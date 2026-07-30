@@ -346,8 +346,19 @@ BAGIAN 11 - TITIK AUDIT PRIORITAS (untuk peninjau kode framework)
 
       HASIL VERIFIKASI (dijalankan sebagai bagian dari analisis ini):
         node analysis/tools/check-security-schema-sync.mjs
-        -> compiler: 30 entri, core: 30 entri, TIDAK ADA PERBEDAAN.
+        -> compiler: 48 kombinasi, core: 48 kombinasi, TIDAK ADA PERBEDAAN.
       Jadi ini bukan cacat yang ada sekarang, melainkan RISIKO PEMELIHARAAN.
+
+      KOREKSI ATAS VERIFIKASI PERTAMA (penting):
+      Versi pertama skrip ini melaporkan "30 entri" dan menyatakan sinkron.
+      Angka itu SALAH karena parser-nya memakai regex per-baris `['tag',[...]]`
+      sehingga MELEWATKAN blok yang ditulis multi-baris - yaitu seluruh blok
+      ATTRIBUTE_NO_BINDING tanpa namespace (18 kombinasi: `unknown` x 11 dan
+      `iframe` x 7). Justru blok itulah yang paling sensitif, karena memuat
+      sandbox/allow/csp/credentialless dan penampung host binding generik.
+      Kesimpulan "sinkron" kebetulan tetap benar, tetapi BUKTINYA tidak sahih
+      sampai parser diperbaiki. Versi sekarang membaca argumen registerContext
+      dengan penghitungan kurung sehingga tata letak kode tidak berpengaruh.
 
       Yang mengikat kedua berkas hanyalah komentar
       ("Keep is a copy of DOM Security Schema", core/dom_security_schema.ts:66).
@@ -360,7 +371,46 @@ BAGIAN 11 - TITIK AUDIT PRIORITAS (untuk peninjau kode framework)
           komentar "*Must* be in sync with ...".
       Artinya divergensi antar-paket tidak akan tertangkap CI. Skrip
       check-security-schema-sync.mjs di direktori ini menutup celah tersebut
-      dan bisa dijadikan uji otomatis bila diinginkan.
+      dan bisa dijadikan uji otomatis bila diinginkan. Skrip itu kini memeriksa
+      TIGA invarian sekaligus:
+        1. skema compiler == skema core          (48 vs 48 kombinasi, cocok)
+        2. entri `unknown` mencakup gabungan seluruh atribut ATTRIBUTE_NO_BINDING
+           dari semua tag konkret                (11 atribut, lengkap)
+        3. daftar atribut iframe di skema == SECURITY_SENSITIVE_ATTRS yang
+           disalin manual di security_spec.ts:126 (7 atribut, cocok)
+
+      Invarian (2) penting dan mudah terlewat: `unknown` adalah penampung untuk
+      host binding pada selector generik (elemen host belum diketahui saat
+      kompilasi). Bila sebuah atribut terdaftar untuk tag konkret tetapi lupa
+      ditambahkan ke `unknown`, maka directive dengan selector generik bisa
+      menulis atribut itu tanpa pemeriksaan runtime sama sekali.
+
+  P1b. RUJUKAN KOMENTAR YANG MENGGANTUNG.  [TEMUAN NYATA - dokumentasi]
+      Kedua berkas skema, pada baris 112, memuat komentar:
+          "Keep this in sync with SECURITY_SENSITIVE_ELEMENTS in
+           packages/core/src/sanitization/sanitization.ts"
+      Simbol `SECURITY_SENSITIVE_ELEMENTS` TIDAK ADA di berkas tersebut
+      (diverifikasi dengan pencarian menyeluruh di packages/). Nama yang
+      sebenarnya ada di sana adalah `SECURITY_SENSITIVE_ATTRIBUTE_NAMES`
+      (sanitization.ts:317) dan `SVG_ANIMATION_SENSITIVE_STATIC_VALUES` (:323).
+      Dampaknya bukan kerentanan, melainkan kewajiban sinkronisasi manual yang
+      menunjuk ke simbol yang tidak bisa ditemukan - persis jenis rujukan yang
+      membuat pemeliharaan lintas-paket gagal diam-diam.
+
+  P1c. TABEL RELAKSASI SVG BUKAN TABEL PEMBATASAN.  [DIVERIFIKASI - BUKAN CELAH]
+      Sekilas tampak ada ketidakcocokan: skema menandai empat tag SVG
+      (animate, set, animateMotion, animateTransform) sebagai ATTRIBUTE_NO_BINDING,
+      tetapi SVG_ANIMATION_SENSITIVE_STATIC_VALUES di runtime hanya memuat
+      `animate` (to/values/from) dan `set` (to).
+      Setelah membaca alur ɵɵvalidateAttribute (sanitization.ts:342-397),
+      ketidakcocokan itu DISENGAJA dan arahnya aman:
+        - bila ada entri di tabel  -> binding DIIZINKAN kecuali atribut
+          `attributeName` statis elemen tersebut bernilai href/xlink:href;
+        - bila TIDAK ada entri     -> jatuh ke `throw` tanpa syarat di akhir
+          fungsi, yaitu perlakuan yang LEBIH KETAT.
+      Jadi tabel runtime adalah daftar PELONGGARAN bersyarat, bukan daftar
+      pembatasan. Kombinasi seperti `[attributeName]` pada keempat tag, serta
+      seluruh atribut pada animateMotion/animateTransform, selalu ditolak.
 
   P2. PROPERTI DOM BARU DARI STANDAR WEB.
       Skema bersifat daftar-putih statis. Setiap properti baru berbahaya yang

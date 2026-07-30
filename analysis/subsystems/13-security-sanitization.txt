@@ -82,6 +82,29 @@ cocok dengan konteks pemakaian, sehingga SafeUrl tidak bisa dipakai sebagai
 SafeHtml. `unwrapSafeValue` adalah satu-satunya pintu keluar nilai mentah, dan
 seluruh pemanggilnya sudah diverifikasi memanggil pemeriksaan tipe lebih dulu.
 
+KOMBINASI ATTRIBUTE_NO_BINDING (yang paling mudah terlewat saat audit)
+----------------------------------------------------------------------
+Konteks ATTRIBUTE_NO_BINDING tidak memasang sanitizer; ia menandai bahwa
+keputusan harus diambil runtime oleh ɵɵvalidateAttribute. Isinya 18 kombinasi:
+
+  ns=SVG   animate            attributeName, values, to, from
+           set                to, attributeName
+           animateMotion      attributeName
+           animateTransform   attributeName
+  ns=-     iframe             sandbox, allow, allowFullscreen, referrerPolicy,
+                              csp, fetchPriority, credentialless
+           unknown            gabungan keduanya (11 atribut)
+
+`unknown` adalah penampung untuk host binding pada selector generik: saat
+kompilasi, elemen host belum diketahui, sehingga compiler memakai entri ini agar
+pemeriksaan tetap terjadi di runtime. Atribut yang lupa didaftarkan di `unknown`
+akan lolos tanpa pemeriksaan apa pun lewat jalur host binding.
+
+Perilaku runtime untuk keempat tag SVG bersifat "tolak kecuali dilonggarkan":
+tabel SVG_ANIMATION_SENSITIVE_STATIC_VALUES hanya memuat animate(to/values/from)
+dan set(to) sebagai PELONGGARAN bersyarat; kombinasi lain jatuh ke throw tanpa
+syarat. Lihat TAINT-TO-SINK.txt temuan P1c.
+
 Lihat analysis/TAINT-TO-SINK.txt untuk rantai lengkap source -> sink beserta
 matriks status dan daftar titik audit prioritas.
 
