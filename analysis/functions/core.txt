@@ -2361,10 +2361,10 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] _lastDefined  (function) :74
 
 ## packages/core/src/application/application_ref.ts
-[ ] publishDefaultGlobalUtils  (export function) :66
-[ ] publishSignalConfiguration  (export function) :73
+[x] publishDefaultGlobalUtils  (export function) :66
+[x] publishSignalConfiguration  (export function) :73
       -- Sets the error for an invalid write to a signal to be an Angular `RuntimeError`.
-[ ] optionsReducer  (export function) :155
+[x] optionsReducer  (export function) :155
 [ ] ApplicationRef  (export class) :254
       -- A reference to an Angular application running on a page. ### isStable examples and caveats Note two important points about `isStable`, demonstrated in the examp
 [ ] ApplicationRef.allViews  (accessor) :295
@@ -2374,41 +2374,41 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] ApplicationRef.isStable  (accessor) :325
       -- Returns an Observable that indicates when the application is stable or unstable.
 [ ] ApplicationRef.constructor  (ctor) :330
-[ ] ApplicationRef.whenStable  (method) :338
+[x] ApplicationRef.whenStable  (method) :338
 [ ] ApplicationRef.injector  (accessor) :359
       -- The `EnvironmentInjector` used to create this application.
 [ ] ApplicationRef.bootstrap  (method) :400
       -- Bootstrap a component onto the element identified by its selector or, optionally, to a specified element. ### Bootstrap process When bootstrapping a component, 
 [ ] ApplicationRef.bootstrap  (method) :409
-[ ] ApplicationRef.bootstrap  (method) :448
+[x] ApplicationRef.bootstrap  (method) :448
       -- Bootstrap a component onto the element identified by its selector or, optionally, to a specified element. ### Bootstrap process When bootstrapping a component, 
-[ ] ApplicationRef.bootstrapImpl  (method) :452
-[ ] ApplicationRef.tick  (method) :533
+[x] ApplicationRef.bootstrapImpl  (method) :452
+[x] ApplicationRef.tick  (method) :533
       -- Invoke this method to explicitly process change detection and its side-effects. In development mode, `tick()` also performs a second change detection cycle to e
-[ ] ApplicationRef._tick  (method) :541
+[x] ApplicationRef._tick  (method) :541
       -- @internal
-[ ] ApplicationRef.synchronize  (method) :588
+[x] ApplicationRef.synchronize  (method) :588
       -- Performs the core work of synchronizing the application state with the UI, resolving any pending dirtiness (potentially in a loop).
-[ ] ApplicationRef.synchronizeOnce  (method) :617
+[x] ApplicationRef.synchronizeOnce  (method) :617
       -- Perform a single synchronization pass.
-[ ] ApplicationRef.syncDirtyFlagsWithViews  (method) :704
+[x] ApplicationRef.syncDirtyFlagsWithViews  (method) :704
       -- Checks `allViews` for views which require refresh/traversal, and updates `dirtyFlags` accordingly, with two potential behaviors: 1. If any of our views require 
-[ ] ApplicationRef.attachView  (method) :721
+[x] ApplicationRef.attachView  (method) :721
       -- Attaches a view so that it will be dirty checked. The view will be automatically detached when it is destroyed. This will throw if the view is already attached 
-[ ] ApplicationRef.detachView  (method) :731
+[x] ApplicationRef.detachView  (method) :731
       -- Detaches a view from dirty checking again.
-[ ] ApplicationRef._loadComponent  (method) :738
-[ ] ApplicationRef.ngOnDestroy  (method) :761
+[x] ApplicationRef._loadComponent  (method) :738
+[x] ApplicationRef.ngOnDestroy  (method) :761
       -- @internal
-[ ] ApplicationRef.onDestroy  (method) :786
+[x] ApplicationRef.onDestroy  (method) :786
       -- Registers a listener to be called when an instance is destroyed.
-[ ] ApplicationRef.destroy  (method) :797
+[x] ApplicationRef.destroy  (method) :797
       -- Destroys an Angular application represented by this `ApplicationRef`. Calling this function will destroy the associated environment injectors as well as all the
 [ ] ApplicationRef.viewCount  (accessor) :818
       -- Returns the number of attached views.
-[ ] normalizeBootstrapOptions  (function) :823
-[ ] warnIfDestroyed  (function) :849
-[ ] remove  (export function) :860
+[x] normalizeBootstrapOptions  (function) :823
+[x] warnIfDestroyed  (function) :849
+[x] remove  (export function) :860
 
 ## packages/core/src/application/create_application.ts
 [ ] internalCreateApplication  (export function) :38
@@ -2645,20 +2645,20 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] ChangeDetectionScheduler.notify  (method) :62
 
 ## packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts
-[ ] trackMicrotaskNotificationForDebugging  (function) :40
+[x] trackMicrotaskNotificationForDebugging  (function) :40
 [ ] ChangeDetectionSchedulerImpl  (export class) :60
 [ ] ChangeDetectionSchedulerImpl.constructor  (ctor) :83
-[ ] ChangeDetectionSchedulerImpl.switchToMicrotaskScheduler  (method) :127
+[x] ChangeDetectionSchedulerImpl.switchToMicrotaskScheduler  (method) :127
       -- paint, even if that spans multiple rounds of change detection.
-[ ] ChangeDetectionSchedulerImpl.notify  (method) :138
-[ ] ChangeDetectionSchedulerImpl.shouldScheduleTick  (method) :227
-[ ] ChangeDetectionSchedulerImpl.tick  (method) :257
+[x] ChangeDetectionSchedulerImpl.notify  (method) :138
+[x] ChangeDetectionSchedulerImpl.shouldScheduleTick  (method) :227
+[x] ChangeDetectionSchedulerImpl.tick  (method) :257
       -- Calls ApplicationRef._tick inside the `NgZone`. Calling `tick` directly runs change detection and cancels any change detection that had been scheduled previousl
-[ ] ChangeDetectionSchedulerImpl.ngOnDestroy  (method) :307
-[ ] ChangeDetectionSchedulerImpl.cleanup  (method) :312
-[ ] provideZonelessChangeDetection  (export function) :369
+[x] ChangeDetectionSchedulerImpl.ngOnDestroy  (method) :307
+[x] ChangeDetectionSchedulerImpl.cleanup  (method) :312
+[x] provideZonelessChangeDetection  (export function) :369
       -- Provides change detection without ZoneJS for the application bootstrapped using `bootstrapApplication`. NOTE: Zoneless is enabled by default in Angular v21+. En
-[ ] provideZonelessChangeDetectionInternal  (export function) :390
+[x] provideZonelessChangeDetectionInternal  (export function) :390
 
 ## packages/core/src/change_detection/simple_change.ts
 [ ] SimpleChange  (export class) :20
@@ -4085,17 +4085,17 @@ Format: [ ] Nama  (export|kind) :baris
       -- This is a basic sanity check that the `injectorIndex` seems to point to what looks like a NodeInjector data structure.
 
 ## packages/core/src/render3/bindings.ts
-[ ] updateBinding  (export function) :19
+[x] updateBinding  (export function) :19
       -- Updates binding and returns the value.
-[ ] getBinding  (export function) :24
+[x] getBinding  (export function) :24
       -- Gets the current binding value.
-[ ] bindingUpdated  (export function) :44
+[x] bindingUpdated  (export function) :44
       -- Updates binding if changed, then returns whether it was updated. This function also checks the `CheckNoChangesMode` and throws if changes are made. Some changes
-[ ] bindingUpdated2  (export function) :88
+[x] bindingUpdated2  (export function) :88
       -- Updates 2 bindings if changed, then returns whether either was updated.
-[ ] bindingUpdated3  (export function) :94
+[x] bindingUpdated3  (export function) :94
       -- Updates 3 bindings if changed, then returns whether any was updated.
-[ ] bindingUpdated4  (export function) :106
+[x] bindingUpdated4  (export function) :106
       -- Updates 4 bindings if changed, then returns whether any was updated.
 
 ## packages/core/src/render3/chained_injector.ts
@@ -4675,9 +4675,9 @@ Format: [ ] Nama  (export|kind) :baris
       -- or a sub-template.
 
 ## packages/core/src/render3/instructions/advance.ts
-[ ] ɵɵadvance  (export function) :43
+[x] ɵɵadvance  (export function) :43
       -- Advances to an element for later binding instructions. Used in conjunction with instructions like {@link property} to act on elements with specified indices, fo
-[ ] selectIndexInternal  (export function) :53
+[x] selectIndexInternal  (export function) :53
 
 ## packages/core/src/render3/instructions/animation.ts
 [ ] ɵɵanimateEnter  (export function) :58
@@ -4715,23 +4715,23 @@ Format: [ ] Nama  (export|kind) :baris
       -- Updates the value of or removes a bound attribute on an Element. Used in the case of `[attr.title]="value"`                  Otherwise the attribute value is se
 
 ## packages/core/src/render3/instructions/change_detection.ts
-[ ] detectChangesInternal  (export function) :80
-[ ] detectChangesInViewWhileDirty  (function) :102
-[ ] checkNoChangesInternal  (export function) :141
-[ ] refreshView  (export function) :180
-[ ] detectChangesInEmbeddedViews  (function) :379
+[x] detectChangesInternal  (export function) :80
+[x] detectChangesInViewWhileDirty  (function) :102
+[x] checkNoChangesInternal  (export function) :141
+[x] refreshView  (export function) :180
+[x] detectChangesInEmbeddedViews  (function) :379
       -- Goes over embedded views (ones created through ViewContainerRef APIs) and refreshes them by executing an associated template function.
-[ ] markTransplantedViewsForRefresh  (function) :397
+[x] markTransplantedViewsForRefresh  (function) :397
       -- Mark transplanted views as needing to be refreshed at their attachment points.
-[ ] detectChangesInComponent  (function) :420
+[x] detectChangesInComponent  (function) :420
       -- Detects changes in a component by entering the component view and processing its bindings, queries, etc. if it is CheckAlways, OnPush and Dirty, etc.
-[ ] detectChangesInViewIfAttached  (function) :441
+[x] detectChangesInViewIfAttached  (function) :441
       -- Visits a view as part of change detection traversal. If the view is detached, no additional traversal happens.
-[ ] detectChangesInView  (function) :458
+[x] detectChangesInView  (function) :458
       -- Visits a view as part of change detection traversal. The view is refreshed if: - If the view is CheckAlways or Dirty and ChangeDetectionMode is `Global` - If th
-[ ] detectChangesInChildComponents  (function) :520
+[x] detectChangesInChildComponents  (function) :520
       -- Refreshes child components in the current view (update mode).
-[ ] processHostBindingOpCodes  (function) :539
+[x] processHostBindingOpCodes  (function) :539
       -- Invoke `HostBindingsFunction`s for view. This methods executes `TView.hostBindingOpCodes`. It is used to execute the `HostBindingsFunction`s associated with the
 
 ## packages/core/src/render3/instructions/component_instance.ts
@@ -4769,51 +4769,51 @@ Format: [ ] Nama  (export|kind) :baris
       -- Returns whether the specified `directiveDef` has an output named `name`.
 
 ## packages/core/src/render3/instructions/control_flow.ts
-[ ] ɵɵconditionalCreate  (export function) :74
+[x] ɵɵconditionalCreate  (export function) :74
       -- Creates an LContainer for an ng-template representing a root node of control flow (@if, @switch). We use this to explicitly set flags on the TNode created to id
-[ ] ɵɵconditionalBranchCreate  (export function) :122
+[x] ɵɵconditionalBranchCreate  (export function) :122
       -- Creates an LContainer for an ng-template representing a branch of control flow (@else, @case, @default). We use this to explicitly set flags on the TNode create
-[ ] ɵɵconditional  (export function) :163
+[x] ɵɵconditional  (export function) :163
       -- The conditional instruction represents the basic building block on the runtime side to support built-in "if" and "switch". On the high level this instruction is
 [ ] RepeaterContext  (export class) :221
 [ ] RepeaterContext.constructor  (ctor) :222
-[ ] RepeaterContext.$count  (accessor) :228
-[ ] ɵɵrepeaterTrackByIndex  (export function) :240
+[x] RepeaterContext.$count  (accessor) :228
+[x] ɵɵrepeaterTrackByIndex  (export function) :240
       -- A built-in trackBy function used for situations where users specified collection index as a tracking expression. Having this function body in the runtime avoids
-[ ] ɵɵrepeaterTrackByIdentity  (export function) :252
+[x] ɵɵrepeaterTrackByIdentity  (export function) :252
       -- A built-in trackBy function used for situations where users specified collection item reference as a tracking expression. Having this function body in the runti
 [ ] RepeaterMetadata  (class) :256
 [ ] RepeaterMetadata.constructor  (ctor) :257
-[ ] ɵɵrepeaterCreate  (export function) :290
+[x] ɵɵrepeaterCreate  (export function) :290
       -- The repeaterCreate instruction runs in the creation part of the template pass and initializes internal data structures required by the update pass of the built-
-[ ] isViewExpensiveToRecreate  (function) :357
+[x] isViewExpensiveToRecreate  (function) :357
 [ ] OperationsCounter  (class) :362
-[ ] OperationsCounter.reset  (method) :366
-[ ] OperationsCounter.recordCreate  (method) :371
-[ ] OperationsCounter.recordDestroy  (method) :375
-[ ] OperationsCounter.wasReCreated  (method) :386
+[x] OperationsCounter.reset  (method) :366
+[x] OperationsCounter.recordCreate  (method) :371
+[x] OperationsCounter.recordDestroy  (method) :375
+[x] OperationsCounter.wasReCreated  (method) :386
       -- A method indicating if the entire collection was re-created as part of the reconciliation pass. Used to warn developers about the usage of a tracking function t
 [ ] LiveCollectionLContainerImpl  (class) :391
 [ ] LiveCollectionLContainerImpl.constructor  (ctor) :403
 [ ] LiveCollectionLContainerImpl.length  (accessor) :411
-[ ] LiveCollectionLContainerImpl.at  (method) :414
-[ ] LiveCollectionLContainerImpl.attach  (method) :417
-[ ] LiveCollectionLContainerImpl.detach  (method) :428
-[ ] LiveCollectionLContainerImpl.create  (method) :433
-[ ] LiveCollectionLContainerImpl.destroy  (method) :448
-[ ] LiveCollectionLContainerImpl.updateValue  (method) :452
+[x] LiveCollectionLContainerImpl.at  (method) :414
+[x] LiveCollectionLContainerImpl.attach  (method) :417
+[x] LiveCollectionLContainerImpl.detach  (method) :428
+[x] LiveCollectionLContainerImpl.create  (method) :433
+[x] LiveCollectionLContainerImpl.destroy  (method) :448
+[x] LiveCollectionLContainerImpl.updateValue  (method) :452
 [ ] LiveCollectionLContainerImpl.reset  (method) :456
-[ ] LiveCollectionLContainerImpl.updateIndexes  (method) :461
+[x] LiveCollectionLContainerImpl.updateIndexes  (method) :461
 [ ] LiveCollectionLContainerImpl.getLView  (method) :469
-[ ] ɵɵrepeater  (export function) :481
+[x] ɵɵrepeater  (export function) :481
       -- The repeater instruction does update-time diffing of a provided collection (against the collection seen previously) and maps changes in the collection to views 
-[ ] getLContainer  (function) :571
+[x] getLContainer  (function) :571
 [ ] clearDetachAnimationList  (function) :578
 [ ] maybeInitDetachAnimationList  (function) :601
       -- if it has leave animations.
 [ ] detachExistingView  (function) :614
-[ ] getExistingLViewFromLContainer  (function) :621
-[ ] getExistingTNode  (function) :628
+[x] getExistingLViewFromLContainer  (function) :621
+[x] getExistingTNode  (function) :628
 
 ## packages/core/src/render3/instructions/di.ts
 [ ] ɵɵdirectiveInject  (export function) :43
@@ -4834,7 +4834,7 @@ Format: [ ] Nama  (export|kind) :baris
       -- Updates a synthetic host binding (e.g. `[@foo]`) on a component or directive. This instruction is for compatibility purposes and is designed to ensure that a sy
 
 ## packages/core/src/render3/instructions/element.ts
-[ ] ɵɵelementStart  (export function) :88
+[x] ɵɵelementStart  (export function) :88
       -- Create DOM element. The instruction must later be followed by `elementEnd()` call. Attributes and localRefs are passed as an array of strings where elements wit
 [ ] initializeElement  (function) :131
 [ ] ɵɵelementEnd  (export function) :161
@@ -4967,7 +4967,7 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] listenerInternal  (export function) :122
 
 ## packages/core/src/render3/instructions/mark_view_dirty.ts
-[ ] markViewDirty  (export function) :26
+[x] markViewDirty  (export function) :26
       -- Marks current view and all ancestors dirty. Returns the root view because it is found as a byproduct of marking the view tree dirty, and can be used by methods 
 
 ## packages/core/src/render3/instructions/next_context.ts
@@ -5009,61 +5009,61 @@ Format: [ ] Nama  (export|kind) :baris
       -- Advances the current query index by a specified offset. Adjusting the current query index is necessary in cases where a given directive has a mix of zone-based 
 
 ## packages/core/src/render3/instructions/render.ts
-[ ] renderComponent  (export function) :32
-[ ] syncViewWithBlueprint  (export function) :80
+[x] renderComponent  (export function) :32
+[x] syncViewWithBlueprint  (export function) :80
       -- Syncs an LView instance with its blueprint if they have gotten out of sync. Typically, blueprints and their view instances should always be in sync, so the loop
-[ ] renderView  (export function) :93
+[x] renderView  (export function) :93
       -- Processes a view in the creation mode. This includes a number of steps in a specific order: - creating view query functions (if any); - executing a template fun
-[ ] renderChildComponents  (function) :158
+[x] renderChildComponents  (function) :158
       -- Renders child components in the current view (creation mode).
 
 ## packages/core/src/render3/instructions/shared.ts
-[ ] executeTemplate  (export function) :86
-[ ] createDirectivesInstances  (export function) :121
+[x] executeTemplate  (export function) :86
+[x] createDirectivesInstances  (export function) :121
       -- Creates directive instances.
-[ ] saveResolvedLocalsInData  (export function) :132
+[x] saveResolvedLocalsInData  (export function) :132
       -- Takes a list of local names and indices and pushes the resolved local variable values to LView in the same order as they are loaded in the template with load().
-[ ] locateHostElement  (export function) :162
+[x] locateHostElement  (export function) :162
       -- Locates the host native element, used for bootstrapping existing nodes into rendering pipeline.
-[ ] applyRootElementTransform  (export function) :193
+[x] applyRootElementTransform  (export function) :193
       -- Applies any root element transformations that are needed. If hydration is enabled, this will process corrupted text nodes.
-[ ] applyRootElementTransformImpl  (export function) :213
+[x] applyRootElementTransformImpl  (export function) :213
       -- Processes text node markers before hydration begins. This replaces any special comment nodes that were added prior to serialization are swapped out to restore p
-[ ] enableApplyRootElementTransformImpl  (export function) :227
+[x] enableApplyRootElementTransformImpl  (export function) :227
       -- Sets the implementation for the `applyRootElementTransform` function.
-[ ] mapPropName  (function) :240
+[x] mapPropName  (function) :240
       -- Mapping between attributes names that don't correspond to their element property names. Performance note: this function is written as a series of if checks (ins
-[ ] setPropertyAndInputs  (export function) :250
-[ ] setDomProperty  (export function) :285
+[x] setPropertyAndInputs  (export function) :250
+[x] setDomProperty  (export function) :285
       -- Sets a DOM property on a specific node.
-[ ] markDirtyIfOnPush  (export function) :319
+[x] markDirtyIfOnPush  (export function) :319
       -- If node is an OnPush component, marks its LView dirty.
-[ ] setNgReflectProperty  (function) :327
-[ ] setNgReflectProperties  (export function) :350
-[ ] instantiateAllDirectives  (function) :386
+[x] setNgReflectProperty  (function) :327
+[x] setNgReflectProperties  (export function) :350
+[x] instantiateAllDirectives  (function) :386
       -- Instantiate all the directives that were previously resolved on the current node.
-[ ] invokeDirectivesHostBindings  (export function) :422
-[ ] invokeHostBindingsInCreationMode  (export function) :449
+[x] invokeDirectivesHostBindings  (export function) :422
+[x] invokeHostBindingsInCreationMode  (export function) :449
       -- Invoke the host bindings in creation mode.
-[ ] findDirectiveDefMatches  (export function) :459
+[x] findDirectiveDefMatches  (export function) :459
       -- Matches the current node against all available selectors. If a component is matched (at most one), it is returned in first position in the array.
-[ ] elementAttributeInternal  (export function) :499
-[ ] setElementAttribute  (export function) :521
-[ ] setInputsFromAttrs  (function) :553
+[x] elementAttributeInternal  (export function) :499
+[x] setElementAttribute  (export function) :521
+[x] setInputsFromAttrs  (function) :553
       -- Sets initial input properties on directive instances from attribute data
-[ ] elementLikeStartShared  (export function) :577
+[x] elementLikeStartShared  (export function) :577
       -- Shared code between instructions that indicate the start of an element.
-[ ] elementLikeEndShared  (export function) :622
+[x] elementLikeEndShared  (export function) :622
       -- Shared code between instructions that indicate the end of an element.
-[ ] storePropertyBindingMetadata  (export function) :661
+[x] storePropertyBindingMetadata  (export function) :661
       -- Stores meta-data for a property binding to be used by TestBed's `DebugElement.properties`. In order to support TestBed's `DebugElement.properties` we need to sa
-[ ] loadComponentRenderer  (export function) :689
+[x] loadComponentRenderer  (export function) :689
       -- There are cases where the sub component's renderer needs to be included instead of the current renderer (see the componentSyntheticHost* instructions).
-[ ] handleUncaughtError  (export function) :707
+[x] handleUncaughtError  (export function) :707
       -- Handles an error thrown in an LView.
-[ ] setAllInputsForProperty  (export function) :730
+[x] setAllInputsForProperty  (export function) :730
       -- Set all directive inputs with the specific public name on the node.
-[ ] setDirectiveInput  (export function) :774
+[x] setDirectiveInput  (export function) :774
       -- Sets an input value only on a specific directive and its host directives.
 
 ## packages/core/src/render3/instructions/storage.ts
@@ -5672,15 +5672,15 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] refreshSignalQuery  (function) :111
 
 ## packages/core/src/render3/reactive_lview_consumer.ts
-[ ] getOrBorrowReactiveLViewConsumer  (export function) :24
+[x] getOrBorrowReactiveLViewConsumer  (export function) :24
       -- Create a new template consumer pointing at the specified LView. Sometimes, a previously created consumer may be reused, in order to save on allocations. In that
-[ ] borrowReactiveLViewConsumer  (function) :28
-[ ] maybeReturnReactiveLViewConsumer  (export function) :34
-[ ] getOrCreateTemporaryConsumer  (export function) :67
+[x] borrowReactiveLViewConsumer  (function) :28
+[x] maybeReturnReactiveLViewConsumer  (export function) :34
+[x] getOrCreateTemporaryConsumer  (export function) :67
       -- Creates a temporary consumer for use with `LView`s that should not have consumers. If the LView already has a consumer, returns the existing one instead. This i
-[ ] viewShouldHaveReactiveConsumer  (export function) :109
+[x] viewShouldHaveReactiveConsumer  (export function) :109
       -- Indicates if the view should get its own reactive consumer node. In the current design, all embedded views share a consumer with the component view. This allows
-[ ] isReactiveLViewConsumer  (export function) :113
+[x] isReactiveLViewConsumer  (export function) :113
 
 ## packages/core/src/render3/reactivity/after_render_effect.ts
 [ ] AfterRenderEffectSequence  (export class) :162
@@ -6137,18 +6137,18 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] getConstant  (export function) :187
 [ ] resetPreOrderHookFlags  (export function) :200
       -- Resets the pre-order hook flags of the view.
-[ ] markViewForRefresh  (export function) :208
+[x] markViewForRefresh  (export function) :208
       -- Adds the `RefreshView` flag from the lView and updates HAS_CHILD_VIEWS_TO_REFRESH flag of parents.
-[ ] walkUpViews  (export function) :223
+[x] walkUpViews  (export function) :223
       -- Walks up the LView hierarchy.
-[ ] requiresRefreshOrTraversal  (export function) :236
-[ ] updateAncestorTraversalFlagsOnAttach  (export function) :247
+[x] requiresRefreshOrTraversal  (export function) :236
+[x] updateAncestorTraversalFlagsOnAttach  (export function) :247
       -- Updates the `HasChildViewsToRefresh` flag on the parents of the `LView` as well as the parents above.
-[ ] markAncestorsForTraversal  (export function) :264
+[x] markAncestorsForTraversal  (export function) :264
       -- Ensures views above the given `lView` are traversed during change detection even when they are not dirty. This is done by setting the `HAS_CHILD_VIEWS_TO_REFRES
-[ ] storeLViewOnDestroy  (export function) :285
+[x] storeLViewOnDestroy  (export function) :285
       -- Stores a LView-specific destroy callback.
-[ ] removeLViewOnDestroy  (export function) :301
+[x] removeLViewOnDestroy  (export function) :301
       -- Removes previously registered LView-specific destroy callback.
 [ ] getLViewParent  (export function) :315
       -- Gets the parent LView of the passed LView, if the PARENT is an LContainer, will get the parent of that LContainer, which is an LView
@@ -6158,18 +6158,18 @@ Format: [ ] Nama  (export|kind) :baris
       -- Saves context for this cleanup function in LView.cleanupInstances. On the first template pass, saves in TView: - Cleanup function - Index of context we just sav
 
 ## packages/core/src/render3/view/construction.ts
-[ ] createTView  (export function) :67
+[x] createTView  (export function) :67
       -- Creates a TView instance
-[ ] createViewBlueprint  (function) :129
-[ ] getOrCreateComponentTView  (export function) :146
+[x] createViewBlueprint  (function) :129
+[x] getOrCreateComponentTView  (export function) :146
       -- Gets TView from a template function or creates a new TView if it doesn't already exist.
-[ ] createLView  (export function) :173
-[ ] createComponentLView  (export function) :226
-[ ] getInitialLViewFlagsFromDef  (export function) :263
+[x] createLView  (export function) :173
+[x] createComponentLView  (export function) :226
+[x] getInitialLViewFlagsFromDef  (export function) :263
       -- Gets the initial set of LView flags based on the component definition that the LView represents.
-[ ] allocExpando  (export function) :282
+[x] allocExpando  (export function) :282
       -- When elements are created dynamically after a view blueprint is created (e.g. through i18nApply()), we need to adjust the blueprint for future template passes.
-[ ] addToEndOfViewTree  (export function) :320
+[x] addToEndOfViewTree  (export function) :320
       -- Adds LView or LContainer to the end of the current view tree. This structure will be used to traverse through nested views to remove listeners and call onDestro
 
 ## packages/core/src/render3/view/container.ts

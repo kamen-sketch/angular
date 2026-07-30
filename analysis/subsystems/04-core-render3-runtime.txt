@@ -1,0 +1,188 @@
+SUBSISTEM 04 :: Runtime render3 (struktur data + instruksi template)
+Lokasi   : packages/core/src/render3/**
+Status   : SELESAI DIANALISIS (struktur data, siklus render, instruksi inti,
+           binding, control flow @if/@for)
+==============================================================================
+
+STRUKTUR DATA INTI: TView / LView / TNode
+-----------------------------------------
+Angular memisahkan data STATIS (dibagi seluruh instance) dari data INSTANCE:
+
+  TView  - "cetak biru" satu template. Satu TView per komponen/template,
+           dibuat sekali. Berisi: template fn, blueprint, data (TNode +
+           definisi directive), daftar hook, queries, registry directive/pipe,
+           hostBindingOpCodes, flag firstCreatePass/firstUpdatePass.
+  LView  - satu instance view. ARRAY (bukan objek) dengan header berukuran
+           HEADER_OFFSET=27 slot, lalu slot untuk node, lalu slot binding.
+  TNode  - metadata statis satu node template (tipe, attrs, indeks directive,
+           providerIndexes, injectorIndex, parent/child/next).
+
+Mengapa LView adalah array, bukan objek: akses berindeks lebih cepat, ukuran
+kode lebih kecil (konstanta HOST=0, TVIEW=1, FLAGS=2, ... di-inline oleh
+minifier), dan memudahkan alokasi lewat `blueprint.slice()`.
+
+Header LView (indeks 0..26) berisi antara lain:
+  HOST, TVIEW, FLAGS, PARENT, NEXT, T_HOST, HYDRATION, CLEANUP, CONTEXT,
+  INJECTOR, ENVIRONMENT, RENDERER, CHILD_HEAD, CHILD_TAIL, DECLARATION_VIEW,
+  DECLARATION_COMPONENT_VIEW, DECLARATION_LCONTAINER, PREORDER_HOOK_FLAGS,
+  QUERIES, ID, EMBEDDED_VIEW_INJECTOR, ON_DESTROY_HOOKS, EFFECTS_TO_SCHEDULE,
+  EFFECTS, REACTIVE_TEMPLATE_CONSUMER, AFTER_RENDER_SEQUENCES_TO_ADD, ANIMATIONS
+
+Perbedaan tiga "parent" yang sering membingungkan:
+  PARENT                     - induk logis (LView atau LContainer)
+  DECLARATION_VIEW           - view tempat template DITULIS (untuk DI & scope)
+  DECLARATION_COMPONENT_VIEW - view komponen terdekat (untuk @Host, host binding)
+Untuk embedded view yang disisipkan di tempat lain (transplanted view), ketiganya
+bisa menunjuk ke tempat berbeda - inilah sumber kerumitan CD transplanted view.
+
+`createTView` menutup objek dengan `Object.seal` di dev mode agar bentuknya
+tetap monomorfik (penting untuk optimasi JIT engine JavaScript).
+
+DUA FASE: CREATION vs UPDATE
+----------------------------
+Template hasil kompilasi berbentuk:
+
+    function Tmpl(rf, ctx) {
+      if (rf & 1) { /* creation: elementStart, text, template, ... */ }
+      if (rf & 2) { /* update: advance, property, textInterpolate, ... */ }
+    }
+
+  - `renderView` menjalankan fase creation (RenderFlags.Create) + view query
+    statis + render komponen anak.
+  - `refreshView` (subsistem 03) menjalankan fase update.
+  - `tView.firstCreatePass` menandai eksekusi pertama sebuah TEMPLATE (bukan
+    instance): di situlah TNode dibuat, directive dicocokkan, hook didaftarkan.
+    Instance berikutnya memakai ulang seluruh hasil kerja itu.
+  - Jika terjadi error saat firstCreatePass, TView ditandai `incompleteFirstPass`
+    agar runtime bisa mencoba memulihkan diri.
+
+MODEL BINDING (kenapa `advance` ada)
+------------------------------------
+Nilai binding disimpan di slot LView setelah `bindingStartIndex`, diakses
+BERURUTAN lewat penunjuk global `bindingIndex`. Instruksi update tidak menyebut
+indeks slot - urutannya implisit dari urutan pemanggilan. Karena itu compiler
+menyisipkan `ɵɵadvance(n)` untuk memindahkan "elemen terpilih" (selected index),
+dan `ɵɵadvance` sekaligus menjadi titik eksekusi pre-order hooks yang tertunda.
+
+`bindingUpdated` adalah primitif intinya: bandingkan dengan `Object.is`, simpan
+bila berubah, dan (di dev mode + checkNoChanges) lempar
+ExpressionChangedAfterItHasBeenCheckedError dengan detail lokasi. Sentinel
+`NO_CHANGE` menandai slot yang belum pernah diisi. Varian `bindingUpdated2/3/4`
+menghindari overhead pemanggilan berulang untuk interpolasi multi-ekspresi.
+
+SIKLUS PEMBUATAN ELEMEN
+-----------------------
+`ɵɵelementStart` (dan saudara-saudaranya) mengikuti pola seragam:
+  1. firstCreatePass -> `directiveHostFirstCreatePass` membuat TNode, mencocokkan
+     directive (`findDirectiveDefMatches`), mengalokasi slot host binding.
+  2. Selain itu ambil TNode yang sudah ada dari `tView.data`.
+  3. Buat/klaim DOM node - klaim (hydration) bila ada data dehidrasi.
+  4. `createDirectivesInstances` -> instansiasi directive + host bindings.
+  5. `saveResolvedLocalsInData` mengisi nilai local ref (#ref).
+
+Semua jalur pembuatan node memeriksa hidrasi lebih dulu (`canHydrateNode`,
+`locateNextRNode`, `markRNodeAsClaimedByHydration`), sehingga instruksi yang
+sama dipakai untuk render baru maupun hidrasi.
+
+CONTROL FLOW BAWAAN (@if / @for / @switch)
+------------------------------------------
+@if dan @switch dikompilasi menjadi `ɵɵconditional`: sebuah LContainer dengan
+banyak template cabang; instruksi hanya memilih indeks cabang, membuang view
+lama dan membuat view baru saat indeks berubah.
+
+@for dikompilasi menjadi `ɵɵrepeaterCreate` + `ɵɵrepeater`:
+  - `RepeaterMetadata` menyimpan trackByFn dan LiveCollection.
+  - `LiveCollectionLContainerImpl` adalah adaptor LContainer ke algoritma
+    rekonsiliasi generik (`reconcile` di list_reconciliation.ts) yang memakai
+    kunci track-by untuk memutuskan create/move/update/destroy.
+  - `ɵɵrepeaterTrackByIndex` / `ɵɵrepeaterTrackByIdentity` adalah dua fungsi
+    track bawaan.
+  - Di dev mode, `OperationsCounter` mendeteksi kasus "seluruh koleksi dibuat
+    ulang" dengan track by identity dan mencetak peringatan - hanya jika view
+    dianggap mahal untuk dibuat ulang (`isViewExpensiveToRecreate`).
+  - Seluruh `ɵɵrepeater` berjalan dengan `setActiveConsumer(null)`: pembacaan
+    koleksi tidak boleh terlacak sebagai dependensi template.
+
+PENGELOLAAN NODE & VIEW TREE
+----------------------------
+`addToEndOfViewTree` merangkai LView/LContainer anak sebagai linked list
+(CHILD_HEAD/CHILD_TAIL/NEXT) - dipakai untuk menelusuri seluruh keturunan saat
+destroy dan saat CD. Komentar TODO di kode mengakui urutannya bisa salah bila
+LContainer diambil dari RNode secara tidak berurutan.
+
+`allocExpando` memperbesar blueprint + LView + TView.data secara sinkron ketika
+node dibuat dinamis (mis. i18nApply).
+
+DAFTAR FUNGSI YANG SUDAH DIPAHAMI
+---------------------------------
+[x] createTView | packages/core/src/render3/view/construction.ts:67 | Membuat cetak biru statis satu template (blueprint, data, registry, slot hook) dan menyegelnya di dev mode agar monomorfik.
+[x] createViewBlueprint | packages/core/src/render3/view/construction.ts:129 | Menyusun array blueprint: header + slot decl + slot binding berisi NO_CHANGE.
+[x] getOrCreateComponentTView | packages/core/src/render3/view/construction.ts:146 | Cache TView per definisi komponen (dibuat sekali per kelas komponen).
+[x] createLView | packages/core/src/render3/view/construction.ts:173 | Instansiasi view: salin blueprint, set flag awal (CreationMode|Attached|Dirty|RefreshView), turunkan renderer/environment/injector dari induk, tentukan DECLARATION_COMPONENT_VIEW.
+[x] createComponentLView | packages/core/src/render3/view/construction.ts:226 | Membuat view komponen anak beserta renderer khusus (encapsulation) dan menautkannya ke pohon view.
+[x] getInitialLViewFlagsFromDef | packages/core/src/render3/view/construction.ts:263 | Menerjemahkan strategi komponen ke flag: signals -> SignalView, onPush -> Dirty, selain itu CheckAlways.
+[x] allocExpando | packages/core/src/render3/view/construction.ts:282 | Menambah slot ke LView, blueprint, dan TView.data secara sinkron untuk node yang dibuat dinamis.
+[x] addToEndOfViewTree | packages/core/src/render3/view/construction.ts:320 | Merangkai LView/LContainer anak sebagai linked list CHILD_HEAD/CHILD_TAIL/NEXT.
+[x] renderComponent | packages/core/src/render3/instructions/render.ts:32 | Fase creation satu komponen anak: sinkronkan blueprint, ambil info hidrasi, jalankan renderView.
+[x] syncViewWithBlueprint | packages/core/src/render3/instructions/render.ts:80 | Menambal LView yang dibuat sebelum blueprint bertambah (kasus dua komponen bersebelahan).
+[x] renderView | packages/core/src/render3/instructions/render.ts:93 | Fase creation: view query create, template create, matikan firstCreatePass, query statis, render komponen anak; menandai incompleteFirstPass bila error.
+[x] renderChildComponents | packages/core/src/render3/instructions/render.ts:158 | Iterasi indeks komponen anak pada fase creation.
+[x] executeTemplate | packages/core/src/render3/instructions/shared.ts:86 | Membungkus pemanggilan fungsi template: atur selected index, tanda profiler, pulihkan indeks lama.
+[x] createDirectivesInstances | packages/core/src/render3/instructions/shared.ts:121 | Instansiasi semua directive node lalu jalankan host bindings bila ada.
+[x] saveResolvedLocalsInData | packages/core/src/render3/instructions/shared.ts:132 | Mengisi slot local ref (#ref) dengan elemen DOM atau instance directive.
+[x] locateHostElement | packages/core/src/render3/instructions/shared.ts:162 | Menemukan elemen host saat bootstrap; mempertahankan isi untuk ShadowDom/hidrasi.
+[x] applyRootElementTransform | packages/core/src/render3/instructions/shared.ts:193 | Indireksi tree-shakable ke transformasi root element.
+[x] applyRootElementTransformImpl | packages/core/src/render3/instructions/shared.ts:213 | Memulihkan penanda text node sebelum hidrasi, atau mengosongkan root bila ngSkipHydration.
+[x] enableApplyRootElementTransformImpl | packages/core/src/render3/instructions/shared.ts:227 | Mengaktifkan implementasi di atas saat hidrasi dinyalakan.
+[x] mapPropName | packages/core/src/render3/instructions/shared.ts:240 | Peta nama atribut ke nama properti DOM (class->className dst); sengaja rantai if demi performa.
+[x] setPropertyAndInputs | packages/core/src/render3/instructions/shared.ts:250 | Jalur utama [prop]: tulis ke input directive bila ada, selain itu ke properti DOM.
+[x] setDomProperty | packages/core/src/render3/instructions/shared.ts:285 | Menulis properti DOM dengan sanitasi dan validasi nama properti (schema).
+[x] markDirtyIfOnPush | packages/core/src/render3/instructions/shared.ts:319 | Menandai komponen anak OnPush kotor saat input berubah.
+[x] setNgReflectProperty | packages/core/src/render3/instructions/shared.ts:327 | Menulis atribut ng-reflect-* untuk debugging.
+[x] setNgReflectProperties | packages/core/src/render3/instructions/shared.ts:350 | Versi jamak untuk seluruh input yang cocok.
+[x] instantiateAllDirectives | packages/core/src/render3/instructions/shared.ts:386 | Membuat instance seluruh directive node lewat NodeInjector, termasuk komponen host.
+[x] invokeDirectivesHostBindings | packages/core/src/render3/instructions/shared.ts:422 | Menjalankan hostBindings semua directive pada fase creation.
+[x] invokeHostBindingsInCreationMode | packages/core/src/render3/instructions/shared.ts:449 | Memanggil satu hostBindings dengan RenderFlags.Create.
+[x] findDirectiveDefMatches | packages/core/src/render3/instructions/shared.ts:459 | Pencocokan selector directive terhadap TNode memakai registry TView.
+[x] elementAttributeInternal | packages/core/src/render3/instructions/shared.ts:499 | Set/hapus atribut dengan sanitasi dan dukungan namespace.
+[x] setElementAttribute | packages/core/src/render3/instructions/shared.ts:521 | Pemanggilan renderer setAttribute/removeAttribute tingkat rendah.
+[x] setInputsFromAttrs | packages/core/src/render3/instructions/shared.ts:553 | Mengisi input directive dari atribut statis saat pembuatan.
+[x] elementLikeStartShared | packages/core/src/render3/instructions/shared.ts:577 | Logika bersama pembuatan elemen/ng-container: TNode, DOM node, directive, local refs.
+[x] elementLikeEndShared | packages/core/src/render3/instructions/shared.ts:622 | Penutup: kembalikan currentTNode ke induk, jalankan content queries, tangani skip-hydration.
+[x] storePropertyBindingMetadata | packages/core/src/render3/instructions/shared.ts:661 | Menyimpan metadata binding untuk DevTools/pesan error.
+[x] loadComponentRenderer | packages/core/src/render3/instructions/shared.ts:689 | Memilih renderer sesuai encapsulation komponen.
+[x] handleUncaughtError | packages/core/src/render3/instructions/shared.ts:707 | Meneruskan error runtime ke ErrorHandler aplikasi.
+[x] setAllInputsForProperty | packages/core/src/render3/instructions/shared.ts:730 | Menulis satu nilai ke semua directive yang punya input dengan nama tersebut.
+[x] setDirectiveInput | packages/core/src/render3/instructions/shared.ts:774 | Menulis satu input directive (signal input atau properti biasa) lalu menandai OnPush kotor.
+[x] updateBinding | packages/core/src/render3/bindings.ts:19 | Menyimpan nilai binding ke slot LView.
+[x] getBinding | packages/core/src/render3/bindings.ts:24 | Membaca nilai binding tersimpan.
+[x] bindingUpdated | packages/core/src/render3/bindings.ts:44 | Primitif deteksi perubahan per-binding (Object.is), termasuk pelaporan ExpressionChanged di checkNoChanges.
+[x] bindingUpdated2 | packages/core/src/render3/bindings.ts:88 | Versi dua ekspresi untuk interpolasi.
+[x] bindingUpdated3 | packages/core/src/render3/bindings.ts:94 | Versi tiga ekspresi.
+[x] bindingUpdated4 | packages/core/src/render3/bindings.ts:106 | Versi empat ekspresi.
+[x] ɵɵadvance | packages/core/src/render3/instructions/advance.ts:43 | Memajukan elemen terpilih sekaligus titik flush pre-order hooks.
+[x] selectIndexInternal | packages/core/src/render3/instructions/advance.ts:53 | Menjalankan hook init/check yang tertunda lalu memasang selected index (urutan ini disengaja).
+[x] ɵɵelementStart | packages/core/src/render3/instructions/element.ts:88 | Membuat TNode+elemen DOM, mencocokkan directive pada firstCreatePass, membungkus init komponen dengan tracing.
+[x] ɵɵconditional | packages/core/src/render3/instructions/control_flow.ts:163 | Implementasi @if/@switch: mengganti view cabang saat indeks cabang berubah.
+[x] ɵɵconditionalCreate | packages/core/src/render3/instructions/control_flow.ts:74 | Membuat container + template cabang utama pada fase creation.
+[x] ɵɵconditionalBranchCreate | packages/core/src/render3/instructions/control_flow.ts:122 | Mendaftarkan template cabang tambahan (@else if/@else, @case).
+[x] ɵɵrepeaterCreate | packages/core/src/render3/instructions/control_flow.ts:290 | Menyiapkan metadata @for: trackByFn, template item, template @empty.
+[x] ɵɵrepeater | packages/core/src/render3/instructions/control_flow.ts:481 | Menjalankan rekonsiliasi koleksi terhadap LContainer, memperbarui indeks, menangani blok @empty; berjalan di luar konteks reaktif.
+[x] ɵɵrepeaterTrackByIndex | packages/core/src/render3/instructions/control_flow.ts:240 | Fungsi track bawaan berbasis indeks.
+[x] ɵɵrepeaterTrackByIdentity | packages/core/src/render3/instructions/control_flow.ts:252 | Fungsi track bawaan berbasis identitas item.
+[x] RepeaterContext.$count | packages/core/src/render3/instructions/control_flow.ts:228 | Variabel kontekstual $count untuk template @for.
+[x] isViewExpensiveToRecreate | packages/core/src/render3/instructions/control_flow.ts:357 | Heuristik: apakah view berisi komponen/container sehingga pembuatan ulang mahal.
+[x] OperationsCounter.wasReCreated | packages/core/src/render3/instructions/control_flow.ts:386 | Deteksi seluruh koleksi dibuat ulang (create==destroy==panjang koleksi).
+[x] OperationsCounter.reset | packages/core/src/render3/instructions/control_flow.ts:366 | Reset penghitung operasi tiap putaran rekonsiliasi.
+[x] OperationsCounter.recordCreate | packages/core/src/render3/instructions/control_flow.ts:371 | Mencatat pembuatan view.
+[x] OperationsCounter.recordDestroy | packages/core/src/render3/instructions/control_flow.ts:375 | Mencatat penghancuran view.
+[x] LiveCollectionLContainerImpl.at | packages/core/src/render3/instructions/control_flow.ts:414 | Membaca nilai item pada posisi tertentu dari LContainer.
+[x] LiveCollectionLContainerImpl.attach | packages/core/src/render3/instructions/control_flow.ts:417 | Menyisipkan kembali view pada indeks tertentu.
+[x] LiveCollectionLContainerImpl.detach | packages/core/src/render3/instructions/control_flow.ts:428 | Melepas view untuk dipindahkan.
+[x] LiveCollectionLContainerImpl.create | packages/core/src/render3/instructions/control_flow.ts:433 | Membuat embedded view baru (memakai view dehidrasi bila ada).
+[x] LiveCollectionLContainerImpl.destroy | packages/core/src/render3/instructions/control_flow.ts:448 | Menghancurkan view yang tidak lagi dipakai.
+[x] LiveCollectionLContainerImpl.updateValue | packages/core/src/render3/instructions/control_flow.ts:452 | Memperbarui $implicit pada konteks item yang dipakai ulang.
+[x] LiveCollectionLContainerImpl.updateIndexes | packages/core/src/render3/instructions/control_flow.ts:461 | Menyelaraskan variabel $index setelah pemindahan.
+[x] getLContainer | packages/core/src/render3/instructions/control_flow.ts:571 | Ambil LContainer pada slot tertentu dengan asersi.
+[x] getExistingTNode | packages/core/src/render3/instructions/control_flow.ts:628 | Ambil TNode template yang sudah dibuat.
+[x] getExistingLViewFromLContainer | packages/core/src/render3/instructions/control_flow.ts:621 | Ambil LView anak dari container pada indeks tertentu.
