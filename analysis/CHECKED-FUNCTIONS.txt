@@ -1,7 +1,7 @@
 DAFTAR FUNGSI YANG SUDAH DIANALISIS
 Dihasilkan otomatis oleh analysis/tools/sync-checklist.mjs -- jangan diedit manual.
 Sumber: analysis/subsystems/*.txt
-Total fungsi tercentang: 601
+Total fungsi tercentang: 700
 ==============================================================================
 
 ### 01-core-signals-primitives
@@ -1225,3 +1225,205 @@ Total fungsi tercentang: 601
       Menulis error secara manual dan menyebarkan perubahan status ke leluhur.
 [x] hasOwnControl  --  packages/forms/src/model/abstract_model.ts:1811
       Cek kepemilikan kontrol anak (aman terhadap prototipe).
+
+### 11-hydration-ssr
+[x] getSsrId  --  packages/core/src/hydration/annotate.ts:133
+      Mengambil/menghasilkan id TView untuk mencocokkan template di klien.
+[x] calcNumRootNodes  --  packages/core/src/hydration/annotate.ts:161
+      Menghitung jumlah node akar sebuah view untuk dicatat pada data hidrasi.
+[x] calcNumRootNodesInLContainer  --  packages/core/src/hydration/annotate.ts:170
+      Versi untuk container.
+[x] annotateComponentLViewForHydration  --  packages/core/src/hydration/annotate.ts:180
+      Menyerialisasi view komponen dan menuliskan atribut ngh pada host-nya.
+[x] annotateLContainerForHydration  --  packages/core/src/hydration/annotate.ts:199
+      Varian untuk ViewRef yang merupakan embedded view.
+[x] annotateForHydration  --  packages/core/src/hydration/annotate.ts:243
+      Titik masuk serialisasi server: menelusuri seluruh view aplikasi, menyerialisasi struktur, dan menyimpannya ke TransferState.
+[x] serializeLContainer  --  packages/core/src/hydration/annotate.ts:314
+      Menyerialisasi view-view di dalam container beserta ssrId template-nya.
+[x] serializeHydrateTriggers  --  packages/core/src/hydration/annotate.ts:482
+      Menyerialisasi trigger hidrasi blok @defer.
+[x] appendSerializedNodePath  --  packages/core/src/hydration/annotate.ts:511
+      Menyimpan jalur navigasi DOM untuk node yang tidak bisa ditemukan secara berurutan.
+[x] appendDisconnectedNodeIndex  --  packages/core/src/hydration/annotate.ts:528
+      Mencatat node yang tidak terhubung ke DOM saat serialisasi.
+[x] serializeLView  --  packages/core/src/hydration/annotate.ts:548
+      Menyerialisasi satu view: jumlah node akar, node terputus, penanda teks, jalur node, referensi blok defer.
+[x] conditionallyAnnotateNodePath  --  packages/core/src/hydration/annotate.ts:757
+      Memutuskan kapan jalur node perlu disimpan eksplisit.
+[x] componentUsesShadowDomEncapsulation  --  packages/core/src/hydration/annotate.ts:796
+      Deteksi komponen ShadowDom yang tidak bisa dihidrasi.
+[x] annotateHostElementForHydration  --  packages/core/src/hydration/annotate.ts:819
+      Menempelkan atribut ngh berisi indeks data hidrasi.
+[x] annotateDeferBlockAnchorForHydration  --  packages/core/src/hydration/annotate.ts:851
+      Menandai komentar jangkar blok @defer dengan id blok.
+[x] insertCorruptedTextNodeMarkers  --  packages/core/src/hydration/annotate.ts:864
+      Menyisipkan komentar penanda untuk teks kosong/berdampingan yang hilang saat parsing HTML.
+[x] isContentProjectedNode  --  packages/core/src/hydration/annotate.ts:877
+      Deteksi node hasil proyeksi konten (butuh jalur eksplisit).
+[x] annotateDeferBlockRootNodesWithJsAction  --  packages/core/src/hydration/annotate.ts:897
+      Menambahkan atribut jsaction pada node akar blok defer untuk trigger hidrasi.
+[x] enableHydrationRuntimeSupport  --  packages/core/src/hydration/api.ts:97
+      Menukar implementasi fungsi runtime ke versi sadar-hidrasi (pola tree-shaking).
+[x] enableI18nHydrationRuntimeSupport  --  packages/core/src/hydration/api.ts:116
+      Versi i18n dari penukaran implementasi di atas.
+[x] printHydrationStats  --  packages/core/src/hydration/api.ts:128
+      Statistik dev-mode: jumlah node yang dihidrasi vs dilewati.
+[x] whenStableWithTimeout  --  packages/core/src/hydration/api.ts:145
+      Menunggu aplikasi stabil dengan batas waktu sebelum membersihkan view dehidrasi.
+[x] isClientRenderModeEnabled  --  packages/core/src/hydration/api.ts:175
+      Deteksi mode render-klien penuh (menekan peringatan hidrasi).
+[x] withDomHydration  --  packages/core/src/hydration/api.ts:192
+      Provider hidrasi DOM: verifikasi data server, aktifkan implementasi runtime, pertahankan konten host di browser.
+[x] withI18nSupport  --  packages/core/src/hydration/api.ts:313
+      Mengaktifkan hidrasi untuk blok i18n.
+[x] withIncrementalHydration  --  packages/core/src/hydration/api.ts:342
+      Mengaktifkan hidrasi bertahap untuk blok @defer beserta event replay-nya.
+[x] logWarningOnStableTimedout  --  packages/core/src/hydration/api.ts:380
+      Peringatan bila aplikasi tak kunjung stabil (biasanya karena timer/langganan berjalan terus).
+[x] removeDehydratedViews  --  packages/core/src/hydration/cleanup.ts:33
+      Membuang view sisa server yang tidak diklaim dari sebuah container.
+[x] removeDehydratedViewList  --  packages/core/src/hydration/cleanup.ts:56
+      Membuang seluruh daftar view dehidrasi.
+[x] cleanupLContainer  --  packages/core/src/hydration/cleanup.ts:90
+      Membersihkan container beserta seluruh view di dalamnya.
+[x] cleanupLView  --  packages/core/src/hydration/cleanup.ts:110
+      Menelusuri view dan membersihkan sisa hidrasi di seluruh keturunannya.
+[x] cleanupDehydratedViews  --  packages/core/src/hydration/cleanup.ts:129
+      Titik masuk pembersihan setelah aplikasi stabil.
+[x] cleanupHydratedDeferBlocks  --  packages/core/src/hydration/cleanup.ts:152
+      Membersihkan sisa data blok defer yang sudah dihidrasi.
+[x] isDisconnectedRNode  --  packages/core/src/hydration/node_lookup_utils.ts:69
+      Cek node DOM yang tidak terpasang di dokumen.
+[x] locateI18nRNodeByIndex  --  packages/core/src/hydration/node_lookup_utils.ts:80
+      Pencarian node untuk blok i18n yang strukturnya dibentuk opcode.
+[x] tryLocateRNodeByPath  --  packages/core/src/hydration/node_lookup_utils.ts:99
+      Menemukan node DOM lewat jalur navigasi tersimpan (untuk node yang tidak berurutan).
+[x] retrieveHydrationInfoImpl  --  packages/core/src/hydration/utils.ts:121
+      Membaca atribut ngh sebuah host element dan mengambil data serialisasi dari TransferState.
+[x] enableRetrieveHydrationInfoImpl  --  packages/core/src/hydration/utils.ts:209
+      Mengaktifkan implementasi pengambilan data hidrasi.
+[x] retrieveHydrationInfo  --  packages/core/src/hydration/utils.ts:217
+      Indireksi tree-shakable ke implementasi di atas.
+[x] getLNodeForHydration  --  packages/core/src/hydration/utils.ts:231
+      Mengambil LView/LContainer dari sebuah ViewRef untuk diserialisasi.
+[x] processTextNodeMarkersBeforeHydration  --  packages/core/src/hydration/utils.ts:262
+      Mengembalikan komentar penanda menjadi text node kosong sebelum hidrasi dimulai.
+[x] markRNodeAsClaimedByHydration  --  packages/core/src/hydration/utils.ts:330
+      Menandai node DOM sebagai sudah diklaim (dan mendeteksi klaim ganda di dev mode).
+[x] markRNodeAsSkippedByHydration  --  packages/core/src/hydration/utils.ts:344
+      Menandai node yang sengaja dilewati (ngSkipHydration).
+[x] markRNodeAsHavingHydrationMismatch  --  packages/core/src/hydration/utils.ts:363
+      Menandai node yang menyebabkan ketidakcocokan untuk pesan error.
+[x] isRNodeClaimedForHydration  --  packages/core/src/hydration/utils.ts:391
+      Cek status klaim sebuah node.
+[x] setSegmentHead  --  packages/core/src/hydration/utils.ts:395
+      Menyimpan node awal segmen sebuah container.
+[x] getSegmentHead  --  packages/core/src/hydration/utils.ts:404
+      Membaca node awal segmen.
+[x] isIncrementalHydrationEnabled  --  packages/core/src/hydration/utils.ts:408
+      Cek konfigurasi hidrasi inkremental.
+[x] warnIncrementalHydrationNotConfigured  --  packages/core/src/hydration/utils.ts:420
+      Peringatan bila template memakai hydrate trigger tanpa withIncrementalHydration.
+[x] getNgContainerSize  --  packages/core/src/hydration/utils.ts:450
+      Jumlah node akar sebuah ng-container terserialisasi.
+[x] getSerializedContainerViews  --  packages/core/src/hydration/utils.ts:470
+      Data view dehidrasi milik sebuah container.
+[x] calcSerializedContainerSize  --  packages/core/src/hydration/utils.ts:481
+      Total jumlah node yang ditempati view-view dalam container.
+[x] initDisconnectedNodes  --  packages/core/src/hydration/utils.ts:494
+      Menyiapkan himpunan indeks node terputus dari data serialisasi.
+[x] isDisconnectedNode  --  packages/core/src/hydration/utils.ts:508
+      Cek apakah sebuah node ditandai terputus saat serialisasi.
+[x] canHydrateNode  --  packages/core/src/hydration/utils.ts:522
+      Predikat utama yang dipanggil instruksi pembuatan node sebelum membuat DOM baru.
+[x] processTextNodeBeforeSerialization  --  packages/core/src/hydration/utils.ts:538
+      Menyiapkan text node bermasalah agar bisa direkonstruksi klien.
+[x] convertHydrateTriggersToJsAction  --  packages/core/src/hydration/utils.ts:578
+      Menerjemahkan hydrate trigger menjadi daftar event jsaction.
+[x] getParentBlockHydrationQueue  --  packages/core/src/hydration/utils.ts:600
+      Menyusun antrean blok defer induk yang harus dihidrasi lebih dulu.
+[x] appendDeferBlocksToJSActionMap  --  packages/core/src/hydration/utils.ts:647
+      Mendaftarkan blok defer ke peta jsaction untuk penangkapan event dini.
+[x] retrieveDeferBlockData  --  packages/core/src/hydration/utils.ts:689
+      Mengambil data serialisasi satu blok defer.
+[x] createBlockSummary  --  packages/core/src/hydration/utils.ts:726
+      Ringkasan satu blok defer (trigger, induk, jumlah node akar).
+[x] processBlockData  --  packages/core/src/hydration/utils.ts:741
+      Mengubah data blok defer terserialisasi menjadi ringkasan siap pakai.
+[x] verifySsrContentsIntegrity  --  packages/core/src/hydration/utils.ts:776
+      Memastikan HTML server tidak dipotong/diubah sebelum hidrasi dimulai.
+
+### 12-zone-ngzone
+[x] NgZone.isInAngularZone  --  packages/core/src/zone/ng_zone.ts:193
+      Cek apakah kode saat ini berjalan di dalam zone Angular.
+[x] NgZone.assertInAngularZone  --  packages/core/src/zone/ng_zone.ts:201
+      Asersi berada di dalam zone Angular.
+[x] NgZone.assertNotInAngularZone  --  packages/core/src/zone/ng_zone.ts:213
+      Asersi berada di luar zone Angular.
+[x] NgZone.run  --  packages/core/src/zone/ng_zone.ts:234
+      Menjalankan fungsi di dalam zone Angular sehingga pekerjaan asinkronnya memicu CD.
+[x] NgZone.runTask  --  packages/core/src/zone/ng_zone.ts:250
+      Menjalankan fungsi sebagai eventTask sehingga memicu evaluasi stabilitas.
+[x] NgZone.runGuarded  --  packages/core/src/zone/ng_zone.ts:264
+      Seperti run(), tetapi error diteruskan ke handler zone.
+[x] NgZone.runOutsideAngular  --  packages/core/src/zone/ng_zone.ts:281
+      Menjalankan fungsi di zone induk agar task-nya tidak memicu CD.
+[x] checkStable  --  packages/core/src/zone/ng_zone.ts:354
+      Inti integrasi: memancarkan onMicrotaskEmpty lalu onStable saat tidak ada microtask dan nesting nol, dengan penjagaan re-entrancy.
+[x] delayChangeDetectionForEvents  --  packages/core/src/zone/ng_zone.ts:387
+      Implementasi coalescing: menunda checkStable ke rAF-race dan mencegah penjadwalan ganda.
+[x] scheduleCheckStable  --  packages/core/src/zone/ng_zone.ts:405
+      Menjadwalkan evaluasi stabilitas di luar zone Angular (atau di root zone).
+[x] forkInnerZoneWithAngularBehavior  --  packages/core/src/zone/ng_zone.ts:426
+      Membuat zone 'angular' beserta seluruh hook onInvoke/onInvokeTask/onHasTask/onHandleError.
+[x] updateMicroTaskStatus  --  packages/core/src/zone/ng_zone.ts:526
+      Menghitung ulang flag hasPendingMicrotasks termasuk kasus coalescing.
+[x] onEnter  --  packages/core/src/zone/ng_zone.ts:538
+      Menaikkan nesting dan memancarkan onUnstable pada transisi pertama.
+[x] onLeave  --  packages/core/src/zone/ng_zone.ts:546
+      Menurunkan nesting lalu mengevaluasi stabilitas.
+[x] NoopNgZone.run  --  packages/core/src/zone/ng_zone.ts:564
+      Implementasi zoneless: langsung memanggil fungsi.
+[x] NoopNgZone.runGuarded  --  packages/core/src/zone/ng_zone.ts:568
+      Varian tanpa penanganan zone.
+[x] NoopNgZone.runOutsideAngular  --  packages/core/src/zone/ng_zone.ts:572
+      Tidak ada zone, jadi identik dengan run.
+[x] NoopNgZone.runTask  --  packages/core/src/zone/ng_zone.ts:576
+      Varian tanpa penanganan zone.
+[x] shouldBeIgnoredByZone  --  packages/core/src/zone/ng_zone.ts:581
+      Menandai task yang tidak boleh memengaruhi stabilitas.
+[x] isSchedulerTick  --  packages/core/src/zone/ng_zone.ts:585
+      Mengenali task yang merupakan tick scheduler agar stabilitas dievaluasi sinkron.
+[x] hasApplyArgsData  --  packages/core/src/zone/ng_zone.ts:589
+      Pembacaan aman terhadap metadata argumen task.
+[x] getNgZone  --  packages/core/src/zone/ng_zone.ts:611
+      Memilih NgZone atau NoopNgZone sesuai konfigurasi bootstrap.
+[x] patchTimer  --  packages/zone.js/lib/common/timers.ts:28
+      Menambal setTimeout/setInterval beserta pembatalnya menjadi macroTask zone.
+[x] wrapWithCurrentZone  --  packages/zone.js/lib/common/utils.ts:44
+      Mengikat callback ke zone saat ini.
+[x] scheduleMacroTaskWithCurrentZone  --  packages/zone.js/lib/common/utils.ts:48
+      Menjadwalkan macroTask pada zone aktif.
+[x] bindArguments  --  packages/zone.js/lib/common/utils.ts:68
+      Mengikat semua argumen berupa fungsi ke zone saat ini.
+[x] patchPrototype  --  packages/zone.js/lib/common/utils.ts:77
+      Menambal sekumpulan metode pada sebuah prototipe.
+[x] isPropertyWritable  --  packages/zone.js/lib/common/utils.ts:98
+      Memeriksa descriptor sebelum mencoba menambal properti.
+[x] patchProperty  --  packages/zone.js/lib/common/utils.ts:197
+      Menambal properti handler (onclick dsb) dengan getter/setter sadar-zone.
+[x] patchOnProperties  --  packages/zone.js/lib/common/utils.ts:302
+      Menambal seluruh properti on* sebuah objek.
+[x] patchClass  --  packages/zone.js/lib/common/utils.ts:323
+      Membungkus konstruktor kelas agar callback-nya terikat zone.
+[x] copySymbolProperties  --  packages/zone.js/lib/common/utils.ts:394
+      Menyalin properti simbol dari objek asli ke objek tertambal.
+[x] patchMethod  --  packages/zone.js/lib/common/utils.ts:424
+      Penambal universal: menyimpan metode asli di properti simbol lalu menggantinya (idempoten).
+[x] patchMacroTask  --  packages/zone.js/lib/common/utils.ts:471
+      Membungkus API menjadi macroTask (mis. XHR send).
+[x] patchMicroTask  --  packages/zone.js/lib/common/utils.ts:510
+      Membungkus API menjadi microTask.
+[x] attachOriginToPatched  --  packages/zone.js/lib/common/utils.ts:542
+      Menyimpan referensi ke implementasi asli pada fungsi tertambal.

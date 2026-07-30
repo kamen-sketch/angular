@@ -137,7 +137,7 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] patchQueueMicrotask  (export function) :13
 
 ## packages/zone.js/lib/common/timers.ts
-[ ] patchTimer  (export function) :28
+[x] patchTimer  (export function) :28
 [ ] scheduleTask  (function) :36
 [ ] clearTask  (function) :58
 
@@ -145,24 +145,24 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] patchToString  (export function) :12
 
 ## packages/zone.js/lib/common/utils.ts
-[ ] wrapWithCurrentZone  (export function) :44
-[ ] scheduleMacroTaskWithCurrentZone  (export function) :48
-[ ] bindArguments  (export function) :68
-[ ] patchPrototype  (export function) :77
-[ ] isPropertyWritable  (export function) :98
-[ ] patchProperty  (export function) :197
-[ ] patchOnProperties  (export function) :302
-[ ] patchClass  (export function) :323
+[x] wrapWithCurrentZone  (export function) :44
+[x] scheduleMacroTaskWithCurrentZone  (export function) :48
+[x] bindArguments  (export function) :68
+[x] patchPrototype  (export function) :77
+[x] isPropertyWritable  (export function) :98
+[x] patchProperty  (export function) :197
+[x] patchOnProperties  (export function) :302
+[x] patchClass  (export function) :323
       -- wrap some native API on `window`
-[ ] copySymbolProperties  (export function) :394
+[x] copySymbolProperties  (export function) :394
 [ ] setShouldCopySymbolProperties  (export function) :420
-[ ] patchMethod  (export function) :424
-[ ] patchMacroTask  (export function) :471
+[x] patchMethod  (export function) :424
+[x] patchMacroTask  (export function) :471
       -- TODO: @JiaLiPassion, support cancel task later if necessary
 [ ] scheduleTask  (function) :478
-[ ] patchMicroTask  (export function) :510
+[x] patchMicroTask  (export function) :510
 [ ] scheduleTask  (function) :517
-[ ] attachOriginToPatched  (export function) :542
+[x] attachOriginToPatched  (export function) :542
 [ ] isFunction  (export function) :546
 [ ] isNumber  (export function) :550
 

@@ -1,0 +1,151 @@
+SUBSISTEM 11 :: Hydration & SSR
+Lokasi   : packages/core/src/hydration/**, packages/platform-server/**,
+           packages/ssr/**, packages/core/src/transfer_state.ts
+Status   : DIANALISIS - anotasi server, klaim node klien, event replay,
+           hidrasi inkremental
+==============================================================================
+
+MASALAH YANG DIPECAHKAN
+-----------------------
+Tanpa hidrasi, aplikasi SSR akan MENGHANCURKAN seluruh DOM hasil server lalu
+merender ulang dari nol (destructive hydration) - menyebabkan kedipan dan
+kehilangan status DOM. Dengan hidrasi, runtime klien MENGKLAIM node DOM yang
+sudah ada alih-alih membuatnya.
+
+Agar bisa mengklaim, klien harus tahu STRUKTUR view yang dirender server.
+Informasi itu dikirim lewat TransferState dengan kunci `NGH_DATA_KEY` (dan
+`NGH_DEFER_BLOCKS_KEY` untuk blok @defer), sementara setiap host komponen di
+HTML diberi atribut `ngh="<index>"` yang menunjuk ke entri data tersebut.
+
+SISI SERVER: ANOTASI
+--------------------
+`annotateForHydration(appRef, doc)` dijalankan setelah render selesai:
+  - menelusuri semua `appRef._views`, mengambil LView/LContainer akarnya,
+  - `serializeLView` merekam per node: jumlah node akar, indeks node yang
+    "disconnected", teks kosong yang perlu penanda, jalur node yang tidak bisa
+    ditemukan lewat penelusuran biasa (`conditionallyAnnotateNodePath`),
+  - `serializeLContainer` merekam view di dalam container beserta `ssrId`
+    TView-nya sehingga klien tahu template mana yang harus dipakai,
+  - mengumpulkan jenis event yang perlu di-replay,
+  - `insertCorruptedTextNodeMarkers` menyisipkan komentar penanda untuk teks
+    kosong/berdampingan yang akan hilang saat parsing HTML,
+  - hasilnya disimpan ke TransferState. Catatan penting di kode: kunci hidrasi
+    SELALU ditulis walau daftar view kosong, sebagai sinyal ke klien bahwa
+    server memang menjalankan hidrasi.
+
+Node yang tidak bisa dihidrasi ditandai agar dilewati: komponen dengan
+ShadowDom encapsulation, node yang diproyeksikan dari tempat lain, dan subtree
+ber-atribut `ngSkipHydration`.
+
+SISI KLIEN: KLAIM NODE
+----------------------
+`withDomHydration()` mendaftarkan provider yang:
+  - memverifikasi ada data hidrasi di TransferState (kalau tidak, hidrasi
+    dimatikan dan di dev mode dicetak peringatan NG0505),
+  - `verifySsrContentsIntegrity(doc)` memeriksa penanda konten SSR,
+  - `enableHydrationRuntimeSupport()` MENUKAR implementasi beberapa fungsi
+    runtime (pola "enable...Impl" yang dipakai di seluruh core agar kode
+    hidrasi bisa di-tree-shake bila tidak dipakai),
+  - menyalakan `PRESERVE_HOST_CONTENT` di browser supaya isi host tidak dihapus.
+
+Saat instruksi pembuatan node berjalan (subsistem 04), setiap node memanggil
+`canHydrateNode` -> `locateNextRNode`/`tryLocateRNodeByPath` -> bila ketemu,
+`markRNodeAsClaimedByHydration` dan node DOM dipakai ulang. Bila tidak cocok,
+terjadi hydration mismatch: dev mode melempar error dengan diff DOM
+(`error_handling.ts`), produksi jatuh ke render ulang bagian tersebut.
+
+Setelah aplikasi stabil, `cleanupDehydratedViews` membuang node/view sisa server
+yang tidak diklaim siapa pun (`removeDehydratedViews`, `cleanupLContainer`,
+`cleanupLView`).
+
+EVENT REPLAY
+------------
+Masalah klasik SSR: pengguna mengklik sebelum JS selesai dimuat. Solusinya
+memakai `primitives/event-dispatch` (port dari jsaction Google):
+  - server menambahkan atribut `jsaction="click:;keydown:"` pada elemen yang
+    punya listener, dan menyisipkan skrip kecil (`earlyeventcontract.ts`) yang
+    memasang listener global di `body` serta MENYIMPAN event ke antrean,
+  - setelah runtime siap, `event_replay.ts` memutar ulang event tersimpan ke
+    listener Angular yang sebenarnya.
+
+HIDRASI INKREMENTAL (@defer dengan hydrate triggers)
+----------------------------------------------------
+`withIncrementalHydration()` memungkinkan blok @defer tetap dehidrasi sampai
+trigger-nya terpenuhi (`on viewport`, `on interaction`, `on timer`, `when`).
+Server menyerialisasi info blok defer + trigger-nya; klien memasang listener
+jsaction pada node akar blok (`annotateDeferBlockRootNodesWithJsAction`), lalu
+`incremental_runtime.ts` memuat dependensi dan menghidrasi blok saat dipicu -
+termasuk menghidrasi seluruh rantai blok induk lebih dulu
+(`getParentBlockHydrationQueue`).
+
+I18N
+----
+Blok i18n memerlukan penanganan khusus karena struktur DOM-nya dibentuk oleh
+opcode, bukan instruksi biasa; `withI18nSupport()` menyalakan jalur ini
+(`hydration/i18n.ts`).
+
+DAFTAR FUNGSI YANG SUDAH DIPAHAMI
+---------------------------------
+[x] annotateForHydration | packages/core/src/hydration/annotate.ts:243 | Titik masuk serialisasi server: menelusuri seluruh view aplikasi, menyerialisasi struktur, dan menyimpannya ke TransferState.
+[x] serializeLView | packages/core/src/hydration/annotate.ts:548 | Menyerialisasi satu view: jumlah node akar, node terputus, penanda teks, jalur node, referensi blok defer.
+[x] serializeLContainer | packages/core/src/hydration/annotate.ts:314 | Menyerialisasi view-view di dalam container beserta ssrId template-nya.
+[x] serializeHydrateTriggers | packages/core/src/hydration/annotate.ts:482 | Menyerialisasi trigger hidrasi blok @defer.
+[x] annotateComponentLViewForHydration | packages/core/src/hydration/annotate.ts:180 | Menyerialisasi view komponen dan menuliskan atribut ngh pada host-nya.
+[x] annotateLContainerForHydration | packages/core/src/hydration/annotate.ts:199 | Varian untuk ViewRef yang merupakan embedded view.
+[x] annotateHostElementForHydration | packages/core/src/hydration/annotate.ts:819 | Menempelkan atribut ngh berisi indeks data hidrasi.
+[x] annotateDeferBlockAnchorForHydration | packages/core/src/hydration/annotate.ts:851 | Menandai komentar jangkar blok @defer dengan id blok.
+[x] annotateDeferBlockRootNodesWithJsAction | packages/core/src/hydration/annotate.ts:897 | Menambahkan atribut jsaction pada node akar blok defer untuk trigger hidrasi.
+[x] insertCorruptedTextNodeMarkers | packages/core/src/hydration/annotate.ts:864 | Menyisipkan komentar penanda untuk teks kosong/berdampingan yang hilang saat parsing HTML.
+[x] appendSerializedNodePath | packages/core/src/hydration/annotate.ts:511 | Menyimpan jalur navigasi DOM untuk node yang tidak bisa ditemukan secara berurutan.
+[x] appendDisconnectedNodeIndex | packages/core/src/hydration/annotate.ts:528 | Mencatat node yang tidak terhubung ke DOM saat serialisasi.
+[x] conditionallyAnnotateNodePath | packages/core/src/hydration/annotate.ts:757 | Memutuskan kapan jalur node perlu disimpan eksplisit.
+[x] componentUsesShadowDomEncapsulation | packages/core/src/hydration/annotate.ts:796 | Deteksi komponen ShadowDom yang tidak bisa dihidrasi.
+[x] isContentProjectedNode | packages/core/src/hydration/annotate.ts:877 | Deteksi node hasil proyeksi konten (butuh jalur eksplisit).
+[x] calcNumRootNodes | packages/core/src/hydration/annotate.ts:161 | Menghitung jumlah node akar sebuah view untuk dicatat pada data hidrasi.
+[x] calcNumRootNodesInLContainer | packages/core/src/hydration/annotate.ts:170 | Versi untuk container.
+[x] getSsrId | packages/core/src/hydration/annotate.ts:133 | Mengambil/menghasilkan id TView untuk mencocokkan template di klien.
+[x] withDomHydration | packages/core/src/hydration/api.ts:192 | Provider hidrasi DOM: verifikasi data server, aktifkan implementasi runtime, pertahankan konten host di browser.
+[x] withI18nSupport | packages/core/src/hydration/api.ts:313 | Mengaktifkan hidrasi untuk blok i18n.
+[x] withIncrementalHydration | packages/core/src/hydration/api.ts:342 | Mengaktifkan hidrasi bertahap untuk blok @defer beserta event replay-nya.
+[x] enableHydrationRuntimeSupport | packages/core/src/hydration/api.ts:97 | Menukar implementasi fungsi runtime ke versi sadar-hidrasi (pola tree-shaking).
+[x] enableI18nHydrationRuntimeSupport | packages/core/src/hydration/api.ts:116 | Versi i18n dari penukaran implementasi di atas.
+[x] printHydrationStats | packages/core/src/hydration/api.ts:128 | Statistik dev-mode: jumlah node yang dihidrasi vs dilewati.
+[x] whenStableWithTimeout | packages/core/src/hydration/api.ts:145 | Menunggu aplikasi stabil dengan batas waktu sebelum membersihkan view dehidrasi.
+[x] isClientRenderModeEnabled | packages/core/src/hydration/api.ts:175 | Deteksi mode render-klien penuh (menekan peringatan hidrasi).
+[x] logWarningOnStableTimedout | packages/core/src/hydration/api.ts:380 | Peringatan bila aplikasi tak kunjung stabil (biasanya karena timer/langganan berjalan terus).
+[x] retrieveHydrationInfoImpl | packages/core/src/hydration/utils.ts:121 | Membaca atribut ngh sebuah host element dan mengambil data serialisasi dari TransferState.
+[x] retrieveHydrationInfo | packages/core/src/hydration/utils.ts:217 | Indireksi tree-shakable ke implementasi di atas.
+[x] enableRetrieveHydrationInfoImpl | packages/core/src/hydration/utils.ts:209 | Mengaktifkan implementasi pengambilan data hidrasi.
+[x] getLNodeForHydration | packages/core/src/hydration/utils.ts:231 | Mengambil LView/LContainer dari sebuah ViewRef untuk diserialisasi.
+[x] processTextNodeMarkersBeforeHydration | packages/core/src/hydration/utils.ts:262 | Mengembalikan komentar penanda menjadi text node kosong sebelum hidrasi dimulai.
+[x] markRNodeAsClaimedByHydration | packages/core/src/hydration/utils.ts:330 | Menandai node DOM sebagai sudah diklaim (dan mendeteksi klaim ganda di dev mode).
+[x] markRNodeAsSkippedByHydration | packages/core/src/hydration/utils.ts:344 | Menandai node yang sengaja dilewati (ngSkipHydration).
+[x] markRNodeAsHavingHydrationMismatch | packages/core/src/hydration/utils.ts:363 | Menandai node yang menyebabkan ketidakcocokan untuk pesan error.
+[x] isRNodeClaimedForHydration | packages/core/src/hydration/utils.ts:391 | Cek status klaim sebuah node.
+[x] canHydrateNode | packages/core/src/hydration/utils.ts:522 | Predikat utama yang dipanggil instruksi pembuatan node sebelum membuat DOM baru.
+[x] setSegmentHead | packages/core/src/hydration/utils.ts:395 | Menyimpan node awal segmen sebuah container.
+[x] getSegmentHead | packages/core/src/hydration/utils.ts:404 | Membaca node awal segmen.
+[x] getSerializedContainerViews | packages/core/src/hydration/utils.ts:470 | Data view dehidrasi milik sebuah container.
+[x] calcSerializedContainerSize | packages/core/src/hydration/utils.ts:481 | Total jumlah node yang ditempati view-view dalam container.
+[x] getNgContainerSize | packages/core/src/hydration/utils.ts:450 | Jumlah node akar sebuah ng-container terserialisasi.
+[x] initDisconnectedNodes | packages/core/src/hydration/utils.ts:494 | Menyiapkan himpunan indeks node terputus dari data serialisasi.
+[x] isDisconnectedNode | packages/core/src/hydration/utils.ts:508 | Cek apakah sebuah node ditandai terputus saat serialisasi.
+[x] verifySsrContentsIntegrity | packages/core/src/hydration/utils.ts:776 | Memastikan HTML server tidak dipotong/diubah sebelum hidrasi dimulai.
+[x] processTextNodeBeforeSerialization | packages/core/src/hydration/utils.ts:538 | Menyiapkan text node bermasalah agar bisa direkonstruksi klien.
+[x] isIncrementalHydrationEnabled | packages/core/src/hydration/utils.ts:408 | Cek konfigurasi hidrasi inkremental.
+[x] warnIncrementalHydrationNotConfigured | packages/core/src/hydration/utils.ts:420 | Peringatan bila template memakai hydrate trigger tanpa withIncrementalHydration.
+[x] convertHydrateTriggersToJsAction | packages/core/src/hydration/utils.ts:578 | Menerjemahkan hydrate trigger menjadi daftar event jsaction.
+[x] getParentBlockHydrationQueue | packages/core/src/hydration/utils.ts:600 | Menyusun antrean blok defer induk yang harus dihidrasi lebih dulu.
+[x] appendDeferBlocksToJSActionMap | packages/core/src/hydration/utils.ts:647 | Mendaftarkan blok defer ke peta jsaction untuk penangkapan event dini.
+[x] retrieveDeferBlockData | packages/core/src/hydration/utils.ts:689 | Mengambil data serialisasi satu blok defer.
+[x] processBlockData | packages/core/src/hydration/utils.ts:741 | Mengubah data blok defer terserialisasi menjadi ringkasan siap pakai.
+[x] createBlockSummary | packages/core/src/hydration/utils.ts:726 | Ringkasan satu blok defer (trigger, induk, jumlah node akar).
+[x] tryLocateRNodeByPath | packages/core/src/hydration/node_lookup_utils.ts:99 | Menemukan node DOM lewat jalur navigasi tersimpan (untuk node yang tidak berurutan).
+[x] locateI18nRNodeByIndex | packages/core/src/hydration/node_lookup_utils.ts:80 | Pencarian node untuk blok i18n yang strukturnya dibentuk opcode.
+[x] isDisconnectedRNode | packages/core/src/hydration/node_lookup_utils.ts:69 | Cek node DOM yang tidak terpasang di dokumen.
+[x] removeDehydratedViews | packages/core/src/hydration/cleanup.ts:33 | Membuang view sisa server yang tidak diklaim dari sebuah container.
+[x] removeDehydratedViewList | packages/core/src/hydration/cleanup.ts:56 | Membuang seluruh daftar view dehidrasi.
+[x] cleanupLContainer | packages/core/src/hydration/cleanup.ts:90 | Membersihkan container beserta seluruh view di dalamnya.
+[x] cleanupLView | packages/core/src/hydration/cleanup.ts:110 | Menelusuri view dan membersihkan sisa hidrasi di seluruh keturunannya.
+[x] cleanupDehydratedViews | packages/core/src/hydration/cleanup.ts:129 | Titik masuk pembersihan setelah aplikasi stabil.
+[x] cleanupHydratedDeferBlocks | packages/core/src/hydration/cleanup.ts:152 | Membersihkan sisa data blok defer yang sudah dihidrasi.

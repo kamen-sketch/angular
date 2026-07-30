@@ -3260,74 +3260,74 @@ Format: [ ] Nama  (export|kind) :baris
       -- A collection that tracks all serialized views (`ngh` DOM annotations) to avoid duplication. An attempt to add a duplicate view results in the collection returni
 [ ] SerializedViewCollection.add  (method) :103
 [ ] SerializedViewCollection.getAll  (method) :114
-[ ] getSsrId  (function) :133
+[x] getSsrId  (function) :133
       -- Generates a unique id for a given TView and returns this id. The id is also stored on this instance of a TView and reused in subsequent calls. This id is needed
-[ ] calcNumRootNodes  (function) :161
+[x] calcNumRootNodes  (function) :161
       -- Computes the number of root nodes in a given view (or child nodes in a given container if a tNode is provided).
-[ ] calcNumRootNodesInLContainer  (function) :170
+[x] calcNumRootNodesInLContainer  (function) :170
       -- Computes the number of root nodes in all views in a given LContainer.
-[ ] annotateComponentLViewForHydration  (function) :180
+[x] annotateComponentLViewForHydration  (function) :180
       -- Annotates root level component's LView for hydration, see `annotateHostElementForHydration` for additional information.
-[ ] annotateLContainerForHydration  (function) :199
+[x] annotateLContainerForHydration  (function) :199
       -- Annotates root level LContainer for hydration. This happens when a root component injects ViewContainerRef, thus making the component an anchor for a view conta
-[ ] annotateForHydration  (export function) :243
+[x] annotateForHydration  (export function) :243
       -- Annotates all components bootstrapped in a given ApplicationRef with info needed for hydration.
-[ ] serializeLContainer  (function) :314
+[x] serializeLContainer  (function) :314
       -- Serializes the lContainer data into a list of SerializedView objects, that represent views within this lContainer.
-[ ] serializeHydrateTriggers  (function) :482
-[ ] appendSerializedNodePath  (function) :511
+[x] serializeHydrateTriggers  (function) :482
+[x] appendSerializedNodePath  (function) :511
       -- Helper function to produce a node path (which navigation steps runtime logic needs to take to locate a node) and stores it in the `NODES` section of the current
-[ ] appendDisconnectedNodeIndex  (function) :528
+[x] appendDisconnectedNodeIndex  (function) :528
       -- Helper function to append information about a disconnected node. This info is needed at runtime to avoid DOM lookups for this element and instead, the element w
-[ ] serializeLView  (function) :548
+[x] serializeLView  (function) :548
       -- Serializes the lView data into a SerializedView object that will later be added to the TransferState storage and referenced using the `ngh` attribute on a host 
-[ ] conditionallyAnnotateNodePath  (function) :757
+[x] conditionallyAnnotateNodePath  (function) :757
       -- Serializes node location in cases when it's needed, specifically:  1. If `tNode.projectionNext` is different from `tNode.next` - it means that     the next `tNo
-[ ] componentUsesShadowDomEncapsulation  (function) :796
+[x] componentUsesShadowDomEncapsulation  (function) :796
       -- Determines whether a component instance that is represented by a given LView uses `ViewEncapsulation.ShadowDom`.
-[ ] annotateHostElementForHydration  (function) :819
+[x] annotateHostElementForHydration  (function) :819
       -- Annotates component host element for hydration: - by either adding the `ngh` attribute and collecting hydration-related info   for the serialization and transfe
-[ ] annotateDeferBlockAnchorForHydration  (function) :851
+[x] annotateDeferBlockAnchorForHydration  (function) :851
       -- Annotates defer block comment node for hydration:
-[ ] insertCorruptedTextNodeMarkers  (function) :864
+[x] insertCorruptedTextNodeMarkers  (function) :864
       -- Physically inserts the comment nodes to ensure empty text nodes and adjacent text node separators are preserved after server serialization of the DOM. These get
-[ ] isContentProjectedNode  (function) :877
+[x] isContentProjectedNode  (function) :877
       -- Detects whether a given TNode represents a node that is being content projected.
-[ ] annotateDeferBlockRootNodesWithJsAction  (function) :897
+[x] annotateDeferBlockRootNodesWithJsAction  (function) :897
       -- Incremental hydration requires that any defer block root node with interaction or hover triggers have all of their root nodes trigger hydration with those event
 
 ## packages/core/src/hydration/api.ts
-[ ] enableHydrationRuntimeSupport  (function) :97
+[x] enableHydrationRuntimeSupport  (function) :97
       -- Brings the necessary hydration code in tree-shakable manner. The code is only present when the `provideClientHydration` is invoked. Otherwise, this code is tree
-[ ] enableI18nHydrationRuntimeSupport  (function) :116
+[x] enableI18nHydrationRuntimeSupport  (function) :116
       -- Brings the necessary i18n hydration code in tree-shakable manner. Similar to `enableHydrationRuntimeSupport`, the code is only present when `withI18nSupport` is
-[ ] printHydrationStats  (function) :128
+[x] printHydrationStats  (function) :128
       -- Outputs a message with hydration stats into a console.
-[ ] whenStableWithTimeout  (function) :145
+[x] whenStableWithTimeout  (function) :145
       -- Returns a Promise that is resolved when an application becomes stable.
-[ ] isClientRenderModeEnabled  (function) :175
+[x] isClientRenderModeEnabled  (function) :175
       -- Checks whether the `RenderMode.Client` was defined for the current route.
-[ ] withDomHydration  (export function) :192
+[x] withDomHydration  (export function) :192
       -- Returns a set of providers required to setup hydration support for an application that is server side rendered. This function is included into the `provideClien
-[ ] withI18nSupport  (export function) :313
+[x] withI18nSupport  (export function) :313
       -- Returns a set of providers required to setup support for i18n hydration. Requires hydration to be enabled separately.
-[ ] withIncrementalHydration  (export function) :342
+[x] withIncrementalHydration  (export function) :342
       -- Returns a set of providers required to setup support for incremental hydration. Requires hydration to be enabled separately. Enabling incremental hydration also
-[ ] logWarningOnStableTimedout  (function) :380
+[x] logWarningOnStableTimedout  (function) :380
 
 ## packages/core/src/hydration/cleanup.ts
-[ ] removeDehydratedViews  (export function) :33
+[x] removeDehydratedViews  (export function) :33
       -- Removes all dehydrated views from a given LContainer: both in internal data structure, as well as removing corresponding DOM nodes that belong to that dehydrate
-[ ] removeDehydratedViewList  (export function) :56
+[x] removeDehydratedViewList  (export function) :56
 [ ] removeDehydratedView  (function) :71
       -- Helper function to remove all nodes from a dehydrated view.
-[ ] cleanupLContainer  (export function) :90
+[x] cleanupLContainer  (export function) :90
       -- Walks over all views within this LContainer invokes dehydrated views cleanup function for each one.
-[ ] cleanupLView  (export function) :110
+[x] cleanupLView  (export function) :110
       -- Walks over `LContainer`s and components registered within this LView and invokes dehydrated views cleanup function for each one.
-[ ] cleanupDehydratedViews  (export function) :129
+[x] cleanupDehydratedViews  (export function) :129
       -- Walks over all views registered within the ApplicationRef and removes all dehydrated views from all `LContainer`s along the way.
-[ ] cleanupHydratedDeferBlocks  (export function) :152
+[x] cleanupHydratedDeferBlocks  (export function) :152
       -- post hydration cleanup handling for defer blocks that were incrementally hydrated. This removes all the jsaction attributes, timers, observers, dehydrated views
 
 ## packages/core/src/hydration/compression.ts
@@ -3447,11 +3447,11 @@ Format: [ ] Nama  (export|kind) :baris
       -- Returns an instruction index (subtracting HEADER_OFFSET).
 [ ] isDisconnectedNode  (export function) :54
       -- Check whether a given node exists, but is disconnected from the DOM.
-[ ] isDisconnectedRNode  (export function) :69
+[x] isDisconnectedRNode  (export function) :69
       -- Check whether the given node exists, but is disconnected from the DOM. Note: we leverage the fact that we have this information available in the DOM emulation l
-[ ] locateI18nRNodeByIndex  (export function) :80
+[x] locateI18nRNodeByIndex  (export function) :80
       -- Locate a node in an i18n tree that corresponds to a given instruction index.
-[ ] tryLocateRNodeByPath  (export function) :99
+[x] tryLocateRNodeByPath  (export function) :99
       -- Attempt to locate an RNode by a path, if it exists.
 [ ] locateNextRNode  (export function) :118
       -- Locate a node in DOM tree that corresponds to a given TNode.
@@ -3490,69 +3490,69 @@ Format: [ ] Nama  (export|kind) :baris
 ## packages/core/src/hydration/utils.ts
 [ ] isInternalHydrationTransferStateKey  (export function) :74
       -- Checks whether a given key is used by the framework for transferring hydration data.
-[ ] retrieveHydrationInfoImpl  (export function) :121
-[ ] enableRetrieveHydrationInfoImpl  (export function) :209
+[x] retrieveHydrationInfoImpl  (export function) :121
+[x] enableRetrieveHydrationInfoImpl  (export function) :209
       -- Sets the implementation for the `retrieveHydrationInfo` function.
-[ ] retrieveHydrationInfo  (export function) :217
+[x] retrieveHydrationInfo  (export function) :217
       -- Retrieves hydration info by reading the value from the `ngh` attribute and accessing a corresponding slot in TransferState storage.
-[ ] getLNodeForHydration  (export function) :231
+[x] getLNodeForHydration  (export function) :231
       -- Retrieves the necessary object from a given ViewRef to serialize:  - an LView for component views  - an LContainer for cases when component acts as a ViewContai
 [ ] getTextNodeContent  (function) :249
-[ ] processTextNodeMarkersBeforeHydration  (export function) :262
+[x] processTextNodeMarkersBeforeHydration  (export function) :262
       -- Restores text nodes and separators into the DOM that were lost during SSR serialization. The hydration process replaces empty text nodes and text nodes that are
 [ ] patchHydrationInfo  (function) :317
 [ ] readHydrationInfo  (export function) :321
-[ ] markRNodeAsClaimedByHydration  (export function) :330
+[x] markRNodeAsClaimedByHydration  (export function) :330
       -- Marks a node as "claimed" by hydration process. This is needed to make assessments in tests whether the hydration process handled all nodes.
-[ ] markRNodeAsSkippedByHydration  (export function) :344
+[x] markRNodeAsSkippedByHydration  (export function) :344
 [ ] countBlocksSkippedByHydration  (export function) :355
-[ ] markRNodeAsHavingHydrationMismatch  (export function) :363
-[ ] isRNodeClaimedForHydration  (export function) :391
-[ ] setSegmentHead  (export function) :395
-[ ] getSegmentHead  (export function) :404
-[ ] isIncrementalHydrationEnabled  (export function) :408
+[x] markRNodeAsHavingHydrationMismatch  (export function) :363
+[x] isRNodeClaimedForHydration  (export function) :391
+[x] setSegmentHead  (export function) :395
+[x] getSegmentHead  (export function) :404
+[x] isIncrementalHydrationEnabled  (export function) :408
 [ ] resetIncrementalHydrationEnabledWarnedForTests  (export function) :415
-[ ] warnIncrementalHydrationNotConfigured  (export function) :420
+[x] warnIncrementalHydrationNotConfigured  (export function) :420
       -- Throws an error if the incremental hydration is not enabled
 [ ] assertSsrIdDefined  (export function) :436
       -- Throws an error if the ssrUniqueId on the LDeferBlockDetails is not present
-[ ] getNgContainerSize  (export function) :450
+[x] getNgContainerSize  (export function) :450
       -- Returns the size of an <ng-container>, using either the information serialized in `ELEMENT_CONTAINERS` (element container size) or by computing the sum of root 
 [ ] isSerializedElementContainer  (export function) :463
-[ ] getSerializedContainerViews  (export function) :470
-[ ] calcSerializedContainerSize  (export function) :481
+[x] getSerializedContainerViews  (export function) :470
+[x] calcSerializedContainerSize  (export function) :481
       -- Computes the size of a serialized container (the number of root nodes) by calculating the sum of root nodes in all dehydrated views in this container.
-[ ] initDisconnectedNodes  (export function) :494
+[x] initDisconnectedNodes  (export function) :494
       -- Attempt to initialize the `disconnectedNodes` field of the given `DehydratedView`. Returns the initialized value.
-[ ] isDisconnectedNode  (export function) :508
+[x] isDisconnectedNode  (export function) :508
       -- Checks whether a node is annotated as "disconnected", i.e. not present in the DOM at serialization time. We should not attempt hydration for such nodes and inst
-[ ] canHydrateNode  (export function) :522
+[x] canHydrateNode  (export function) :522
       -- Checks whether a node can be hydrated.
-[ ] processTextNodeBeforeSerialization  (export function) :538
+[x] processTextNodeBeforeSerialization  (export function) :538
       -- Helper function to prepare text nodes for serialization by ensuring that separate logical text blocks in the DOM remain separate after serialization.
-[ ] convertHydrateTriggersToJsAction  (export function) :578
-[ ] getParentBlockHydrationQueue  (export function) :600
+[x] convertHydrateTriggersToJsAction  (export function) :578
+[x] getParentBlockHydrationQueue  (export function) :600
       -- Builds a queue of blocks that need to be hydrated, looking up the tree to the topmost defer block that exists in the tree that hasn't been hydrated, but exists 
 [ ] gatherDeferBlocksByJSActionAttribute  (function) :633
-[ ] appendDeferBlocksToJSActionMap  (export function) :647
+[x] appendDeferBlocksToJSActionMap  (export function) :647
 [ ] _retrieveDeferBlockDataImpl  (arrow) :660
       -- Retrieves defer block hydration information from the TransferState.
 [ ] retrieveDeferBlockDataImpl  (export function) :664
 [ ] enableRetrieveDeferBlockDataImpl  (export function) :682
       -- Sets the implementation for the `retrieveDeferBlockData` function.
-[ ] retrieveDeferBlockData  (export function) :689
+[x] retrieveDeferBlockData  (export function) :689
       -- Retrieves defer block data from TransferState storage
 [ ] isTimerTrigger  (function) :693
 [ ] getHydrateTimerTrigger  (function) :697
 [ ] getHydrateViewportTrigger  (function) :702
 [ ] hasHydrateTrigger  (function) :718
-[ ] createBlockSummary  (function) :726
+[x] createBlockSummary  (function) :726
       -- Creates a summary of the given serialized defer block, which is used later to properly initialize specific triggers.
-[ ] processBlockData  (export function) :741
+[x] processBlockData  (export function) :741
       -- Processes all of the defer block data in the transfer state and creates a map of the summaries
 [ ] isSsrContentsIntegrity  (function) :750
 [ ] skipTextNodes  (function) :758
-[ ] verifySsrContentsIntegrity  (export function) :776
+[x] verifySsrContentsIntegrity  (export function) :776
       -- Verifies whether the DOM contains a special marker added during SSR time to make sure there is no SSR'ed contents transformations happen after SSR is completed.
 
 ## packages/core/src/hydration/views.ts
@@ -6712,37 +6712,37 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] NgZone  (export class) :106
       -- An injectable service for executing work inside or outside of the Angular zone. The most common use of this service is to optimize performance when starting a w
 [ ] NgZone.constructor  (ctor) :139
-[ ] NgZone.isInAngularZone  (method) :193
+[x] NgZone.isInAngularZone  (method) :193
       -- This method checks whether the method call happens within an Angular Zone instance.
-[ ] NgZone.assertInAngularZone  (method) :201
+[x] NgZone.assertInAngularZone  (method) :201
       -- Assures that the method is called within the Angular Zone, otherwise throws an error.
-[ ] NgZone.assertNotInAngularZone  (method) :213
+[x] NgZone.assertNotInAngularZone  (method) :213
       -- Assures that the method is called outside of the Angular Zone, otherwise throws an error.
-[ ] NgZone.run  (method) :234
+[x] NgZone.run  (method) :234
       -- Executes the `fn` function synchronously within the Angular zone and returns value returned by the function. Running functions via `run` allows you to reenter A
-[ ] NgZone.runTask  (method) :250
+[x] NgZone.runTask  (method) :250
       -- Executes the `fn` function synchronously within the Angular zone as a task and returns value returned by the function. Running functions via `runTask` allows yo
-[ ] NgZone.runGuarded  (method) :264
+[x] NgZone.runGuarded  (method) :264
       -- Same as `run`, except that synchronous errors are caught and forwarded via `onError` and not rethrown.
-[ ] NgZone.runOutsideAngular  (method) :281
+[x] NgZone.runOutsideAngular  (method) :281
       -- Executes the `fn` function synchronously in Angular's parent zone and returns value returned by the function. Running functions via {@link #runOutsideAngular} a
-[ ] checkStable  (function) :354
-[ ] delayChangeDetectionForEvents  (function) :387
-[ ] scheduleCheckStable  (function) :405
-[ ] forkInnerZoneWithAngularBehavior  (function) :426
-[ ] updateMicroTaskStatus  (function) :526
-[ ] onEnter  (function) :538
-[ ] onLeave  (function) :546
+[x] checkStable  (function) :354
+[x] delayChangeDetectionForEvents  (function) :387
+[x] scheduleCheckStable  (function) :405
+[x] forkInnerZoneWithAngularBehavior  (function) :426
+[x] updateMicroTaskStatus  (function) :526
+[x] onEnter  (function) :538
+[x] onLeave  (function) :546
 [ ] NoopNgZone  (export class) :555
       -- Provides a noop implementation of `NgZone` which does nothing. This zone requires explicit calls to framework to perform rendering.
-[ ] NoopNgZone.run  (method) :564
-[ ] NoopNgZone.runGuarded  (method) :568
-[ ] NoopNgZone.runOutsideAngular  (method) :572
-[ ] NoopNgZone.runTask  (method) :576
-[ ] shouldBeIgnoredByZone  (function) :581
-[ ] isSchedulerTick  (function) :585
-[ ] hasApplyArgsData  (function) :589
-[ ] getNgZone  (export function) :611
+[x] NoopNgZone.run  (method) :564
+[x] NoopNgZone.runGuarded  (method) :568
+[x] NoopNgZone.runOutsideAngular  (method) :572
+[x] NoopNgZone.runTask  (method) :576
+[x] shouldBeIgnoredByZone  (function) :581
+[x] isSchedulerTick  (function) :585
+[x] hasApplyArgsData  (function) :589
+[x] getNgZone  (export function) :611
 
 ## packages/core/testing/src/application_error_handler.ts
 [ ] TestBedApplicationErrorHandler  (export class) :14

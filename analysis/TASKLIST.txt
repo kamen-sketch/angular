@@ -1,0 +1,118 @@
+TASKLIST ANALISIS KODE ANGULAR
+==============================================================================
+Legenda:  [x] selesai   [~] sebagian (alur utama dipahami, sisa fungsi terdaftar
+          di inventory dan belum dicentang)   [ ] belum disentuh
+
+Aturan pencentangan: sebuah subsistem baru boleh ditandai [x] bila SELURUH
+fungsi di berkas intinya sudah dibaca dan tercatat di analysis/subsystems/*.txt
+(dan karenanya otomatis tercentang di analysis/functions/<area>.txt).
+
+A. INFRASTRUKTUR ANALISIS
+-------------------------
+[x] A1  Inventarisasi otomatis seluruh simbol fungsi/kelas (18.072 simbol,
+        3.011 berkas sumber non-test)            -> analysis/functions/*.txt
+[x] A2  Perkakas pembangun inventory              -> analysis/tools/build-inventory.mjs
+[x] A3  Perkakas sinkronisasi centang + log       -> analysis/tools/sync-checklist.mjs
+[x] A4  Peta arsitektur repositori                -> analysis/ARCHITECTURE-MAP.txt
+[x] A5  Log fungsi yang sudah dianalisis          -> analysis/CHECKED-FUNCTIONS.txt
+[x] A6  Laporan progres per area                  -> analysis/PROGRESS.txt
+
+B. CORE - FONDASI
+-----------------
+[x] B1  primitives/signals - graf reaktif lengkap        (subsistem 01)
+[x] B2  Dependency Injection: R3Injector + NodeInjector  (subsistem 02)
+[x] B3  Change detection + penjadwalan zoneless          (subsistem 03)
+[~] B4  Runtime render3: LView/TView, instruksi, control flow (subsistem 04)
+        Selesai: struktur data, siklus create/update, binding, @if/@for,
+                 shared.ts, construction.ts, render.ts, advance.ts
+        Belum  : instruksi styling, i18n, interpolation, projection, two_way,
+                 let_declaration, storage, namespace, animation, dom_property
+[x] B5  API signal & authoring (input/output/model/queries/effect) (subsistem 05)
+
+C. CORE - LANJUTAN
+------------------
+[~] C1  Hidrasi & SSR (subsistem 11) - anotasi, klaim node, event replay,
+        hidrasi inkremental. Belum: hydration/i18n.ts, compression.ts detail
+[x] C2  zone.js & NgZone (subsistem 12)
+[ ] C3  Blok @defer: state machine src/defer/ (instruksi & trigger sudah
+        tersentuh lewat subsistem 04/06/11, mesinnya sendiri belum)
+[ ] C4  i18n runtime (src/i18n/ + render3/i18n/): opcode, ICU, locale
+[ ] C5  linker: ComponentFactory, ViewContainerRef, TemplateRef, NgModuleRef
+[ ] C6  Queries klasik (@ViewChild/@ContentChild) & QueryList
+[ ] C7  Lifecycle hooks: pendaftaran & eksekusi (render3/hooks.ts)
+[ ] C8  Sanitasi & Trusted Types (src/sanitization/)
+[ ] C9  Styling: algoritma class/style binding (render3/styling/)
+[ ] C10 node_manipulation.ts: penyisipan/penghapusan DOM & proyeksi
+[ ] C11 resource() / httpResource() dan rxjs-interop (toSignal/toObservable)
+[ ] C12 Animasi CSS baru (src/animation/) + paket @angular/animations lama
+[ ] C13 TestBed & @angular/core/testing
+[ ] C14 Differs (IterableDiffer/KeyValueDiffer) di change_detection/
+[ ] C15 Debug API global (ng.*), profiler, injector_profiler
+[ ] C16 JIT compiler runtime (render3/jit/) & deps_tracker
+
+D. COMPILER
+-----------
+[~] D1  Pipeline template: HTML -> AST -> IR -> instruksi (subsistem 06)
+        Selesai: alur, ingest, emit, compiler definisi, r3_template_transform
+        Belum  : 72 phase satu per satu, expression_parser, output emitter
+[ ] D2  expression_parser: lexer & parser ekspresi Angular
+[ ] D3  output/: AST output + emitter JS/TS + source map
+[ ] D4  t2_binder: analisis binding & scope template
+[ ] D5  i18n compiler: ekstraksi pesan + serializer (XLIFF/XMB/JSON)
+[ ] D6  render3/partial/: ɵɵngDeclare* untuk pustaka
+[ ] D7  shadow_css.ts + style_url_resolver.ts
+[ ] D8  schema/: skema elemen & properti DOM
+[ ] D9  72 phase pipeline (analisis per phase)
+
+E. COMPILER-CLI
+---------------
+[~] E1  ngtsc: NgCompiler, TraitCompiler, ComponentDecoratorHandler (subsistem 07)
+[ ] E2  Handler lain: directive, ngModule, pipe, injectable
+[ ] E3  scope/: LocalModuleScopeRegistry & standalone scope
+[ ] E4  typecheck/: pembangkitan Type Check Block & pemetaan diagnostik
+[ ] E5  partial_evaluator/: evaluasi statis nilai dekorator
+[ ] E6  incremental/: graf dependensi & penentuan emit ulang
+[ ] E7  imports/ & cycles/: strategi import dan deteksi siklus
+[ ] E8  linker/ (menerjemahkan ɵɵngDeclare* saat build aplikasi)
+[ ] E9  reflection/, metadata/, shims/, perf/
+
+F. PAKET LAIN
+-------------
+[~] F1  common: NgIf/NgForOf, AsyncPipe, HttpClient (subsistem 08)
+        Belum: NgOptimizedImage, pipe tanggal/angka, Location, i18n data
+[~] F2  router: pipeline navigasi, recognizer, guard, resolver (subsistem 09)
+        Belum: RouterOutlet, RouterLink, statemanager, preloader, scroller
+[~] F3  forms: model kontrol & siklus validasi (subsistem 10)
+        Belum: value accessors, directive ngModel/formControlName, FormBuilder
+[ ] F4  platform-browser: DomRenderer, EventManager, sanitasi DOM, meta/title
+[ ] F5  platform-server + @angular/ssr
+[ ] F6  service-worker: driver ngsw, SwUpdate/SwPush
+[ ] F7  localize: $localize, ekstraksi, terjemahan runtime
+[ ] F8  animations: pengurai metadata & pemutar animasi web
+[ ] F9  elements: bridge custom elements
+[ ] F10 upgrade: interop AngularJS
+[ ] F11 language-service: fitur editor (completion, quick info, rename)
+[ ] F12 benchpress, misc, private
+
+G. LUAR packages/
+-----------------
+[ ] G1  devtools: ng-devtools, backend, protocol, shell-browser
+[ ] G2  adev: aplikasi angular.dev + tutorial interaktif
+[ ] G3  tools/: aturan Bazel, symbol-extractor, perkakas rilis
+[ ] G4  modules/: benchmark & playground
+[ ] G5  scripts/: skrip rilis dan pemeliharaan
+
+RINGKASAN ANGKA (lihat analysis/PROGRESS.txt untuk data terkini)
+----------------------------------------------------------------
+  Total simbol terinventarisasi : 18.072
+  Sudah dianalisis & tercentang :    699 fungsi dengan penjelasan per fungsi
+  Subsistem dengan catatan penuh :   12 berkas di analysis/subsystems/
+
+CATATAN JUJUR TENTANG CAKUPAN
+-----------------------------
+Repositori ini berisi ~18 ribu simbol fungsi. Yang sudah dibaca baris demi baris
+dan dijelaskan satu per satu adalah 699 fungsi - dipilih karena merupakan JALUR
+EKSEKUSI UTAMA framework (DI, change detection, render3, signal, kompilasi,
+routing, forms, hidrasi, zone). Sisanya sudah TERPETAKAN (nama, berkas, baris,
+jenis, ringkasan JSDoc) di analysis/functions/, tetapi belum dianalisis.
+Item bertanda [ ] di atas adalah urutan kerja yang disarankan untuk melanjutkan.

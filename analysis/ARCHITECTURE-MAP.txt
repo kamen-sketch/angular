@@ -1,0 +1,205 @@
+PETA ARSITEKTUR REPOSITORI ANGULAR (monorepo angular/angular)
+Versi paket saat pemetaan: 22.2.0-next.0
+Dibuat oleh: analisis kode terstruktur; lihat analysis/README.txt
+==============================================================================
+
+BAGIAN 1 - PETA DIREKTORI TINGKAT ATAS
+======================================
+
+  packages/          seluruh paket npm @angular/* (KODE INTI - fokus analisis)
+  adev/              angular.dev: situs dokumentasi + tutorial interaktif
+  devtools/          ekstensi browser Angular DevTools
+  modules/           benchmark, playground, ssr-benchmarks, utilities
+  integration/       aplikasi uji integrasi end-to-end (per skenario)
+  tools/             perkakas build: aturan Bazel, symbol-extractor, saucelabs
+  scripts/           skrip rilis, benchmark, pemeliharaan repo
+  goldens/           berkas "golden" API publik + ukuran simbol (uji regresi API)
+  contributing-docs/ panduan kontribusi (build, testing, commit message)
+  dev-app/           aplikasi pengembangan lokal
+  vscode-ng-language-service/  integrasi language service untuk VS Code
+  third_party/       kode pihak ketiga yang di-vendor
+
+  Berkas kunci di akar:
+    MODULE.bazel / .bazelrc / BUILD.bazel   sistem build (Bazel + rules_js)
+    pnpm-workspace.yaml / pnpm-lock.yaml    manajemen dependensi (pnpm)
+    package.json                            skrip: build, test, lint, adev, devtools
+    .ng-dev/                                konfigurasi perkakas ng-dev (rilis, PR)
+    .pullapprove.yml                        aturan kepemilikan review per direktori
+
+BAGIAN 2 - PETA PAKET (packages/)
+=================================
+Angka = jumlah simbol fungsi/kelas hasil pemindaian otomatis (analysis/functions/).
+
+  core (3922)                inti framework: DI, render3, signal, CD, hidrasi
+  compiler (3130)            kompilasi template menjadi instruksi render3
+  compiler-cli (2383)        integrasi TypeScript (ngtsc), type-check, build
+  forms (1053)              reactive & template-driven forms
+  common (1023)             directive/pipe umum, HttpClient, Location, i18n data
+  router (602)              routing
+  language-service (600)    layanan bahasa untuk editor
+  animations (510)          @angular/animations (API lama berbasis metadata)
+  service-worker (429)      @angular/service-worker (SwPush, SwUpdate, ngsw)
+  zone.js (344)             monkey-patching API asinkron
+  localize (237)            $localize, ekstraksi & penerjemahan pesan
+  platform-browser (225)    bootstrap browser, DomRenderer, sanitasi, event manager
+  benchpress (158)          kerangka benchmark
+  upgrade (101)             interop AngularJS <-> Angular
+  platform-server (67)      render sisi server
+  misc (62)                 utilitas kecil (mis. angular_in_memory_web_api)
+  elements (35)             Angular Elements (custom elements)
+  private (29)              utilitas internal lintas paket (termasuk testing)
+  platform-browser-dynamic (9) bootstrap JIT
+  ssr (0 simbol; re-export)  @angular/ssr
+  examples/ docs/           contoh kode untuk dokumentasi
+
+BAGIAN 3 - PETA INTERNAL packages/core
+======================================
+
+  primitives/            lapisan tanpa-dependensi, dipakai ulang paket lain
+    signals/             mesin reaktif (graph, signal, computed, watch, effect)
+    di/                  kontrak Injector minimal + NotFound
+    event-dispatch/      jsaction: penangkapan & replay event untuk SSR
+    defer/               trigger blok @defer (interaction/hover/viewport)
+    devtools/            tipe profiler & graf signal untuk DevTools
+    dom-navigation/      tipe Navigation API
+
+  src/
+    di/                  EnvironmentInjector (R3Injector), provider, inject()
+    render3/             RUNTIME - lihat rincian di bawah
+    authoring/           input(), output(), model(), viewChild(), contentChild()
+    change_detection/    ChangeDetectorRef, differs (Iterable/KeyValue), scheduler
+    application/         ApplicationRef, bootstrap, tracing, initStatus
+    platform/            PlatformRef, createPlatform
+    hydration/           anotasi server + klaim node klien + event replay
+    defer/               state machine blok @defer, loading/error/placeholder
+    i18n/                runtime i18n (opcode, ICU, locale)
+    linker/              ComponentFactory, ViewContainerRef, TemplateRef, NgModuleRef
+    metadata/            dekorator (@Component, @Directive, @Input, ...)
+    animation/           animasi berbasis CSS baru (animate.enter/leave)
+    resource/            resource(), httpResource() - async state primitive
+    rxjs-interop/        toSignal, toObservable, takeUntilDestroyed, rxResource
+    sanitization/        sanitasi HTML/URL/style, Trusted Types
+    testability/         Testability API (dipakai Protractor/e2e)
+    zone/                NgZone, NoopNgZone
+    util/                utilitas (assert, stringify, array, dom, closure)
+    debug/               API debug global (ng.*), profiler
+    webmcp/              integrasi Model Context Protocol (eksperimental)
+
+  src/render3/ (runtime yang menjalankan template)
+    instructions/        ~40 berkas instruksi ɵɵ* (element, property, listener,
+                         template, text, i18n, styling, control_flow, defer, ...)
+    interfaces/          definisi tipe LView/TView/TNode/LContainer/Renderer
+    view/                construction (createTView/createLView), container,
+                         directives (resolveDirectives), elements, outputs
+    queries/             @ViewChild/@ContentChild klasik + query berbasis signal
+    reactivity/          signal/computed/effect versi Angular + scheduler effect
+    features/            ɵɵInheritDefinitionFeature, NgOnChangesFeature,
+                         ProvidersFeature, HostDirectivesFeature
+    styling/             algoritma styling (class/style binding)
+    i18n/                opcode i18n runtime
+    di.ts                NodeInjector berbasis bloom filter
+    node_manipulation.ts penyisipan/penghapusan node DOM
+    hooks.ts             pendaftaran & eksekusi lifecycle hooks
+    profiler.ts          titik instrumentasi untuk DevTools
+    jit/                 kompilasi JIT (@Component tanpa AOT)
+    deps_tracker/        pelacakan dependensi standalone/NgModule saat runtime
+
+BAGIAN 4 - PETA packages/compiler
+=================================
+  ml_parser/           lexer + parser HTML (termasuk blok @if dan ICU)
+  expression_parser/   lexer + parser ekspresi Angular ({{ }}, [x]="...")
+  render3/             AST R3, transformasi HTML->R3, compiler definisi
+    view/              compiler komponen/directive, t2_binder (analisis binding)
+    partial/           output ɵɵngDeclare* untuk pustaka
+  template/pipeline/   arsitektur IR: ingest -> 72 phase -> emit
+  output/              AST output + emitter JavaScript/TypeScript
+  i18n/                ekstraksi pesan, serializer XLIFF/XMB/JSON
+  schema/              skema elemen & properti DOM (untuk validasi)
+  typecheck/           dukungan pembangkitan Type Check Block
+  shadow_css.ts        emulasi view encapsulation
+  constant_pool.ts     deduplikasi konstanta lintas template
+
+BAGIAN 5 - PETA packages/compiler-cli
+=====================================
+  ngtsc/
+    core/              NgCompiler - orkestrator seluruh kompilasi
+    transform/         TraitCompiler + transformer TypeScript
+    annotations/       handler per dekorator (component/directive/ngModule/pipe/injectable)
+    scope/             visibilitas directive/pipe (NgModule & standalone)
+    metadata/          registry metadata lokal dan dari .d.ts
+    reflection/        pembacaan kelas & dekorator dari AST TS
+    partial_evaluator/ evaluasi statis nilai dekorator
+    typecheck/         Type Check Block + pemetaan diagnostik ke template
+    incremental/       graf dependensi & build inkremental
+    imports/           strategi penulisan import
+    cycles/            deteksi impor melingkar
+    shims/             berkas bayangan (.ngtypecheck, .ngfactory)
+    perf/, docs/, indexer/, xi18n/, hmr/, sourcemaps/, validation/
+  linker/              menerjemahkan ɵɵngDeclare* pustaka menjadi definisi penuh
+  ngcc/                (sudah dihapus di versi modern)
+
+BAGIAN 6 - ALUR HIDUP APLIKASI (jalur eksekusi lengkap)
+=======================================================
+
+  A. BUILD TIME
+     tsc/ngtsc  ->  NgCompiler.analyze (baca @Component)
+                ->  compiler: HTML -> AST -> IR -> instruksi
+                ->  emit: kelas + ɵcmp/ɵdir/ɵfac/ɵinj/ɵpipe
+
+  B. BOOTSTRAP
+     bootstrapApplication(App, {providers})
+       -> createPlatform / PlatformRef
+       -> createInjector (R3Injector) + APP_INITIALIZER
+       -> ApplicationRef.bootstrap(App)
+       -> ComponentFactory.create -> createLView/createTView
+       -> renderView (fase creation) -> instruksi ɵɵelementStart dll
+       -> ApplicationRef.tick pertama -> refreshView (fase update)
+
+  C. RUNTIME (siklus perubahan)
+     signal.set / markForCheck / event listener / setInput
+       -> markViewDirty / markAncestorsForTraversal
+       -> ChangeDetectionScheduler.notify -> dirtyFlags
+       -> jadwal tick (rAF-race atau microtask)
+       -> ApplicationRef._tick -> synchronize -> detectChangesInternal
+       -> detectChangesInView -> refreshView (template, hooks, queries, host
+          bindings, komponen anak, effects)
+       -> afterRender hooks
+
+  D. SSR + HIDRASI
+     platform-server render -> annotateForHydration -> TransferState + ngh=*
+       -> klien: withDomHydration -> instruksi mengklaim node yang ada
+       -> event replay dari antrean jsaction
+       -> cleanupDehydratedViews setelah stabil
+
+BAGIAN 7 - KONVENSI KODE YANG BERULANG DI SELURUH REPO
+======================================================
+Memahami tujuh pola ini membuat sebagian besar kode langsung terbaca:
+
+  1. `ɵɵnamaInstruksi`   API yang dipanggil kode hasil kompilasi (@codeGenApi).
+     `ɵnama`             API internal yang tetap harus stabil antar paket.
+  2. `ngDevMode`         blok yang dihapus total di build produksi. Sering
+                         ditulis `ngDevMode && assert(...)`.
+  3. Pola "enable*Impl"  fungsi indireksi + setter implementasi, dipakai agar
+                         fitur opsional (hidrasi, i18n, animasi) tree-shakable.
+  4. Save/restore state  `const prev = setX(v); try {...} finally { setX(prev); }`
+                         dipakai untuk activeConsumer, currentInjector,
+                         selectedIndex, injectImplementation.
+  5. Prototipe + Object.create  node reaktif dan LView dibuat dari objek
+                         prototipe agar bentuknya monomorfik (ramah JIT V8).
+  6. Struktur data array LView/TData/opcodes adalah array berindeks konstanta,
+                         bukan objek, demi ukuran bundel dan kecepatan.
+  7. Komentar "PERF WARNING" / "do NOT change without benchmarking" menandai kode
+                         yang bentuknya ditentukan hasil benchmark, bukan estetika.
+
+BAGIAN 8 - KODE ERROR RUNTIME
+=============================
+Semua error runtime memakai `RuntimeError(RuntimeErrorCode.X, pesan)` dengan kode
+numerik NGxxxx yang terdokumentasi di adev. Rentangnya:
+  NG0000-NG0999  core (DI, CD, hidrasi, signal)
+  NG1000-NG1999  compiler / template
+  NG2000-NG2999  compiler-cli
+  NG3000-NG3999  type-check template
+  NG04xx         router
+  NG05xx         hidrasi/SSR
+  NG08xx         forms
+Definisi lengkap: packages/core/src/errors.ts (enum RuntimeErrorCode).
