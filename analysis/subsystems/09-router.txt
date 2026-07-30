@@ -1,0 +1,152 @@
+SUBSISTEM 09 :: @angular/router
+Lokasi   : packages/router/src/**
+Status   : DIANALISIS - pipeline navigasi, recognizer, guard, resolver, URL tree
+==============================================================================
+
+MODEL DATA ROUTER
+-----------------
+Empat representasi yang berbeda dan sering tertukar:
+
+  UrlTree                 hasil parse URL: pohon UrlSegmentGroup + query params
+                          + fragment. Outlet bernama menjadi cabang bernama.
+  RouterStateSnapshot     hasil pencocokan UrlTree dengan konfigurasi Routes;
+                          pohon ActivatedRouteSnapshot (nilai statis, immutable).
+  RouterState             pohon ActivatedRoute (Observable params/data/dll) yang
+                          DIPAKAI ULANG antar navigasi bila rute tidak berubah.
+  Routes (konfigurasi)    pohon Route yang ditulis pengembang.
+
+PIPELINE NAVIGASI (NavigationTransitions.setupNavigations)
+-----------------------------------------------------------
+Seluruh navigasi adalah SATU rantai RxJS di atas `BehaviorSubject<NavigationTransition>`.
+`switchMap` terluar berarti: navigasi baru otomatis MEMBATALKAN navigasi yang
+sedang berjalan. Tahapannya berurutan:
+
+  1. filter transisi null, mulai AbortController untuk navigasi ini
+  2. penjagaan id: bila `this.navigationId > t.id`, navigasi ini sudah usang
+     (ada komentar panjang tentang bug RxJS #7455 yang membuat penjagaan manual
+     ini perlu - switchMap bisa gagal membatalkan bila navigasi baru terjadi
+     sinkron di dalam handler NavigationCancel)
+  3. `urlHandlingStrategy.shouldProcessUrl` - dukungan aplikasi hybrid
+  4. event NavigationStart, lalu `Promise.resolve` (memaksa navigasi selalu asinkron)
+  5. RECOGNIZE - cocokkan URL dengan config, terapkan redirect, muat rute lazy
+  6. update URL bila mode `eager`, event RoutesRecognized
+  7. `canDeactivate` -> `canActivateChild` -> `canActivate` (checkGuards)
+  8. RESOLVE data (resolveData)
+  9. muat komponen lazy yang diperlukan
+  10. `createRouterState` - membangun pohon ActivatedRoute dengan reuse
+  11. view transition (bila diaktifkan) - navigasi menunggu callback dimulai
+  12. `take(1)` sebagai jaring pengaman agar transisi selalu selesai (isu #49567)
+  13. titik "tidak bisa dibatalkan lagi" (`abortable = false`), event BeforeActivateRoutes
+  14. AKTIVASI: pasang/lepas komponen di RouterOutlet, update URL bila mode `deferred`
+  15. NavigationEnd / NavigationCancel / NavigationError, finalize
+
+Perhatikan: guard dan resolver berjalan SEBELUM RouterState dibuat; itulah
+sebabnya guard menerima `ActivatedRouteSnapshot`, bukan `ActivatedRoute`.
+
+RECOGNIZER
+----------
+`Recognizer` menelusuri konfigurasi secara rekursif:
+  processSegmentGroup -> processChildren -> processSegment ->
+  processSegmentAgainstRoute -> matchSegmentAgainstRoute
+Di setiap simpul ia mencoba mencocokkan `path` (termasuk parameter `:id` dan
+wildcard `**`), menjalankan `canMatch` guard, menangani `redirectTo`
+(`expandSegmentAgainstRouteUsingRedirect`), dan memuat `loadChildren` lewat
+`RouterConfigLoader`. Rute dengan path kosong ditangani khusus - `hasEmptyPathConfig`
+dan `sortActivatedRouteSnapshots` menjaga urutan hasil agar deterministik.
+
+Kegagalan pencocokan dilempar sebagai `NoMatch`; redirect absolut sebagai
+`AbsoluteRedirect`; keduanya ditangkap di lapisan atas dan diterjemahkan menjadi
+error/navigasi baru.
+
+GUARD
+-----
+`checkGuards` menjalankan guard dalam urutan yang penting:
+  1. `canDeactivate` dari rute terdalam ke terluar (yang akan ditinggalkan)
+  2. `canActivateChild` dari terluar ke terdalam
+  3. `canActivate`
+Setiap guard boleh mengembalikan boolean, UrlTree (redirect), atau Observable/
+Promise dari keduanya; `redirectIfUrlTree` menerjemahkan UrlTree menjadi
+pembatalan navigasi + navigasi baru. `runCanLoadGuards` dan `runCanMatchGuards`
+dipakai pada fase recognize, bukan di sini.
+
+RESOLVER
+--------
+`resolveData` meratakan pohon rute lalu menjalankan resolver setiap simpul,
+menghormati `runGuardsAndResolvers` dan strategi pewarisan parameter
+(`paramsInheritanceStrategy`). Hasilnya disimpan ke snapshot sebelum aktivasi.
+
+REUSE ROUTE STATE
+-----------------
+`createRouterState` + `createOrReuseChildren` memutuskan ActivatedRoute mana yang
+dipakai ulang berdasarkan `RouteReuseStrategy.shouldReuseRoute`. Inilah alasan
+komponen tidak dibuat ulang saat hanya parameter yang berubah - dan alasan
+`ActivatedRoute.params` harus dibaca sebagai Observable, bukan sekali saja.
+
+MEMBANGUN URL
+-------------
+`createUrlTree*` menerjemahkan array perintah (`router.navigate(['../x', {id: 1}])`)
+menjadi UrlTree: `computeNavigation` menghitung berapa tingkat naik (`..`) dan
+apakah perintah bersifat absolut, `findStartingPositionForTargetGroup` mencari
+segmen awal, lalu segmen baru disusun dengan mempertahankan matrix params dan
+outlet bernama.
+
+DAFTAR FUNGSI YANG SUDAH DIPAHAMI
+---------------------------------
+[x] NavigationTransitions.setupNavigations | packages/router/src/navigation_transition.ts:444 | Rantai RxJS lengkap satu navigasi: recognize -> guards -> resolve -> createRouterState -> view transition -> aktivasi, dengan pembatalan lewat switchMap.
+[x] NavigationTransitions.handleNavigationRequest | packages/router/src/navigation_transition.ts:407 | Menambahkan permintaan navigasi baru ke subject transisi (menaikkan navigationId).
+[x] NavigationTransitions.cancelNavigationTransition | packages/router/src/navigation_transition.ts:990 | Membatalkan navigasi dengan kode alasan dan memancarkan NavigationCancel.
+[x] NavigationTransitions.isUpdatingInternalState | packages/router/src/navigation_transition.ts:1010 | Menentukan apakah transisi mengubah state internal router (dipakai state manager).
+[x] NavigationTransitions.isUpdatedBrowserUrl | packages/router/src/navigation_transition.ts:1028 | Menentukan apakah URL browser perlu diperbarui.
+[x] NavigationTransitions.complete | packages/router/src/navigation_transition.ts:403 | Menutup subject transisi saat router dihancurkan.
+[x] isBrowserTriggeredNavigation | packages/router/src/navigation_transition.ts:1045 | Membedakan navigasi dari tombol back/forward browser dengan navigasi imperatif.
+[x] discardNewActivatedRoutes | packages/router/src/navigation_transition.ts:1049 | Membuang ActivatedRoute yang terlanjur dibuat saat navigasi dibatalkan.
+[x] recognize | packages/router/src/recognize.ts:46 | Operator yang menjalankan Recognizer atas UrlTree dan menghasilkan RouterStateSnapshot.
+[x] Recognizer.recognize | packages/router/src/recognize.ts:97 | Titik masuk pencocokan: proses grup segmen root lalu bangun snapshot.
+[x] Recognizer.match | packages/router/src/recognize.ts:117 | Mencocokkan UrlTree dengan konfigurasi dan memvalidasi tidak ada sisa segmen.
+[x] Recognizer.processSegmentGroup | packages/router/src/recognize.ts:157 | Memroses satu UrlSegmentGroup terhadap daftar Route.
+[x] Recognizer.processChildren | packages/router/src/recognize.ts:188 | Memroses anak per outlet (termasuk outlet bernama).
+[x] Recognizer.processSegment | packages/router/src/recognize.ts:235 | Mencoba setiap Route terhadap segmen saat ini.
+[x] Recognizer.processSegmentAgainstRoute | packages/router/src/recognize.ts:270 | Menjalankan canMatch, menangani redirectTo, dan menurunkan ke anak.
+[x] Recognizer.expandSegmentAgainstRouteUsingRedirect | packages/router/src/recognize.ts:324 | Menerapkan redirect (relatif maupun absolut) lalu mencocokkan ulang.
+[x] Recognizer.matchSegmentAgainstRoute | packages/router/src/recognize.ts:402 | Pencocokan path aktual termasuk parameter dan wildcard, serta pemuatan loadChildren.
+[x] Recognizer.getChildConfig | packages/router/src/recognize.ts:494 | Mengambil konfigurasi anak, memuat modul lazy bila perlu.
+[x] Recognizer.createSnapshot | packages/router/src/recognize.ts:377 | Membuat ActivatedRouteSnapshot lengkap dengan params, data, dan resolve.
+[x] Recognizer.noMatchError | packages/router/src/recognize.ts:88 | Menyusun error NG04002 "Cannot match any routes".
+[x] sortActivatedRouteSnapshots | packages/router/src/recognize.ts:534 | Mengurutkan hasil agar outlet primary lebih dulu (hasil deterministik).
+[x] hasEmptyPathConfig | packages/router/src/recognize.ts:542 | Deteksi rute berpath kosong yang perlu perlakuan khusus.
+[x] ApplyRedirects.applyRedirectCommands | packages/router/src/apply_redirects.ts:84 | Menerapkan perintah redirectTo, mempertahankan parameter posisi.
+[x] ApplyRedirects.lineralizeSegments | packages/router/src/apply_redirects.ts:67 | Meratakan grup segmen hasil redirect menjadi daftar linear.
+[x] ApplyRedirects.createSegmentGroup | packages/router/src/apply_redirects.ts:137 | Membangun grup segmen baru dari pola redirect.
+[x] ApplyRedirects.findPosParam | packages/router/src/apply_redirects.ts:167 | Mencari nilai parameter posisi (:id) untuk disisipkan ke redirect.
+[x] namedOutletsRedirect | packages/router/src/apply_redirects.ts:45 | Error: redirectTo tidak didukung untuk outlet bernama.
+[x] canLoadFails | packages/router/src/apply_redirects.ts:53 | Error/pembatalan ketika guard canLoad menolak.
+[x] createRouterState | packages/router/src/create_router_state.ts:20 | Membangun pohon ActivatedRoute baru dengan memakai ulang simpul lama sesuai RouteReuseStrategy.
+[x] createNode | packages/router/src/create_router_state.ts:35 | Membuat atau memakai ulang satu simpul ActivatedRoute.
+[x] createOrReuseChildren | packages/router/src/create_router_state.ts:70 | Mencocokkan anak lama dengan anak baru untuk menentukan reuse.
+[x] createActivatedRoute | packages/router/src/create_router_state.ts:86 | Membuat ActivatedRoute baru dari snapshot.
+[x] checkGuards | packages/router/src/operators/check_guards.ts:56 | Operator yang menjalankan canDeactivate, canActivateChild, dan canActivate berurutan.
+[x] runCanDeactivateChecks | packages/router/src/operators/check_guards.ts:80 | Menjalankan canDeactivate dari rute terdalam ke terluar.
+[x] runCanActivateChecks | packages/router/src/operators/check_guards.ts:93 | Menjalankan canActivateChild lalu canActivate dari terluar ke terdalam.
+[x] runCanActivate | packages/router/src/operators/check_guards.ts:149 | Menjalankan satu set guard canActivate dalam konteks injeksi rute.
+[x] runCanActivateChild | packages/router/src/operators/check_guards.ts:174 | Menjalankan guard canActivateChild milik leluhur.
+[x] runCanDeactivate | packages/router/src/operators/check_guards.ts:209 | Menjalankan guard canDeactivate dengan komponen yang akan dilepas.
+[x] runCanLoadGuards | packages/router/src/operators/check_guards.ts:230 | Guard canLoad sebelum memuat modul lazy.
+[x] runCanMatchGuards | packages/router/src/operators/check_guards.ts:265 | Guard canMatch saat pencocokan rute.
+[x] redirectIfUrlTree | packages/router/src/operators/check_guards.ts:254 | Menerjemahkan UrlTree yang dikembalikan guard menjadi redirect navigasi.
+[x] fireActivationStart | packages/router/src/operators/check_guards.ts:121 | Memancarkan event ActivationStart.
+[x] fireChildActivationStart | packages/router/src/operators/check_guards.ts:139 | Memancarkan event ChildActivationStart.
+[x] resolveData | packages/router/src/operators/resolve_data.ts:28 | Operator yang menjalankan resolver semua rute dan menyimpan hasilnya ke snapshot.
+[x] flattenRouteTree | packages/router/src/operators/resolve_data.ts:74 | Meratakan pohon rute menjadi daftar untuk pemrosesan berurutan.
+[x] runResolve | packages/router/src/operators/resolve_data.ts:79 | Menjalankan resolver satu simpul dengan menghormati runGuardsAndResolvers.
+[x] resolveNode | packages/router/src/operators/resolve_data.ts:101 | Menjalankan seluruh resolver satu rute dan menggabungkan hasilnya.
+[x] getResolver | packages/router/src/operators/resolve_data.ts:129 | Menyelesaikan resolver berbasis kelas maupun fungsi dalam konteks injeksi.
+[x] createUrlTreeFromSnapshot | packages/router/src/create_url_tree.ts:79 | Membangun UrlTree dari snapshot rute + perintah navigasi relatif.
+[x] createSegmentGroupFromRoute | packages/router/src/create_url_tree.ts:96 | Merekonstruksi grup segmen dari sebuah ActivatedRoute.
+[x] createUrlTreeFromSegmentGroup | packages/router/src/create_url_tree.ts:119 | Menerapkan perintah navigasi pada grup segmen dan menghasilkan UrlTree.
+[x] computeNavigation | packages/router/src/create_url_tree.ts:270 | Menghitung sifat perintah: absolut/relatif, jumlah '..', dan pemisahan outlet.
+[x] findStartingPositionForTargetGroup | packages/router/src/create_url_tree.ts:329 | Menentukan grup segmen awal tempat perintah diterapkan.
+[x] createPositionApplyingDoubleDots | packages/router/src/create_url_tree.ts:354 | Menaiki pohon segmen sesuai jumlah '..'.
+[x] normalizeQueryParams | packages/router/src/create_url_tree.ts:172 | Menormalkan query params sebelum serialisasi.
+[x] isMatrixParams | packages/router/src/create_url_tree.ts:150 | Mendeteksi perintah berupa matrix params.
+[x] isCommandWithOutlets | packages/router/src/create_url_tree.ts:158 | Mendeteksi perintah berbentuk {outlets: {...}}.
+[x] replaceSegment | packages/router/src/create_url_tree.ts:223 | Mengganti satu segmen dalam pohon secara immutable.

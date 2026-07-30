@@ -1542,32 +1542,32 @@ Format: [ ] Nama  (export|kind) :baris
       -- Base class for every event sent by `AbstractControl.events()`
 [ ] ValueChangeEvent  (export class) :109
       -- Event fired when the value of a control changes.
-[ ] ValueChangeEvent.constructor  (ctor) :110
+[x] ValueChangeEvent.constructor  (ctor) :110
 [ ] PristineChangeEvent  (export class) :124
-[ ] PristineChangeEvent.constructor  (ctor) :125
+[x] PristineChangeEvent.constructor  (ctor) :125
 [ ] TouchedChangeEvent  (export class) :140
       -- Event fired when the control's touched status changes (touched <=> untouched).
-[ ] TouchedChangeEvent.constructor  (ctor) :141
+[x] TouchedChangeEvent.constructor  (ctor) :141
 [ ] StatusChangeEvent  (export class) :156
       -- Event fired when the control's status changes.
-[ ] StatusChangeEvent.constructor  (ctor) :157
+[x] StatusChangeEvent.constructor  (ctor) :157
 [ ] FormSubmittedEvent  (export class) :172
       -- Event fired when a form is submitted
-[ ] FormSubmittedEvent.constructor  (ctor) :173
+[x] FormSubmittedEvent.constructor  (ctor) :173
 [ ] FormResetEvent  (export class) :184
       -- Event fired when a form is reset.
-[ ] FormResetEvent.constructor  (ctor) :185
-[ ] pickValidators  (export function) :193
+[x] FormResetEvent.constructor  (ctor) :185
+[x] pickValidators  (export function) :193
       -- Gets validators from either an options object or given validators.
-[ ] coerceToValidator  (function) :202
+[x] coerceToValidator  (function) :202
       -- Creates validator function by combining provided validators.
-[ ] pickAsyncValidators  (export function) :209
+[x] pickAsyncValidators  (export function) :209
       -- Gets async validators from either an options object or given validators.
-[ ] coerceToAsyncValidator  (function) :224
+[x] coerceToAsyncValidator  (function) :224
       -- Creates async validator function by combining provided async validators.
-[ ] isOptionsObj  (export function) :257
-[ ] assertControlPresent  (export function) :267
-[ ] assertAllValuesPresent  (export function) :284
+[x] isOptionsObj  (export function) :257
+[x] assertControlPresent  (export function) :267
+[x] assertAllValuesPresent  (export function) :284
 [ ] AbstractControl  (export class) :481
       -- This is the base class for `FormControl`, `FormGroup`, and `FormArray`. It provides some of the shared behavior that all controls and groups of controls have, l
 [ ] AbstractControl.constructor  (ctor) :571
@@ -1604,58 +1604,58 @@ Format: [ ] Nama  (export|kind) :baris
       -- True if the control has not been marked as touched A control is `untouched` if the user has not yet triggered a `blur` event on it.
 [ ] AbstractControl.updateOn  (accessor) :803
       -- Reports the update strategy of the `AbstractControl` (meaning the event on which the control updates itself). Possible values: `'change'` | `'blur'` | `'submit'
-[ ] AbstractControl.setValidators  (method) :817
+[x] AbstractControl.setValidators  (method) :817
       -- Sets the synchronous validators that are active on this control.  Calling this overwrites any existing synchronous validators. When you add or remove a validato
-[ ] AbstractControl.setAsyncValidators  (method) :831
+[x] AbstractControl.setAsyncValidators  (method) :831
       -- Sets the asynchronous validators that are active on this control. Calling this overwrites any existing asynchronous validators. When you add or remove a validat
-[ ] AbstractControl.addValidators  (method) :847
+[x] AbstractControl.addValidators  (method) :847
       -- Add a synchronous validator or validators to this control, without affecting other validators. When you add or remove a validator at run time, you must call `up
 [ ] AbstractControl.addAsyncValidators  (method) :862
       -- Add an asynchronous validator or validators to this control, without affecting other validators. When you add or remove a validator at run time, you must call `
-[ ] AbstractControl.removeValidators  (method) :893
+[x] AbstractControl.removeValidators  (method) :893
       -- Remove a synchronous validator from this control, without affecting other validators. Validators are compared by function reference; you must pass a reference t
 [ ] AbstractControl.removeAsyncValidators  (method) :908
       -- Remove an asynchronous validator from this control, without affecting other validators. Validators are compared by function reference; you must pass a reference
-[ ] AbstractControl.hasValidator  (method) :933
+[x] AbstractControl.hasValidator  (method) :933
       -- Check whether a synchronous validator function is present on this control. The provided validator must be a reference to the exact same function that was provid
 [ ] AbstractControl.hasAsyncValidator  (method) :945
       -- Check whether an asynchronous validator function is present on this control. The provided validator must be a reference to the exact same function that was prov
-[ ] AbstractControl.clearValidators  (method) :956
+[x] AbstractControl.clearValidators  (method) :956
       -- Empties out the synchronous validator list. When you add or remove a validator at run time, you must call `updateValueAndValidity()` for the new validation to t
-[ ] AbstractControl.clearAsyncValidators  (method) :967
+[x] AbstractControl.clearAsyncValidators  (method) :967
       -- Empties out the async validator list. When you add or remove a validator at run time, you must call `updateValueAndValidity()` for the new validation to take ef
 [ ] AbstractControl.markAsTouched  (method) :990
       -- Marks the control as `touched`. A control is touched by focus and blur events that do not change the value. and emits events after marking is applied. * `onlySe
 [ ] AbstractControl.markAsTouched  (method) :994
-[ ] AbstractControl.markAsTouched  (method) :999
-[ ] AbstractControl.markAllAsDirty  (method) :1028
+[x] AbstractControl.markAsTouched  (method) :999
+[x] AbstractControl.markAllAsDirty  (method) :1028
       -- Marks the control and all its descendant controls as `dirty`. and emits events after marking is applied. * `emitEvent`: When true or not supplied (the default),
-[ ] AbstractControl.markAllAsTouched  (method) :1047
+[x] AbstractControl.markAllAsTouched  (method) :1047
       -- Marks the control and all its descendant controls as `touched`. and emits events after marking is applied. * `emitEvent`: When true or not supplied (the default
 [ ] AbstractControl.markAsUntouched  (method) :1074
       -- Marks the control as `untouched`. If the control has any children, also marks all children as `untouched` and recalculates the `touched` status of all parent co
 [ ] AbstractControl.markAsUntouched  (method) :1079
-[ ] AbstractControl.markAsUntouched  (method) :1084
+[x] AbstractControl.markAsUntouched  (method) :1084
 [ ] AbstractControl.markAsDirty  (method) :1124
       -- Marks the control as `dirty`. A control becomes dirty when the control's value is changed through the UI; compare `markAsTouched`. and emits events after markin
 [ ] AbstractControl.markAsDirty  (method) :1128
-[ ] AbstractControl.markAsDirty  (method) :1133
+[x] AbstractControl.markAsDirty  (method) :1133
 [ ] AbstractControl.markAsPristine  (method) :1171
       -- Marks the control as `pristine`. If the control has any children, marks all children as `pristine`, and recalculates the `pristine` status of all parent control
 [ ] AbstractControl.markAsPristine  (method) :1175
-[ ] AbstractControl.markAsPristine  (method) :1180
+[x] AbstractControl.markAsPristine  (method) :1180
 [ ] AbstractControl.markAsPending  (method) :1219
       -- Marks the control as `pending`. A control is pending while the control performs async validation. emits events after marking is applied. * `onlySelf`: When true
 [ ] AbstractControl.markAsPending  (method) :1223
-[ ] AbstractControl.markAsPending  (method) :1228
+[x] AbstractControl.markAsPending  (method) :1228
 [ ] AbstractControl.disable  (method) :1261
       -- Disables the control. This means the control is exempt from validation checks and excluded from the aggregate value of any parent. Its status is `DISABLED`. If 
 [ ] AbstractControl.disable  (method) :1265
-[ ] AbstractControl.disable  (method) :1266
-[ ] AbstractControl.enable  (method) :1311
+[x] AbstractControl.disable  (method) :1266
+[x] AbstractControl.enable  (method) :1311
       -- Enables the control. This means the control is included in validation checks and the aggregate value of its parent. Its status recalculates based on its value a
-[ ] AbstractControl._updateAncestors  (method) :1326
-[ ] AbstractControl.setParent  (method) :1344
+[x] AbstractControl._updateAncestors  (method) :1326
+[x] AbstractControl.setParent  (method) :1344
       -- Sets the parent of the control
 [ ] AbstractControl.setValue  (method) :1351
       -- Sets the value of the control. Abstract method (implemented in sub-classes).
@@ -1663,23 +1663,23 @@ Format: [ ] Nama  (export|kind) :baris
       -- Patches the value of the control. Abstract method (implemented in sub-classes).
 [ ] AbstractControl.reset  (method) :1361
       -- Resets the control. Abstract method (implemented in sub-classes).
-[ ] AbstractControl.getRawValue  (method) :1367
+[x] AbstractControl.getRawValue  (method) :1367
       -- The raw value of this control. For most control implementations, the raw value will include disabled children.
 [ ] AbstractControl.updateValueAndValidity  (method) :1388
       -- Recalculates the value and validation status of the control. By default, it also updates the value and validity of its ancestors. after updates and validity che
 [ ] AbstractControl.updateValueAndValidity  (method) :1392
-[ ] AbstractControl.updateValueAndValidity  (method) :1397
-[ ] AbstractControl._updateTreeValidity  (method) :1430
+[x] AbstractControl.updateValueAndValidity  (method) :1397
+[x] AbstractControl._updateTreeValidity  (method) :1430
       -- @internal
-[ ] AbstractControl._setInitialStatus  (method) :1435
-[ ] AbstractControl._runValidator  (method) :1439
-[ ] AbstractControl._runAsyncValidator  (method) :1443
-[ ] AbstractControl._cancelExistingSubscription  (method) :1461
+[x] AbstractControl._setInitialStatus  (method) :1435
+[x] AbstractControl._runValidator  (method) :1439
+[x] AbstractControl._runAsyncValidator  (method) :1443
+[x] AbstractControl._cancelExistingSubscription  (method) :1461
 [ ] AbstractControl.setErrors  (method) :1507
       -- Sets errors on a form control when running validations manually, rather than automatically. Calling `setErrors` also updates the validity of the parent control.
 [ ] AbstractControl.setErrors  (method) :1510
       -- @internal
-[ ] AbstractControl.setErrors  (method) :1514
+[x] AbstractControl.setErrors  (method) :1514
 [ ] AbstractControl.get  (method) :1527
       -- Retrieves a child control given the control's name or path. This signature for get supports strings and `const` arrays (`.get(['foo', 'bar'] as const)`).
 [ ] AbstractControl.get  (method) :1537
@@ -1730,7 +1730,7 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] AbstractControl._assignAsyncValidators  (method) :1801
       -- Internal implementation of the `setAsyncValidators` method. Needs to be separated out into a different method, because it is called in the constructor and it ca
 [ ] AbstractControl._updateHasRequiredValidator  (method) :1806
-[ ] hasOwnControl  (export function) :1811
+[x] hasOwnControl  (export function) :1811
 
 ## packages/forms/src/model/form_array.ts
 [ ] FormArray  (export class) :122

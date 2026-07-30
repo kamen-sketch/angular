@@ -1,7 +1,7 @@
 DAFTAR FUNGSI YANG SUDAH DIANALISIS
 Dihasilkan otomatis oleh analysis/tools/sync-checklist.mjs -- jangan diedit manual.
 Sumber: analysis/subsystems/*.txt
-Total fungsi tercentang: 471
+Total fungsi tercentang: 601
 ==============================================================================
 
 ### 01-core-signals-primitives
@@ -959,3 +959,269 @@ Total fungsi tercentang: 471
       Dekorator Angular pada sebuah kelas (dipakai transformer untuk menghapusnya).
 [x] containsErrors  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:815
       Predikat diagnostik: ada error (bukan sekadar warning).
+
+### 08-common-package
+[x] addBody  --  packages/common/http/src/client.ts:43
+      Menyisipkan body ke dalam objek opsi untuk metode POST/PUT/PATCH.
+[x] HttpClient.request  --  packages/common/http/src/client.ts:457
+      Implementasi tunggal di balik puluhan overload: menyusun HttpRequest, menjalankan rantai handler, memetakan hasil sesuai opsi observe/responseType.
+[x] interceptorChainEndFn  --  packages/common/http/src/interceptor.ts:149
+      Ujung rantai interceptor: memanggil handler backend sebenarnya.
+[x] adaptLegacyInterceptorToChain  --  packages/common/http/src/interceptor.ts:160
+      Membungkus HttpInterceptor berbasis kelas menjadi fungsi rantai.
+[x] chainedInterceptorFn  --  packages/common/http/src/interceptor.ts:174
+      Membungkus interceptor fungsional dan menjalankannya dalam konteks injeksi.
+[x] legacyInterceptorFnFactory  --  packages/common/http/src/interceptor.ts:227
+      Membangun rantai dari multi-provider HTTP_INTERCEPTORS dan mendaftarkan pending task per request.
+[x] NgForOfContext.first  --  packages/common/src/directives/ng_for_of.ts:53
+      Variabel kontekstual `first`.
+[x] NgForOfContext.last  --  packages/common/src/directives/ng_for_of.ts:58
+      Variabel kontekstual `last`.
+[x] NgForOfContext.even  --  packages/common/src/directives/ng_for_of.ts:63
+      Variabel kontekstual `even`.
+[x] NgForOfContext.odd  --  packages/common/src/directives/ng_for_of.ts:68
+      Variabel kontekstual `odd`.
+[x] NgForOf.ngForTrackBy  --  packages/common/src/directives/ng_for_of.ts:208
+      Setter fungsi trackBy dengan peringatan dev bila bukan fungsi.
+[x] NgForOf.ngDoCheck  --  packages/common/src/directives/ng_for_of.ts:253
+      Membuat differ saat pertama kali, menjalankan diff, dan menerapkan perubahan.
+[x] NgForOf._applyChanges  --  packages/common/src/directives/ng_for_of.ts:286
+      Menerjemahkan operasi differ menjadi create/remove/move pada ViewContainerRef dan menyegarkan index/count semua view.
+[x] NgForOf.ngTemplateContextGuard  --  packages/common/src/directives/ng_for_of.ts:333
+      Penanda tipe konteks NgForOfContext untuk type-checker.
+[x] applyViewChange  --  packages/common/src/directives/ng_for_of.ts:346
+      Memperbarui $implicit pada view yang dipakai ulang.
+[x] getTypeName  --  packages/common/src/directives/ng_for_of.ts:353
+      Nama tipe nilai untuk pesan error differ.
+[x] NgIf.ngIf  --  packages/common/src/directives/ng_if.ts:185
+      Setter kondisi yang menyimpan nilai ke konteks ($implicit) lalu memperbarui view.
+[x] NgIf.ngIfThen  --  packages/common/src/directives/ng_if.ts:195
+      Setter template "then" dinamis, mereset view yang ada.
+[x] NgIf.ngIfElse  --  packages/common/src/directives/ng_if.ts:207
+      Setter template "else" dinamis.
+[x] NgIf._updateView  --  packages/common/src/directives/ng_if.ts:214
+      Membuat/menukar view then-else hanya bila cabang berganti; membersihkan container lebih dulu.
+[x] NgIf.ngTemplateContextGuard  --  packages/common/src/directives/ng_if.ts:259
+      Penanda bagi type-checker tentang tipe konteks template NgIf.
+[x] assertTemplate  --  packages/common/src/directives/ng_if.ts:278
+      Validasi bahwa nilai yang diberikan benar-benar TemplateRef.
+[x] SubscribableStrategy.createSubscription  --  packages/common/src/pipes/async_pipe.ts:35
+      Berlangganan Observable/Subscribable dengan penerusan error ke ErrorHandler.
+[x] SubscribableStrategy.dispose  --  packages/common/src/pipes/async_pipe.ts:55
+      Unsubscribe.
+[x] PromiseStrategy.createSubscription  --  packages/common/src/pipes/async_pipe.ts:62
+      Menyambungkan then/catch Promise ke callback pipe.
+[x] PromiseStrategy.dispose  --  packages/common/src/pipes/async_pipe.ts:102
+      Promise tidak bisa dibatalkan - dispose adalah no-op.
+[x] AsyncPipe.ngOnDestroy  --  packages/common/src/pipes/async_pipe.ts:160
+      Melepas langganan saat pipe dihancurkan.
+[x] AsyncPipe.transform  --  packages/common/src/pipes/async_pipe.ts:178
+      Berlangganan sumber async, mengembalikan nilai terakhir, dan berganti langganan bila objeknya berubah.
+[x] AsyncPipe._subscribe  --  packages/common/src/pipes/async_pipe.ts:202
+      Memilih strategi lalu membuat langganan yang memanggil _updateLatestValue.
+[x] AsyncPipe._selectStrategy  --  packages/common/src/pipes/async_pipe.ts:212
+      Membedakan Promise dari Subscribable/Observable.
+[x] AsyncPipe._dispose  --  packages/common/src/pipes/async_pipe.ts:226
+      Melepas langganan dan mereset state pipe.
+[x] AsyncPipe._updateLatestValue  --  packages/common/src/pipes/async_pipe.ts:235
+      Menyimpan nilai baru dan memanggil markForCheck hanya untuk emisi asinkron.
+
+### 09-router
+[x] namedOutletsRedirect  --  packages/router/src/apply_redirects.ts:45
+      Error: redirectTo tidak didukung untuk outlet bernama.
+[x] canLoadFails  --  packages/router/src/apply_redirects.ts:53
+      Error/pembatalan ketika guard canLoad menolak.
+[x] ApplyRedirects.lineralizeSegments  --  packages/router/src/apply_redirects.ts:67
+      Meratakan grup segmen hasil redirect menjadi daftar linear.
+[x] ApplyRedirects.applyRedirectCommands  --  packages/router/src/apply_redirects.ts:84
+      Menerapkan perintah redirectTo, mempertahankan parameter posisi.
+[x] ApplyRedirects.createSegmentGroup  --  packages/router/src/apply_redirects.ts:137
+      Membangun grup segmen baru dari pola redirect.
+[x] ApplyRedirects.findPosParam  --  packages/router/src/apply_redirects.ts:167
+      Mencari nilai parameter posisi (:id) untuk disisipkan ke redirect.
+[x] createRouterState  --  packages/router/src/create_router_state.ts:20
+      Membangun pohon ActivatedRoute baru dengan memakai ulang simpul lama sesuai RouteReuseStrategy.
+[x] createNode  --  packages/router/src/create_router_state.ts:35
+      Membuat atau memakai ulang satu simpul ActivatedRoute.
+[x] createOrReuseChildren  --  packages/router/src/create_router_state.ts:70
+      Mencocokkan anak lama dengan anak baru untuk menentukan reuse.
+[x] createActivatedRoute  --  packages/router/src/create_router_state.ts:86
+      Membuat ActivatedRoute baru dari snapshot.
+[x] createUrlTreeFromSnapshot  --  packages/router/src/create_url_tree.ts:79
+      Membangun UrlTree dari snapshot rute + perintah navigasi relatif.
+[x] createSegmentGroupFromRoute  --  packages/router/src/create_url_tree.ts:96
+      Merekonstruksi grup segmen dari sebuah ActivatedRoute.
+[x] createUrlTreeFromSegmentGroup  --  packages/router/src/create_url_tree.ts:119
+      Menerapkan perintah navigasi pada grup segmen dan menghasilkan UrlTree.
+[x] isMatrixParams  --  packages/router/src/create_url_tree.ts:150
+      Mendeteksi perintah berupa matrix params.
+[x] isCommandWithOutlets  --  packages/router/src/create_url_tree.ts:158
+      Mendeteksi perintah berbentuk {outlets: {...}}.
+[x] normalizeQueryParams  --  packages/router/src/create_url_tree.ts:172
+      Menormalkan query params sebelum serialisasi.
+[x] replaceSegment  --  packages/router/src/create_url_tree.ts:223
+      Mengganti satu segmen dalam pohon secara immutable.
+[x] computeNavigation  --  packages/router/src/create_url_tree.ts:270
+      Menghitung sifat perintah: absolut/relatif, jumlah '..', dan pemisahan outlet.
+[x] findStartingPositionForTargetGroup  --  packages/router/src/create_url_tree.ts:329
+      Menentukan grup segmen awal tempat perintah diterapkan.
+[x] createPositionApplyingDoubleDots  --  packages/router/src/create_url_tree.ts:354
+      Menaiki pohon segmen sesuai jumlah '..'.
+[x] NavigationTransitions.complete  --  packages/router/src/navigation_transition.ts:403
+      Menutup subject transisi saat router dihancurkan.
+[x] NavigationTransitions.handleNavigationRequest  --  packages/router/src/navigation_transition.ts:407
+      Menambahkan permintaan navigasi baru ke subject transisi (menaikkan navigationId).
+[x] NavigationTransitions.setupNavigations  --  packages/router/src/navigation_transition.ts:444
+      Rantai RxJS lengkap satu navigasi: recognize -> guards -> resolve -> createRouterState -> view transition -> aktivasi, dengan pembatalan lewat switchMap.
+[x] NavigationTransitions.cancelNavigationTransition  --  packages/router/src/navigation_transition.ts:990
+      Membatalkan navigasi dengan kode alasan dan memancarkan NavigationCancel.
+[x] NavigationTransitions.isUpdatingInternalState  --  packages/router/src/navigation_transition.ts:1010
+      Menentukan apakah transisi mengubah state internal router (dipakai state manager).
+[x] NavigationTransitions.isUpdatedBrowserUrl  --  packages/router/src/navigation_transition.ts:1028
+      Menentukan apakah URL browser perlu diperbarui.
+[x] isBrowserTriggeredNavigation  --  packages/router/src/navigation_transition.ts:1045
+      Membedakan navigasi dari tombol back/forward browser dengan navigasi imperatif.
+[x] discardNewActivatedRoutes  --  packages/router/src/navigation_transition.ts:1049
+      Membuang ActivatedRoute yang terlanjur dibuat saat navigasi dibatalkan.
+[x] checkGuards  --  packages/router/src/operators/check_guards.ts:56
+      Operator yang menjalankan canDeactivate, canActivateChild, dan canActivate berurutan.
+[x] runCanDeactivateChecks  --  packages/router/src/operators/check_guards.ts:80
+      Menjalankan canDeactivate dari rute terdalam ke terluar.
+[x] runCanActivateChecks  --  packages/router/src/operators/check_guards.ts:93
+      Menjalankan canActivateChild lalu canActivate dari terluar ke terdalam.
+[x] fireActivationStart  --  packages/router/src/operators/check_guards.ts:121
+      Memancarkan event ActivationStart.
+[x] fireChildActivationStart  --  packages/router/src/operators/check_guards.ts:139
+      Memancarkan event ChildActivationStart.
+[x] runCanActivate  --  packages/router/src/operators/check_guards.ts:149
+      Menjalankan satu set guard canActivate dalam konteks injeksi rute.
+[x] runCanActivateChild  --  packages/router/src/operators/check_guards.ts:174
+      Menjalankan guard canActivateChild milik leluhur.
+[x] runCanDeactivate  --  packages/router/src/operators/check_guards.ts:209
+      Menjalankan guard canDeactivate dengan komponen yang akan dilepas.
+[x] runCanLoadGuards  --  packages/router/src/operators/check_guards.ts:230
+      Guard canLoad sebelum memuat modul lazy.
+[x] redirectIfUrlTree  --  packages/router/src/operators/check_guards.ts:254
+      Menerjemahkan UrlTree yang dikembalikan guard menjadi redirect navigasi.
+[x] runCanMatchGuards  --  packages/router/src/operators/check_guards.ts:265
+      Guard canMatch saat pencocokan rute.
+[x] resolveData  --  packages/router/src/operators/resolve_data.ts:28
+      Operator yang menjalankan resolver semua rute dan menyimpan hasilnya ke snapshot.
+[x] flattenRouteTree  --  packages/router/src/operators/resolve_data.ts:74
+      Meratakan pohon rute menjadi daftar untuk pemrosesan berurutan.
+[x] runResolve  --  packages/router/src/operators/resolve_data.ts:79
+      Menjalankan resolver satu simpul dengan menghormati runGuardsAndResolvers.
+[x] resolveNode  --  packages/router/src/operators/resolve_data.ts:101
+      Menjalankan seluruh resolver satu rute dan menggabungkan hasilnya.
+[x] getResolver  --  packages/router/src/operators/resolve_data.ts:129
+      Menyelesaikan resolver berbasis kelas maupun fungsi dalam konteks injeksi.
+[x] recognize  --  packages/router/src/recognize.ts:46
+      Operator yang menjalankan Recognizer atas UrlTree dan menghasilkan RouterStateSnapshot.
+[x] Recognizer.noMatchError  --  packages/router/src/recognize.ts:88
+      Menyusun error NG04002 "Cannot match any routes".
+[x] Recognizer.recognize  --  packages/router/src/recognize.ts:97
+      Titik masuk pencocokan: proses grup segmen root lalu bangun snapshot.
+[x] Recognizer.match  --  packages/router/src/recognize.ts:117
+      Mencocokkan UrlTree dengan konfigurasi dan memvalidasi tidak ada sisa segmen.
+[x] Recognizer.processSegmentGroup  --  packages/router/src/recognize.ts:157
+      Memroses satu UrlSegmentGroup terhadap daftar Route.
+[x] Recognizer.processChildren  --  packages/router/src/recognize.ts:188
+      Memroses anak per outlet (termasuk outlet bernama).
+[x] Recognizer.processSegment  --  packages/router/src/recognize.ts:235
+      Mencoba setiap Route terhadap segmen saat ini.
+[x] Recognizer.processSegmentAgainstRoute  --  packages/router/src/recognize.ts:270
+      Menjalankan canMatch, menangani redirectTo, dan menurunkan ke anak.
+[x] Recognizer.expandSegmentAgainstRouteUsingRedirect  --  packages/router/src/recognize.ts:324
+      Menerapkan redirect (relatif maupun absolut) lalu mencocokkan ulang.
+[x] Recognizer.createSnapshot  --  packages/router/src/recognize.ts:377
+      Membuat ActivatedRouteSnapshot lengkap dengan params, data, dan resolve.
+[x] Recognizer.matchSegmentAgainstRoute  --  packages/router/src/recognize.ts:402
+      Pencocokan path aktual termasuk parameter dan wildcard, serta pemuatan loadChildren.
+[x] Recognizer.getChildConfig  --  packages/router/src/recognize.ts:494
+      Mengambil konfigurasi anak, memuat modul lazy bila perlu.
+[x] sortActivatedRouteSnapshots  --  packages/router/src/recognize.ts:534
+      Mengurutkan hasil agar outlet primary lebih dulu (hasil deterministik).
+[x] hasEmptyPathConfig  --  packages/router/src/recognize.ts:542
+      Deteksi rute berpath kosong yang perlu perlakuan khusus.
+
+### 10-forms
+[x] ValueChangeEvent.constructor  --  packages/forms/src/model/abstract_model.ts:110
+      Event terpadu perubahan nilai pada aliran `events`.
+[x] PristineChangeEvent.constructor  --  packages/forms/src/model/abstract_model.ts:125
+      Event terpadu perubahan pristine.
+[x] TouchedChangeEvent.constructor  --  packages/forms/src/model/abstract_model.ts:141
+      Event terpadu perubahan touched.
+[x] StatusChangeEvent.constructor  --  packages/forms/src/model/abstract_model.ts:157
+      Event terpadu perubahan status.
+[x] FormSubmittedEvent.constructor  --  packages/forms/src/model/abstract_model.ts:173
+      Event submit form pada aliran `events`.
+[x] FormResetEvent.constructor  --  packages/forms/src/model/abstract_model.ts:185
+      Event reset form pada aliran `events`.
+[x] pickValidators  --  packages/forms/src/model/abstract_model.ts:193
+      Mengambil validator dari argumen berbentuk array atau objek opsi.
+[x] coerceToValidator  --  packages/forms/src/model/abstract_model.ts:202
+      Menggabungkan array validator menjadi satu fungsi (Validators.compose).
+[x] pickAsyncValidators  --  packages/forms/src/model/abstract_model.ts:209
+      Versi async dari pickValidators.
+[x] coerceToAsyncValidator  --  packages/forms/src/model/abstract_model.ts:224
+      Menggabungkan validator async menjadi satu.
+[x] isOptionsObj  --  packages/forms/src/model/abstract_model.ts:257
+      Membedakan argumen opsi ({validators, updateOn}) dari array validator.
+[x] assertControlPresent  --  packages/forms/src/model/abstract_model.ts:267
+      Error jelas saat setValue/patchValue menyebut kontrol yang tidak ada.
+[x] assertAllValuesPresent  --  packages/forms/src/model/abstract_model.ts:284
+      Memastikan setValue menyertakan seluruh kunci grup.
+[x] AbstractControl.setValidators  --  packages/forms/src/model/abstract_model.ts:817
+      Mengganti seluruh validator sinkron (tanpa menjalankan ulang validasi).
+[x] AbstractControl.setAsyncValidators  --  packages/forms/src/model/abstract_model.ts:831
+      Mengganti seluruh validator async.
+[x] AbstractControl.addValidators  --  packages/forms/src/model/abstract_model.ts:847
+      Menambahkan validator tanpa menghapus yang lama.
+[x] AbstractControl.removeValidators  --  packages/forms/src/model/abstract_model.ts:893
+      Menghapus validator berdasarkan identitas fungsi.
+[x] AbstractControl.hasValidator  --  packages/forms/src/model/abstract_model.ts:933
+      Cek keberadaan validator tertentu.
+[x] AbstractControl.clearValidators  --  packages/forms/src/model/abstract_model.ts:956
+      Menghapus semua validator sinkron.
+[x] AbstractControl.clearAsyncValidators  --  packages/forms/src/model/abstract_model.ts:967
+      Menghapus semua validator async.
+[x] AbstractControl.markAsTouched  --  packages/forms/src/model/abstract_model.ts:999
+      Menandai kontrol tersentuh dan menyebarkannya ke leluhur.
+[x] AbstractControl.markAllAsDirty  --  packages/forms/src/model/abstract_model.ts:1028
+      Menandai seluruh pohon kotor.
+[x] AbstractControl.markAllAsTouched  --  packages/forms/src/model/abstract_model.ts:1047
+      Menandai seluruh pohon tersentuh (pola umum saat submit).
+[x] AbstractControl.markAsUntouched  --  packages/forms/src/model/abstract_model.ts:1084
+      Mereset status touched pada kontrol dan seluruh anaknya.
+[x] AbstractControl.markAsDirty  --  packages/forms/src/model/abstract_model.ts:1133
+      Menandai kontrol kotor dan menyebarkannya ke leluhur.
+[x] AbstractControl.markAsPristine  --  packages/forms/src/model/abstract_model.ts:1180
+      Mereset status dirty pada kontrol dan seluruh anaknya.
+[x] AbstractControl.markAsPending  --  packages/forms/src/model/abstract_model.ts:1228
+      Menyetel status PENDING secara eksplisit.
+[x] AbstractControl.disable  --  packages/forms/src/model/abstract_model.ts:1266
+      Menonaktifkan kontrol beserta anaknya dan mengeluarkan nilainya dari agregat induk.
+[x] AbstractControl.enable  --  packages/forms/src/model/abstract_model.ts:1311
+      Mengaktifkan kembali kontrol dan menghitung ulang leluhur.
+[x] AbstractControl._updateAncestors  --  packages/forms/src/model/abstract_model.ts:1326
+      Menghitung ulang nilai, validitas, dan status pristine leluhur.
+[x] AbstractControl.setParent  --  packages/forms/src/model/abstract_model.ts:1344
+      Menautkan kontrol ke induknya.
+[x] AbstractControl.getRawValue  --  packages/forms/src/model/abstract_model.ts:1367
+      Nilai termasuk kontrol yang disabled.
+[x] AbstractControl.updateValueAndValidity  --  packages/forms/src/model/abstract_model.ts:1397
+      Inti siklus validasi: hitung nilai, jalankan validator sinkron lalu async, emit event, dan propagasi ke leluhur.
+[x] AbstractControl._updateTreeValidity  --  packages/forms/src/model/abstract_model.ts:1430
+      Validasi ulang seluruh pohon dari daun ke akar (dipakai saat form dipasang).
+[x] AbstractControl._setInitialStatus  --  packages/forms/src/model/abstract_model.ts:1435
+      Status awal DISABLED bila semua anak disabled, selain itu VALID.
+[x] AbstractControl._runValidator  --  packages/forms/src/model/abstract_model.ts:1439
+      Menjalankan validator sinkron gabungan dan mengembalikan objek error.
+[x] AbstractControl._runAsyncValidator  --  packages/forms/src/model/abstract_model.ts:1443
+      Menyetel status PENDING dan berlangganan hasil validator async.
+[x] AbstractControl._cancelExistingSubscription  --  packages/forms/src/model/abstract_model.ts:1461
+      Membatalkan validator async yang masih berjalan, mengembalikan apakah emisi seharusnya terjadi.
+[x] AbstractControl.setErrors  --  packages/forms/src/model/abstract_model.ts:1514
+      Menulis error secara manual dan menyebarkan perubahan status ke leluhur.
+[x] hasOwnControl  --  packages/forms/src/model/abstract_model.ts:1811
+      Cek kepemilikan kontrol anak (aman terhadap prototipe).

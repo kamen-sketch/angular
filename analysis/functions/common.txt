@@ -19,7 +19,7 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] HttpHandler.handle  (method) :148
 
 ## packages/common/http/src/client.ts
-[ ] addBody  (function) :43
+[x] addBody  (function) :43
       -- Constructs an instance of `HttpRequestOptions<T>` from a source `HttpMethodOptions` and the given `body`. This function clones the object and adds the body. Not
 [ ] HttpClient  (export class) :96
       -- Performs HTTP requests. This service is available as an injectable class, with methods to perform HTTP requests. Each request method has multiple signatures, an
@@ -58,7 +58,7 @@ Format: [ ] Nama  (export|kind) :baris
       -- Constructs a request which interprets the body as a JavaScript object with the response body of the requested type.
 [ ] HttpClient.request  (method) :421
       -- Constructs a request where response type and requested observable are not known statically.
-[ ] HttpClient.request  (method) :457
+[x] HttpClient.request  (method) :457
       -- Constructs an observable for a generic HTTP request that, when subscribed, fires the request through the chain of registered interceptors and on to the server. 
 
 ## packages/common/http/src/context.ts
@@ -119,12 +119,12 @@ Format: [ ] Nama  (export|kind) :baris
       -- Verifies that the headers object has the right shape: the values must be either strings, numbers or arrays. Throws an error if an invalid header value is presen
 
 ## packages/common/http/src/interceptor.ts
-[ ] interceptorChainEndFn  (export function) :149
-[ ] adaptLegacyInterceptorToChain  (export function) :160
+[x] interceptorChainEndFn  (export function) :149
+[x] adaptLegacyInterceptorToChain  (export function) :160
       -- Constructs a `ChainedInterceptorFn` which adapts a legacy `HttpInterceptor` to the `ChainedInterceptorFn` interface.
-[ ] chainedInterceptorFn  (export function) :174
+[x] chainedInterceptorFn  (export function) :174
       -- Constructs a `ChainedInterceptorFn` which wraps and invokes a functional interceptor in the given injector.
-[ ] legacyInterceptorFnFactory  (export function) :227
+[x] legacyInterceptorFnFactory  (export function) :227
       -- Creates an `HttpInterceptorFn` which lazily initializes an interceptor chain from the legacy class-based interceptors and runs the request through it.
 
 ## packages/common/http/src/jsonp.ts
@@ -660,46 +660,46 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] NgForOfContext  (export class) :33
       -- The `ngFor` directive is deprecated. Use the `@for` block instead.
 [ ] NgForOfContext.constructor  (ctor) :34
-[ ] NgForOfContext.first  (accessor) :53
+[x] NgForOfContext.first  (accessor) :53
       -- Indicates whether this is the first item in the collection.
-[ ] NgForOfContext.last  (accessor) :58
+[x] NgForOfContext.last  (accessor) :58
       -- Indicates whether this is the last item in the collection.
-[ ] NgForOfContext.even  (accessor) :63
+[x] NgForOfContext.even  (accessor) :63
       -- Indicates whether an index of this item in the collection is even.
-[ ] NgForOfContext.odd  (accessor) :68
+[x] NgForOfContext.odd  (accessor) :68
       -- Indicates whether an index of this item in the collection is odd.
 [ ] NgForOf  (export class) :177
 [ ] NgForOf.ngForOf  (accessor) :184
       -- The value of the iterable expression, which can be used as a [template input variable](guide/directives/structural-directives#structural-directive-shorthand).
-[ ] NgForOf.ngForTrackBy  (accessor) :208
+[x] NgForOf.ngForTrackBy  (accessor) :208
       -- Specifies a custom `TrackByFunction` to compute the identity of items in an iterable. If a custom `TrackByFunction` is not provided, `NgForOf` will use the item
 [ ] NgForOf.ngForTrackBy  (accessor) :218
 [ ] NgForOf.constructor  (ctor) :229
 [ ] NgForOf.ngForTemplate  (accessor) :241
       -- A reference to the template that is stamped out for each item in the iterable.
-[ ] NgForOf.ngDoCheck  (method) :253
+[x] NgForOf.ngDoCheck  (method) :253
       -- Applies the changes when needed.
-[ ] NgForOf._applyChanges  (method) :286
-[ ] NgForOf.ngTemplateContextGuard  (method) :333
+[x] NgForOf._applyChanges  (method) :286
+[x] NgForOf.ngTemplateContextGuard  (method) :333
       -- Asserts the correct type of the context for the template that `NgForOf` will render. The presence of this method is a signal to the Ivy template type-check comp
-[ ] applyViewChange  (function) :346
-[ ] getTypeName  (function) :353
+[x] applyViewChange  (function) :346
+[x] getTypeName  (function) :353
 
 ## packages/common/src/directives/ng_if.ts
 [ ] NgIf  (export class) :166
 [ ] NgIf.constructor  (ctor) :173
-[ ] NgIf.ngIf  (accessor) :185
+[x] NgIf.ngIf  (accessor) :185
       -- The Boolean expression to evaluate as the condition for showing a template.
-[ ] NgIf.ngIfThen  (accessor) :195
+[x] NgIf.ngIfThen  (accessor) :195
       -- A template to show if the condition expression evaluates to true.
-[ ] NgIf.ngIfElse  (accessor) :207
+[x] NgIf.ngIfElse  (accessor) :207
       -- A template to show if the condition expression evaluates to false.
-[ ] NgIf._updateView  (method) :214
-[ ] NgIf.ngTemplateContextGuard  (method) :259
+[x] NgIf._updateView  (method) :214
+[x] NgIf.ngTemplateContextGuard  (method) :259
       -- Asserts the correct type of the context for the template that `NgIf` will render. The presence of this method is a signal to the Ivy template type-check compile
 [ ] NgIfContext  (export class) :273
       -- The ngIf directive is deprecated in favor of the @if block instead.
-[ ] assertTemplate  (function) :278
+[x] assertTemplate  (function) :278
 
 ## packages/common/src/directives/ng_optimized_image/asserts.ts
 [ ] assertDevMode  (export function) :18
@@ -1242,22 +1242,22 @@ Format: [ ] Nama  (export|kind) :baris
 
 ## packages/common/src/pipes/async_pipe.ts
 [ ] SubscribableStrategy  (class) :34
-[ ] SubscribableStrategy.createSubscription  (method) :35
-[ ] SubscribableStrategy.dispose  (method) :55
+[x] SubscribableStrategy.createSubscription  (method) :35
+[x] SubscribableStrategy.dispose  (method) :55
 [ ] PromiseStrategy  (class) :61
-[ ] PromiseStrategy.createSubscription  (method) :62
-[ ] PromiseStrategy.dispose  (method) :102
+[x] PromiseStrategy.createSubscription  (method) :62
+[x] PromiseStrategy.dispose  (method) :102
 [ ] AsyncPipe  (export class) :144
 [ ] AsyncPipe.constructor  (ctor) :154
-[ ] AsyncPipe.ngOnDestroy  (method) :160
+[x] AsyncPipe.ngOnDestroy  (method) :160
 [ ] AsyncPipe.transform  (method) :175
 [ ] AsyncPipe.transform  (method) :176
 [ ] AsyncPipe.transform  (method) :177
-[ ] AsyncPipe.transform  (method) :178
-[ ] AsyncPipe._subscribe  (method) :202
-[ ] AsyncPipe._selectStrategy  (method) :212
-[ ] AsyncPipe._dispose  (method) :226
-[ ] AsyncPipe._updateLatestValue  (method) :235
+[x] AsyncPipe.transform  (method) :178
+[x] AsyncPipe._subscribe  (method) :202
+[x] AsyncPipe._selectStrategy  (method) :212
+[x] AsyncPipe._dispose  (method) :226
+[x] AsyncPipe._updateLatestValue  (method) :235
 
 ## packages/common/src/pipes/case_conversion_pipes.ts
 [ ] LowerCasePipe  (export class) :33

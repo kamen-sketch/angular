@@ -10,17 +10,17 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] NoMatch.constructor  (ctor) :23
 [ ] AbsoluteRedirect  (export class) :34
 [ ] AbsoluteRedirect.constructor  (ctor) :35
-[ ] namedOutletsRedirect  (export function) :45
-[ ] canLoadFails  (export function) :53
+[x] namedOutletsRedirect  (export function) :45
+[x] canLoadFails  (export function) :53
 [ ] ApplyRedirects  (export class) :61
 [ ] ApplyRedirects.constructor  (ctor) :62
-[ ] ApplyRedirects.lineralizeSegments  (method) :67
-[ ] ApplyRedirects.applyRedirectCommands  (method) :84
+[x] ApplyRedirects.lineralizeSegments  (method) :67
+[x] ApplyRedirects.applyRedirectCommands  (method) :84
 [ ] ApplyRedirects.applyRedirectCreateUrlTree  (method) :109
 [ ] ApplyRedirects.createQueryParams  (method) :123
-[ ] ApplyRedirects.createSegmentGroup  (method) :137
+[x] ApplyRedirects.createSegmentGroup  (method) :137
 [ ] ApplyRedirects.createSegments  (method) :154
-[ ] ApplyRedirects.findPosParam  (method) :167
+[x] ApplyRedirects.findPosParam  (method) :167
 [ ] ApplyRedirects.findOrReturn  (method) :182
 [ ] getRedirectResult  (function) :195
 
@@ -30,34 +30,34 @@ Format: [ ] Nama  (export|kind) :baris
       -- Makes a copy of the config and adds any default required properties.
 
 ## packages/router/src/create_router_state.ts
-[ ] createRouterState  (export function) :20
-[ ] createNode  (function) :35
-[ ] createOrReuseChildren  (function) :70
-[ ] createActivatedRoute  (function) :86
+[x] createRouterState  (export function) :20
+[x] createNode  (function) :35
+[x] createOrReuseChildren  (function) :70
+[x] createActivatedRoute  (function) :86
 
 ## packages/router/src/create_url_tree.ts
-[ ] createUrlTreeFromSnapshot  (export function) :79
+[x] createUrlTreeFromSnapshot  (export function) :79
       -- Creates a `UrlTree` relative to an `ActivatedRouteSnapshot`. If the path is static, can be the literal URL string. For a dynamic path, pass an array of path seg
-[ ] createSegmentGroupFromRoute  (export function) :96
+[x] createSegmentGroupFromRoute  (export function) :96
 [ ] createSegmentGroupFromRouteRecursive  (function) :99
-[ ] createUrlTreeFromSegmentGroup  (export function) :119
-[ ] isMatrixParams  (function) :150
-[ ] isCommandWithOutlets  (function) :158
+[x] createUrlTreeFromSegmentGroup  (export function) :119
+[x] isMatrixParams  (function) :150
+[x] isCommandWithOutlets  (function) :158
       -- Determines if a given command has an `outlets` map. When we encounter a command with an outlets k/v map, we need to apply each outlet individually to the existi
-[ ] normalizeQueryParams  (function) :172
+[x] normalizeQueryParams  (function) :172
       -- Normalizes a query parameter value by using the `UrlSerializer` to serialize then parse the value. This ensures that the value is consistent between parsing a U
 [ ] tree  (function) :182
-[ ] replaceSegment  (function) :223
+[x] replaceSegment  (function) :223
       -- Replaces the `oldSegment` which is located in some child of the `current` with the `newSegment`. This also has the effect of creating new `UrlSegmentGroup` copi
 [ ] Navigation  (class) :240
 [ ] Navigation.constructor  (ctor) :241
 [ ] Navigation.toRoot  (method) :264
-[ ] computeNavigation  (function) :270
+[x] computeNavigation  (function) :270
       -- Transforms commands to a normalized `Navigation`
 [ ] Position  (class) :321
 [ ] Position.constructor  (ctor) :322
-[ ] findStartingPositionForTargetGroup  (function) :329
-[ ] createPositionApplyingDoubleDots  (function) :354
+[x] findStartingPositionForTargetGroup  (function) :329
+[x] createPositionApplyingDoubleDots  (function) :354
 [ ] getOutlets  (function) :376
 [ ] updateSegmentGroup  (function) :384
 [ ] updateSegmentGroupChildren  (function) :414
@@ -261,16 +261,16 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] NavigationTransitions  (export class) :342
 [ ] NavigationTransitions.hasRequestedNavigation  (accessor) :377
 [ ] NavigationTransitions.constructor  (ctor) :393
-[ ] NavigationTransitions.complete  (method) :403
-[ ] NavigationTransitions.handleNavigationRequest  (method) :407
-[ ] NavigationTransitions.setupNavigations  (method) :444
-[ ] NavigationTransitions.cancelNavigationTransition  (method) :990
-[ ] NavigationTransitions.isUpdatingInternalState  (method) :1010
+[x] NavigationTransitions.complete  (method) :403
+[x] NavigationTransitions.handleNavigationRequest  (method) :407
+[x] NavigationTransitions.setupNavigations  (method) :444
+[x] NavigationTransitions.cancelNavigationTransition  (method) :990
+[x] NavigationTransitions.isUpdatingInternalState  (method) :1010
       -- currently set to.
-[ ] NavigationTransitions.isUpdatedBrowserUrl  (method) :1028
+[x] NavigationTransitions.isUpdatedBrowserUrl  (method) :1028
       -- to somewhere not displayed in the URL bar and we will update the URL bar if navigation succeeds).
-[ ] isBrowserTriggeredNavigation  (export function) :1045
-[ ] discardNewActivatedRoutes  (function) :1049
+[x] isBrowserTriggeredNavigation  (export function) :1045
+[x] discardNewActivatedRoutes  (function) :1049
 
 ## packages/router/src/operators/activate_routes.ts
 [ ] ActivateRoutes  (export class) :16
@@ -286,19 +286,19 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] ActivateRoutes.activateRoutes  (method) :165
 
 ## packages/router/src/operators/check_guards.ts
-[ ] checkGuards  (export function) :56
-[ ] runCanDeactivateChecks  (function) :80
-[ ] runCanActivateChecks  (function) :93
-[ ] fireActivationStart  (function) :121
+[x] checkGuards  (export function) :56
+[x] runCanDeactivateChecks  (function) :80
+[x] runCanActivateChecks  (function) :93
+[x] fireActivationStart  (function) :121
       -- This should fire off `ActivationStart` events for each route being activated at this level. In other words, if you're activating `a` and `b` below, `path` will 
-[ ] fireChildActivationStart  (function) :139
+[x] fireChildActivationStart  (function) :139
       -- This should fire off `ChildActivationStart` events for each route being activated at this level. In other words, if you're activating `a` and `b` below, `path` 
-[ ] runCanActivate  (function) :149
-[ ] runCanActivateChild  (function) :174
-[ ] runCanDeactivate  (function) :209
-[ ] runCanLoadGuards  (export function) :230
-[ ] redirectIfUrlTree  (function) :254
-[ ] runCanMatchGuards  (export function) :265
+[x] runCanActivate  (function) :149
+[x] runCanActivateChild  (function) :174
+[x] runCanDeactivate  (function) :209
+[x] runCanLoadGuards  (export function) :230
+[x] redirectIfUrlTree  (function) :254
+[x] runCanMatchGuards  (export function) :265
 
 ## packages/router/src/operators/prioritized_guard_value.ts
 [ ] prioritizedGuardValue  (export function) :18
@@ -308,12 +308,12 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] recognize  (export function) :19
 
 ## packages/router/src/operators/resolve_data.ts
-[ ] resolveData  (export function) :28
-[ ] flattenRouteTree  (function) :74
+[x] resolveData  (export function) :28
+[x] flattenRouteTree  (function) :74
       --  Returns the `ActivatedRouteSnapshot` tree as an array, using DFS to traverse the route tree.
-[ ] runResolve  (function) :79
-[ ] resolveNode  (function) :101
-[ ] getResolver  (function) :129
+[x] runResolve  (function) :79
+[x] resolveNode  (function) :101
+[x] getResolver  (function) :129
 
 ## packages/router/src/operators/setup_activated_route_injectors.ts
 [ ] setupActivatedRouteInjectors  (export function) :16
@@ -374,23 +374,23 @@ Format: [ ] Nama  (export|kind) :baris
 ## packages/router/src/recognize.ts
 [ ] NoLeftoversInUrl  (class) :44
       -- Class used to indicate there were no additional route config matches but that all segments of the URL were consumed during matching so the route was URL matched
-[ ] recognize  (export function) :46
+[x] recognize  (export function) :46
 [ ] Recognizer  (export class) :70
 [ ] Recognizer.constructor  (ctor) :75
-[ ] Recognizer.noMatchError  (method) :88
-[ ] Recognizer.recognize  (method) :97
-[ ] Recognizer.match  (method) :117
-[ ] Recognizer.processSegmentGroup  (method) :157
-[ ] Recognizer.processChildren  (method) :188
+[x] Recognizer.noMatchError  (method) :88
+[x] Recognizer.recognize  (method) :97
+[x] Recognizer.match  (method) :117
+[x] Recognizer.processSegmentGroup  (method) :157
+[x] Recognizer.processChildren  (method) :188
       -- Matches every child outlet in the `segmentGroup` to a `Route` in the config. Returns `null` if we cannot find a match for _any_ of the children.     config.
-[ ] Recognizer.processSegment  (method) :235
-[ ] Recognizer.processSegmentAgainstRoute  (method) :270
-[ ] Recognizer.expandSegmentAgainstRouteUsingRedirect  (method) :324
-[ ] Recognizer.createSnapshot  (method) :377
-[ ] Recognizer.matchSegmentAgainstRoute  (method) :402
-[ ] Recognizer.getChildConfig  (method) :494
-[ ] sortActivatedRouteSnapshots  (function) :534
-[ ] hasEmptyPathConfig  (function) :542
+[x] Recognizer.processSegment  (method) :235
+[x] Recognizer.processSegmentAgainstRoute  (method) :270
+[x] Recognizer.expandSegmentAgainstRouteUsingRedirect  (method) :324
+[x] Recognizer.createSnapshot  (method) :377
+[x] Recognizer.matchSegmentAgainstRoute  (method) :402
+[x] Recognizer.getChildConfig  (method) :494
+[x] sortActivatedRouteSnapshots  (function) :534
+[x] hasEmptyPathConfig  (function) :542
 [ ] mergeEmptyPathMatches  (function) :552
       -- Finds `TreeNode`s with matching empty path route configs and merges them into `TreeNode` with the children from each duplicate. This is necessary because differ
 [ ] checkOutletNameUniqueness  (function) :586
