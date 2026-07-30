@@ -1690,7 +1690,7 @@ Format: [ ] Nama  (export|kind) :baris
       -- Returns the Trusted Types policy, or null if Trusted Types are not enabled/supported. The first call to this function will create the policy.
 [ ] trustedScriptFromString  (function) :94
       -- Unsafely promote a string to a TrustedScript, falling back to strings when Trusted Types are not available. never cause an XSS vulnerability if used in a contex
-[ ] newTrustedFunctionForJIT  (export function) :105
+[x] newTrustedFunctionForJIT  (export function) :105
       -- Unsafely call the Function constructor with the given string arguments. must go through security review. In particular, it must be assured that it is only calle
 
 ## packages/compiler/src/output/source_map.ts

@@ -14,6 +14,10 @@ ISI DIREKTORI
   CHECKED-FUNCTIONS.txt   LOG SELURUH FUNGSI YANG SUDAH DICEK, berisi nama
                           fungsi + lokasi + penjelasan (dihasilkan otomatis)
 
+  TAINT-TO-SINK.txt       ANALISIS KEAMANAN: penelusuran aliran data tidak
+                          tepercaya (source) menuju titik berbahaya (sink),
+                          beserta matriks status dan titik audit prioritas
+
   functions/<area>.txt    INVENTORY LENGKAP seluruh simbol per area.
                           Satu baris per fungsi/kelas/metode:
                               [ ] namaFungsi  (export function) :123
@@ -27,6 +31,9 @@ ISI DIREKTORI
   tools/build-inventory.mjs   membangun ulang functions/*.txt dari kode
   tools/sync-checklist.mjs    mencentang inventory dari catatan subsistem,
                               lalu menulis ulang CHECKED-FUNCTIONS.txt & PROGRESS.txt
+  tools/check-security-schema-sync.mjs
+                              memverifikasi dua skema keamanan DOM (compiler vs
+                              core) tetap identik -- lihat TAINT-TO-SINK.txt P1
 
 ANGKA CAKUPAN
 -------------
@@ -34,8 +41,8 @@ ANGKA CAKUPAN
                                  spec/test yang sengaja dikecualikan)
   Simbol terinventarisasi      : 18.072 (fungsi, arrow, kelas, metode, accessor)
   Area/paket terpetakan        : 26
-  Fungsi dianalisis + dijelaskan: 699
-  Catatan subsistem            : 12 berkas
+  Fungsi dianalisis + dijelaskan: 765
+  Catatan subsistem            : 13 berkas
 
 CARA MEMAKAI
 ------------

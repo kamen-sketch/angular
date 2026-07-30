@@ -6353,8 +6353,8 @@ Format: [ ] Nama  (export|kind) :baris
 ## packages/core/src/sanitization/bypass.ts
 [ ] SafeValueImpl  (class) :61
 [ ] SafeValueImpl.constructor  (ctor) :62
-[ ] SafeValueImpl.getTypeName  (method) :64
-[ ] SafeValueImpl.toString  (method) :66
+[x] SafeValueImpl.getTypeName  (method) :64
+[x] SafeValueImpl.toString  (method) :66
 [ ] SafeHtmlImpl  (class) :74
 [ ] SafeHtmlImpl.getTypeName  (method) :75
 [ ] SafeStyleImpl  (class) :79
@@ -6367,24 +6367,24 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] SafeResourceUrlImpl.getTypeName  (method) :95
 [ ] unwrapSafeValue  (export function) :100
 [ ] unwrapSafeValue  (export function) :101
-[ ] unwrapSafeValue  (export function) :102
+[x] unwrapSafeValue  (export function) :102
 [ ] allowSanitizationBypassAndThrow  (export function) :108
 [ ] allowSanitizationBypassAndThrow  (export function) :112
 [ ] allowSanitizationBypassAndThrow  (export function) :116
 [ ] allowSanitizationBypassAndThrow  (export function) :120
 [ ] allowSanitizationBypassAndThrow  (export function) :124
 [ ] allowSanitizationBypassAndThrow  (export function) :125
-[ ] allowSanitizationBypassAndThrow  (export function) :126
-[ ] getSanitizationBypassType  (export function) :136
-[ ] bypassSanitizationTrustHtml  (export function) :149
+[x] allowSanitizationBypassAndThrow  (export function) :126
+[x] getSanitizationBypassType  (export function) :136
+[x] bypassSanitizationTrustHtml  (export function) :149
       -- Mark `html` string as trusted. This function wraps the trusted string in `String` and brands it in a way which makes it recognizable to {@link htmlSanitizer} to
-[ ] bypassSanitizationTrustStyle  (export function) :161
+[x] bypassSanitizationTrustStyle  (export function) :161
       -- Mark `style` string as trusted. This function wraps the trusted string in `String` and brands it in a way which makes it recognizable to {@link styleSanitizer} 
-[ ] bypassSanitizationTrustScript  (export function) :173
+[x] bypassSanitizationTrustScript  (export function) :173
       -- Mark `script` string as trusted. This function wraps the trusted string in `String` and brands it in a way which makes it recognizable to {@link scriptSanitizer
-[ ] bypassSanitizationTrustUrl  (export function) :185
+[x] bypassSanitizationTrustUrl  (export function) :185
       -- Mark `url` string as trusted. This function wraps the trusted string in `String` and brands it in a way which makes it recognizable to {@link urlSanitizer} to b
-[ ] bypassSanitizationTrustResourceUrl  (export function) :197
+[x] bypassSanitizationTrustResourceUrl  (export function) :197
       -- Mark `url` string as trusted. This function wraps the trusted string in `String` and brands it in a way which makes it recognizable to {@link resourceUrlSanitiz
 
 ## packages/core/src/sanitization/dom_security_schema.ts
@@ -6394,75 +6394,75 @@ Format: [ ] Nama  (export|kind) :baris
       -- Checks the SecurityContext for a given tag and property.
 
 ## packages/core/src/sanitization/html_sanitizer.ts
-[ ] tagSet  (function) :18
-[ ] merge  (function) :24
+[x] tagSet  (function) :18
+[x] merge  (function) :24
 [ ] SanitizingHtmlSerializer  (class) :123
       -- SanitizingHtmlSerializer serializes a DOM fragment, stripping out any unsafe elements and unsafe attributes.
-[ ] SanitizingHtmlSerializer.sanitizeChildren  (method) :129
-[ ] SanitizingHtmlSerializer.startElement  (method) :180
+[x] SanitizingHtmlSerializer.sanitizeChildren  (method) :129
+[x] SanitizingHtmlSerializer.startElement  (method) :180
       -- Sanitizes an opening element tag (if valid) and returns whether the element's contents should be traversed. Element content must always be traversed (even if th
-[ ] SanitizingHtmlSerializer.endElement  (method) :206
-[ ] SanitizingHtmlSerializer.chars  (method) :215
-[ ] isClobberedElement  (function) :225
+[x] SanitizingHtmlSerializer.endElement  (method) :206
+[x] SanitizingHtmlSerializer.chars  (method) :215
+[x] isClobberedElement  (function) :225
       -- Verifies whether a given child node is a descendant of a given parent node. It may not be the case when properties like `.firstChild` are clobbered and accessin
-[ ] getNextSibling  (function) :236
+[x] getNextSibling  (function) :236
       -- Retrieves next sibling node and makes sure that there is no clobbering of the `nextSibling` property happening.
-[ ] getFirstChild  (function) :251
+[x] getFirstChild  (function) :251
       -- Retrieves first child node and makes sure that there is no clobbering of the `firstChild` property happening.
-[ ] getNodeName  (export function) :260
+[x] getNodeName  (export function) :260
       -- Gets a reasonable nodeName, even for clobbered nodes.
-[ ] clobberedElementError  (function) :266
-[ ] encodeEntities  (function) :283
+[x] clobberedElementError  (function) :266
+[x] encodeEntities  (function) :283
       -- Escapes all potentially dangerous characters, so that the resulting string can be safely inserted into attribute or element text.
-[ ] _sanitizeHtml  (export function) :304
+[x] _sanitizeHtml  (export function) :304
       -- Sanitizes the given unsafe, untrusted HTML fragment, and returns HTML text that is safe to add to the DOM in a browser environment.
-[ ] getTemplateContent  (export function) :348
-[ ] isTemplateElement  (function) :353
+[x] getTemplateContent  (export function) :348
+[x] isTemplateElement  (function) :353
 
 ## packages/core/src/sanitization/iframe_attrs_validation.ts
-[ ] enforceIframeSecurity  (export function) :26
+[x] enforceIframeSecurity  (export function) :26
       -- Enforces security by neutralizing an `<iframe>` if a security-sensitive attribute is set. This function is invoked at runtime when a security-sensitive attribut
 
 ## packages/core/src/sanitization/inert_body.ts
-[ ] getInertBodyHelper  (export function) :18
+[x] getInertBodyHelper  (export function) :18
       -- This helper is used to get hold of an inert tree of DOM elements containing dirty HTML that needs sanitizing. Depending upon browser support we use one of two s
 [ ] DOMParserHelper  (class) :34
       -- Uses DOMParser to create and fill an inert body element. This is the default strategy used in browsers that support it.
 [ ] DOMParserHelper.constructor  (ctor) :35
-[ ] DOMParserHelper.getInertBodyElement  (method) :37
+[x] DOMParserHelper.getInertBodyElement  (method) :37
 [ ] InertDocumentHelper  (class) :66
       -- Use an HTML5 `template` element to create and fill an inert DOM element. This is the fallback strategy if the browser does not support DOMParser.
 [ ] InertDocumentHelper.constructor  (ctor) :69
-[ ] InertDocumentHelper.getInertBodyElement  (method) :73
-[ ] isDOMParserAvailable  (export function) :87
+[x] InertDocumentHelper.getInertBodyElement  (method) :73
+[x] isDOMParserAvailable  (export function) :87
       -- We need to determine whether the DOMParser exists in the global context and supports parsing HTML; HTML parsing support is not as wide as other formats, see htt
 
 ## packages/core/src/sanitization/sanitization.ts
-[ ] ɵɵsanitizeHtml  (export function) :51
+[x] ɵɵsanitizeHtml  (export function) :51
       -- An `html` sanitizer which converts untrusted `html` **string** into trusted string by removing dangerous content. This method parses the `html` and locates pote
-[ ] ɵɵsanitizeStyle  (export function) :85
+[x] ɵɵsanitizeStyle  (export function) :85
       -- A `style` sanitizer which converts untrusted `style` **string** into trusted string by removing dangerous content. It is possible to mark a string as trusted by
-[ ] ɵɵsanitizeUrl  (export function) :112
+[x] ɵɵsanitizeUrl  (export function) :112
       -- A `url` sanitizer which converts untrusted `url` **string** into trusted string by removing dangerous content. This method parses the `url` and locates potentia
-[ ] ɵɵsanitizeResourceUrl  (export function) :134
+[x] ɵɵsanitizeResourceUrl  (export function) :134
       -- A `url` sanitizer which only lets trusted `url`s through. This passes only `url`s marked trusted by calling {@link bypassSanitizationTrustResourceUrl}. only tru
-[ ] ɵɵsanitizeScript  (export function) :162
+[x] ɵɵsanitizeScript  (export function) :162
       -- A `script` sanitizer which only lets trusted javascript through. This passes only `script`s marked trusted by calling {@link bypassSanitizationTrustScript}. bec
-[ ] ɵɵtrustConstantHtml  (export function) :191
+[x] ɵɵtrustConstantHtml  (export function) :191
       -- A template tag function for promoting the associated constant literal to a TrustedHTML. Interpolation is explicitly not allowed. convert constant values of attr
-[ ] ɵɵtrustConstantResourceUrl  (export function) :217
+[x] ɵɵtrustConstantResourceUrl  (export function) :217
       -- A template tag function for promoting the associated constant literal to a TrustedScriptURL. Interpolation is explicitly not allowed. convert constant values of
-[ ] getUrlSanitizer  (export function) :237
+[x] getUrlSanitizer  (export function) :237
       -- Detects which sanitizer to use for URL property, based on tag name and prop name. The rules are based on the URL and RESOURCE_URL context config from `packages/
-[ ] ɵɵsanitizeUrlOrResourceUrl  (export function) :263
+[x] ɵɵsanitizeUrlOrResourceUrl  (export function) :263
       -- Sanitizes URL, selecting sanitizer function based on tag and property names. This function is used in case we can't define security context at compile time, whe
-[ ] validateAgainstEventProperties  (export function) :267
-[ ] getSanitizer  (function) :278
-[ ] getSecurityContext  (function) :283
-[ ] resolveElement  (function) :288
-[ ] ɵɵvalidateAttribute  (export function) :342
+[x] validateAgainstEventProperties  (export function) :267
+[x] getSanitizer  (function) :278
+[x] getSecurityContext  (function) :283
+[x] resolveElement  (function) :288
+[x] ɵɵvalidateAttribute  (export function) :342
       -- Validates that the attribute binding is safe to use.
-[ ] getSecuritySensitiveSVGAnimationAttributeName  (function) :398
+[x] getSecuritySensitiveSVGAnimationAttributeName  (function) :398
 
 ## packages/core/src/sanitization/sanitizer.ts
 [ ] Sanitizer  (export class) :19
@@ -6470,7 +6470,7 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] Sanitizer.sanitize  (method) :20
 
 ## packages/core/src/sanitization/url_sanitizer.ts
-[ ] _sanitizeUrl  (export function) :39
+[x] _sanitizeUrl  (export function) :39
 
 ## packages/core/src/testability/testability.ts
 [ ] Testability  (export class) :94
@@ -6510,25 +6510,25 @@ Format: [ ] Nama  (export|kind) :baris
       -- Set the {@link GetTestability} implementation used by the Angular testing framework.
 
 ## packages/core/src/transfer_state.ts
-[ ] makeStateKey  (export function) :47
+[x] makeStateKey  (export function) :47
       -- Create a `StateKey<T>` that can be used to store value of type T with `TransferState`. Example: ```ts const COUNTER_KEY = makeStateKey<number>('counter'); let v
 [ ] TransferState  (export class) :66
       -- A key value store that is transferred from the application on the server side to the application on the client side. The `TransferState` is available as an inje
-[ ] TransferState.get  (method) :89
+[x] TransferState.get  (method) :89
       -- Get the value corresponding to a key. Return `defaultValue` if key is not found.
-[ ] TransferState.set  (method) :96
+[x] TransferState.set  (method) :96
       -- Set the value corresponding to a key.
-[ ] TransferState.remove  (method) :103
+[x] TransferState.remove  (method) :103
       -- Remove a key from the store.
-[ ] TransferState.hasKey  (method) :110
+[x] TransferState.hasKey  (method) :110
       -- Test whether a key exists in the store.
 [ ] TransferState.isEmpty  (accessor) :117
       -- Indicates whether the state is empty.
-[ ] TransferState.onSerialize  (method) :124
+[x] TransferState.onSerialize  (method) :124
       -- Register a callback to provide the value for a key when `toJson` is called.
-[ ] TransferState.toJson  (method) :131
+[x] TransferState.toJson  (method) :131
       -- Serialize the current state of the store to JSON.
-[ ] retrieveTransferredState  (export function) :150
+[x] retrieveTransferredState  (export function) :150
 
 ## packages/core/src/type_checking.ts
 [ ] ɵassertType  (export function) :13
@@ -6666,11 +6666,11 @@ Format: [ ] Nama  (export|kind) :baris
       -- Sets properties on a target object from a source object, but only if the property doesn't already exist on the target object.
 
 ## packages/core/src/util/security/trusted_types.ts
-[ ] getPolicy  (function) :38
+[x] getPolicy  (function) :38
       -- Returns the Trusted Types policy, or null if Trusted Types are not enabled/supported. The first call to this function will create the policy.
-[ ] trustedHTMLFromString  (export function) :68
+[x] trustedHTMLFromString  (export function) :68
       -- Unsafely promote a string to a TrustedHTML, falling back to strings when Trusted Types are not available. must go through security review. In particular, it mus
-[ ] trustedScriptURLFromString  (export function) :81
+[x] trustedScriptURLFromString  (export function) :81
       -- Unsafely promote a string to a TrustedScriptURL, falling back to strings when Trusted Types are not available. must go through security review. In particular, i
 
 ## packages/core/src/util/security/trusted_types_bypass.ts

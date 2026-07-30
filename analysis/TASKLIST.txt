@@ -16,6 +16,9 @@ A. INFRASTRUKTUR ANALISIS
 [x] A4  Peta arsitektur repositori                -> analysis/ARCHITECTURE-MAP.txt
 [x] A5  Log fungsi yang sudah dianalisis          -> analysis/CHECKED-FUNCTIONS.txt
 [x] A6  Laporan progres per area                  -> analysis/PROGRESS.txt
+[x] A7  Analisis taint-to-sink (keamanan)         -> analysis/TAINT-TO-SINK.txt
+[x] A8  Verifikator sinkronisasi skema keamanan
+        -> analysis/tools/check-security-schema-sync.mjs
 
 B. CORE - FONDASI
 -----------------
@@ -40,7 +43,7 @@ C. CORE - LANJUTAN
 [ ] C5  linker: ComponentFactory, ViewContainerRef, TemplateRef, NgModuleRef
 [ ] C6  Queries klasik (@ViewChild/@ContentChild) & QueryList
 [ ] C7  Lifecycle hooks: pendaftaran & eksekusi (render3/hooks.ts)
-[ ] C8  Sanitasi & Trusted Types (src/sanitization/)
+[x] C8  Sanitasi & Trusted Types (subsistem 13 + TAINT-TO-SINK.txt)
 [ ] C9  Styling: algoritma class/style binding (render3/styling/)
 [ ] C10 node_manipulation.ts: penyisipan/penghapusan DOM & proyeksi
 [ ] C11 resource() / httpResource() dan rxjs-interop (toSignal/toObservable)
@@ -105,13 +108,13 @@ G. LUAR packages/
 RINGKASAN ANGKA (lihat analysis/PROGRESS.txt untuk data terkini)
 ----------------------------------------------------------------
   Total simbol terinventarisasi : 18.072
-  Sudah dianalisis & tercentang :    699 fungsi dengan penjelasan per fungsi
-  Subsistem dengan catatan penuh :   12 berkas di analysis/subsystems/
+  Sudah dianalisis & tercentang :    765 fungsi dengan penjelasan per fungsi
+  Subsistem dengan catatan penuh :   13 berkas di analysis/subsystems/
 
 CATATAN JUJUR TENTANG CAKUPAN
 -----------------------------
 Repositori ini berisi ~18 ribu simbol fungsi. Yang sudah dibaca baris demi baris
-dan dijelaskan satu per satu adalah 699 fungsi - dipilih karena merupakan JALUR
+dan dijelaskan satu per satu adalah 765 fungsi - dipilih karena merupakan JALUR
 EKSEKUSI UTAMA framework (DI, change detection, render3, signal, kompilasi,
 routing, forms, hidrasi, zone). Sisanya sudah TERPETAKAN (nama, berkas, baris,
 jenis, ringkasan JSDoc) di analysis/functions/, tetapi belum dianalisis.

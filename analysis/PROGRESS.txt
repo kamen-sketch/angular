@@ -1,13 +1,13 @@
 PROGRES ANALISIS FUNGSI
 Diperbarui: 2026-07-30
 ==============================================================================
-core                         415/3922   ##..................  10.6%
-compiler                      64/3130   ....................   2.0%
+core                         472/3922   ##..................  12.0%
+compiler                      65/3130   ....................   2.1%
 compiler-cli                  76/2383   #...................   3.2%
 adev                           0/1409   ....................   0.0%
 forms                         40/1053   #...................   3.8%
 devtools                       0/1051   ....................   0.0%
-common                        32/1023   #...................   3.1%
+common                        34/1023   #...................   3.3%
 router                        58/602    ##..................   9.6%
 language-service               0/600    ....................   0.0%
 animations                     0/510    ....................   0.0%
@@ -16,7 +16,7 @@ modules                        0/363    ....................   0.0%
 zone.js                       14/344    #...................   4.1%
 examples                       0/261    ....................   0.0%
 localize                       0/237    ....................   0.0%
-platform-browser               0/225    ....................   0.0%
+platform-browser               6/225    #...................   2.7%
 benchpress                     0/158    ....................   0.0%
 upgrade                        0/101    ....................   0.0%
 platform-server                0/67     ....................   0.0%
@@ -28,9 +28,9 @@ scripts                        0/24     ....................   0.0%
 platform-browser-dynamic       0/9      ....................   0.0%
 dev-app                        0/1      ....................   0.0%
 ------------------------------------------------------------------------------
-TOTAL                        699/18072  3.87%
+TOTAL                        765/18072  4.23%
 
-Catatan subsistem: 12 berkas di analysis/subsystems/
+Catatan subsistem: 13 berkas di analysis/subsystems/
 
 Entri catatan yang tidak punya padanan di inventory otomatis
 (umumnya konstanta multi-baris yang tidak terdeteksi pemindai):

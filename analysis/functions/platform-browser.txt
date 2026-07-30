@@ -336,12 +336,12 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] DomSanitizer.bypassSecurityTrustResourceUrl  (method) :163
       -- Bypass security and trust the given value to be a safe resource URL, i.e. a location that may be used to load executable code from, like `<script src>`, or `<if
 [ ] DomSanitizerImpl  (export class) :167
-[ ] DomSanitizerImpl.sanitize  (method) :169
-[ ] DomSanitizerImpl.bypassSecurityTrustHtml  (method) :216
-[ ] DomSanitizerImpl.bypassSecurityTrustStyle  (method) :219
-[ ] DomSanitizerImpl.bypassSecurityTrustScript  (method) :222
-[ ] DomSanitizerImpl.bypassSecurityTrustUrl  (method) :225
-[ ] DomSanitizerImpl.bypassSecurityTrustResourceUrl  (method) :228
+[x] DomSanitizerImpl.sanitize  (method) :169
+[x] DomSanitizerImpl.bypassSecurityTrustHtml  (method) :216
+[x] DomSanitizerImpl.bypassSecurityTrustStyle  (method) :219
+[x] DomSanitizerImpl.bypassSecurityTrustScript  (method) :222
+[x] DomSanitizerImpl.bypassSecurityTrustUrl  (method) :225
+[x] DomSanitizerImpl.bypassSecurityTrustResourceUrl  (method) :228
 
 ## packages/platform-browser/testing/src/browser.ts
 [ ] BrowserTestingModule  (export class) :36

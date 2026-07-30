@@ -311,12 +311,12 @@ Format: [ ] Nama  (export|kind) :baris
 ## packages/common/http/src/xsrf.ts
 [ ] HttpXsrfCookieExtractor  (export class) :53
       -- `HttpXsrfTokenExtractor` which retrieves the token from a cookie.
-[ ] HttpXsrfCookieExtractor.getToken  (method) :65
+[x] HttpXsrfCookieExtractor.getToken  (method) :65
 [ ] HttpXsrfTokenExtractor  (export class) :85
       -- Retrieves the current XSRF token to use with the next outgoing request.
 [ ] HttpXsrfTokenExtractor.getToken  (method) :91
       -- Get the XSRF token to use with an outgoing request. Will be called for every request, so the token may change between requests.
-[ ] xsrfInterceptorFn  (export function) :94
+[x] xsrfInterceptorFn  (export function) :94
 [ ] HttpXsrfInterceptor  (export class) :133
       -- `HttpInterceptor` which adds an XSRF token to eligible outgoing requests.
 [ ] HttpXsrfInterceptor.intercept  (method) :136
