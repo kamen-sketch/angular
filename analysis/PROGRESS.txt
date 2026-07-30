@@ -1,0 +1,37 @@
+PROGRES ANALISIS FUNGSI
+Diperbarui: 2026-07-30
+==============================================================================
+core                         150/3922   #...................   3.8%
+compiler                       0/3130   ....................   0.0%
+compiler-cli                   0/2383   ....................   0.0%
+adev                           0/1409   ....................   0.0%
+forms                          0/1053   ....................   0.0%
+devtools                       0/1051   ....................   0.0%
+common                         0/1023   ....................   0.0%
+router                         0/602    ....................   0.0%
+language-service               0/600    ....................   0.0%
+animations                     0/510    ....................   0.0%
+service-worker                 0/429    ....................   0.0%
+modules                        0/363    ....................   0.0%
+zone.js                        0/344    ....................   0.0%
+examples                       0/261    ....................   0.0%
+localize                       0/237    ....................   0.0%
+platform-browser               0/225    ....................   0.0%
+benchpress                     0/158    ....................   0.0%
+upgrade                        0/101    ....................   0.0%
+platform-server                0/67     ....................   0.0%
+misc                           0/62     ....................   0.0%
+tools                          0/44     ....................   0.0%
+elements                       0/35     ....................   0.0%
+private                        0/29     ....................   0.0%
+scripts                        0/24     ....................   0.0%
+platform-browser-dynamic       0/9      ....................   0.0%
+dev-app                        0/1      ....................   0.0%
+------------------------------------------------------------------------------
+TOTAL                        150/18072  0.83%
+
+Catatan subsistem: 2 berkas di analysis/subsystems/
+
+Entri catatan yang tidak punya padanan di inventory otomatis
+(umumnya konstanta multi-baris yang tidak terdeteksi pemindai):
+  - LINKED_SIGNAL_NODE (packages/core/primitives/signals/src/linked_signal.ts:127)

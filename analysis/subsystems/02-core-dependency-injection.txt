@@ -1,0 +1,224 @@
+SUBSISTEM 02 :: Dependency Injection (@angular/core)
+Lokasi   : packages/core/primitives/di/, packages/core/src/di/, packages/core/src/render3/di.ts
+Status   : SELESAI DIANALISIS (jalur utama runtime)
+==============================================================================
+
+RINGKASAN ARSITEKTUR
+--------------------
+Angular punya DUA hierarki injector yang berbeda, dan kunci memahami DI adalah
+memahami kapan masing-masing dipakai:
+
+  A. EnvironmentInjector (R3Injector)   -> hierarki "aplikasi", di luar pohon DOM
+     root -> platform -> aplikasi -> route-level -> lazy module
+  B. NodeInjector                       -> hierarki "elemen", mengikuti pohon DOM
+     satu injector per elemen yang punya directive/provider
+
+Pencarian token selalu: NodeInjector (naik pohon elemen) -> EnvironmentInjector
+(naik hierarki modul) -> NullInjector (lempar NG0201).
+
+TIGA LAPIS KODE
+---------------
+1. `primitives/di` - kontrak minimal (`Injector.retrieve`, `NotFound`,
+   `getCurrentInjector`/`setCurrentInjector`). Dipisah agar paket lain bisa
+   memakai DI tanpa menarik seluruh core.
+2. `src/di` - implementasi EnvironmentInjector, provider resolution, `inject()`,
+   forwardRef, InjectionToken, dan JIT compiler untuk `@Injectable`.
+3. `src/render3/di.ts` - NodeInjector: DI berbasis bloom filter di dalam LView.
+
+MEKANISME PENTING
+-----------------
+* KONTEKS INJEKSI. `inject()` tidak menerima injector sebagai argumen; ia
+  membaca variabel modul `_currentInjector` (di primitives) atau delegasi
+  `_injectImplementation` (di inject_switch.ts). Setiap tempat yang "membuka"
+  konteks injeksi memakai pola save/restore try-finally yang sama:
+  `setCurrentInjector` + `setInjectImplementation`. Karena itu `inject()` hanya
+  sinkron - setelah `await`, stack frame-nya sudah kehilangan konteks.
+
+* SWITCH IMPLEMENTASI. `ɵɵinject` memanggil `getInjectImplementation() ||
+  injectInjectorOnly`. Saat runtime sedang membuat directive, implementasinya
+  diganti ke `directiveInject` (render3) sehingga token dicari lewat
+  NodeInjector; di luar itu hanya EnvironmentInjector yang dilihat. Trik ini
+  menjaga `src/di` tetap bebas dari ketergantungan render3 (tree-shaking).
+
+* R3Injector.records. Setiap token dipetakan ke `Record{factory, value, multi}`.
+  - `NOT_YET` = belum diinstansiasi, `CIRCULAR` = sedang diinstansiasi
+    (dipakai untuk mendeteksi dependensi melingkar).
+  - `value === null` record disimpan sebagai penanda "sudah dicari, tidak ada"
+    agar pencarian tree-shakable provider tidak diulang.
+  - Instansiasi = `hydrate()`; nilai yang punya `ngOnDestroy` otomatis
+    didaftarkan ke `_ngOnDestroyHooks`.
+  - Seluruh instansiasi dibungkus `setActiveConsumer(null)` supaya pembacaan
+    signal di dalam factory TIDAK terlacak sebagai dependensi reaktif.
+
+* providedIn (tree-shakable providers). Jika token tidak punya record,
+  `R3Injector.get` melihat `ɵprov.providedIn` dan mencocokkannya dengan
+  `this.scopes` (`'root'`, `'platform'`, `'environment'`, `'any'`) atau dengan
+  `injectorDefTypes` (untuk `providedIn: SomeModule`). Inilah alasan service
+  `providedIn:'root'` yang tak pernah di-inject bisa hilang dari bundle.
+
+* limp mode (`injectRootLimpMode`). Bila belum ada injector sama sekali, token
+  `providedIn:'root'` masih bisa dibuat dan nilainya disimpan langsung pada
+  definisi injectable. Dipakai pada kode yang berjalan sebelum bootstrap.
+
+* PROVIDER TREE. `walkProviderTree` menelusuri `imports` NgModule dan
+  dependensi komponen standalone secara rekursif, dengan `dedup` set (mencegah
+  modul diproses dua kali) dan `parents` array (mendeteksi impor melingkar).
+  `importProvidersFrom` adalah pintu publiknya.
+
+* PESAN ERROR. Jalur error DI menarik: `R3Injector.get` menangkap error
+  CYCLIC_DI_DEPENDENCY / PROVIDER_NOT_FOUND, menambahkan token saat ini ke
+  jalur dependensi (`prependTokenToDependencyPath`), lalu melempar ulang.
+  Rangkaian token baru diformat menjadi pesan lengkap di frame paling atas
+  (`augmentRuntimeError`). Di prod, semua ini diganti error kode saja - dan
+  komentar di kode menjelaskan mengapa memakai `if (ngDevMode)` alih-alih
+  early return (ESBuild lebih andal mem-tree-shake pola tersebut).
+
+NODE INJECTOR: BLOOM FILTER
+---------------------------
+NodeInjector tidak menyimpan Map token->provider. Sebagai gantinya setiap node
+injector menempati 9 slot di LView/TView.data: 8 slot bilangan 32-bit sebagai
+BLOOM FILTER (256 bit) + 1 slot pointer ke parent.
+
+  - `bloomAdd`: setiap token/directive diberi ID unik (`__NG_ELEMENT_ID__`),
+    di-mask ke 0..255, lalu bit-nya dinyalakan di bucket
+    `injectorIndex + (hash >> 5)`.
+  - `bloomHasToken`: cek satu bit. Karena bloom filter, "true" berarti MUNGKIN
+    ada (perlu verifikasi), "false" berarti PASTI tidak ada - inilah yang
+    membuat penelusuran ke atas bisa dipotong lebih awal.
+  - Ada DUA bloom per node: bloom milik node sendiri (di `tView.data`) dan
+    bloom KUMULATIF (di `lView`) yang merupakan OR dari bloom seluruh leluhur.
+    Bloom kumulatif memungkinkan `lookupTokenUsingNodeInjector` berhenti total
+    saat leluhur pun dipastikan tidak punya token itu.
+  - Verifikasi sebenarnya dilakukan `locateDirectiveOrProvider`, yang memindai
+    rentang indeks provider dan directive milik TNode.
+
+Aturan visibilitas yang diimplementasikan di `searchTokensOnInjector`:
+  - `viewProviders` hanya terlihat oleh komponen itu sendiri dan turunan di
+    dalam TEMPLATE-nya, bukan oleh konten yang di-project. Ini diputuskan lewat
+    `canAccessViewProviders` (bandingkan `previousTView` vs `currentTView`).
+  - Flag `@Host` dibatasi lewat `hostTElementNode` + `isHostSpecialCase`.
+  - `@Self`/`@SkipSelf` dipetakan ke bit `InternalInjectFlags` dan diperiksa di
+    `shouldSearchParent`.
+
+Lintas-view: `getParentInjectorLocation` mengembalikan nilai terkemas berisi
+(indeks injector, jumlah view yang harus dinaiki). Untuk embedded view yang
+disisipkan di tempat lain, pencarian mengikuti DECLARATION_VIEW (tempat
+template ditulis), bukan tempat DOM-nya disisipkan - sesuai semantik Angular.
+
+`lookupTokenUsingEmbeddedInjector` menangani `createEmbeddedView(..., injector)`
+: karena injector tambahan ini tidak punya bloom filter, pencarian dilakukan
+node demi node dengan flag `Self` pada tiap tingkat.
+
+CATATAN LAIN
+------------
+* `ɵɵgetInheritedFactory` menaiki rantai prototipe untuk menemukan factory milik
+  kelas induk; dibungkus `noSideEffects` agar tidak menghalangi tree-shaking.
+* `forwardRef` menandai fungsi dengan properti `__forward_ref__`; setiap titik
+  yang membaca token memanggil `resolveForwardRef` sebagai identity function
+  jika bukan forward ref.
+* `injectAttributeImpl` membaca atribut statis dari array `tNode.attrs` yang
+  memakai penanda (`AttributeMarker`) untuk memisahkan atribut biasa,
+  namespaced, binding, dan template.
+
+DAFTAR FUNGSI YANG SUDAH DIPAHAMI
+---------------------------------
+[x] getCurrentInjector | packages/core/primitives/di/src/injector.ts:24 | Membaca injector aktif dari variabel modul (dasar konteks injeksi).
+[x] setCurrentInjector | packages/core/primitives/di/src/injector.ts:28 | Memasang injector aktif, mengembalikan yang lama (pola save/restore).
+[x] inject | packages/core/primitives/di/src/injector.ts:36 | Deklarasi overload inject versi primitives.
+[x] inject | packages/core/primitives/di/src/injector.ts:37 | Implementasi primitives: retrieve token dari injector aktif, hormati opsi optional.
+[x] defineInjectable | packages/core/primitives/di/src/injection_token.ts:70 | Membuat struktur ɵprov (token, providedIn, factory) untuk provider tree-shakable.
+[x] registerInjectable | packages/core/primitives/di/src/injection_token.ts:85 | Menempelkan ɵprov ke tipe/token.
+[x] NotFoundError | packages/core/primitives/di/src/not_found.ts:19 | Error khusus "token tidak ditemukan" yang bisa dibedakan dari error lain.
+[x] isNotFound | packages/core/primitives/di/src/not_found.ts:29 | Type guard NotFound; dipakai agar error not-found tidak tertukar dengan error factory.
+[x] isType | packages/core/primitives/di/src/type.ts:21 | Cek nilai berupa fungsi konstruktor.
+[x] inject | packages/core/src/di/injector_compatibility.ts:293 | API publik inject(): konversi InjectOptions ke bit flags lalu delegasi ke ɵɵinject.
+[x] injectInjectorOnly | packages/core/src/di/injector_compatibility.ts:93 | Jalur "hanya EnvironmentInjector": lempar NG0203 jika di luar konteks injeksi, limp mode jika injector null.
+[x] convertToBitFlags | packages/core/src/di/injector_compatibility.ts:300 | Konversi hemat-ukuran dari objek opsi ke bitmask (memanfaatkan OR dengan falsy).
+[x] convertToInjectOptions | packages/core/src/di/injector_compatibility.ts:318 | Konversi balik bitmask ke objek opsi untuk API primitives.
+[x] injectArgs | packages/core/src/di/injector_compatibility.ts:327 | Resolusi array `deps` provider, termasuk bentuk bersarang [new Optional(), Token].
+[x] attachInjectFlag | packages/core/src/di/injector_compatibility.ts:374 | Menempelkan flag DI ke dekorator (static + prototype) agar tree-shakable tanpa referensi langsung.
+[x] getInjectFlag | packages/core/src/di/injector_compatibility.ts:385 | Membaca flag yang ditempel di atas.
+[x] RetrievingInjector.retrieve | packages/core/src/di/injector_compatibility.ts:51 | Adapter Injector lama ke antarmuka primitives; mengubah error NotFound menjadi nilai balik.
+[x] runInInjectionContext | packages/core/src/di/contextual.ts:37 | Menjalankan fungsi dalam konteks injector tertentu; membungkus injector non-R3 dengan RetrievingInjector.
+[x] isInInjectionContext | packages/core/src/di/contextual.ts:64 | True bila ada implementasi inject atau injector aktif.
+[x] assertInInjectionContext | packages/core/src/di/contextual.ts:77 | Guard untuk API seperti effect()/toSignal(); menerima Function agar nama tidak tertahan di bundle.
+[x] getInjectImplementation | packages/core/src/di/inject_switch.ts:28 | Membaca implementasi inject aktif (undefined = hanya module injector).
+[x] setInjectImplementation | packages/core/src/di/inject_switch.ts:35 | Menukar implementasi inject (dipakai render3 untuk mengaktifkan directiveInject).
+[x] injectRootLimpMode | packages/core/src/di/inject_switch.ts:50 | Limp mode: instansiasi provider providedIn:'root' tanpa injector, nilai di-cache di ɵprov.
+[x] assertInjectImplementationNotEqual | packages/core/src/di/inject_switch.ts:76 | Guard dev-mode pencegah rekursi tak hingga saat menukar implementasi.
+[x] forwardRef | packages/core/src/di/forward_ref.ts:69 | Menandai fungsi sebagai referensi tertunda untuk memecah siklus deklarasi.
+[x] resolveForwardRef | packages/core/src/di/forward_ref.ts:93 | Membuka forward ref bila ada, selain itu identity.
+[x] isForwardRef | packages/core/src/di/forward_ref.ts:98 | Deteksi penanda __forward_ref__ yang closure-safe.
+[x] createInjector | packages/core/src/di/create_injector.ts:21 | Membuat R3Injector lalu langsung menjalankan ENVIRONMENT_INITIALIZER.
+[x] createInjectorWithoutInjectorInstances | packages/core/src/di/create_injector.ts:42 | Varian yang menunda inisialisasi untuk menghindari loop saat bootstrap.
+[x] getNullInjector | packages/core/src/di/r3_injector.ts:105 | NullInjector singleton lazy sebagai ujung rantai pencarian.
+[x] R3Injector.constructor | packages/core/src/di/r3_injector.ts:216 | Memproses semua provider menjadi record, mendaftarkan token INJECTOR/EnvironmentInjector, menentukan scope.
+[x] R3Injector.retrieve | packages/core/src/di/r3_injector.ts:246 | Adapter ke antarmuka primitives; NotFound dikembalikan sebagai nilai, bukan dilempar.
+[x] R3Injector.destroy | packages/core/src/di/r3_injector.ts:270 | Menjalankan ngOnDestroy semua instance + hook onDestroy, lalu melepas seluruh referensi.
+[x] R3Injector.onDestroy | packages/core/src/di/r3_injector.ts:297 | Mendaftarkan callback destroy dan mengembalikan fungsi pembatalan.
+[x] R3Injector.runInContext | packages/core/src/di/r3_injector.ts:303 | Versi lama runInInjectionContext yang terikat pada injector ini.
+[x] R3Injector.get | packages/core/src/di/r3_injector.ts:323 | Inti resolusi: hormati SkipSelf/Self/Optional, cari record, fallback ke providedIn scope, lalu delegasi ke parent; menyusun jalur error DI.
+[x] R3Injector.resolveInjectorInitializers | packages/core/src/di/r3_injector.ts:426 | Menjalankan multi-provider ENVIRONMENT_INITIALIZER dalam konteks injector ini.
+[x] R3Injector.toString | packages/core/src/di/r3_injector.ts:457 | Debug: daftar token (hanya dev mode).
+[x] R3Injector.processProvider | packages/core/src/di/r3_injector.ts:473 | Mengubah satu provider jadi record; menangani multi-provider dan melarang campuran multi/non-multi.
+[x] R3Injector.hydrate | packages/core/src/di/r3_injector.ts:524 | Instansiasi malas dengan penanda CIRCULAR, pendaftaran ngOnDestroy, dan setActiveConsumer(null).
+[x] R3Injector.injectableDefInScope | packages/core/src/di/r3_injector.ts:551 | Mencocokkan providedIn dengan scope injector atau daftar tipe injector.
+[x] R3Injector.removeOnDestroy | packages/core/src/di/r3_injector.ts:563 | Melepas satu callback destroy.
+[x] injectableDefOrInjectorDefFactory | packages/core/src/di/r3_injector.ts:571 | Menentukan factory dari ɵprov/ɵfac; error jelas untuk token tanpa definisi.
+[x] getUndecoratedInjectableFactory | packages/core/src/di/r3_injector.ts:598 | Menangani kelas tanpa dekorator: pakai factory warisan atau konstruktor tanpa argumen.
+[x] providerToRecord | packages/core/src/di/r3_injector.ts:624 | ValueProvider langsung berisi nilai; sisanya menyimpan factory dengan penanda NOT_YET.
+[x] providerToFactory | packages/core/src/di/r3_injector.ts:639 | Peta bentuk provider (useValue/useFactory/useExisting/useClass/Type) ke fungsi pembuat instance.
+[x] assertNotDestroyed | packages/core/src/di/r3_injector.ts:683 | Guard pemakaian injector setelah destroy.
+[x] makeRecord | packages/core/src/di/r3_injector.ts:692 | Konstruktor record internal (factory, value, slot multi).
+[x] hasDeps | packages/core/src/di/r3_injector.ts:704 | Cek provider punya array deps eksplisit.
+[x] hasOnDestroy | packages/core/src/di/r3_injector.ts:710 | Deteksi instance dengan ngOnDestroy untuk didaftarkan ke hook destroy.
+[x] couldBeInjectableType | packages/core/src/di/r3_injector.ts:718 | Filter cepat sebelum membaca ɵprov (fungsi atau InjectionToken).
+[x] forEachSingleProvider | packages/core/src/di/r3_injector.ts:725 | Meratakan array bersarang dan EnvironmentProviders menjadi provider tunggal.
+[x] walkProviderTree | packages/core/src/di/provider_collection.ts:232 | Menelusuri NgModule imports dan dependensi komponen standalone dengan dedup + deteksi siklus.
+[x] importProvidersFrom | packages/core/src/di/provider_collection.ts:144 | API publik untuk mengambil provider dari NgModule ke dalam konfigurasi standalone.
+[x] internalImportProvidersFrom | packages/core/src/di/provider_collection.ts:151 | Versi internal dengan opsi validasi.
+[x] makeEnvironmentProviders | packages/core/src/di/provider_collection.ts:46 | Membungkus provider agar hanya sah dipakai di level environment (mis. provideRouter).
+[x] provideEnvironmentInitializer | packages/core/src/di/provider_collection.ts:81 | Gula sintaks multi-provider ENVIRONMENT_INITIALIZER.
+[x] processInjectorTypesWithProviders | packages/core/src/di/provider_collection.ts:195 | Menangani bentuk {ngModule, providers} pada imports.
+[x] validateProvider | packages/core/src/di/provider_collection.ts:365 | Validasi bentuk provider di dev mode.
+[x] deepForEachProvider | packages/core/src/di/provider_collection.ts:388 | Iterasi rekursif array provider bersarang.
+[x] isValueProvider | packages/core/src/di/provider_collection.ts:409 | Diskriminator bentuk provider useValue.
+[x] isExistingProvider | packages/core/src/di/provider_collection.ts:413 | Diskriminator useExisting (alias token).
+[x] isFactoryProvider | packages/core/src/di/provider_collection.ts:417 | Diskriminator useFactory.
+[x] isTypeProvider | packages/core/src/di/provider_collection.ts:421 | Provider berupa kelas telanjang.
+[x] isClassProvider | packages/core/src/di/provider_collection.ts:425 | Diskriminator useClass.
+[x] getInjectableDef | packages/core/src/di/interface/defs.ts:207 | Membaca ɵprov milik token (tanpa warisan).
+[x] isInjectable | packages/core/src/di/interface/defs.ts:211 | Cek keberadaan ɵprov.
+[x] getOwnDefinition | packages/core/src/di/interface/defs.ts:219 | Memastikan definisi milik tipe itu sendiri, bukan warisan prototipe.
+[x] getInheritedInjectableDef | packages/core/src/di/interface/defs.ts:232 | Menaiki rantai prototipe mencari ɵprov leluhur; memperingatkan pemakaian yang salah di dev mode.
+[x] getInjectorDef | packages/core/src/di/interface/defs.ts:253 | Membaca ɵinj (definisi injector NgModule).
+[x] isEnvironmentProviders | packages/core/src/di/interface/provider.ts:375 | Deteksi pembungkus EnvironmentProviders.
+[x] setIncludeViewProviders | packages/core/src/render3/di.ts:117 | Menyalakan/mematikan visibilitas viewProviders selama satu resolusi.
+[x] bloomAdd | packages/core/src/render3/di.ts:152 | Menyalakan bit token pada bloom filter node (ID unik per tipe, mask 256 bit, bucket 32 bit).
+[x] getOrCreateNodeInjectorForNode | packages/core/src/render3/di.ts:193 | Mengalokasikan 9 slot injector di LView/TView dan membangun bloom kumulatif dari leluhur.
+[x] insertBloom | packages/core/src/render3/di.ts:230 | Menambahkan 8 slot bloom + 1 slot footer ke array.
+[x] getInjectorIndex | packages/core/src/render3/di.ts:234 | Mengembalikan indeks injector node ini, -1 bila sebenarnya milik parent atau belum siap.
+[x] getParentInjectorLocation | packages/core/src/render3/di.ts:258 | Menghitung lokasi injector induk terkemas (indeks + jumlah view yang dinaiki lewat DECLARATION_VIEW).
+[x] diPublicInInjector | packages/core/src/render3/di.ts:304 | Mempublikasikan token directive ke bloom filter node.
+[x] injectAttributeImpl | packages/core/src/render3/di.ts:343 | Implementasi @Attribute: membaca atribut statis dari array tNode.attrs dengan penanda AttributeMarker.
+[x] notFoundValueOrThrow | packages/core/src/render3/di.ts:386 | Menghormati Optional/notFoundValue atau melempar NG0201.
+[x] lookupTokenUsingModuleInjector | packages/core/src/render3/di.ts:407 | Fallback ke EnvironmentInjector; mematikan directiveInject agar module injector tidak melihat scope directive.
+[x] getOrCreateInjectable | packages/core/src/render3/di.ts:457 | Orkestrator pencarian: embedded view injector -> node injector -> module injector.
+[x] lookupTokenUsingNodeInjector | packages/core/src/render3/di.ts:506 | Penelusuran pohon node injector berbasis bloom, termasuk penanganan token khusus berbasis factory.
+[x] searchTokensOnInjector | packages/core/src/render3/di.ts:627 | Menentukan hak akses viewProviders dan kasus khusus @Host sebelum mencari token nyata.
+[x] locateDirectiveOrProvider | packages/core/src/render3/di.ts:685 | Pemindaian linear rentang provider/directive pada TNode untuk memverifikasi kandidat bloom.
+[x] getNodeInjectable | packages/core/src/render3/di.ts:735 | Instansiasi malas isi slot LView; deteksi siklus via flag resolving, daftarkan pre-order hooks untuk directive.
+[x] bloomHashBitOrFactory | packages/core/src/render3/di.ts:825 | Memetakan token ke bit bloom, atau ke factory untuk token khusus (Injector, ElementRef, TemplateRef).
+[x] bloomHasToken | packages/core/src/render3/di.ts:849 | Uji satu bit bloom (false = pasti tidak ada; true = mungkin ada).
+[x] shouldSearchParent | packages/core/src/render3/di.ts:870 | Menerjemahkan flag Self/Host menjadi keputusan lanjut/berhenti menaiki pohon.
+[x] getNodeInjectorLView | packages/core/src/render3/di.ts:879 | Akses internal ke LView milik NodeInjector (dipakai DevTools/testing).
+[x] getNodeInjectorTNode | packages/core/src/render3/di.ts:883 | Akses internal ke TNode milik NodeInjector.
+[x] NodeInjector.get | packages/core/src/render3/di.ts:899 | Antarmuka Injector publik di atas getOrCreateInjectable.
+[x] createNodeInjector | packages/core/src/render3/di.ts:911 | Membuat NodeInjector untuk node yang sedang diproses (token khusus `Injector`).
+[x] ɵɵgetInheritedFactory | packages/core/src/render3/di.ts:918 | Menaiki rantai prototipe mencari ɵfac induk; dibungkus noSideEffects demi tree-shaking.
+[x] getFactoryOf | packages/core/src/render3/di.ts:951 | Membaca ɵfac sebuah tipe, transparan terhadap forwardRef.
+[x] lookupTokenUsingEmbeddedInjector | packages/core/src/render3/di.ts:971 | Menelusuri injector embedded view node-demi-node (tidak punya bloom filter) dengan flag Self.
+[x] getTNodeFromLView | packages/core/src/render3/di.ts:1044 | Mengambil TNode induk sesuai tipe view (Embedded pakai declTNode, Component pakai T_HOST).
+[x] compileInjectable | packages/core/src/di/jit/injectable.ts:34 | Jalur JIT: menyusun ɵprov dan ɵfac dari metadata @Injectable saat runtime.
+[x] getInjectableMetadata | packages/core/src/di/jit/injectable.ts:108 | Menerjemahkan opsi @Injectable ke metadata compiler (useClass/useValue/useFactory/useExisting).
+[x] compileService | packages/core/src/di/jit/service.ts:25 | Titik masuk kompilasi JIT untuk service.

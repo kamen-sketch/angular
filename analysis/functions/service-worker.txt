@@ -1,0 +1,587 @@
+INVENTORY FUNGSI :: service-worker
+Total simbol: 429 | file: 33
+Rincian: function=68, arrow=1, class=56, method=251, accessor=13, ctor=40
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## packages/service-worker/cli/filesystem.ts
+[ ] NodeFilesystem  (export class) :15
+[ ] NodeFilesystem.constructor  (ctor) :16
+[ ] NodeFilesystem.list  (method) :18
+[ ] NodeFilesystem.read  (method) :37
+[ ] NodeFilesystem.hash  (method) :42
+[ ] NodeFilesystem.write  (method) :48
+[ ] NodeFilesystem.canonical  (method) :53
+
+## packages/service-worker/cli/sha1.ts
+[ ] sha1  (export function) :20
+[ ] sha1Binary  (export function) :26
+[ ] _sha1  (function) :31
+[ ] add32  (function) :59
+[ ] add32to64  (function) :63
+[ ] add64  (function) :69
+[ ] sub32  (function) :75
+[ ] rol32  (function) :82
+      -- Rotate a 32b number left `count` position
+[ ] rol64  (function) :87
+      -- Rotate a 64b number left `count` position
+[ ] fk  (function) :98
+[ ] stringToWords32  (function) :114
+[ ] arrayBufferToWords32  (function) :125
+[ ] byteAt  (function) :135
+[ ] wordAt  (function) :143
+[ ] words32ToByteString  (function) :157
+[ ] word32ToByteString  (function) :161
+[ ] byteStringToHexString  (function) :169
+[ ] byteStringToDecString  (function) :179
+      -- based on http://www.danvk.org/hex2dec.html (JS can not handle more than 56b)
+[ ] addBigInt  (function) :192
+      -- x and y decimal, lowest significant digit first
+[ ] numberTimesBigInt  (function) :209
+
+## packages/service-worker/config/src/duration.ts
+[ ] parseDurationToMs  (export function) :12
+
+## packages/service-worker/config/src/generator.ts
+[ ] Generator  (export class) :26
+      -- Consumes service worker configuration files and processes them into control files.
+[ ] Generator.constructor  (ctor) :27
+[ ] Generator.process  (method) :32
+[ ] Generator.processAssetGroups  (method) :52
+[ ] Generator.processDataGroups  (method) :100
+[ ] processNavigationUrls  (export function) :119
+[ ] processInBatches  (function) :130
+[ ] globListToMatcher  (function) :148
+[ ] matches  (function) :165
+[ ] urlToRegex  (function) :175
+[ ] joinUrls  (function) :186
+[ ] withOrderedKeys  (function) :195
+[ ] buildCacheQueryOptions  (function) :203
+
+## packages/service-worker/config/src/glob.ts
+[ ] globToRegex  (export function) :21
+
+## packages/service-worker/config/testing/mock.ts
+[ ] MockFilesystem  (export class) :12
+[ ] MockFilesystem.constructor  (ctor) :15
+[ ] MockFilesystem.list  (method) :19
+[ ] MockFilesystem.read  (method) :23
+[ ] MockFilesystem.hash  (method) :27
+[ ] MockFilesystem.write  (method) :31
+[ ] HashTrackingMockFilesystem  (export class) :36
+[ ] HashTrackingMockFilesystem.hash  (method) :41
+      -- @override
+
+## packages/service-worker/src/low_level.ts
+[ ] NgswCommChannel  (export class) :134
+[ ] NgswCommChannel.constructor  (ctor) :141
+[ ] NgswCommChannel.postMessage  (method) :215
+[ ] NgswCommChannel.postMessageWithOperation  (method) :228
+[ ] NgswCommChannel.generateNonce  (method) :238
+[ ] NgswCommChannel.eventsOfType  (method) :242
+[ ] NgswCommChannel.nextEventOfType  (method) :252
+[ ] NgswCommChannel.waitForOperationCompleted  (method) :256
+[ ] NgswCommChannel.isEnabled  (accessor) :276
+
+## packages/service-worker/src/module.ts
+[ ] ServiceWorkerModule  (export class) :23
+[ ] ServiceWorkerModule.register  (method) :30
+      -- Register the given Angular Service Worker script. If `enabled` is set to `false` in the given options, the module will behave as if service workers are not supp
+
+## packages/service-worker/src/provider.ts
+[ ] ngswAppInitializer  (export function) :32
+[ ] delayWithTimeout  (function) :124
+[ ] ngswCommChannelFactory  (export function) :128
+[ ] SwRegistrationOptions  (export class) :153
+      -- Token that can be used to provide options for `ServiceWorkerModule` outside of `ServiceWorkerModule.register()`. You can use this token to define a provider tha
+[ ] provideServiceWorker  (export function) :240
+      -- Sets up providers to register the given Angular Service Worker script. If `enabled` is set to `false` in the given options, the module will behave as if service
+
+## packages/service-worker/src/push.ts
+[ ] SwPush  (export class) :97
+      -- Subscribe and listen to [Web Push Notifications](https://developer.mozilla.org/en-US/docs/Web/API/Push_API/Best_Practices) through Angular Service Worker. You c
+[ ] SwPush.isEnabled  (accessor) :172
+      -- True if the Service Worker is enabled (supported by the browser and enabled via `ServiceWorkerModule`).
+[ ] SwPush.constructor  (ctor) :179
+[ ] SwPush.requestSubscription  (method) :230
+      -- Subscribes to Web Push Notifications, after requesting and receiving user permission.
+[ ] SwPush.unsubscribe  (method) :262
+      -- Unsubscribes from Service Worker push notifications.          active subscription or the unsubscribe operation fails.
+[ ] SwPush.decodeBase64  (method) :295
+
+## packages/service-worker/src/update.ts
+[ ] SwUpdate  (export class) :29
+      -- Subscribe to update notifications from the Service Worker, trigger update checks, and forcibly activate updates.
+[ ] SwUpdate.isEnabled  (accessor) :55
+      -- True if the Service Worker is enabled (supported by the browser and enabled via `ServiceWorkerModule`).
+[ ] SwUpdate.constructor  (ctor) :61
+[ ] SwUpdate.checkForUpdate  (method) :85
+      -- Checks for an update and waits until the new version is downloaded from the server and ready for activation. - resolves to `true` if a new version was found and
+[ ] SwUpdate.activateUpdate  (method) :125
+      -- Updates the current client (i.e. browser tab) to the latest version that is ready for activation. In most cases, you should not use this method and instead shou
+
+## packages/service-worker/testing/mock.ts
+[ ] patchDecodeBase64  (export arrow) :11
+[ ] MockServiceWorkerContainer  (export class) :27
+[ ] MockServiceWorkerContainer.addEventListener  (method) :35
+[ ] MockServiceWorkerContainer.removeEventListener  (method) :43
+[ ] MockServiceWorkerContainer.register  (method) :51
+[ ] MockServiceWorkerContainer.getRegistration  (method) :55
+[ ] MockServiceWorkerContainer.setupSw  (method) :59
+[ ] MockServiceWorkerContainer.sendMessage  (method) :65
+[ ] MockServiceWorker  (export class) :74
+[ ] MockServiceWorker.constructor  (ctor) :75
+[ ] MockServiceWorker.postMessage  (method) :80
+[ ] MockServiceWorkerRegistration  (export class) :85
+[ ] MockPushManager  (export class) :89
+[ ] MockPushManager.getSubscription  (method) :92
+[ ] MockPushManager.subscribe  (method) :96
+[ ] MockPushSubscription  (export class) :102
+[ ] MockPushSubscription.unsubscribe  (method) :103
+
+## packages/service-worker/worker/src/adapter.ts
+[ ] Adapter  (export class) :18
+      -- Adapts the service worker to its runtime environment. Mostly, this is used to mock out identifiers which are otherwise read from the global scope.
+[ ] Adapter.constructor  (ctor) :22
+[ ] Adapter.newRequest  (method) :40
+      -- Wrapper around the `Request` constructor.
+[ ] Adapter.newResponse  (method) :47
+      -- Wrapper around the `Response` constructor.
+[ ] Adapter.newHeaders  (method) :54
+      -- Wrapper around the `Headers` constructor.
+[ ] Adapter.isClient  (method) :61
+      -- Test if a given object is an instance of `Client`.
+[ ] Adapter.time  (accessor) :68
+      -- Read the current UNIX time in milliseconds.
+[ ] Adapter.normalizeUrl  (method) :84
+      -- Get a normalized representation of a URL such as those found in the ServiceWorker's `ngsw.json` configuration. More specifically: 1. Resolve the URL relative to
+[ ] Adapter.parseUrl  (method) :93
+      -- Parse a URL into its different parts, such as `origin`, `path` and `search`.
+[ ] Adapter.timeout  (method) :103
+      -- Wait for a given amount of time before completing a Promise.
+
+## packages/service-worker/worker/src/app-version.ts
+[ ] AppVersion  (export class) :25
+      -- A specific version of the application, identified by a unique manifest as determined by its hash. Each `AppVersion` can be thought of as a published version of 
+[ ] AppVersion.okay  (accessor) :58
+[ ] AppVersion.constructor  (ctor) :62
+[ ] AppVersion.initializeFully  (method) :126
+      -- Fully initialize this version of the application. If this Promise resolves successfully, all required data has been safely downloaded.
+[ ] AppVersion.handleFetch  (method) :146
+[ ] AppVersion.isNavigationRequest  (method) :216
+      -- Determine whether the request is a navigation request. Takes into account: Request method and mode, `Accept` header, `navigationUrls` patterns.
+[ ] AppVersion.lookupResourceWithHash  (method) :238
+      -- Check this version for a given resource with a particular hash.
+[ ] AppVersion.lookupResourceWithoutHash  (method) :258
+      -- Check this version for a given resource regardless of its hash.
+[ ] AppVersion.previouslyCachedResources  (method) :276
+      -- List all unhashed resources from all asset groups.
+[ ] AppVersion.recentCacheStatus  (method) :283
+[ ] AppVersion.getCacheNames  (method) :300
+      -- Return a list of the names of all caches used by this version.
+[ ] AppVersion.appData  (accessor) :311
+      -- Get the opaque application data which was provided with the manifest.
+[ ] AppVersion.acceptsTextHtml  (method) :318
+      -- Check whether a request accepts `text/html` (based on the `Accept` header).
+
+## packages/service-worker/worker/src/assets.ts
+[ ] AssetGroup  (export class) :24
+      -- A group of assets that are cached in a `Cache` and managed by a given policy. Concrete classes derive from this base and specify the exact caching policy.
+[ ] AssetGroup.constructor  (ctor) :57
+[ ] AssetGroup.cacheStatus  (method) :86
+[ ] AssetGroup.initializeFully  (method) :108
+      -- Initialize this asset group, updating from the given source if available.
+[ ] AssetGroup.getCacheNames  (method) :113
+      -- Return a list of the names of all caches used by this group.
+[ ] AssetGroup.handleFetch  (method) :121
+      -- Process a request for a given resource and return it, or return null if it's not available.
+[ ] AssetGroup.needToRevalidate  (method) :183
+      -- Some resources are cached without a hash, meaning that their expiration is controlled by HTTP caching headers. Check whether the given request/response pair is 
+[ ] AssetGroup.fetchFromCacheOnly  (method) :258
+      -- Fetch the complete state of a cached resource, or return null if it's not found.
+[ ] AssetGroup.unhashedResources  (method) :285
+      -- Lookup all resources currently stored in the cache which have no associated hash.
+[ ] AssetGroup.fetchAndCacheOnce  (method) :300
+      -- Fetch the given resource from the network, and cache it if able.
+[ ] AssetGroup.fetchFromNetwork  (method) :366
+[ ] AssetGroup.cacheBustedFetchFromNetwork  (method) :389
+      -- Load a particular asset from the network, accounting for hash validation.
+[ ] AssetGroup.maybeUpdate  (method) :472
+      -- Possibly update a resource, if it's expired and needs to be updated. A no-op otherwise.
+[ ] AssetGroup.newRequestWithMetadata  (method) :520
+      -- Create a new `Request` based on the specified URL and `RequestInit` options, preserving only metadata that are known to be safe. Currently, headers, referrer, r
+[ ] AssetGroup.cacheBust  (method) :554
+      -- Construct a cache-busting URL for a given URL.
+[ ] AssetGroup.safeFetch  (method) :558
+[ ] PrefetchAssetGroup  (export class) :573
+      -- An `AssetGroup` that prefetches all of its resources during initialization.
+[ ] PrefetchAssetGroup.initializeFully  (method) :574
+[ ] LazyAssetGroup  (export class) :662
+[ ] LazyAssetGroup.initializeFully  (method) :663
+
+## packages/service-worker/worker/src/data.ts
+[ ] LruList  (class) :76
+      -- Manages an instance of `LruState` and moves URLs to the head of the chain when requested.
+[ ] LruList.constructor  (ctor) :78
+[ ] LruList.size  (accessor) :93
+      -- The current count of URLs in the list.
+[ ] LruList.pop  (method) :100
+      -- Remove the tail.
+[ ] LruList.remove  (method) :113
+[ ] LruList.accessed  (method) :168
+[ ] DataGroup  (export class) :222
+      -- A group of cached resources determined by a set of URL patterns which follow a LRU policy for caching.
+[ ] DataGroup.constructor  (ctor) :249
+[ ] DataGroup.lru  (method) :266
+      -- Lazily initialize/load the LRU chain.
+[ ] DataGroup.syncLru  (method) :281
+      -- Sync the LRU chain to non-volatile storage.
+[ ] DataGroup.handleFetch  (method) :303
+      -- Process a fetch event and return a `Response` if the resource is covered by this group, or `null` otherwise.
+[ ] DataGroup.handleFetchWithPerformance  (method) :346
+[ ] DataGroup.handleFetchWithFreshness  (method) :392
+[ ] DataGroup.networkFetchWithTimeout  (method) :434
+[ ] DataGroup.safeCacheResponse  (method) :470
+[ ] DataGroup.loadFromCache  (method) :496
+[ ] DataGroup.cacheResponse  (method) :537
+      -- Operation for caching the response from the server. This has to happen all at once, so that the cache and LRU tracking remain in sync. If the network request co
+[ ] DataGroup.cleanup  (method) :579
+      -- Delete all of the saved state which this group uses to track resources.
+[ ] DataGroup.getCacheNames  (method) :590
+      -- Return a list of the names of all caches used by this group.
+[ ] DataGroup.clearCacheForUrl  (method) :606
+      -- Clear the state of the cache for a particular resource. This doesn't remove the resource from the LRU table, that is assumed to have been done already. This cle
+[ ] DataGroup.safeFetch  (method) :615
+[ ] DataGroup.detectStorageFull  (method) :630
+      -- Detect if storage is full or approaching capacity. Returns true if storage is at or near capacity.
+
+## packages/service-worker/worker/src/database.ts
+[ ] NotFound  (export class) :63
+      -- An error returned in rejected promises if the given key is not found in the table.
+[ ] NotFound.constructor  (ctor) :64
+
+## packages/service-worker/worker/src/db-cache.ts
+[ ] CacheDatabase  (export class) :17
+      -- An implementation of a `Database` that uses the `CacheStorage` API to serialize state within mock `Response` objects.
+[ ] CacheDatabase.constructor  (ctor) :21
+[ ] CacheDatabase.list  (method) :30
+[ ] CacheDatabase.open  (method) :40
+[ ] CacheTable  (export class) :53
+      -- A `Table` backed by a `Cache`.
+[ ] CacheTable.constructor  (ctor) :56
+[ ] CacheTable.request  (method) :65
+[ ] CacheTable.keys  (method) :73
+[ ] CacheTable.read  (method) :77
+[ ] CacheTable.write  (method) :86
+
+## packages/service-worker/worker/src/debug.ts
+[ ] DebugHandler  (export class) :21
+[ ] DebugHandler.constructor  (ctor) :30
+[ ] DebugHandler.handleFetch  (method) :35
+[ ] DebugHandler.since  (method) :78
+[ ] DebugHandler.log  (method) :102
+[ ] DebugHandler.errorToString  (method) :118
+[ ] DebugHandler.formatDebugLog  (method) :122
+
+## packages/service-worker/worker/src/driver.ts
+[ ] isLocalhost  (export function) :79
+      -- Determines if a given URL scope corresponds to localhost.
+[ ] Driver  (export class) :101
+[ ] Driver.constructor  (ctor) :161
+[ ] Driver.onFetch  (method) :233
+      -- The handler for fetch events. This is the transition point between the synchronous event handler and the asynchronous execution that eventually resolves for res
+[ ] Driver.onMessage  (method) :298
+      -- The handler for message events.
+[ ] Driver.onPush  (method) :331
+[ ] Driver.onClick  (method) :341
+[ ] Driver.onClose  (method) :346
+[ ] Driver.onPushSubscriptionChange  (method) :351
+[ ] Driver.onMessageError  (method) :356
+[ ] Driver.onUnhandledRejection  (method) :365
+[ ] Driver.ensureInitialized  (method) :374
+[ ] Driver.handleMessage  (method) :400
+[ ] Driver.handlePush  (method) :410
+[ ] Driver.handleClick  (method) :426
+[ ] Driver.handleClose  (method) :490
+      -- Handles the closing of a notification by extracting its options and broadcasting a `NOTIFICATION_CLOSE` message. This is typically called when a notification is
+[ ] Driver.handlePushSubscriptionChange  (method) :513
+      -- Handles changes to the push subscription by capturing the old and new subscription details and broadcasting a `PUSH_SUBSCRIPTION_CHANGE` message. This method is
+[ ] Driver.getLastFocusedMatchingClient  (method) :522
+[ ] Driver.completeOperation  (method) :531
+[ ] Driver.updateClient  (method) :550
+[ ] Driver.handleFetch  (method) :579
+[ ] Driver.initialize  (method) :648
+      -- Attempt to quickly reach a state where it's safe to serve responses.
+[ ] Driver.lookupVersionByHash  (method) :782
+[ ] Driver.assignVersion  (method) :798
+      -- Decide which version of the manifest to use for the event.
+[ ] Driver.fetchLatestManifest  (method) :929
+      -- Retrieve a copy of the latest manifest from the server. Return `null` if `ignoreOfflineError` is true (default: false) and the server or client are offline (det
+[ ] Driver.fetchLatestManifest  (method) :930
+[ ] Driver.fetchLatestManifest  (method) :931
+[ ] Driver.deleteAllCaches  (method) :948
+[ ] Driver.scheduleInitialization  (method) :958
+      -- Schedule the SW's attempt to reach a fully prefetched state for the given AppVersion when the SW is not busy and has connectivity. This returns a Promise which 
+[ ] Driver.versionFailed  (method) :975
+[ ] Driver.setupUpdate  (method) :1008
+[ ] Driver.checkForUpdate  (method) :1053
+[ ] Driver.sync  (method) :1091
+      -- Synchronize the existing state to the underlying database.
+[ ] Driver.cleanupCaches  (method) :1120
+[ ] Driver.lookupResourceWithHash  (method) :1167
+      -- Determine if a specific version of the given resource is cached anywhere within the SW, and fetch it if so.
+[ ] Driver.lookupResourceWithoutHash  (method) :1191
+[ ] Driver.previouslyCachedResources  (method) :1197
+[ ] Driver.recentCacheStatus  (method) :1203
+[ ] Driver.mergeHashWithAppData  (method) :1208
+[ ] Driver.notifyClientsAboutUnrecoverableState  (method) :1215
+[ ] Driver.notifyClientsAboutVersionInstallationFailed  (method) :1242
+[ ] Driver.notifyClientsAboutNoNewVersionDetected  (method) :1263
+[ ] Driver.notifyClientsAboutVersionDetected  (method) :1279
+[ ] Driver.notifyClientsAboutVersionReady  (method) :1302
+[ ] Driver.broadcast  (method) :1335
+[ ] Driver.debugState  (method) :1342
+[ ] Driver.debugVersions  (method) :1351
+[ ] Driver.debugIdleState  (method) :1367
+[ ] Driver.safeFetch  (method) :1375
+[ ] Driver.getCacheNames  (method) :1387
+
+## packages/service-worker/worker/src/error.ts
+[ ] SwCriticalError  (export class) :9
+[ ] errorToString  (export function) :13
+[ ] SwUnrecoverableStateError  (export class) :21
+
+## packages/service-worker/worker/src/idle.ts
+[ ] IdleScheduler  (export class) :21
+[ ] IdleScheduler.constructor  (ctor) :30
+[ ] IdleScheduler.trigger  (method) :37
+[ ] IdleScheduler.execute  (method) :68
+[ ] IdleScheduler.schedule  (method) :92
+[ ] IdleScheduler.size  (accessor) :106
+[ ] IdleScheduler.taskDescriptions  (accessor) :110
+
+## packages/service-worker/worker/src/manifest.ts
+[ ] hashManifest  (export function) :48
+
+## packages/service-worker/worker/src/msg.ts
+[ ] isMsgCheckForUpdates  (export function) :18
+[ ] isMsgActivateUpdate  (export function) :27
+[ ] isMsgCheckVersion  (export function) :36
+
+## packages/service-worker/worker/src/named-cache-storage.ts
+[ ] NamedCacheStorage  (export class) :19
+      -- A wrapper around `CacheStorage` to allow interacting with caches more easily and consistently by: - Adding a `name` property to all opened caches, which can be 
+[ ] NamedCacheStorage.constructor  (ctor) :20
+[ ] NamedCacheStorage.has  (method) :29
+[ ] NamedCacheStorage.keys  (method) :33
+[ ] NamedCacheStorage.match  (method) :40
+[ ] NamedCacheStorage.open  (method) :44
+
+## packages/service-worker/worker/src/sha1.ts
+[ ] sha1  (export function) :20
+[ ] sha1Binary  (export function) :26
+[ ] _sha1  (function) :31
+[ ] add32  (function) :59
+[ ] add32to64  (function) :63
+[ ] add64  (function) :69
+[ ] sub32  (function) :75
+[ ] rol32  (function) :82
+      -- Rotate a 32b number left `count` position
+[ ] rol64  (function) :87
+      -- Rotate a 64b number left `count` position
+[ ] fk  (function) :98
+[ ] stringToWords32  (function) :114
+[ ] arrayBufferToWords32  (function) :125
+[ ] byteAt  (function) :135
+[ ] wordAt  (function) :143
+[ ] words32ToByteString  (function) :157
+[ ] word32ToByteString  (function) :161
+[ ] byteStringToHexString  (function) :169
+[ ] byteStringToDecString  (function) :179
+      -- based on https://www.danvk.org/hex2dec.html (JS can not handle more than 56b)
+[ ] addBigInt  (function) :192
+      -- x and y decimal, lowest significant digit first
+[ ] numberTimesBigInt  (function) :209
+
+## packages/service-worker/worker/testing/cache.ts
+[ ] MockCacheStorage  (export class) :26
+[ ] MockCacheStorage.constructor  (ctor) :29
+[ ] MockCacheStorage.has  (method) :41
+[ ] MockCacheStorage.keys  (method) :45
+[ ] MockCacheStorage.open  (method) :49
+[ ] MockCacheStorage.match  (method) :56
+[ ] MockCacheStorage.dehydrate  (method) :78
+[ ] MockCache  (export class) :88
+[ ] MockCache.constructor  (ctor) :91
+[ ] MockCache.add  (method) :110
+[ ] MockCache.addAll  (method) :114
+[ ] MockCache.keys  (method) :134
+[ ] MockCache.match  (method) :141
+[ ] MockCache.matchAll  (method) :157
+[ ] MockCache.put  (method) :169
+[ ] MockCache.dehydrate  (method) :180
+[ ] MockCache.getRequestUrl  (method) :201
+      -- Get the normalized URL from a `RequestInfo` value.
+[ ] MockCache.stripQueryAndHash  (method) :207
+      -- remove the query/hash part from a url
+[ ] clearAllCaches  (export function) :215
+      -- caches.
+
+## packages/service-worker/worker/testing/clients.ts
+[ ] MockClient  (export class) :11
+[ ] MockClient.constructor  (ctor) :16
+[ ] MockClient.postMessage  (method) :23
+[ ] MockWindowClient  (export class) :29
+[ ] MockWindowClient.constructor  (ctor) :33
+[ ] MockWindowClient.focus  (method) :37
+[ ] MockWindowClient.navigate  (method) :45
+[ ] MockClients  (export class) :51
+[ ] MockClients.add  (method) :54
+[ ] MockClients.remove  (method) :71
+[ ] MockClients.get  (method) :75
+[ ] MockClients.getMock  (method) :79
+[ ] MockClients.matchAll  (method) :83
+[ ] MockClients.openWindow  (method) :109
+[ ] MockClients.claim  (method) :113
+
+## packages/service-worker/worker/testing/events.ts
+[ ] MockEvent  (export class) :9
+[ ] MockEvent.constructor  (ctor) :28
+[ ] MockEvent.composedPath  (method) :30
+[ ] MockEvent.initEvent  (method) :33
+[ ] MockEvent.preventDefault  (method) :36
+[ ] MockEvent.stopImmediatePropagation  (method) :39
+[ ] MockEvent.stopPropagation  (method) :42
+[ ] MockEvent.notImplemented  (method) :46
+[ ] MockExtendableEvent  (export class) :51
+[ ] MockExtendableEvent.ready  (accessor) :54
+[ ] MockExtendableEvent.waitUntil  (method) :62
+[ ] MockActivateEvent  (export class) :67
+[ ] MockActivateEvent.constructor  (ctor) :68
+[ ] MockFetchEvent  (export class) :73
+[ ] MockFetchEvent.constructor  (ctor) :78
+[ ] MockFetchEvent.respondWith  (method) :86
+[ ] MockInstallEvent  (export class) :91
+[ ] MockInstallEvent.constructor  (ctor) :92
+[ ] MockExtendableMessageEvent  (export class) :97
+[ ] MockExtendableMessageEvent.constructor  (ctor) :105
+[ ] MockNotificationEvent  (export class) :113
+[ ] MockNotificationEvent.constructor  (ctor) :116
+[ ] MockPushEvent  (export class) :128
+[ ] MockPushEvent.constructor  (ctor) :134
+
+## packages/service-worker/worker/testing/fetch.ts
+[ ] MockBody  (export class) :9
+[ ] MockBody.constructor  (ctor) :13
+[ ] MockBody.arrayBuffer  (method) :15
+[ ] MockBody.blob  (method) :27
+[ ] MockBody.json  (method) :31
+[ ] MockBody.text  (method) :35
+[ ] MockBody.formData  (method) :39
+[ ] MockBody.bytes  (method) :43
+[ ] MockBody.getBody  (method) :47
+[ ] MockHeaders  (export class) :59
+[ ] MockHeaders.constructor  (ctor) :62
+[ ] MockHeaders.[Symbol.iterator]  (method) :76
+[ ] MockHeaders.append  (method) :80
+[ ] MockHeaders.entries  (method) :88
+[ ] MockHeaders.forEach  (method) :92
+[ ] MockHeaders.get  (method) :96
+[ ] MockHeaders.has  (method) :100
+[ ] MockHeaders.keys  (method) :104
+[ ] MockHeaders.set  (method) :108
+[ ] MockHeaders.values  (method) :112
+[ ] MockHeaders.getSetCookie  (method) :116
+[ ] MockRequest  (export class) :121
+[ ] MockRequest.constructor  (ctor) :139
+[ ] MockRequest.clone  (method) :177
+[ ] MockResponse  (export class) :194
+[ ] MockResponse.ok  (accessor) :197
+[ ] MockResponse.constructor  (ctor) :206
+[ ] MockResponse.clone  (method) :227
+
+## packages/service-worker/worker/testing/mock.ts
+[ ] MockFile  (export class) :18
+[ ] MockFile.constructor  (ctor) :19
+[ ] MockFile.hash  (accessor) :26
+[ ] MockFileSystemBuilder  (export class) :31
+[ ] MockFileSystemBuilder.addFile  (method) :34
+[ ] MockFileSystemBuilder.addUnhashedFile  (method) :39
+[ ] MockFileSystemBuilder.build  (method) :44
+[ ] MockFileSystem  (export class) :49
+[ ] MockFileSystem.constructor  (ctor) :50
+[ ] MockFileSystem.lookup  (method) :52
+[ ] MockFileSystem.extend  (method) :56
+[ ] MockFileSystem.list  (method) :69
+[ ] MockServerStateBuilder  (export class) :74
+[ ] MockServerStateBuilder.withRootDirectory  (method) :79
+[ ] MockServerStateBuilder.withStaticFiles  (method) :96
+[ ] MockServerStateBuilder.withManifest  (method) :107
+[ ] MockServerStateBuilder.withRedirect  (method) :113
+[ ] MockServerStateBuilder.withError  (method) :118
+[ ] MockServerStateBuilder.build  (method) :123
+[ ] MockServerState  (export class) :132
+[ ] MockServerState.constructor  (ctor) :140
+[ ] MockServerState.fetch  (method) :149
+[ ] MockServerState.pause  (method) :180
+[ ] MockServerState.unpause  (method) :186
+[ ] MockServerState.getRequestsFor  (method) :194
+[ ] MockServerState.assertSawRequestFor  (method) :198
+[ ] MockServerState.assertNoRequestFor  (method) :204
+[ ] MockServerState.sawRequestFor  (method) :210
+[ ] MockServerState.assertNoOtherRequests  (method) :219
+[ ] MockServerState.noOtherRequests  (method) :229
+[ ] MockServerState.clearRequests  (method) :233
+[ ] MockServerState.reset  (method) :237
+[ ] tmpManifestSingleAssetGroup  (export function) :248
+[ ] tmpHashTableForFs  (export function) :274
+[ ] tmpHashTable  (export function) :293
+[ ] joinPaths  (function) :306
+      -- Join two path segments, ensuring that there is exactly one slash (`/`) between them.
+
+## packages/service-worker/worker/testing/scope.ts
+[ ] SwTestHarnessBuilder  (export class) :29
+[ ] SwTestHarnessBuilder.constructor  (ctor) :34
+[ ] SwTestHarnessBuilder.withCacheState  (method) :39
+[ ] SwTestHarnessBuilder.withServerState  (method) :44
+[ ] SwTestHarnessBuilder.build  (method) :49
+[ ] SwTestHarnessImpl  (export class) :56
+[ ] SwTestHarnessImpl.time  (accessor) :83
+[ ] SwTestHarnessImpl.constructor  (ctor) :98
+[ ] SwTestHarnessImpl.resolveSelfMessages  (method) :106
+[ ] SwTestHarnessImpl.startup  (method) :117
+[ ] SwTestHarnessImpl.updateServerState  (method) :136
+[ ] SwTestHarnessImpl.fetch  (method) :140
+[ ] SwTestHarnessImpl.addEventListener  (method) :150
+[ ] SwTestHarnessImpl.removeEventListener  (method) :164
+[ ] SwTestHarnessImpl.newRequest  (method) :176
+[ ] SwTestHarnessImpl.newResponse  (method) :180
+[ ] SwTestHarnessImpl.newHeaders  (method) :184
+[ ] SwTestHarnessImpl.skipWaiting  (method) :188
+[ ] SwTestHarnessImpl.handleFetch  (method) :192
+[ ] SwTestHarnessImpl.handleMessage  (method) :218
+[ ] SwTestHarnessImpl.handleMessageError  (method) :236
+[ ] SwTestHarnessImpl.handlePush  (method) :254
+[ ] SwTestHarnessImpl.handleClick  (method) :263
+[ ] SwTestHarnessImpl.handleClose  (method) :272
+[ ] SwTestHarnessImpl.handleUnhandledRejection  (method) :281
+[ ] SwTestHarnessImpl.timeout  (method) :296
+[ ] SwTestHarnessImpl.advance  (method) :313
+[ ] SwTestHarnessImpl.isClient  (method) :324
+[ ] AssetGroupBuilder  (export class) :335
+[ ] AssetGroupBuilder.constructor  (ctor) :336
+[ ] AssetGroupBuilder.addFile  (method) :343
+[ ] AssetGroupBuilder.finish  (method) :352
+[ ] AssetGroupBuilder.toManifestGroup  (method) :356
+[ ] ConfigBuilder  (export class) :361
+[ ] ConfigBuilder.addAssetGroup  (method) :364
+[ ] ConfigBuilder.finish  (method) :370
+
+## packages/service-worker/worker/testing/utils.ts
+[ ] envIsSupported  (export function) :16
+      -- Determine whether the current environment provides all necessary APIs to run ServiceWorker tests.
+[ ] normalizeUrl  (export function) :33
+      -- Get a normalized representation of a URL relative to a provided base URL. More specifically: 1. Resolve the URL relative to the provided base URL. 2. If the URL
+[ ] parseUrl  (export function) :43
+      -- Parse a URL into its different parts, such as `origin`, `path` and `search`.

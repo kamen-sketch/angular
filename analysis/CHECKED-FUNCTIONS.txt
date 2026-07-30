@@ -1,0 +1,311 @@
+DAFTAR FUNGSI YANG SUDAH DIANALISIS
+Dihasilkan otomatis oleh analysis/tools/sync-checklist.mjs -- jangan diedit manual.
+Sumber: analysis/subsystems/*.txt
+Total fungsi tercentang: 151
+==============================================================================
+
+### 01-core-signals-primitives
+[x] createComputed  --  packages/core/primitives/signals/src/computed.ts:59
+      Membuat getter computed: memutakhirkan versi, mendaftar sebagai producer, melempar ulang error yang di-cache.
+[x] COMPUTED_NODE  --  packages/core/primitives/signals/src/computed.ts:117
+      Prototipe computed: dirty awal true, plus implementasi producerMustRecompute/producerRecomputeValue dengan deteksi siklus dan caching error.
+[x] BASE_EFFECT_NODE  --  packages/core/primitives/signals/src/effect.ts:36
+      Prototipe effect: selalu live, boleh menulis signal, dirty awal true.
+[x] runEffect  --  packages/core/primitives/signals/src/effect.ts:45
+      Runner effect generik: bersihkan dirty, polling perubahan, cleanup lalu jalankan fn di konteks consumer.
+[x] defaultEquals  --  packages/core/primitives/signals/src/equality.ts:17
+      Kesetaraan default memakai Object.is (referensial, NaN-safe).
+[x] defaultThrowError  --  packages/core/primitives/signals/src/errors.ts:11
+      Pelempar error minimal sebelum core memasang pesan detail.
+[x] throwInvalidWriteToSignalError  --  packages/core/primitives/signals/src/errors.ts:17
+      Indireksi agar primitives tidak bergantung pada infrastruktur error core.
+[x] setThrowInvalidWriteToSignalError  --  packages/core/primitives/signals/src/errors.ts:21
+      Titik injeksi pesan error kaya dari @angular/core.
+[x] prettifyPreview  --  packages/core/primitives/signals/src/formatter.ts:112
+      Meringkas nilai menjadi label pendek untuk pratinjau custom formatter DevTools.
+[x] isSignal  --  packages/core/primitives/signals/src/formatter.ts:145
+      Cek keberadaan simbol SIGNAL (versi lokal formatter).
+[x] installDevToolsSignalFormatter  --  packages/core/primitives/signals/src/formatter.ts:156
+      Mendaftarkan custom formatter ke globalThis.devtoolsFormatters (Chrome/Firefox), idempoten.
+[x] setActiveConsumer  --  packages/core/primitives/signals/src/graph.ts:42
+      Memasang consumer aktif, mengembalikan yang sebelumnya (pola save/restore).
+[x] getActiveConsumer  --  packages/core/primitives/signals/src/graph.ts:48
+      Membaca consumer aktif; dipakai core untuk cek konteks reaktif.
+[x] isInNotificationPhase  --  packages/core/primitives/signals/src/graph.ts:52
+      True saat propagasi dirty berlangsung; dipakai untuk melarang baca/schedule.
+[x] isReactive  --  packages/core/primitives/signals/src/graph.ts:60
+      Type guard: nilai punya properti simbol SIGNAL.
+[x] producerAccessed  --  packages/core/primitives/signals/src/graph.ts:212
+      Inti pelacakan dependensi: mencatat edge producer->consumer aktif, dengan tiga fast-path reuse link.
+[x] producerIncrementEpoch  --  packages/core/primitives/signals/src/graph.ts:302
+      Menaikkan epoch global; dipanggil source signal saat nilainya berubah.
+[x] producerUpdateValueVersion  --  packages/core/primitives/signals/src/graph.ts:309
+      Memastikan version node mutakhir: skip jika live+bersih atau bersih pada epoch ini, jika tidak polling lalu recompute.
+[x] producerNotifyConsumers  --  packages/core/primitives/signals/src/graph.ts:339
+      Menyebarkan notifikasi kotor ke semua live consumer dalam fase notifikasi.
+[x] producerUpdatesAllowed  --  packages/core/primitives/signals/src/graph.ts:367
+      Guard: apakah menulis signal diizinkan pada konteks consumer saat ini.
+[x] consumerMarkDirty  --  packages/core/primitives/signals/src/graph.ts:371
+      Menandai node kotor, meneruskan notifikasi ke hilir, lalu memanggil hook consumerMarkedDirty (yang menjadwalkan effect).
+[x] producerMarkClean  --  packages/core/primitives/signals/src/graph.ts:377
+      Reset dirty dan catat lastCleanEpoch untuk fast-path polling.
+[x] consumerBeforeComputation  --  packages/core/primitives/signals/src/graph.ts:389
+      Reset state dependensi lalu jadikan node consumer aktif.
+[x] resetConsumerBeforeComputation  --  packages/core/primitives/signals/src/graph.ts:403
+      Membatalkan knownValidAtEpoch link lama dan membuka mode recomputing.
+[x] consumerAfterComputation  --  packages/core/primitives/signals/src/graph.ts:427
+      Kembalikan consumer sebelumnya lalu finalisasi daftar dependensi.
+[x] finalizeConsumerAfterComputation  --  packages/core/primitives/signals/src/graph.ts:444
+      Memotong dan melepas link dependensi basi setelah rekonsiliasi inkremental.
+[x] consumerPollProducersForChange  --  packages/core/primitives/signals/src/graph.ts:472
+      Model PULL: bandingkan lastReadVersion dengan version producer (memaksa producer memutakhirkan diri lebih dulu).
+[x] consumerDestroy  --  packages/core/primitives/signals/src/graph.ts:501
+      Memutus node dari graf dua arah dan mengosongkan seluruh rantai link.
+[x] producerAddLiveConsumer  --  packages/core/primitives/signals/src/graph.ts:523
+      Menyisipkan link ke rantai consumer; jika node baru menjadi live, merekursi ke seluruh producernya.
+[x] producerRemoveLiveConsumerLink  --  packages/core/primitives/signals/src/graph.ts:546
+      Melepas satu edge O(1) dari rantai dua arah; merekursi turun bila producer berhenti live.
+[x] consumerIsLive  --  packages/core/primitives/signals/src/graph.ts:572
+      Live = selalu-live (effect) atau punya minimal satu consumer.
+[x] runPostProducerCreatedFn  --  packages/core/primitives/signals/src/graph.ts:576
+      Hook pembuatan producer; dipakai DevTools untuk merekam graf signal.
+[x] setPostProducerCreatedFn  --  packages/core/primitives/signals/src/graph.ts:580
+      Memasang hook di atas (save/restore).
+[x] createLinkedSignal  --  packages/core/primitives/signals/src/linked_signal.ts:67
+      Computed yang menyimpan sourceValue sehingga computation bisa melihat pasangan (source, value) sebelumnya.
+[x] linkedSignalSetFn  --  packages/core/primitives/signals/src/linked_signal.ts:106
+      Tulis manual ke linkedSignal lalu tandai bersih agar tidak langsung ditimpa komputasi.
+[x] linkedSignalUpdateFn  --  packages/core/primitives/signals/src/linked_signal.ts:112
+      Sama seperti di atas untuk updater; menolak update saat state ERRORED.
+[x] LINKED_SIGNAL_NODE  --  packages/core/primitives/signals/src/linked_signal.ts:127
+      Prototipe linkedSignal; producerRecomputeValue memanggil source() lalu computation(source, prev).
+[x] createSignal  --  packages/core/primitives/signals/src/signal.ts:53
+      Membuat tuple [getter, set, update]; getter membawa node lewat properti SIGNAL, plus toString ramah-debug di dev mode.
+[x] setPostSignalSetFn  --  packages/core/primitives/signals/src/signal.ts:75
+      Memasang hook pasca-set; dipakai core untuk effect sinkron/penjadwalan CD.
+[x] signalGetFn  --  packages/core/primitives/signals/src/signal.ts:81
+      Baca nilai + daftarkan dependensi via producerAccessed.
+[x] signalSetFn  --  packages/core/primitives/signals/src/signal.ts:86
+      Tulis nilai bila tidak equal, setelah lolos guard producerUpdatesAllowed.
+[x] signalUpdateFn  --  packages/core/primitives/signals/src/signal.ts:97
+      Varian set berbasis fungsi updater terhadap nilai saat ini.
+[x] runPostSignalSetFn  --  packages/core/primitives/signals/src/signal.ts:105
+      Memanggil hook pasca-set secara manual (dipakai node turunan seperti input signal).
+[x] SIGNAL_NODE  --  packages/core/primitives/signals/src/signal.ts:111
+      Prototipe node signal (kind 'signal', equal default Object.is); dibuat via IIFE @__PURE__ agar tree-shakable.
+[x] signalValueChanged  --  packages/core/primitives/signals/src/signal.ts:120
+      Urutan wajib saat nilai berubah: version++, epoch++, notifikasi consumer, hook pasca-set.
+[x] untracked  --  packages/core/primitives/signals/src/untracked.ts:15
+      Jalankan fungsi dengan activeConsumer=null sehingga pembacaan tidak terlacak.
+[x] createWatch  --  packages/core/primitives/signals/src/watch.ts:65
+      Membangun consumer selalu-live dengan siklus hidup notify/run/cleanup/destroy; run melewati eksekusi jika polling menyatakan tidak ada perubahan.
+[x] isWatchNodeDestroyed  --  packages/core/primitives/signals/src/watch.ts:82
+      Node dianggap mati jika fn dan schedule sudah di-null-kan.
+[x] destroyWatchNode  --  packages/core/primitives/signals/src/watch.ts:86
+      Putuskan dari graf, jalankan cleanup terakhir, null-kan referensi (idempoten).
+[x] WATCH_NODE  --  packages/core/primitives/signals/src/watch.ts:143
+      Prototipe watch: consumerIsAlwaysLive, consumerMarkedDirty meneruskan ke scheduler pengguna.
+[x] setAlternateWeakRefImpl  --  packages/core/primitives/signals/src/weak_ref.ts:9
+      Stub kosong bersisa TODO penghapusan; tidak lagi berefek.
+
+### 02-core-dependency-injection
+[x] defineInjectable  --  packages/core/primitives/di/src/injection_token.ts:70
+      Membuat struktur ɵprov (token, providedIn, factory) untuk provider tree-shakable.
+[x] registerInjectable  --  packages/core/primitives/di/src/injection_token.ts:85
+      Menempelkan ɵprov ke tipe/token.
+[x] getCurrentInjector  --  packages/core/primitives/di/src/injector.ts:24
+      Membaca injector aktif dari variabel modul (dasar konteks injeksi).
+[x] setCurrentInjector  --  packages/core/primitives/di/src/injector.ts:28
+      Memasang injector aktif, mengembalikan yang lama (pola save/restore).
+[x] inject  --  packages/core/primitives/di/src/injector.ts:36
+      Deklarasi overload inject versi primitives.
+[x] inject  --  packages/core/primitives/di/src/injector.ts:37
+      Implementasi primitives: retrieve token dari injector aktif, hormati opsi optional.
+[x] NotFoundError  --  packages/core/primitives/di/src/not_found.ts:19
+      Error khusus "token tidak ditemukan" yang bisa dibedakan dari error lain.
+[x] isNotFound  --  packages/core/primitives/di/src/not_found.ts:29
+      Type guard NotFound; dipakai agar error not-found tidak tertukar dengan error factory.
+[x] isType  --  packages/core/primitives/di/src/type.ts:21
+      Cek nilai berupa fungsi konstruktor.
+[x] runInInjectionContext  --  packages/core/src/di/contextual.ts:37
+      Menjalankan fungsi dalam konteks injector tertentu; membungkus injector non-R3 dengan RetrievingInjector.
+[x] isInInjectionContext  --  packages/core/src/di/contextual.ts:64
+      True bila ada implementasi inject atau injector aktif.
+[x] assertInInjectionContext  --  packages/core/src/di/contextual.ts:77
+      Guard untuk API seperti effect()/toSignal(); menerima Function agar nama tidak tertahan di bundle.
+[x] createInjector  --  packages/core/src/di/create_injector.ts:21
+      Membuat R3Injector lalu langsung menjalankan ENVIRONMENT_INITIALIZER.
+[x] createInjectorWithoutInjectorInstances  --  packages/core/src/di/create_injector.ts:42
+      Varian yang menunda inisialisasi untuk menghindari loop saat bootstrap.
+[x] forwardRef  --  packages/core/src/di/forward_ref.ts:69
+      Menandai fungsi sebagai referensi tertunda untuk memecah siklus deklarasi.
+[x] resolveForwardRef  --  packages/core/src/di/forward_ref.ts:93
+      Membuka forward ref bila ada, selain itu identity.
+[x] isForwardRef  --  packages/core/src/di/forward_ref.ts:98
+      Deteksi penanda __forward_ref__ yang closure-safe.
+[x] getInjectImplementation  --  packages/core/src/di/inject_switch.ts:28
+      Membaca implementasi inject aktif (undefined = hanya module injector).
+[x] setInjectImplementation  --  packages/core/src/di/inject_switch.ts:35
+      Menukar implementasi inject (dipakai render3 untuk mengaktifkan directiveInject).
+[x] injectRootLimpMode  --  packages/core/src/di/inject_switch.ts:50
+      Limp mode: instansiasi provider providedIn:'root' tanpa injector, nilai di-cache di ɵprov.
+[x] assertInjectImplementationNotEqual  --  packages/core/src/di/inject_switch.ts:76
+      Guard dev-mode pencegah rekursi tak hingga saat menukar implementasi.
+[x] RetrievingInjector.retrieve  --  packages/core/src/di/injector_compatibility.ts:51
+      Adapter Injector lama ke antarmuka primitives; mengubah error NotFound menjadi nilai balik.
+[x] injectInjectorOnly  --  packages/core/src/di/injector_compatibility.ts:93
+      Jalur "hanya EnvironmentInjector": lempar NG0203 jika di luar konteks injeksi, limp mode jika injector null.
+[x] inject  --  packages/core/src/di/injector_compatibility.ts:293
+      API publik inject(): konversi InjectOptions ke bit flags lalu delegasi ke ɵɵinject.
+[x] convertToBitFlags  --  packages/core/src/di/injector_compatibility.ts:300
+      Konversi hemat-ukuran dari objek opsi ke bitmask (memanfaatkan OR dengan falsy).
+[x] convertToInjectOptions  --  packages/core/src/di/injector_compatibility.ts:318
+      Konversi balik bitmask ke objek opsi untuk API primitives.
+[x] injectArgs  --  packages/core/src/di/injector_compatibility.ts:327
+      Resolusi array `deps` provider, termasuk bentuk bersarang [new Optional(), Token].
+[x] attachInjectFlag  --  packages/core/src/di/injector_compatibility.ts:374
+      Menempelkan flag DI ke dekorator (static + prototype) agar tree-shakable tanpa referensi langsung.
+[x] getInjectFlag  --  packages/core/src/di/injector_compatibility.ts:385
+      Membaca flag yang ditempel di atas.
+[x] getInjectableDef  --  packages/core/src/di/interface/defs.ts:207
+      Membaca ɵprov milik token (tanpa warisan).
+[x] isInjectable  --  packages/core/src/di/interface/defs.ts:211
+      Cek keberadaan ɵprov.
+[x] getOwnDefinition  --  packages/core/src/di/interface/defs.ts:219
+      Memastikan definisi milik tipe itu sendiri, bukan warisan prototipe.
+[x] getInheritedInjectableDef  --  packages/core/src/di/interface/defs.ts:232
+      Menaiki rantai prototipe mencari ɵprov leluhur; memperingatkan pemakaian yang salah di dev mode.
+[x] getInjectorDef  --  packages/core/src/di/interface/defs.ts:253
+      Membaca ɵinj (definisi injector NgModule).
+[x] isEnvironmentProviders  --  packages/core/src/di/interface/provider.ts:375
+      Deteksi pembungkus EnvironmentProviders.
+[x] compileInjectable  --  packages/core/src/di/jit/injectable.ts:34
+      Jalur JIT: menyusun ɵprov dan ɵfac dari metadata @Injectable saat runtime.
+[x] getInjectableMetadata  --  packages/core/src/di/jit/injectable.ts:108
+      Menerjemahkan opsi @Injectable ke metadata compiler (useClass/useValue/useFactory/useExisting).
+[x] compileService  --  packages/core/src/di/jit/service.ts:25
+      Titik masuk kompilasi JIT untuk service.
+[x] makeEnvironmentProviders  --  packages/core/src/di/provider_collection.ts:46
+      Membungkus provider agar hanya sah dipakai di level environment (mis. provideRouter).
+[x] provideEnvironmentInitializer  --  packages/core/src/di/provider_collection.ts:81
+      Gula sintaks multi-provider ENVIRONMENT_INITIALIZER.
+[x] importProvidersFrom  --  packages/core/src/di/provider_collection.ts:144
+      API publik untuk mengambil provider dari NgModule ke dalam konfigurasi standalone.
+[x] internalImportProvidersFrom  --  packages/core/src/di/provider_collection.ts:151
+      Versi internal dengan opsi validasi.
+[x] processInjectorTypesWithProviders  --  packages/core/src/di/provider_collection.ts:195
+      Menangani bentuk {ngModule, providers} pada imports.
+[x] walkProviderTree  --  packages/core/src/di/provider_collection.ts:232
+      Menelusuri NgModule imports dan dependensi komponen standalone dengan dedup + deteksi siklus.
+[x] validateProvider  --  packages/core/src/di/provider_collection.ts:365
+      Validasi bentuk provider di dev mode.
+[x] deepForEachProvider  --  packages/core/src/di/provider_collection.ts:388
+      Iterasi rekursif array provider bersarang.
+[x] isValueProvider  --  packages/core/src/di/provider_collection.ts:409
+      Diskriminator bentuk provider useValue.
+[x] isExistingProvider  --  packages/core/src/di/provider_collection.ts:413
+      Diskriminator useExisting (alias token).
+[x] isFactoryProvider  --  packages/core/src/di/provider_collection.ts:417
+      Diskriminator useFactory.
+[x] isTypeProvider  --  packages/core/src/di/provider_collection.ts:421
+      Provider berupa kelas telanjang.
+[x] isClassProvider  --  packages/core/src/di/provider_collection.ts:425
+      Diskriminator useClass.
+[x] getNullInjector  --  packages/core/src/di/r3_injector.ts:105
+      NullInjector singleton lazy sebagai ujung rantai pencarian.
+[x] R3Injector.constructor  --  packages/core/src/di/r3_injector.ts:216
+      Memproses semua provider menjadi record, mendaftarkan token INJECTOR/EnvironmentInjector, menentukan scope.
+[x] R3Injector.retrieve  --  packages/core/src/di/r3_injector.ts:246
+      Adapter ke antarmuka primitives; NotFound dikembalikan sebagai nilai, bukan dilempar.
+[x] R3Injector.destroy  --  packages/core/src/di/r3_injector.ts:270
+      Menjalankan ngOnDestroy semua instance + hook onDestroy, lalu melepas seluruh referensi.
+[x] R3Injector.onDestroy  --  packages/core/src/di/r3_injector.ts:297
+      Mendaftarkan callback destroy dan mengembalikan fungsi pembatalan.
+[x] R3Injector.runInContext  --  packages/core/src/di/r3_injector.ts:303
+      Versi lama runInInjectionContext yang terikat pada injector ini.
+[x] R3Injector.get  --  packages/core/src/di/r3_injector.ts:323
+      Inti resolusi: hormati SkipSelf/Self/Optional, cari record, fallback ke providedIn scope, lalu delegasi ke parent; menyusun jalur error DI.
+[x] R3Injector.resolveInjectorInitializers  --  packages/core/src/di/r3_injector.ts:426
+      Menjalankan multi-provider ENVIRONMENT_INITIALIZER dalam konteks injector ini.
+[x] R3Injector.toString  --  packages/core/src/di/r3_injector.ts:457
+      Debug: daftar token (hanya dev mode).
+[x] R3Injector.processProvider  --  packages/core/src/di/r3_injector.ts:473
+      Mengubah satu provider jadi record; menangani multi-provider dan melarang campuran multi/non-multi.
+[x] R3Injector.hydrate  --  packages/core/src/di/r3_injector.ts:524
+      Instansiasi malas dengan penanda CIRCULAR, pendaftaran ngOnDestroy, dan setActiveConsumer(null).
+[x] R3Injector.injectableDefInScope  --  packages/core/src/di/r3_injector.ts:551
+      Mencocokkan providedIn dengan scope injector atau daftar tipe injector.
+[x] R3Injector.removeOnDestroy  --  packages/core/src/di/r3_injector.ts:563
+      Melepas satu callback destroy.
+[x] injectableDefOrInjectorDefFactory  --  packages/core/src/di/r3_injector.ts:571
+      Menentukan factory dari ɵprov/ɵfac; error jelas untuk token tanpa definisi.
+[x] getUndecoratedInjectableFactory  --  packages/core/src/di/r3_injector.ts:598
+      Menangani kelas tanpa dekorator: pakai factory warisan atau konstruktor tanpa argumen.
+[x] providerToRecord  --  packages/core/src/di/r3_injector.ts:624
+      ValueProvider langsung berisi nilai; sisanya menyimpan factory dengan penanda NOT_YET.
+[x] providerToFactory  --  packages/core/src/di/r3_injector.ts:639
+      Peta bentuk provider (useValue/useFactory/useExisting/useClass/Type) ke fungsi pembuat instance.
+[x] assertNotDestroyed  --  packages/core/src/di/r3_injector.ts:683
+      Guard pemakaian injector setelah destroy.
+[x] makeRecord  --  packages/core/src/di/r3_injector.ts:692
+      Konstruktor record internal (factory, value, slot multi).
+[x] hasDeps  --  packages/core/src/di/r3_injector.ts:704
+      Cek provider punya array deps eksplisit.
+[x] hasOnDestroy  --  packages/core/src/di/r3_injector.ts:710
+      Deteksi instance dengan ngOnDestroy untuk didaftarkan ke hook destroy.
+[x] couldBeInjectableType  --  packages/core/src/di/r3_injector.ts:718
+      Filter cepat sebelum membaca ɵprov (fungsi atau InjectionToken).
+[x] forEachSingleProvider  --  packages/core/src/di/r3_injector.ts:725
+      Meratakan array bersarang dan EnvironmentProviders menjadi provider tunggal.
+[x] setIncludeViewProviders  --  packages/core/src/render3/di.ts:117
+      Menyalakan/mematikan visibilitas viewProviders selama satu resolusi.
+[x] bloomAdd  --  packages/core/src/render3/di.ts:152
+      Menyalakan bit token pada bloom filter node (ID unik per tipe, mask 256 bit, bucket 32 bit).
+[x] getOrCreateNodeInjectorForNode  --  packages/core/src/render3/di.ts:193
+      Mengalokasikan 9 slot injector di LView/TView dan membangun bloom kumulatif dari leluhur.
+[x] insertBloom  --  packages/core/src/render3/di.ts:230
+      Menambahkan 8 slot bloom + 1 slot footer ke array.
+[x] getInjectorIndex  --  packages/core/src/render3/di.ts:234
+      Mengembalikan indeks injector node ini, -1 bila sebenarnya milik parent atau belum siap.
+[x] getParentInjectorLocation  --  packages/core/src/render3/di.ts:258
+      Menghitung lokasi injector induk terkemas (indeks + jumlah view yang dinaiki lewat DECLARATION_VIEW).
+[x] diPublicInInjector  --  packages/core/src/render3/di.ts:304
+      Mempublikasikan token directive ke bloom filter node.
+[x] injectAttributeImpl  --  packages/core/src/render3/di.ts:343
+      Implementasi @Attribute: membaca atribut statis dari array tNode.attrs dengan penanda AttributeMarker.
+[x] notFoundValueOrThrow  --  packages/core/src/render3/di.ts:386
+      Menghormati Optional/notFoundValue atau melempar NG0201.
+[x] lookupTokenUsingModuleInjector  --  packages/core/src/render3/di.ts:407
+      Fallback ke EnvironmentInjector; mematikan directiveInject agar module injector tidak melihat scope directive.
+[x] getOrCreateInjectable  --  packages/core/src/render3/di.ts:457
+      Orkestrator pencarian: embedded view injector -> node injector -> module injector.
+[x] lookupTokenUsingNodeInjector  --  packages/core/src/render3/di.ts:506
+      Penelusuran pohon node injector berbasis bloom, termasuk penanganan token khusus berbasis factory.
+[x] searchTokensOnInjector  --  packages/core/src/render3/di.ts:627
+      Menentukan hak akses viewProviders dan kasus khusus @Host sebelum mencari token nyata.
+[x] locateDirectiveOrProvider  --  packages/core/src/render3/di.ts:685
+      Pemindaian linear rentang provider/directive pada TNode untuk memverifikasi kandidat bloom.
+[x] getNodeInjectable  --  packages/core/src/render3/di.ts:735
+      Instansiasi malas isi slot LView; deteksi siklus via flag resolving, daftarkan pre-order hooks untuk directive.
+[x] bloomHashBitOrFactory  --  packages/core/src/render3/di.ts:825
+      Memetakan token ke bit bloom, atau ke factory untuk token khusus (Injector, ElementRef, TemplateRef).
+[x] bloomHasToken  --  packages/core/src/render3/di.ts:849
+      Uji satu bit bloom (false = pasti tidak ada; true = mungkin ada).
+[x] shouldSearchParent  --  packages/core/src/render3/di.ts:870
+      Menerjemahkan flag Self/Host menjadi keputusan lanjut/berhenti menaiki pohon.
+[x] getNodeInjectorLView  --  packages/core/src/render3/di.ts:879
+      Akses internal ke LView milik NodeInjector (dipakai DevTools/testing).
+[x] getNodeInjectorTNode  --  packages/core/src/render3/di.ts:883
+      Akses internal ke TNode milik NodeInjector.
+[x] NodeInjector.get  --  packages/core/src/render3/di.ts:899
+      Antarmuka Injector publik di atas getOrCreateInjectable.
+[x] createNodeInjector  --  packages/core/src/render3/di.ts:911
+      Membuat NodeInjector untuk node yang sedang diproses (token khusus `Injector`).
+[x] ɵɵgetInheritedFactory  --  packages/core/src/render3/di.ts:918
+      Menaiki rantai prototipe mencari ɵfac induk; dibungkus noSideEffects demi tree-shaking.
+[x] getFactoryOf  --  packages/core/src/render3/di.ts:951
+      Membaca ɵfac sebuah tipe, transparan terhadap forwardRef.
+[x] lookupTokenUsingEmbeddedInjector  --  packages/core/src/render3/di.ts:971
+      Menelusuri injector embedded view node-demi-node (tidak punya bloom filter) dengan flag Self.
+[x] getTNodeFromLView  --  packages/core/src/render3/di.ts:1044
+      Mengambil TNode induk sesuai tipe view (Embedded pakai declTNode, Component pakai T_HOST).

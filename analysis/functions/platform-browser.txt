@@ -1,0 +1,355 @@
+INVENTORY FUNGSI :: platform-browser
+Total simbol: 225 | file: 24
+Rincian: function=46, class=28, method=131, accessor=2, ctor=18
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## packages/platform-browser/animations/async/src/async_animation_renderer.ts
+[ ] AsyncAnimationRendererFactory  (export class) :36
+[ ] AsyncAnimationRendererFactory.constructor  (ctor) :49
+[ ] AsyncAnimationRendererFactory.ngOnDestroy  (method) :61
+      -- @docs-private
+[ ] AsyncAnimationRendererFactory.loadImpl  (method) :74
+[ ] AsyncAnimationRendererFactory.createRenderer  (method) :119
+      -- This method is delegating the renderer creation to the factories. It uses default factory while the animation factory isn't loaded and will rely on the animatio
+[ ] AsyncAnimationRendererFactory.begin  (method) :159
+[ ] AsyncAnimationRendererFactory.end  (method) :163
+[ ] AsyncAnimationRendererFactory.componentReplaced  (method) :175
+      -- Used during HMR to clear any cached data about a component.
+[ ] DynamicDelegationRenderer  (export class) :186
+      -- The class allows to dynamicly switch between different renderer implementations by changing the delegate renderer.
+[ ] DynamicDelegationRenderer.constructor  (ctor) :191
+[ ] DynamicDelegationRenderer.use  (method) :193
+[ ] DynamicDelegationRenderer.data  (accessor) :208
+[ ] DynamicDelegationRenderer.destroy  (method) :212
+[ ] DynamicDelegationRenderer.createElement  (method) :217
+[ ] DynamicDelegationRenderer.createComment  (method) :221
+[ ] DynamicDelegationRenderer.createText  (method) :225
+[ ] DynamicDelegationRenderer.destroyNode  (accessor) :229
+[ ] DynamicDelegationRenderer.appendChild  (method) :233
+[ ] DynamicDelegationRenderer.insertBefore  (method) :237
+[ ] DynamicDelegationRenderer.removeChild  (method) :241
+[ ] DynamicDelegationRenderer.selectRootElement  (method) :250
+[ ] DynamicDelegationRenderer.parentNode  (method) :254
+[ ] DynamicDelegationRenderer.nextSibling  (method) :258
+[ ] DynamicDelegationRenderer.setAttribute  (method) :262
+[ ] DynamicDelegationRenderer.removeAttribute  (method) :266
+[ ] DynamicDelegationRenderer.addClass  (method) :270
+[ ] DynamicDelegationRenderer.removeClass  (method) :274
+[ ] DynamicDelegationRenderer.setStyle  (method) :278
+[ ] DynamicDelegationRenderer.removeStyle  (method) :282
+[ ] DynamicDelegationRenderer.setProperty  (method) :286
+[ ] DynamicDelegationRenderer.setValue  (method) :295
+[ ] DynamicDelegationRenderer.listen  (method) :299
+[ ] DynamicDelegationRenderer.shouldReplay  (method) :315
+
+## packages/platform-browser/animations/async/src/providers.ts
+[ ] provideAnimationsAsync  (export function) :52
+      -- Returns the set of dependency-injection providers to enable animations in an application. See [animations guide](guide/animations) to learn more about animation
+
+## packages/platform-browser/animations/src/module.ts
+[ ] BrowserAnimationsModule  (export class) :44
+[ ] BrowserAnimationsModule.withConfig  (method) :61
+      -- Configures the module based on the specified object. When registering the `BrowserAnimationsModule`, you can use the `withConfig` function as follows: ```ts   i
+[ ] provideAnimations  (export function) :98
+      -- Returns the set of dependency-injection providers to enable animations in an application. See [animations guide](guide/animations) to learn more about animation
+[ ] NoopAnimationsModule  (export class) :115
+[ ] provideNoopAnimations  (export function) :140
+      -- Returns the set of dependency-injection providers to disable animations in an application. See [animations guide](guide/animations) to learn more about animatio
+
+## packages/platform-browser/animations/src/providers.ts
+[ ] InjectableAnimationEngine  (export class) :32
+[ ] InjectableAnimationEngine.constructor  (ctor) :36
+[ ] InjectableAnimationEngine.ngOnDestroy  (method) :44
+[ ] instantiateDefaultStyleNormalizer  (export function) :49
+[ ] instantiateRendererFactory  (export function) :53
+
+## packages/platform-browser/src/browser.ts
+[ ] bootstrapApplication  (export function) :123
+      -- Bootstraps an instance of an Angular application and renders a standalone component as the application's root component. More information about standalone compo
+[ ] createApplication  (export function) :155
+      -- Create an instance of an Angular application without bootstrapping any components. This is useful for the situation where one wants to decouple application envi
+[ ] createProvidersConfig  (function) :166
+[ ] resolveJitResources  (function) :175
+      -- Attempt to resolve component resources before bootstrapping in JIT mode.
+[ ] provideProtractorTestingSupport  (export function) :196
+      -- Returns a set of providers required to setup [Testability](api/core/Testability) for an application bootstrapped using the `bootstrapApplication` function. The 
+[ ] initDomAdapter  (export function) :210
+[ ] errorHandler  (export function) :214
+[ ] _document  (export function) :218
+[ ] BrowserModule  (export class) :299
+[ ] BrowserModule.constructor  (ctor) :300
+
+## packages/platform-browser/src/browser/browser_adapter.ts
+[ ] BrowserDomAdapter  (export class) :21
+      -- A `DomAdapter` powered by full browser DOM APIs. can introduce XSS risks.
+[ ] BrowserDomAdapter.makeCurrent  (method) :24
+[ ] BrowserDomAdapter.onAndCancel  (method) :28
+[ ] BrowserDomAdapter.dispatchEvent  (method) :34
+[ ] BrowserDomAdapter.remove  (method) :37
+[ ] BrowserDomAdapter.createElement  (method) :40
+[ ] BrowserDomAdapter.createHtmlDocument  (method) :44
+[ ] BrowserDomAdapter.getDefaultDocument  (method) :47
+[ ] BrowserDomAdapter.isElementNode  (method) :51
+[ ] BrowserDomAdapter.isShadowRoot  (method) :55
+[ ] BrowserDomAdapter.getGlobalEventTarget  (method) :60
+      -- @deprecated No longer being used in Ivy code. To be removed in version 14.
+[ ] BrowserDomAdapter.getBaseHref  (method) :72
+[ ] BrowserDomAdapter.resetBaseElement  (method) :76
+[ ] BrowserDomAdapter.getUserAgent  (method) :79
+[ ] BrowserDomAdapter.getCookie  (method) :82
+[ ] getBaseElementHref  (function) :88
+[ ] relativePath  (function) :93
+
+## packages/platform-browser/src/browser/meta.ts
+[ ] Meta  (export class) :59
+      -- A service for managing HTML `<meta>` tags. Properties of the `MetaDefinition` object match the attributes of the HTML `<meta>` tag. These tags define document m
+[ ] Meta.addTag  (method) :74
+      -- Retrieves or creates a specific `<meta>` tag element in the current HTML document. In searching for an existing tag, Angular attempts to match the `name` or `pr
+[ ] Meta.addTags  (method) :87
+      -- Retrieves or creates a set of `<meta>` tag elements in the current HTML document. In searching for an existing tag, Angular attempts to match the `name` or `pro
+[ ] Meta.getTag  (method) :99
+      -- Retrieves a `<meta>` tag element in the current HTML document. `"tag_attribute='value string'"`.
+[ ] Meta.getTags  (method) :111
+      -- Retrieves a set of `<meta>` tag elements in the current HTML document. `"tag_attribute='value string'"`.
+[ ] Meta.updateTag  (method) :126
+      -- Modifies an existing `<meta>` tag element in the current HTML document. an existing tag. A string in the format `"tag_attribute=`value string`"`. If not supplie
+[ ] Meta.removeTag  (method) :141
+      -- Removes an existing `<meta>` tag element from the current HTML document. an existing tag. A string in the format `"tag_attribute=`value string`"`.
+[ ] Meta.removeTagElement  (method) :149
+      -- Removes an existing `<meta>` tag element from the current HTML document.
+[ ] Meta._getOrCreateElement  (method) :155
+[ ] buildMetaSelector  (function) :175
+[ ] setMetaElementAttributes  (function) :179
+[ ] parseSelector  (function) :183
+[ ] escapeSelectorValue  (function) :188
+[ ] containsAttributes  (function) :194
+[ ] getMetaKeyMap  (function) :198
+[ ] isMetaTag  (function) :202
+
+## packages/platform-browser/src/browser/testability.ts
+[ ] BrowserGetTestability  (export class) :20
+[ ] BrowserGetTestability.addToWindow  (method) :21
+[ ] BrowserGetTestability.findTestabilityInTree  (method) :58
+
+## packages/platform-browser/src/browser/title.ts
+[ ] Title  (export class) :23
+      -- A service that can be used to get and set the title of a current HTML document. Since an Angular application can't be bootstrapped on the entire HTML document (
+[ ] Title.constructor  (ctor) :24
+[ ] Title.getTitle  (method) :28
+      -- Get the title of the current HTML document.
+[ ] Title.setTitle  (method) :36
+      -- Set the title of the current HTML document.
+
+## packages/platform-browser/src/browser/tools/common_tools.ts
+[ ] ChangeDetectionPerfRecord  (export class) :11
+[ ] ChangeDetectionPerfRecord.constructor  (ctor) :12
+[ ] AngularProfiler  (export class) :22
+      -- Entry point for all Angular profiling-related debug tools. This object corresponds to the `ng.profiler` in the dev console.
+[ ] AngularProfiler.constructor  (ctor) :25
+[ ] AngularProfiler.timeChangeDetection  (method) :46
+      -- Exercises change detection in a loop and then prints the average amount of time in milliseconds how long a single round of change detection takes for the curren
+
+## packages/platform-browser/src/browser/tools/tools.ts
+[ ] enableDebugTools  (export function) :30
+      -- Enabled Angular debug tools that are accessible via your browser's developer console. Usage: 1. Open developer console (e.g. in Chrome Ctrl + Shift + j) 1. Type
+[ ] disableDebugTools  (export function) :40
+      -- Disables Angular tools.
+
+## packages/platform-browser/src/dom/css_var_namespacer.ts
+[ ] CssVarNamespacer  (export class) :20
+      -- A service that can be used to manually namespace CSS variable names at runtime. This is useful when reading or setting CSS variables dynamically in JavaScript t
+[ ] CssVarNamespacer.namespace  (method) :30
+      -- Prepends the namespace prefix to a CSS variable name.     unchanged if no namespace is configured.
+
+## packages/platform-browser/src/dom/debug/by.ts
+[ ] By  (export class) :17
+      -- Predicates for use with {@link DebugElement}'s query functions.
+[ ] By.all  (method) :26
+      -- Match all nodes. ### Example {@example platform-browser/dom/debug/ts/by/by.ts region='by_all'}
+[ ] By.css  (method) :38
+      -- Match elements by the given CSS selector. ### Example {@example platform-browser/dom/debug/ts/by/by.ts region='by_css'}
+[ ] By.directive  (method) :54
+      -- Match nodes that have the given directive present. ### Example {@example platform-browser/dom/debug/ts/by/by.ts region='by_directive'}
+[ ] elementMatches  (function) :59
+
+## packages/platform-browser/src/dom/dom_renderer.ts
+[ ] provideCssVarNamespacing  (export function) :92
+      -- Configures the application to use the given namespace for all CSS variables.     to the `APP_ID`. An underscore is appended unconditionally.
+[ ] shimContentAttribute  (export function) :102
+[ ] shimHostAttribute  (export function) :106
+[ ] shimStylesContent  (export function) :110
+[ ] addBaseHrefToCssSourceMap  (export function) :132
+      -- Prepends a baseHref to the `sourceMappingURL` within the provided CSS content. If the `sourceMappingURL` contains an inline (encoded) map, the function skips pr
+[ ] DomRendererFactory2  (export class) :161
+[ ] DomRendererFactory2.constructor  (ctor) :169
+[ ] DomRendererFactory2.createRenderer  (method) :192
+[ ] DomRendererFactory2.getOrCreateRenderer  (method) :219
+[ ] DomRendererFactory2.ngOnDestroy  (method) :289
+[ ] DomRendererFactory2.componentReplaced  (method) :297
+      -- Used during HMR to clear any cached data about a component.
+[ ] DefaultDomRenderer2  (class) :302
+[ ] DefaultDomRenderer2.constructor  (ctor) :311
+[ ] DefaultDomRenderer2.destroy  (method) :319
+[ ] DefaultDomRenderer2.createElement  (method) :323
+[ ] DefaultDomRenderer2.createComment  (method) :340
+[ ] DefaultDomRenderer2.createText  (method) :344
+[ ] DefaultDomRenderer2.appendChild  (method) :348
+[ ] DefaultDomRenderer2.insertBefore  (method) :353
+[ ] DefaultDomRenderer2.removeChild  (method) :360
+[ ] DefaultDomRenderer2.selectRootElement  (method) :365
+[ ] DefaultDomRenderer2.parentNode  (method) :381
+[ ] DefaultDomRenderer2.nextSibling  (method) :385
+[ ] DefaultDomRenderer2.setAttribute  (method) :389
+[ ] DefaultDomRenderer2.removeAttribute  (method) :403
+[ ] DefaultDomRenderer2.addClass  (method) :416
+[ ] DefaultDomRenderer2.removeClass  (method) :420
+[ ] DefaultDomRenderer2.setStyle  (method) :424
+[ ] DefaultDomRenderer2.removeStyle  (method) :436
+[ ] DefaultDomRenderer2.setProperty  (method) :449
+[ ] DefaultDomRenderer2.setValue  (method) :460
+[ ] DefaultDomRenderer2.listen  (method) :464
+[ ] DefaultDomRenderer2.decoratePreventDefault  (method) :498
+[ ] checkNoSyntheticProp  (function) :530
+[ ] isTemplateNode  (function) :541
+[ ] ShadowDomRenderer  (class) :545
+[ ] ShadowDomRenderer.constructor  (ctor) :548
+[ ] ShadowDomRenderer.nodeOrShadowRoot  (method) :607
+[ ] ShadowDomRenderer.appendChild  (method) :611
+[ ] ShadowDomRenderer.insertBefore  (method) :615
+[ ] ShadowDomRenderer.removeChild  (method) :619
+[ ] ShadowDomRenderer.parentNode  (method) :623
+[ ] ShadowDomRenderer.destroy  (method) :627
+[ ] NoneEncapsulationDomRenderer  (class) :634
+[ ] NoneEncapsulationDomRenderer.constructor  (ctor) :638
+[ ] NoneEncapsulationDomRenderer.applyStyles  (method) :662
+[ ] NoneEncapsulationDomRenderer.destroy  (method) :666
+[ ] EmulatedEncapsulationDomRenderer2  (class) :676
+[ ] EmulatedEncapsulationDomRenderer2.constructor  (ctor) :680
+[ ] EmulatedEncapsulationDomRenderer2.applyToHost  (method) :707
+[ ] EmulatedEncapsulationDomRenderer2.createElement  (method) :712
+
+## packages/platform-browser/src/dom/events/dom_events.ts
+[ ] DomEventsPlugin  (export class) :14
+[ ] DomEventsPlugin.constructor  (ctor) :15
+[ ] DomEventsPlugin.supports  (method) :21
+      -- events.
+[ ] DomEventsPlugin.addEventListener  (method) :25
+[ ] DomEventsPlugin.removeEventListener  (method) :35
+
+## packages/platform-browser/src/dom/events/event_manager.ts
+[ ] EventManager  (export class) :42
+      -- An injectable service that provides event management for Angular through a browser plug-in.
+[ ] EventManager.constructor  (ctor) :49
+[ ] EventManager.addEventListener  (method) :77
+      -- Registers a handler for a specific element and event. event object as an argument.
+[ ] EventManager.getZone  (method) :90
+      -- Retrieves the compilation zone in which event listeners are registered.
+[ ] EventManager._findPluginFor  (method) :95
+      -- @internal
+
+## packages/platform-browser/src/dom/events/event_manager_plugin.ts
+[ ] EventManagerPlugin  (export class) :22
+      -- The plugin definition for the `EventManager` class It can be used as a base class to create custom manager plugins, i.e. you can create your own class that exte
+[ ] EventManagerPlugin.constructor  (ctor) :24
+[ ] EventManagerPlugin.supports  (method) :32
+      -- Should return `true` for every event name that should be supported by this plugin
+[ ] EventManagerPlugin.addEventListener  (method) :37
+      -- Implement the behaviour for the supported events
+
+## packages/platform-browser/src/dom/events/key_events.ts
+[ ] KeyEventsPlugin  (export class) :51
+      -- A browser plug-in that provides support for handling of key events in Angular.
+[ ] KeyEventsPlugin.constructor  (ctor) :56
+[ ] KeyEventsPlugin.supports  (method) :65
+      -- Reports whether a named key event is supported.
+[ ] KeyEventsPlugin.addEventListener  (method) :77
+      -- Registers a handler for a specific element and key event. event object as an argument.
+[ ] KeyEventsPlugin.parseEventName  (method) :105
+      -- Parses the user provided full keyboard event definition and normalizes it for later internal use. It ensures the string is all lowercase, converts special chara
+[ ] KeyEventsPlugin.matchEventFullKeyCode  (method) :154
+      -- Determines whether the actual keys pressed match the configured key code string. The `fullKeyCode` event is normalized in the `parseEventName` method when the e
+[ ] KeyEventsPlugin.eventCallback  (method) :188
+      -- Configures a handler callback for a key event.
+[ ] KeyEventsPlugin._normalizeKey  (method) :197
+      -- @internal
+
+## packages/platform-browser/src/dom/shared_styles_host.ts
+[ ] removeElements  (function) :37
+      -- Removes all provided elements from the document.
+[ ] createStyleElement  (function) :49
+      -- Creates a `style` element with the provided inline style content.
+[ ] addServerStyles  (function) :65
+      -- Searches a DOM document's head element for style elements with a matching application identifier attribute (`ng-app-id`) to the provide identifier and adds usag
+[ ] createLinkElement  (export function) :100
+      -- Creates a `link` element for the provided external style URL.
+[ ] SharedStylesHost  (export class) :109
+[ ] SharedStylesHost.constructor  (ctor) :127
+[ ] SharedStylesHost.addStyles  (method) :139
+[ ] SharedStylesHost.removeStyles  (method) :151
+      -- Removes embedded styles from the DOM that were added as HTML `style` elements.
+[ ] SharedStylesHost.addUsage  (method) :159
+[ ] SharedStylesHost.removeUsage  (method) :184
+[ ] SharedStylesHost.ngOnDestroy  (method) :202
+[ ] SharedStylesHost.addHost  (method) :209
+[ ] SharedStylesHost.removeHost  (method) :223
+[ ] SharedStylesHost.addElement  (method) :239
+
+## packages/platform-browser/src/dom/util.ts
+[ ] exportNgVar  (export function) :20
+      -- Exports the value under a given `name` in the global property `ng`. For example `ng.probe` if `name` is `'probe'`. global `ng` object.
+
+## packages/platform-browser/src/hydration.ts
+[ ] hydrationFeature  (function) :59
+      -- Helper function to create an object that represents a Hydration feature.
+[ ] withNoHttpTransferCache  (export function) :75
+      -- Disables HTTP transfer cache. Effectively causes HTTP requests to be performed twice: once on the server and other one on the browser.
+[ ] withHttpTransferCacheOptions  (export function) :91
+      -- The function accepts an object, which allows to configure cache parameters, such as which headers should be included (no headers are included by default), wheth
+[ ] withI18nSupport  (export function) :106
+      -- Enables support for hydrating i18n blocks.
+[ ] withEventReplay  (export function) :127
+      -- Enables support for replaying user events (e.g. `click`s) that happened on a page before hydration logic has completed. Once an application is hydrated, all cap
+[ ] withIncrementalHydration  (export function) :149
+      -- Enables support for incremental hydration using the `hydrate` trigger syntax. Basic example of how you can enable incremental hydration in your application when
+[ ] withNoIncrementalHydration  (export function) :159
+      -- Disables support for incremental hydration (which is enabled by default).
+[ ] provideEnabledBlockingInitialNavigationDetector  (function) :168
+      -- Returns an `ENVIRONMENT_INITIALIZER` token setup with a function that verifies whether enabledBlocking initial navigation is used in an application and logs a w
+[ ] provideClientHydration  (export function) :244
+      -- Sets up providers necessary to enable hydration functionality for the application. By default, the function enables the recommended set of features for the opti
+
+## packages/platform-browser/src/security/dom_sanitization_service.ts
+[ ] DomSanitizer  (export class) :109
+      -- DomSanitizer helps preventing Cross Site Scripting Security bugs (XSS) by sanitizing values to be safe to use in the different DOM contexts. For example, when b
+[ ] DomSanitizer.sanitize  (method) :119
+      -- Gets a safe value from either a known safe value or a value with unknown safety. If the given value is already a `SafeValue`, this method returns the unwrapped 
+[ ] DomSanitizer.bypassSecurityTrustHtml  (method) :129
+      -- Bypass security and trust the given value to be safe HTML. Only use this when the bound HTML is unsafe (e.g. contains `<script>` tags) and the code should be ex
+[ ] DomSanitizer.bypassSecurityTrustStyle  (method) :137
+      -- Bypass security and trust the given value to be safe style value (CSS). **WARNING:** calling this method with untrusted user data exposes your application to XS
+[ ] DomSanitizer.bypassSecurityTrustScript  (method) :145
+      -- Bypass security and trust the given value to be safe JavaScript. **WARNING:** calling this method with untrusted user data exposes your application to XSS secur
+[ ] DomSanitizer.bypassSecurityTrustUrl  (method) :154
+      -- Bypass security and trust the given value to be a safe style URL, i.e. a value that can be used in hyperlinks or `<img src>`. **WARNING:** calling this method w
+[ ] DomSanitizer.bypassSecurityTrustResourceUrl  (method) :163
+      -- Bypass security and trust the given value to be a safe resource URL, i.e. a location that may be used to load executable code from, like `<script src>`, or `<if
+[ ] DomSanitizerImpl  (export class) :167
+[ ] DomSanitizerImpl.sanitize  (method) :169
+[ ] DomSanitizerImpl.bypassSecurityTrustHtml  (method) :216
+[ ] DomSanitizerImpl.bypassSecurityTrustStyle  (method) :219
+[ ] DomSanitizerImpl.bypassSecurityTrustScript  (method) :222
+[ ] DomSanitizerImpl.bypassSecurityTrustUrl  (method) :225
+[ ] DomSanitizerImpl.bypassSecurityTrustResourceUrl  (method) :228
+
+## packages/platform-browser/testing/src/browser.ts
+[ ] BrowserTestingModule  (export class) :36
+
+## packages/platform-browser/testing/src/dom_test_component_renderer.ts
+[ ] DOMTestComponentRenderer  (export class) :17
+      -- A DOM based implementation of the TestComponentRenderer.
+[ ] DOMTestComponentRenderer.constructor  (ctor) :18
+[ ] DOMTestComponentRenderer.insertRootElement  (method) :22
+[ ] DOMTestComponentRenderer.removeAllRootElements  (method) :29
+[ ] DOMTestComponentRenderer.removeAllRootElementsImpl  (method) :40

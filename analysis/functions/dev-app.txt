@@ -1,0 +1,9 @@
+INVENTORY FUNGSI :: dev-app
+Total simbol: 1 | file: 1
+Rincian: class=1
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## dev-app/src/app/app.ts
+[ ] App  (export class) :10

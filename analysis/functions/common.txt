@@ -1,0 +1,1648 @@
+INVENTORY FUNGSI :: common
+Total simbol: 1023 | file: 99
+Rincian: function=362, arrow=1, class=95, method=459, accessor=49, ctor=57
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## packages/common/http/src/backend.ts
+[ ] HttpBackend  (export class) :46
+      -- A final `HttpHandler` which will dispatch the request via browser HTTP APIs to a backend. Interceptors sit between the `HttpClient` interface and the `HttpBacke
+[ ] HttpBackend.handle  (method) :47
+[ ] resetFetchBackendWarningFlag  (export function) :53
+      -- Internal function to reset the flag in tests
+[ ] HttpInterceptorHandler  (export class) :58
+[ ] HttpInterceptorHandler.constructor  (ctor) :63
+[ ] HttpInterceptorHandler.handle  (method) :100
+[ ] HttpHandler  (export class) :147
+      -- Transforms an `HttpRequest` into a stream of `HttpEvent`s, one of which will likely be a `HttpResponse`. `HttpHandler` is injectable. When injected, the handler
+[ ] HttpHandler.handle  (method) :148
+
+## packages/common/http/src/client.ts
+[ ] addBody  (function) :43
+      -- Constructs an instance of `HttpRequestOptions<T>` from a source `HttpMethodOptions` and the given `body`. This function clones the object and adds the body. Not
+[ ] HttpClient  (export class) :96
+      -- Performs HTTP requests. This service is available as an injectable class, with methods to perform HTTP requests. Each request method has multiple signatures, an
+[ ] HttpClient.constructor  (ctor) :97
+[ ] HttpClient.request  (method) :104
+      -- Sends an `HttpRequest` and returns a stream of `HttpEvent`s.
+[ ] HttpClient.request  (method) :117
+      -- Constructs a request that interprets the body as an `ArrayBuffer` and returns the response in an `ArrayBuffer`.
+[ ] HttpClient.request  (method) :137
+      -- Constructs a request that interprets the body as a blob and returns the response as a blob.
+[ ] HttpClient.request  (method) :157
+      -- Constructs a request that interprets the body as a text string and returns a string value.
+[ ] HttpClient.request  (method) :178
+      -- Constructs a request that interprets the body as an `ArrayBuffer` and returns the the full event stream. the request.
+[ ] HttpClient.request  (method) :199
+      -- Constructs a request that interprets the body as a `Blob` and returns the full event stream. with the response body of type `Blob`.
+[ ] HttpClient.request  (method) :220
+      -- Constructs a request which interprets the body as a text string and returns the full event stream. with the response body of type string.
+[ ] HttpClient.request  (method) :241
+      -- Constructs a request which interprets the body as a JavaScript object and returns the full event stream. with the response body of type `Object`.
+[ ] HttpClient.request  (method) :262
+      -- Constructs a request which interprets the body as a JavaScript object and returns the full event stream. with the response body of type `R`.
+[ ] HttpClient.request  (method) :282
+      -- Constructs a request which interprets the body as an `ArrayBuffer` and returns the full `HttpResponse`.
+[ ] HttpClient.request  (method) :301
+      -- Constructs a request which interprets the body as a `Blob` and returns the full `HttpResponse`.
+[ ] HttpClient.request  (method) :321
+      -- Constructs a request which interprets the body as a text stream and returns the full `HttpResponse`.
+[ ] HttpClient.request  (method) :342
+      -- Constructs a request which interprets the body as a JavaScript object and returns the full `HttpResponse`. with the response body of type `Object`.
+[ ] HttpClient.request  (method) :362
+      -- Constructs a request which interprets the body as a JavaScript object and returns the full `HttpResponse` with the response body in the requested type.
+[ ] HttpClient.request  (method) :382
+      -- Constructs a request which interprets the body as a JavaScript object and returns the full `HttpResponse` as a JavaScript object.
+[ ] HttpClient.request  (method) :402
+      -- Constructs a request which interprets the body as a JavaScript object with the response body of the requested type.
+[ ] HttpClient.request  (method) :421
+      -- Constructs a request where response type and requested observable are not known statically.
+[ ] HttpClient.request  (method) :457
+      -- Constructs an observable for a generic HTTP request that, when subscribed, fires the request through the chain of registered interceptors and on to the server. 
+
+## packages/common/http/src/context.ts
+[ ] HttpContextToken  (export class) :16
+      -- A token used to manipulate and access values stored in `HttpContext`.
+[ ] HttpContextToken.constructor  (ctor) :17
+[ ] HttpContext  (export class) :55
+      -- Http context stores arbitrary user defined values and ensures type safety without actually knowing the types. It is backed by a `Map` and guarantees that keys d
+[ ] HttpContext.set  (method) :66
+      -- Store a value in the context. If a value is already present it will be overwritten.
+[ ] HttpContext.get  (method) :78
+      -- Retrieve the value associated with the given token.
+[ ] HttpContext.has  (method) :104
+      -- Checks for existence of a given token.
+[ ] HttpContext.keys  (method) :111
+
+## packages/common/http/src/fetch.ts
+[ ] FetchBackend  (export class) :74
+      -- Uses `fetch` to send requests to a backend server. This `FetchBackend` requires the support of the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/
+[ ] FetchBackend.inject  (method) :79
+[ ] FetchBackend.handle  (method) :84
+[ ] FetchBackend.doRequest  (method) :114
+[ ] FetchBackend.parseBody  (method) :316
+[ ] FetchBackend.createRequestInit  (method) :350
+[ ] FetchBackend.concatChunks  (method) :407
+[ ] FetchFactory  (export class) :422
+      -- Abstract class to provide a mocked implementation of `fetch()`
+[ ] noop  (function) :426
+[ ] warningOptionsMessage  (function) :428
+[ ] silenceSuperfluousUnhandledPromiseRejection  (function) :445
+      -- Zone.js treats a rejected promise that has not yet been awaited as an unhandled error. This function adds a noop `.then` to make sure that Zone.js doesn't throw
+[ ] throwBodyTooLargeError  (function) :449
+
+## packages/common/http/src/headers.ts
+[ ] HttpHeaders  (export class) :24
+      -- Represents the header configuration options for an HTTP request. Instances are immutable. Modifying methods return a cloned instance with the change. The origin
+[ ] HttpHeaders.constructor  (ctor) :48
+[ ] HttpHeaders.has  (method) :90
+      -- Checks for existence of a given header.
+[ ] HttpHeaders.get  (method) :103
+      -- Retrieves the first value of a given header.
+[ ] HttpHeaders.keys  (method) :115
+      -- Retrieves the names of the headers.
+[ ] HttpHeaders.getAll  (method) :128
+      -- Retrieves a list of values for a given header.
+[ ] HttpHeaders.append  (method) :144
+[ ] HttpHeaders.set  (method) :157
+      -- Sets or modifies a value for a given header in a clone of the original instance. If the header already exists, its value is replaced with the given value in the
+[ ] HttpHeaders.maybeSetNormalizedName  (method) :172
+[ ] HttpHeaders.init  (method) :178
+[ ] HttpHeaders.copyFrom  (method) :193
+[ ] HttpHeaders.clone  (method) :201
+[ ] HttpHeaders.applyUpdate  (method) :208
+[ ] HttpHeaders.addHeaderEntry  (method) :248
+[ ] HttpHeaders.setHeaderEntries  (method) :258
+[ ] HttpHeaders.forEach  (method) :270
+[ ] assertValidHeaders  (function) :283
+      -- Verifies that the headers object has the right shape: the values must be either strings, numbers or arrays. Throws an error if an invalid header value is presen
+
+## packages/common/http/src/interceptor.ts
+[ ] interceptorChainEndFn  (export function) :149
+[ ] adaptLegacyInterceptorToChain  (export function) :160
+      -- Constructs a `ChainedInterceptorFn` which adapts a legacy `HttpInterceptor` to the `ChainedInterceptorFn` interface.
+[ ] chainedInterceptorFn  (export function) :174
+      -- Constructs a `ChainedInterceptorFn` which wraps and invokes a functional interceptor in the given injector.
+[ ] legacyInterceptorFnFactory  (export function) :227
+      -- Creates an `HttpInterceptorFn` which lazily initializes an interceptor chain from the legacy class-based interceptors and runs the request through it.
+
+## packages/common/http/src/jsonp.ts
+[ ] JsonpCallbackContext  (export class) :69
+      -- DI token/abstract type representing a map of JSONP callbacks. In the browser, this should always be the `window` object.
+[ ] jsonpCallbackContext  (export function) :81
+      -- Factory function that determines where to store JSONP callbacks. Ordinarily JSONP callbacks are stored on the `window` object, but this may not exist in test en
+[ ] JsonpClientBackend  (export class) :98
+      -- Processes an `HttpRequest` with the JSONP method, by performing JSONP style requests.
+[ ] JsonpClientBackend.constructor  (ctor) :105
+[ ] JsonpClientBackend.nextCallback  (method) :120
+      -- Get the name of the next callback method, by incrementing the global `nextRequestId`.
+[ ] JsonpClientBackend.handle  (method) :130
+      -- Processes a JSONP request and returns an event stream of the results.
+[ ] JsonpClientBackend.removeListeners  (method) :293
+[ ] JsonpClientBackend.isAllowedJsonpUrl  (method) :302
+[ ] jsonpInterceptorFn  (export function) :312
+      -- Identifies requests with the method JSONP and shifts them to the `JsonpClientBackend`.
+[ ] JsonpInterceptor  (export class) :334
+      -- Identifies requests with the method JSONP and shifts them to the `JsonpClientBackend`.
+[ ] JsonpInterceptor.constructor  (ctor) :335
+[ ] JsonpInterceptor.intercept  (method) :344
+      -- Identifies and handles a given JSONP request. if no interceptors remain in the chain.
+
+## packages/common/http/src/module.ts
+[ ] HttpClientXsrfModule  (export class) :55
+[ ] HttpClientXsrfModule.disable  (method) :59
+      -- Disable the default XSRF protection.
+[ ] HttpClientXsrfModule.withOptions  (method) :74
+      -- Configure XSRF protection. cookie name or header name. - Cookie name default is `XSRF-TOKEN`. - Header name default is `X-XSRF-TOKEN`.
+[ ] HttpClientModule  (export class) :107
+[ ] HttpClientJsonpModule  (export class) :121
+
+## packages/common/http/src/params.ts
+[ ] HttpUrlEncodingCodec  (export class) :40
+      -- Provides encoding and decoding of URL parameter and query-string values. Serializes and parses URL parameter keys and values to encode and decode them. If you p
+[ ] HttpUrlEncodingCodec.encodeKey  (method) :46
+      -- Encodes a key name for a URL parameter or query-string.
+[ ] HttpUrlEncodingCodec.encodeValue  (method) :55
+      -- Encodes the value of a URL parameter or query-string.
+[ ] HttpUrlEncodingCodec.decodeKey  (method) :64
+      -- Decodes an encoded URL parameter or query-string key.
+[ ] HttpUrlEncodingCodec.decodeValue  (method) :73
+      -- Decodes an encoded URL parameter or query-string value.
+[ ] paramParser  (function) :78
+[ ] standardEncoding  (function) :114
+[ ] valueToString  (function) :121
+[ ] HttpParams  (export class) :165
+      -- An HTTP request/response body that represents serialized parameters, per the MIME type `application/x-www-form-urlencoded`. This class is immutable; all mutatio
+[ ] HttpParams.constructor  (ctor) :171
+[ ] HttpParams.has  (method) :200
+      -- Reports whether the body includes one or more values for a given parameter. false if it has no value or is not present.
+[ ] HttpParams.get  (method) :211
+      -- Retrieves the first value for a parameter. or `null` if the parameter is not present.
+[ ] HttpParams.getAll  (method) :223
+      -- Retrieves all values for a  parameter. or `null` if the parameter not present.
+[ ] HttpParams.keys  (method) :232
+      -- Retrieves all the parameters for this body.
+[ ] HttpParams.append  (method) :243
+      -- Appends a new value to existing values for a parameter.
+[ ] HttpParams.appendAll  (method) :252
+      -- Constructs a new body with appended values for the given parameter name.
+[ ] HttpParams.set  (method) :275
+      -- Replaces the value for a parameter.
+[ ] HttpParams.toString  (method) :294
+      -- Serializes the body to an encoded string, where key-value pairs (separated by `=`) are separated by `&`s.
+[ ] HttpParams.clone  (method) :314
+[ ] HttpParams.init  (method) :321
+
+## packages/common/http/src/provider.ts
+[ ] makeHttpFeature  (function) :56
+[ ] provideHttpClient  (export function) :99
+      -- Configures Angular's `HttpClient` service to be available for injection. The `HttpClient` service is provided in the root by default. By default, `HttpClient` w
+[ ] withInterceptors  (export function) :149
+      -- Adds one or more functional-style HTTP interceptors to the configuration of the `HttpClient` instance.
+[ ] withInterceptorsFromDi  (export function) :179
+      -- Includes class-based interceptors configured using a multi-provider in the current injector into the configured `HttpClient` instance. Prefer `withInterceptors`
+[ ] withXsrfConfiguration  (export function) :205
+      -- Customizes the XSRF protection for the configuration of the current `HttpClient` instance. This feature is incompatible with the `withNoXsrfProtection` feature.
+[ ] withNoXsrfProtection  (export function) :230
+      -- Disables XSRF protection in the configuration of the current `HttpClient` instance. This feature is incompatible with the `withXsrfConfiguration` feature.
+[ ] withJsonpSupport  (export function) :245
+      -- Add JSONP support to the configuration of the current `HttpClient` instance.
+[ ] withRequestsMadeViaParent  (export function) :274
+      -- Configures the current `HttpClient` instance to make requests via the parent injector's `HttpClient` instead of directly. By default, `provideHttpClient` config
+[ ] withFetch  (export function) :301
+      -- Configures the current `HttpClient` instance to make requests using the fetch API. Note: The Fetch API doesn't support progress report on uploads.
+[ ] withXhr  (export function) :325
+      -- Configures the current `HttpClient` instance to make requests using the Xhr API. Use this feature if you want to report progress on uploads as the Xhr API suppo
+
+## packages/common/http/src/request.ts
+[ ] mightHaveBody  (function) :17
+      -- Determine whether the given HTTP method may include a body.
+[ ] isArrayBuffer  (function) :35
+      -- Safely assert whether the given value is an ArrayBuffer. In some execution environments ArrayBuffer is not defined.
+[ ] isBlob  (function) :44
+      -- Safely assert whether the given value is a Blob. In some execution environments Blob is not defined.
+[ ] isFormData  (function) :53
+      -- Safely assert whether the given value is a FormData instance. In some execution environments FormData is not defined.
+[ ] isUrlSearchParams  (function) :62
+      -- Safely assert whether the given value is a URLSearchParams instance. In some execution environments URLSearchParams is not defined.
+[ ] HttpRequest  (export class) :153
+      -- An outgoing HTTP request with an optional typed body. `HttpRequest` represents an outgoing request, including URL, method, headers, body, and other request conf
+[ ] HttpRequest.constructor  (ctor) :291
+[ ] HttpRequest.constructor  (ctor) :292
+[ ] HttpRequest.constructor  (ctor) :293
+[ ] HttpRequest.constructor  (ctor) :294
+[ ] HttpRequest.constructor  (ctor) :295
+[ ] HttpRequest.constructor  (ctor) :296
+[ ] HttpRequest.serializeBody  (method) :442
+      -- Transform the free-form body into a serialized format suitable for transmission to the server.
+[ ] HttpRequest.detectContentTypeHeader  (method) :480
+      -- Examine the body and attempt to infer an appropriate MIME type for it. If no such type can be inferred, this method will return `null`.
+[ ] HttpRequest.clone  (method) :519
+[ ] HttpRequest.clone  (method) :520
+[ ] HttpRequest.clone  (method) :529
+[ ] HttpRequest.clone  (method) :538
+
+## packages/common/http/src/resource.ts
+[ ] httpResource  (export arrow) :218
+      -- `httpResource` makes a reactive HTTP request and exposes the request status and response value as a `WritableResource`. By default, it assumes that the backend 
+[ ] makeHttpResourceFn  (function) :237
+[ ] normalizeRequest  (function) :285
+[ ] HttpResourceImpl  (class) :336
+[ ] HttpResourceImpl.constructor  (ctor) :360
+[ ] HttpResourceImpl.set  (method) :453
+
+## packages/common/http/src/response.ts
+[ ] HttpResponseBase  (export class) :169
+      -- Base class for both `HttpResponse` and `HttpHeaderResponse`.
+[ ] HttpResponseBase.constructor  (ctor) :232
+[ ] HttpHeaderResponse  (export class) :268
+      -- A partial HTTP response which only includes the status and header data, but no response body. `HttpHeaderResponse` is a `HttpEvent` available on the response ev
+[ ] HttpHeaderResponse.constructor  (ctor) :272
+[ ] HttpHeaderResponse.clone  (method) :289
+      -- Copy this `HttpHeaderResponse`, overriding its contents with the given parameter hash.
+[ ] HttpResponse  (export class) :319
+      -- A full HTTP response, including a typed response body (which may be `null` if one was not returned). `HttpResponse` is a `HttpEvent` available on the response e
+[ ] HttpResponse.constructor  (ctor) :328
+[ ] HttpResponse.clone  (method) :345
+[ ] HttpResponse.clone  (method) :346
+[ ] HttpResponse.clone  (method) :354
+[ ] HttpResponse.clone  (method) :363
+[ ] HttpErrorResponse  (export class) :401
+      -- A response that represents an error or failure, either from a non-successful HTTP status, an error while executing the request, or some other failure which occu
+[ ] HttpErrorResponse.constructor  (ctor) :411
+
+## packages/common/http/src/transfer_cache.ts
+[ ] canUseOrCacheRequest  (function) :147
+[ ] getHeadersToInclude  (function) :180
+[ ] retrieveStateFromCache  (export function) :199
+      -- Retrieves the cached response for a given request.
+[ ] transferCacheInterceptorFn  (export function) :278
+[ ] hasAuthHeaders  (function) :345
+      -- @returns true when the request contains authentication or cookie headers.
+[ ] hasUncacheableCacheControl  (function) :355
+[ ] hasSetCookieHeader  (function) :369
+[ ] isNonCacheableRequest  (function) :373
+[ ] hasOutgoingCredentials  (function) :377
+[ ] getFilteredHeaders  (function) :383
+[ ] sortAndConcatParams  (function) :402
+[ ] makeCacheKey  (function) :410
+[ ] toBase64  (function) :433
+[ ] fromBase64  (function) :449
+[ ] withHttpTransferCache  (export function) :468
+      -- Returns the DI providers needed to enable HTTP transfer cache. By default, when using server rendering, requests are performed twice: once on the server and oth
+[ ] appendMissingHeadersDetection  (function) :503
+      -- This function will add a proxy to an HttpHeader to intercept calls to get/has and log a warning if the header entry requested has been removed
+[ ] mapRequestOriginUrl  (function) :546
+[ ] verifyMappedOrigin  (function) :560
+[ ] generateHash  (export function) :600
+      -- Generates a SHA-256 hash representation of a string. Note: A custom synchronous SHA-256 implementation is used here because the Web Crypto API (`crypto.subtle.d
+
+## packages/common/http/src/xhr.ts
+[ ] validateXhrCompatibility  (function) :44
+      -- Validates whether the request is compatible with the XHR backend. Show a warning if the request contains options that are not supported by XHR.
+[ ] HttpXhrBackend  (export class) :108
+      -- Uses `XMLHttpRequest` to send requests to a backend server.
+[ ] HttpXhrBackend.constructor  (ctor) :113
+[ ] HttpXhrBackend.maybePropagateTrace  (method) :115
+[ ] HttpXhrBackend.handle  (method) :124
+      -- Processes a request and returns a stream of response events.
+
+## packages/common/http/src/xsrf.ts
+[ ] HttpXsrfCookieExtractor  (export class) :53
+      -- `HttpXsrfTokenExtractor` which retrieves the token from a cookie.
+[ ] HttpXsrfCookieExtractor.getToken  (method) :65
+[ ] HttpXsrfTokenExtractor  (export class) :85
+      -- Retrieves the current XSRF token to use with the next outgoing request.
+[ ] HttpXsrfTokenExtractor.getToken  (method) :91
+      -- Get the XSRF token to use with an outgoing request. Will be called for every request, so the token may change between requests.
+[ ] xsrfInterceptorFn  (export function) :94
+[ ] HttpXsrfInterceptor  (export class) :133
+      -- `HttpInterceptor` which adds an XSRF token to eligible outgoing requests.
+[ ] HttpXsrfInterceptor.intercept  (method) :136
+
+## packages/common/http/testing/src/api.ts
+[ ] HttpTestingController  (export class) :29
+      -- Controller to be injected into tests, that allows for mocking and flushing of requests.
+[ ] HttpTestingController.match  (method) :33
+      -- Search for requests that match the given parameter, without any expectations.
+[ ] HttpTestingController.expectOne  (method) :44
+      -- Expect that a single request has been made which matches the given URL, and return its mock. If no such request has been made, or more than one such request has
+[ ] HttpTestingController.expectOne  (method) :53
+      -- Expect that a single request has been made which matches the given parameters, and return its mock. If no such request has been made, or more than one such requ
+[ ] HttpTestingController.expectOne  (method) :62
+      -- Expect that a single request has been made which matches the given predicate function, and return its mock. If no such request has been made, or more than one s
+[ ] HttpTestingController.expectOne  (method) :74
+      -- Expect that a single request has been made which matches the given condition, and return its mock. If no such request has been made, or more than one such reque
+[ ] HttpTestingController.expectNone  (method) :85
+      -- Expect that no requests have been made which match the given URL. If a matching request has been made, fail with an error message including the given request de
+[ ] HttpTestingController.expectNone  (method) :93
+      -- Expect that no requests have been made which match the given parameters. If a matching request has been made, fail with an error message including the given req
+[ ] HttpTestingController.expectNone  (method) :101
+      -- Expect that no requests have been made which match the given predicate function. If a matching request has been made, fail with an error message including the g
+[ ] HttpTestingController.expectNone  (method) :109
+      -- Expect that no requests have been made which match the given condition. If a matching request has been made, fail with an error message including the given requ
+[ ] HttpTestingController.verify  (method) :123
+      -- Verify that no unmatched requests are outstanding. If any requests are outstanding, fail with an error message indicating which requests were not handled. If `i
+
+## packages/common/http/testing/src/backend.ts
+[ ] HttpClientTestingBackend  (export class) :28
+      -- A testing backend for `HttpClient` which both acts as an `HttpBackend` and as the `HttpTestingController`. `HttpClientTestingBackend` works by keeping a list of
+[ ] HttpClientTestingBackend.handle  (method) :42
+      -- Handle an incoming request by queueing it in the list of open requests.
+[ ] HttpClientTestingBackend._match  (method) :56
+      -- Helper function to search for requests in the list of open requests.
+[ ] HttpClientTestingBackend.match  (method) :76
+      -- Search for requests in the list of open requests, and return all that match without asserting anything about the number of matches.
+[ ] HttpClientTestingBackend.expectOne  (method) :94
+      -- Expect that a single outstanding request matches the given matcher, and return it. Requests returned through this API will no longer be in the list of open requ
+[ ] HttpClientTestingBackend.expectNone  (method) :121
+      -- Expect that no outstanding requests match the given matcher, and throw an error if any do.
+[ ] HttpClientTestingBackend.verify  (method) :137
+      -- Validate that there are no outstanding requests.
+[ ] HttpClientTestingBackend.descriptionFromMatcher  (method) :151
+[ ] describeRequest  (function) :166
+
+## packages/common/http/testing/src/module.ts
+[ ] HttpClientTestingModule  (export class) :27
+
+## packages/common/http/testing/src/provider.ts
+[ ] provideHttpClientTesting  (export function) :15
+
+## packages/common/http/testing/src/request.ts
+[ ] TestRequest  (export class) :37
+      -- A mock requests that was received and is ready to be answered. This interface allows access to the underlying `HttpRequest`, and allows responding with `HttpEve
+[ ] TestRequest.cancelled  (accessor) :41
+      -- Whether the request was cancelled after it was sent.
+[ ] TestRequest.constructor  (ctor) :50
+[ ] TestRequest.flush  (method) :63
+      -- Resolve the request by returning a body plus additional HTTP information (such as response headers) if provided. If the request specifies an expected body type,
+[ ] TestRequest.error  (method) :111
+      -- Resolve the request by returning an `ErrorEvent` (e.g. simulating a network failure).
+[ ] TestRequest.error  (method) :115
+      -- Resolve the request by returning an `ProgressEvent` (e.g. simulating a network failure).
+[ ] TestRequest.error  (method) :116
+[ ] TestRequest.event  (method) :137
+      -- Deliver an arbitrary `HttpEvent` (such as a progress event) on the response stream for this request.
+[ ] _toArrayBufferBody  (function) :148
+      -- Helper function to convert a response body to an ArrayBuffer.
+[ ] _toBlob  (function) :163
+      -- Helper function to convert a response body to a Blob.
+[ ] _toJsonBody  (function) :181
+      -- Helper function to convert a response body to JSON data.
+[ ] _toTextBody  (function) :213
+      -- Helper function to convert a response body to a string.
+[ ] _maybeConvertBody  (function) :231
+      -- Convert a response body to the requested type.
+
+## packages/common/locales/closure-locale.ts
+[ ] plural_locale_af  (function) :16
+[ ] plural_locale_am  (function) :30
+[ ] plural_locale_ar  (function) :44
+[ ] plural_locale_ar_DZ  (function) :66
+[ ] plural_locale_az  (function) :88
+[ ] plural_locale_be  (function) :102
+[ ] plural_locale_bg  (function) :120
+[ ] plural_locale_bn  (function) :134
+[ ] plural_locale_br  (function) :148
+[ ] plural_locale_bs  (function) :168
+[ ] plural_locale_ca  (function) :184
+[ ] plural_locale_chr  (function) :200
+[ ] plural_locale_cs  (function) :214
+[ ] plural_locale_cy  (function) :232
+[ ] plural_locale_da  (function) :254
+[ ] plural_locale_de  (function) :268
+[ ] plural_locale_de_AT  (function) :282
+[ ] plural_locale_de_CH  (function) :296
+[ ] plural_locale_el  (function) :310
+[ ] plural_locale_en_AU  (function) :324
+[ ] plural_locale_en_CA  (function) :338
+[ ] plural_locale_en_GB  (function) :352
+[ ] plural_locale_en_IE  (function) :366
+[ ] plural_locale_en_IN  (function) :380
+[ ] plural_locale_en_SG  (function) :394
+[ ] plural_locale_en_ZA  (function) :408
+[ ] plural_locale_es  (function) :422
+[ ] plural_locale_es_419  (function) :438
+[ ] plural_locale_es_MX  (function) :454
+[ ] plural_locale_es_US  (function) :470
+[ ] plural_locale_et  (function) :486
+[ ] plural_locale_eu  (function) :500
+[ ] plural_locale_fa  (function) :514
+[ ] plural_locale_fi  (function) :528
+[ ] plural_locale_fr  (function) :542
+[ ] plural_locale_fr_CA  (function) :558
+[ ] plural_locale_ga  (function) :574
+[ ] plural_locale_gl  (function) :594
+[ ] plural_locale_gsw  (function) :608
+[ ] plural_locale_gu  (function) :622
+[ ] plural_locale_haw  (function) :636
+[ ] plural_locale_hi  (function) :650
+[ ] plural_locale_hr  (function) :664
+[ ] plural_locale_hu  (function) :680
+[ ] plural_locale_hy  (function) :694
+[ ] plural_locale_id  (function) :708
+[ ] plural_locale_is  (function) :720
+[ ] plural_locale_it  (function) :734
+[ ] plural_locale_he  (function) :750
+[ ] plural_locale_ja  (function) :766
+[ ] plural_locale_ka  (function) :778
+[ ] plural_locale_kk  (function) :792
+[ ] plural_locale_km  (function) :806
+[ ] plural_locale_kn  (function) :818
+[ ] plural_locale_ko  (function) :832
+[ ] plural_locale_ky  (function) :844
+[ ] plural_locale_ln  (function) :858
+[ ] plural_locale_lo  (function) :872
+[ ] plural_locale_lt  (function) :884
+[ ] plural_locale_lv  (function) :902
+[ ] plural_locale_mk  (function) :918
+[ ] plural_locale_ml  (function) :932
+[ ] plural_locale_mn  (function) :946
+[ ] plural_locale_ro_MD  (function) :960
+[ ] plural_locale_mr  (function) :976
+[ ] plural_locale_ms  (function) :990
+[ ] plural_locale_mt  (function) :1002
+[ ] plural_locale_my  (function) :1022
+[ ] plural_locale_ne  (function) :1034
+[ ] plural_locale_nl  (function) :1048
+[ ] plural_locale_nb  (function) :1062
+[ ] plural_locale_or  (function) :1078
+[ ] plural_locale_pa  (function) :1092
+[ ] plural_locale_pl  (function) :1106
+[ ] plural_locale_pt  (function) :1124
+[ ] plural_locale_pt_PT  (function) :1140
+[ ] plural_locale_ro  (function) :1156
+[ ] plural_locale_ru  (function) :1172
+[ ] plural_locale_sr_Latn  (function) :1190
+[ ] plural_locale_si  (function) :1202
+[ ] plural_locale_sk  (function) :1216
+[ ] plural_locale_sl  (function) :1234
+[ ] plural_locale_sq  (function) :1252
+[ ] plural_locale_sr  (function) :1266
+[ ] plural_locale_sv  (function) :1282
+[ ] plural_locale_sw  (function) :1296
+[ ] plural_locale_ta  (function) :1310
+[ ] plural_locale_te  (function) :1324
+[ ] plural_locale_th  (function) :1338
+[ ] plural_locale_fil  (function) :1350
+[ ] plural_locale_tr  (function) :1364
+[ ] plural_locale_uk  (function) :1378
+[ ] plural_locale_ur  (function) :1396
+[ ] plural_locale_uz  (function) :1410
+[ ] plural_locale_vi  (function) :1424
+[ ] plural_locale_zh  (function) :1436
+[ ] plural_locale_zh_Hans  (function) :1448
+[ ] plural_locale_zh_Hant_HK  (function) :1462
+[ ] plural_locale_zh_Hant  (function) :1474
+[ ] plural_locale_zu  (function) :1488
+
+## packages/common/locales/ff-CM.ts
+[ ] plural  (function) :18
+
+## packages/common/locales/ff-GN.ts
+[ ] plural  (function) :18
+
+## packages/common/locales/ff-MR.ts
+[ ] plural  (function) :18
+
+## packages/common/locales/generate-locales-tool/array-deduplication.ts
+[ ] removeDuplicates  (export function) :28
+      -- To create smaller locale files, we remove duplicated data. To make this work we store the data in arrays, where `undefined` indicates that the value is a duplic
+[ ] trimTrailingUndefined  (function) :46
+
+## packages/common/locales/generate-locales-tool/bin/get-base-currencies-file.ts
+[ ] main  (function) :15
+      -- Generates the base currencies file and prints it to the stdout.
+
+## packages/common/locales/generate-locales-tool/bin/get-base-locale-file.ts
+[ ] main  (function) :16
+      -- Generates the base locale file and prints it to the stdout.
+
+## packages/common/locales/generate-locales-tool/bin/get-closure-locale-file.ts
+[ ] main  (function) :16
+      -- Generates the Google3 closure-locale file and prints it to the stdout.
+
+## packages/common/locales/generate-locales-tool/bin/write-locale-files-to-dist.ts
+[ ] main  (function) :24
+      -- Generates locale files for each available CLDR locale and writes it to the specified directory.
+
+## packages/common/locales/generate-locales-tool/cldr-data.ts
+[ ] CldrData  (export class) :61
+      -- Class that provides access to the CLDR JSON data downloaded as part of the `@cldr_json_data` Bazel repository.
+[ ] CldrData.resolve  (method) :64
+[ ] CldrData.constructor  (ctor) :70
+[ ] CldrData.getLocaleData  (method) :76
+      -- Gets the CLDR data for the specified locale.
+[ ] CldrData.getLanguageAliases  (method) :95
+      -- Gets the CLDR language aliases. http://cldr.unicode.org/index/cldr-spec/language-tag-equivalences.
+[ ] CldrData._getAvailableLocales  (method) :103
+      -- Gets a list of all locales CLDR provides data for.
+[ ] CldrData._loadAndPopulateCldrData  (method) :122
+      -- Loads the CLDR data and populates the `cldrjs` library with it.
+[ ] CldrData._readCldrDataFromRepository  (method) :138
+      -- Reads the CLDR JSON data from the Bazel repository.
+[ ] CldrData._loadJsonOrThrow  (method) :155
+
+## packages/common/locales/generate-locales-tool/closure-locale-file.ts
+[ ] generateClosureLocaleFile  (export function) :155
+      -- Generate a file that contains all locale to import for closure. Tree shaking will only keep the data for the `goog.LOCALE` locale.
+[ ] generateLocaleConstants  (function) :194
+      -- Generates locale data constants for all locale names within the specified Closure Library locale.
+[ ] generateLocaleConstant  (function) :225
+      -- Generates a locale data constant for the specified locale.
+[ ] generateLocaleExtraDataConstant  (function) :236
+      -- Creates a locale extra data constant for the given locale.
+[ ] generateCase  (function) :244
+      -- Generates a TypeScript `switch` case for the specified locale.
+[ ] computeEquivalentLocaleNames  (function) :256
+[ ] formatLocale  (function) :267
+
+## packages/common/locales/generate-locales-tool/day-periods.ts
+[ ] getDayPeriods  (export function) :14
+      -- Returns data for the chosen day periods
+[ ] getDayPeriodRules  (export function) :53
+      -- Returns day period rules for a locale
+[ ] getDayPeriodsAmPm  (export function) :86
+      -- Returns the basic day periods (am/pm)
+[ ] getDayPeriodsNoAmPm  (export function) :93
+      -- Returns the extra day periods (without am/pm)
+
+## packages/common/locales/generate-locales-tool/locale-base-currencies.ts
+[ ] generateBaseCurrenciesFile  (export function) :26
+      -- Generate a file that contains the list of currencies, their symbols and digits.
+[ ] generateBaseCurrencies  (export function) :43
+      -- Generate a list of currencies to be used as a base for other currencies e.g.: {'ARS': [, '$'], 'AUD': ['A$', '$'], ...}
+
+## packages/common/locales/generate-locales-tool/locale-currencies.ts
+[ ] generateLocaleCurrencies  (export function) :15
+      -- To minimize the file even more, we only output the differences compared to the base currency
+[ ] getCurrencySettings  (export function) :57
+      -- Returns the currency code, symbol and name for a locale
+
+## packages/common/locales/generate-locales-tool/locale-extra-file.ts
+[ ] generateLocaleExtra  (export function) :18
+      -- Generate the contents for the extra data file
+[ ] generateLocaleExtraDataArrayCode  (export function) :38
+      -- Generates the "extra" locale data array (in JS-code as a string) for the given locale. The array follows the data and indices as specified in the `ExtraLocaleDa
+[ ] getValuesForKeys  (function) :81
+
+## packages/common/locales/generate-locales-tool/locale-file.ts
+[ ] generateLocale  (export function) :21
+      -- Generate contents for the basic locale data file
+[ ] generateBasicLocaleString  (export function) :39
+      -- Collect up the basic locale data [ localeId, dateTime, number, currency, directionality, pluralCase ].
+[ ] getDirectionality  (function) :66
+      -- Returns the writing direction for a locale
+[ ] getDateTimeSettings  (function) :75
+      -- Returns dateTime data for a locale
+[ ] getNumberSettings  (function) :91
+      -- Returns the number symbols and formats for a locale symbols: [ decimal, group, list, percentSign, plusSign, minusSign, exponential, superscriptingExponent, perM
+[ ] getWeekendRange  (function) :127
+      -- Returns week-end range for a locale, based on US week days
+[ ] getDateTimeTranslations  (function) :143
+      -- Returns date-related translations for a locale monthsStandalone, eras ] each value: [ narrow, abbreviated, wide, short? ]
+[ ] getDateTimeFormats  (function) :229
+      -- Returns date, time and dateTime formats for a locale each format: [ short, medium, long, full ]
+[ ] getFormats  (function) :230
+[ ] getFirstDayOfWeek  (function) :250
+      -- Returns the first day of the week, based on US week days
+
+## packages/common/locales/generate-locales-tool/locale-global-file.ts
+[ ] generateLocaleGlobalFile  (export function) :19
+      -- Generated the contents for the global locale file
+[ ] normalizeLocale  (function) :42
+      -- In Angular the locale is referenced by a "normalized" form.
+
+## packages/common/locales/generate-locales-tool/object-stringify.ts
+[ ] stringify  (export function) :23
+      -- Stringifies the given object while preserving `undefined` values which would usually be transformed into `null` with JSON5. We want to preserve `undefined` beca
+
+## packages/common/locales/generate-locales-tool/plural-function.ts
+[ ] getPluralFunction  (export function) :23
+      -- Returns the plural function for a locale.
+
+## packages/common/src/common_module.ts
+[ ] CommonModule  (export class) :28
+
+## packages/common/src/cookie.ts
+[ ] parseCookieValue  (export function) :9
+
+## packages/common/src/directives/ng_class.ts
+[ ] NgClass  (export class) :79
+[ ] NgClass.constructor  (ctor) :85
+[ ] NgClass.klass  (accessor) :91
+[ ] NgClass.ngClass  (accessor) :96
+[ ] NgClass.ngDoCheck  (method) :125
+      -- The NgClass directive uses the custom change detection algorithm for its inputs. The custom algorithm is necessary since inputs are represented as complex objec
+[ ] NgClass._updateState  (method) :146
+[ ] NgClass._applyStateDiff  (method) :159
+[ ] NgClass._toggleClass  (method) :180
+
+## packages/common/src/directives/ng_component_outlet.ts
+[ ] NgComponentOutlet  (export class) :100
+[ ] NgComponentOutlet.componentInstance  (accessor) :125
+      -- Gets the instance of the currently-rendered component. Will be null if no component has been rendered.
+[ ] NgComponentOutlet.constructor  (ctor) :129
+[ ] NgComponentOutlet._needToReCreateNgModuleInstance  (method) :131
+[ ] NgComponentOutlet._needToReCreateComponentInstance  (method) :138
+[ ] NgComponentOutlet.ngOnChanges  (method) :152
+      -- @docs-private
+[ ] NgComponentOutlet.ngDoCheck  (method) :185
+      -- @docs-private
+[ ] NgComponentOutlet.ngOnDestroy  (method) :198
+      -- @docs-private
+[ ] NgComponentOutlet._applyInputStateDiff  (method) :202
+[ ] getParentInjector  (function) :218
+      -- Helper function that returns an Injector instance of a parent NgModule.
+
+## packages/common/src/directives/ng_for_of.ts
+[ ] NgForOfContext  (export class) :33
+      -- The `ngFor` directive is deprecated. Use the `@for` block instead.
+[ ] NgForOfContext.constructor  (ctor) :34
+[ ] NgForOfContext.first  (accessor) :53
+      -- Indicates whether this is the first item in the collection.
+[ ] NgForOfContext.last  (accessor) :58
+      -- Indicates whether this is the last item in the collection.
+[ ] NgForOfContext.even  (accessor) :63
+      -- Indicates whether an index of this item in the collection is even.
+[ ] NgForOfContext.odd  (accessor) :68
+      -- Indicates whether an index of this item in the collection is odd.
+[ ] NgForOf  (export class) :177
+[ ] NgForOf.ngForOf  (accessor) :184
+      -- The value of the iterable expression, which can be used as a [template input variable](guide/directives/structural-directives#structural-directive-shorthand).
+[ ] NgForOf.ngForTrackBy  (accessor) :208
+      -- Specifies a custom `TrackByFunction` to compute the identity of items in an iterable. If a custom `TrackByFunction` is not provided, `NgForOf` will use the item
+[ ] NgForOf.ngForTrackBy  (accessor) :218
+[ ] NgForOf.constructor  (ctor) :229
+[ ] NgForOf.ngForTemplate  (accessor) :241
+      -- A reference to the template that is stamped out for each item in the iterable.
+[ ] NgForOf.ngDoCheck  (method) :253
+      -- Applies the changes when needed.
+[ ] NgForOf._applyChanges  (method) :286
+[ ] NgForOf.ngTemplateContextGuard  (method) :333
+      -- Asserts the correct type of the context for the template that `NgForOf` will render. The presence of this method is a signal to the Ivy template type-check comp
+[ ] applyViewChange  (function) :346
+[ ] getTypeName  (function) :353
+
+## packages/common/src/directives/ng_if.ts
+[ ] NgIf  (export class) :166
+[ ] NgIf.constructor  (ctor) :173
+[ ] NgIf.ngIf  (accessor) :185
+      -- The Boolean expression to evaluate as the condition for showing a template.
+[ ] NgIf.ngIfThen  (accessor) :195
+      -- A template to show if the condition expression evaluates to true.
+[ ] NgIf.ngIfElse  (accessor) :207
+      -- A template to show if the condition expression evaluates to false.
+[ ] NgIf._updateView  (method) :214
+[ ] NgIf.ngTemplateContextGuard  (method) :259
+      -- Asserts the correct type of the context for the template that `NgIf` will render. The presence of this method is a signal to the Ivy template type-check compile
+[ ] NgIfContext  (export class) :273
+      -- The ngIf directive is deprecated in favor of the @if block instead.
+[ ] assertTemplate  (function) :278
+
+## packages/common/src/directives/ng_optimized_image/asserts.ts
+[ ] assertDevMode  (export function) :18
+      -- Asserts that the application is in development mode. Throws an error if the application is in production mode. This assert can be used to make sure that there i
+
+## packages/common/src/directives/ng_optimized_image/error_helper.ts
+[ ] imgDirectiveDetails  (export function) :10
+      -- Assembles directive details string, useful for error messages.
+
+## packages/common/src/directives/ng_optimized_image/image_loaders/cloudflare_loader.ts
+[ ] createCloudflareUrl  (function) :31
+
+## packages/common/src/directives/ng_optimized_image/image_loaders/cloudinary_loader.ts
+[ ] isCloudinaryUrl  (function) :25
+      -- Tests whether a URL is from Cloudinary CDN.
+[ ] createCloudinaryUrl  (function) :53
+
+## packages/common/src/directives/ng_optimized_image/image_loaders/image_loader.ts
+[ ] createImageLoader  (export function) :93
+      -- Internal helper function that makes it easier to introduce custom image loaders for the `NgOptimizedImage` directive. It is enough to specify a URL builder func
+[ ] throwInvalidPathError  (function) :124
+[ ] throwUnexpectedAbsoluteUrlError  (function) :135
+
+## packages/common/src/directives/ng_optimized_image/image_loaders/imagekit_loader.ts
+[ ] isImageKitUrl  (function) :26
+      -- Tests whether a URL is from ImageKit CDN.
+[ ] createImagekitUrl  (export function) :47
+
+## packages/common/src/directives/ng_optimized_image/image_loaders/imgix_loader.ts
+[ ] isImgixUrl  (function) :26
+      -- Tests whether a URL is from Imgix CDN.
+[ ] createImgixUrl  (function) :45
+
+## packages/common/src/directives/ng_optimized_image/image_loaders/netlify_loader.ts
+[ ] isNetlifyUrl  (function) :36
+      -- Tests whether a URL is from a Netlify site. This won't catch sites with a custom domain, but it's a good start for sites in development. This is only used to wa
+[ ] provideNetlifyLoader  (export function) :48
+      -- Function that generates an ImageLoader for Netlify and turns it into an Angular provider.
+[ ] createNetlifyUrl  (function) :79
+
+## packages/common/src/directives/ng_optimized_image/image_loaders/normalized_options.ts
+[ ] normalizeLoaderTransform  (export function) :14
+      -- Converts transform parameter to URL parameter string.
+
+## packages/common/src/directives/ng_optimized_image/lcp_image_observer.ts
+[ ] LCPImageObserver  (export class) :42
+      -- Observer that detects whether an image with `NgOptimizedImage` is treated as a Largest Contentful Paint (LCP) element. If so, asserts that the image has the `pr
+[ ] LCPImageObserver.constructor  (ctor) :49
+[ ] LCPImageObserver.initPerformanceObserver  (method) :64
+      -- Inits PerformanceObserver and subscribes to LCP events. Based on https://web.dev/lcp/#measure-lcp-in-javascript
+[ ] LCPImageObserver.registerImage  (method) :96
+[ ] LCPImageObserver.unregisterImage  (method) :117
+[ ] LCPImageObserver.updateImage  (method) :130
+[ ] LCPImageObserver.ngOnDestroy  (method) :171
+[ ] logMissingPriorityError  (function) :178
+[ ] logModifiedWarning  (function) :191
+
+## packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts
+[ ] resetImagePriorityCount  (export function) :156
+      -- This function is for testing purpose.
+[ ] NgOptimizedImage  (export class) :272
+[ ] NgOptimizedImage.constructor  (ctor) :400
+[ ] NgOptimizedImage.ngOnInit  (method) :422
+      -- @docs-private
+[ ] NgOptimizedImage.setHostAttributes  (method) :486
+[ ] NgOptimizedImage.ngOnChanges  (method) :537
+      -- @docs-private
+[ ] NgOptimizedImage.getAspectRatio  (method) :580
+      -- Calculates the aspect ratio of the image based on width and height. Returns null if the aspect ratio cannot be calculated (missing dimensions or height is 0).
+[ ] NgOptimizedImage.callImageLoader  (method) :587
+[ ] NgOptimizedImage.getLoadingBehavior  (method) :602
+[ ] NgOptimizedImage.getFetchPriority  (method) :609
+[ ] NgOptimizedImage.getDecoding  (method) :613
+[ ] NgOptimizedImage.getRewrittenSrc  (method) :627
+[ ] NgOptimizedImage.getRewrittenSrcset  (method) :639
+[ ] NgOptimizedImage.getAutomaticSrcset  (method) :652
+[ ] NgOptimizedImage.getResponsiveSrcset  (method) :660
+[ ] NgOptimizedImage.updateSrcAndSrcset  (method) :676
+[ ] NgOptimizedImage.getFixedSrcset  (method) :699
+[ ] NgOptimizedImage.shouldGenerateAutomaticSrcset  (method) :710
+[ ] NgOptimizedImage.generatePlaceholder  (method) :729
+      -- Returns an image url formatted for use with the CSS background-image property. Expects one of: * A base64 encoded image, which is wrapped and passed through. * 
+[ ] NgOptimizedImage.shouldBlurPlaceholder  (method) :749
+      -- Determines if blur should be applied, based on an optional boolean property `blur` within the optional configuration object `placeholderConfig`.
+[ ] NgOptimizedImage.removePlaceholderOnLoad  (method) :756
+[ ] NgOptimizedImage.setHostAttribute  (method) :779
+[ ] processConfig  (function) :789
+      -- Sorts provided config breakpoints and uses defaults.
+[ ] assertNoConflictingSrc  (function) :802
+      -- Verifies that there is no `src` set on a host element.
+[ ] assertNoConflictingSrcset  (function) :817
+      -- Verifies that there is no `srcset` set on a host element.
+[ ] assertNotBase64Image  (function) :832
+      -- Verifies that the `ngSrc` is not a Base64-encoded image.
+[ ] assertNoComplexSizes  (function) :851
+      -- Verifies that the 'sizes' only includes responsive values.
+[ ] assertValidPlaceholder  (function) :864
+[ ] assertNoPlaceholderConfigWithoutPlaceholder  (function) :873
+      -- Verifies that placeholderConfig isn't being used without placeholder
+[ ] assertNoRelativePlaceholderWithoutLoader  (function) :890
+      -- Warns if a relative URL placeholder is specified, but no loader is present to provide the small image.
+[ ] assertNoOversizedDataUrl  (function) :905
+      -- Warns or throws an error if an oversized dataURL placeholder is provided.
+[ ] assertNotBlobUrl  (function) :941
+      -- Verifies that the `ngSrc` is not a Blob URL.
+[ ] assertNonEmptyInput  (function) :957
+      -- Verifies that the input is set to a non-empty string.
+[ ] assertValidNgSrcset  (export function) :972
+      -- Verifies that the `ngSrcset` is in a valid format, e.g. "100w, 200w" or "1x, 2x".
+[ ] assertUnderDensityCap  (function) :994
+[ ] postInitInputChangeError  (function) :1016
+      -- Creates a `RuntimeError` instance to represent a situation when an input is set after the directive has initialized.
+[ ] assertNoPostInitInputChange  (function) :1039
+      -- Verify that none of the listed inputs has changed.
+[ ] assertGreaterThanZero  (function) :1062
+      -- Verifies that a specified input is a number greater than 0.
+[ ] assertNoImageDistortion  (function) :1080
+      -- Verifies that the rendered image is not visually distorted. Effectively this is checking: - Whether the "width" and "height" attributes reflect the actual dimen
+[ ] assertNonEmptyWidthAndHeight  (function) :1206
+      -- Verifies that a specified input is set.
+[ ] assertEmptyWidthAndHeight  (function) :1226
+      -- Verifies that width and height are not set. Used in fill mode, where those attributes don't make sense.
+[ ] assertNonZeroRenderedHeight  (function) :1241
+      -- Verifies that the rendered image has a nonzero height. If the image is in fill mode, provides guidance that this can be caused by the containing element's CSS p
+[ ] assertValidLoadingInput  (function) :1288
+      -- Verifies that the `loading` attribute is set to a valid input & is not used on priority images.
+[ ] assertValidDecodingInput  (function) :1313
+      -- Verifies that the `decoding` attribute is set to a valid input.
+[ ] assertNotMissingBuiltInLoader  (function) :1334
+      -- Warns if NOT using a loader (falling back to the generic loader) and the image appears to be hosted on one of the image CDNs for which we do have a built-in ima
+[ ] assertNoNgSrcsetWithoutLoader  (function) :1363
+      -- Warns if ngSrcset is present and no loader is configured (i.e. the default one is being used).
+[ ] assertNoLoaderParamsWithoutLoader  (function) :1381
+      -- Warns if loaderParams is present and no loader is configured (i.e. the default one is being used).
+[ ] assetPriorityCountBelowThreshold  (function) :1398
+      -- Warns if the priority attribute is used too often on page load
+[ ] assertPlaceholderDimensions  (function) :1422
+      -- Warns if placeholder's dimension are over a threshold. This assert function is meant to only run on the browser.
+[ ] callOnLoadIfImageIsLoaded  (function) :1439
+[ ] round  (function) :1455
+[ ] unwrapSafeUrl  (function) :1461
+      -- as that is not needed for img.src and img.srcset. This transform is purely for compatibility.
+[ ] booleanOrUrlAttribute  (export function) :1470
+      -- of boolean values. Used for the placeholder attribute.
+
+## packages/common/src/directives/ng_optimized_image/preconnect_link_checker.ts
+[ ] PreconnectLinkChecker  (export class) :57
+      -- Contains the logic to detect whether an image, marked with the "priority" attribute has a corresponding `<link rel="preconnect">` tag in the `document.head`. No
+[ ] PreconnectLinkChecker.constructor  (ctor) :75
+[ ] PreconnectLinkChecker.populateBlocklist  (method) :83
+[ ] PreconnectLinkChecker.assertPreconnect  (method) :100
+      -- Checks that a preconnect resource hint exists in the head for the given src.
+[ ] PreconnectLinkChecker.queryPreconnectLinks  (method) :129
+[ ] PreconnectLinkChecker.ngOnDestroy  (method) :139
+[ ] deepForEach  (function) :149
+      -- Invokes a callback for each element in the array. Also invokes a callback recursively for each nested array.
+
+## packages/common/src/directives/ng_optimized_image/preload-link-creator.ts
+[ ] PreloadLinkCreator  (export class) :30
+      -- will also track what images have already had preload link tags added so as to not duplicate link tags. In dev mode this service will validate that the number of
+[ ] PreloadLinkCreator.createPreloadLinkTag  (method) :52
+      -- server while using Angular Universal and SSR to kick off image loads for high priority images. The `sizes` (passed in from the user) and `srcset` (parsed and fo
+[ ] getCrossOriginMode  (function) :106
+
+## packages/common/src/directives/ng_optimized_image/url.ts
+[ ] getUrl  (export function) :10
+      -- Converts a string that represents a URL into a URL class instance.
+[ ] isAbsoluteUrl  (export function) :16
+      -- Checks whether a URL is absolute (i.e. starts with `http://` or `https://`).
+[ ] extractHostname  (export function) :22
+      -- If a URL is a relative one - the URL is returned as is.
+[ ] isValidPath  (export function) :26
+[ ] normalizePath  (export function) :42
+[ ] normalizeSrc  (export function) :46
+[ ] escapeCssUrl  (export function) :50
+
+## packages/common/src/directives/ng_plural.ts
+[ ] NgPlural  (export class) :49
+[ ] NgPlural.constructor  (ctor) :53
+[ ] NgPlural.ngPlural  (accessor) :56
+[ ] NgPlural.addCase  (method) :60
+[ ] NgPlural._updateView  (method) :64
+[ ] NgPlural._clearViews  (method) :72
+[ ] NgPlural._activateView  (method) :76
+[ ] NgPluralCase  (export class) :107
+[ ] NgPluralCase.constructor  (ctor) :108
+
+## packages/common/src/directives/ng_style.ts
+[ ] NgStyle  (export class) :64
+[ ] NgStyle.constructor  (ctor) :68
+[ ] NgStyle.ngStyle  (accessor) :75
+[ ] NgStyle.ngDoCheck  (method) :82
+[ ] NgStyle._setStyle  (method) :91
+[ ] NgStyle._applyChanges  (method) :107
+
+## packages/common/src/directives/ng_switch.ts
+[ ] SwitchView  (export class) :22
+[ ] SwitchView.constructor  (ctor) :25
+[ ] SwitchView.create  (method) :30
+[ ] SwitchView.destroy  (method) :35
+[ ] SwitchView.enforceState  (method) :40
+[ ] NgSwitch  (export class) :120
+[ ] NgSwitch.ngSwitch  (accessor) :130
+      -- @deprecated Use the `@switch` block instead. Intent to remove in a future major release
+[ ] NgSwitch._addCase  (method) :138
+      -- @internal
+[ ] NgSwitch._addDefault  (method) :143
+      -- @internal
+[ ] NgSwitch._matchCase  (method) :148
+      -- @internal
+[ ] NgSwitch._updateDefaultCases  (method) :160
+[ ] NgSwitchCase  (export class) :208
+[ ] NgSwitchCase.constructor  (ctor) :216
+[ ] NgSwitchCase.ngDoCheck  (method) :233
+      -- Performs case matching. For internal use only.
+[ ] NgSwitchDefault  (export class) :257
+[ ] NgSwitchDefault.constructor  (ctor) :258
+[ ] throwNgSwitchProviderNotFoundError  (function) :271
+
+## packages/common/src/directives/ng_template_outlet.ts
+[ ] NgTemplateOutlet  (export class) :50
+[ ] NgTemplateOutlet.constructor  (ctor) :74
+[ ] NgTemplateOutlet.ngOnChanges  (method) :76
+[ ] NgTemplateOutlet._getInjector  (method) :102
+      -- Gets the injector to use for the template outlet based on ngTemplateOutletInjector.
+[ ] NgTemplateOutlet._shouldRecreateView  (method) :114
+      -- We need to re-create existing embedded view if either is true: - the outlet changed. - the injector changed.
+[ ] NgTemplateOutlet._createContextForwardProxy  (method) :123
+      -- For a given outlet instance, we create a proxy object that delegates to the user-specified context. This allows changing, or swapping out the context object com
+
+## packages/common/src/dom_adapter.ts
+[ ] getDOM  (export function) :11
+[ ] setRootDomAdapter  (export function) :15
+[ ] DomAdapter  (export class) :25
+      -- Provides DOM operations in an environment-agnostic way. can introduce XSS risks.
+[ ] DomAdapter.dispatchEvent  (method) :27
+      -- Needs Domino-friendly test utility
+[ ] DomAdapter.remove  (method) :31
+      -- Used by Meta
+[ ] DomAdapter.createElement  (method) :32
+[ ] DomAdapter.createHtmlDocument  (method) :33
+[ ] DomAdapter.getDefaultDocument  (method) :34
+[ ] DomAdapter.isElementNode  (method) :37
+      -- Used by By.css
+[ ] DomAdapter.isShadowRoot  (method) :40
+      -- Used by Testability
+[ ] DomAdapter.onAndCancel  (method) :43
+      -- Used by KeyEventsPlugin
+[ ] DomAdapter.getGlobalEventTarget  (method) :46
+      -- Used by PlatformLocation and ServerEventManagerPlugin
+[ ] DomAdapter.getBaseHref  (method) :49
+      -- Used by PlatformLocation
+[ ] DomAdapter.resetBaseElement  (method) :50
+[ ] DomAdapter.getUserAgent  (method) :53
+      -- TODO: remove dependency in DefaultValueAccessor
+[ ] DomAdapter.getCookie  (method) :56
+      -- Used in the legacy @angular/http package which has some usage in g3.
+
+## packages/common/src/i18n/format_date.ts
+[ ] formatDate  (export function) :87
+      -- Formats a date according to locale rules. or an [ISO date-time string](https://www.w3.org/TR/NOTE-datetime). If not specified, uses host system settings.
+[ ] assertValidDateFormatLength  (function) :138
+[ ] assertValidDateFormat  (function) :153
+      -- Asserts that the given date format is free from common mistakes.  Throws an error if one is found (except for the case of all "Y", in which case we just log a w
+[ ] createDate  (function) :181
+      -- Create a new Date object with the given date value, and the time set to midnight. We cannot use `new Date(year, month, date)` because it maps years between 0 an
+[ ] getNamedFormat  (function) :203
+[ ] formatDateTime  (function) :276
+[ ] padNumber  (function) :285
+[ ] formatFractionalSeconds  (function) :311
+[ ] dateGetter  (function) :319
+      -- Returns a date formatter that transforms a date into its locale digit representation
+[ ] getDatePart  (function) :345
+[ ] dateStrGetter  (function) :374
+      -- Returns a date formatter that transforms a date into its locale string representation
+[ ] getDateTranslation  (function) :388
+      -- Returns the locale translation of a date for a given form, type and width
+[ ] timeZoneGetter  (function) :465
+      -- Returns a date formatter that transforms a date and an offset into a timezone with ISO8601 or GMT format depending on the width (eg: short = +0430, short:GMT = 
+[ ] getFirstThursdayOfYear  (function) :509
+[ ] getThursdayThisIsoWeek  (export function) :521
+      --  ISO Week starts on day 1 (Monday) and ends with day 0 (Sunday)
+[ ] weekGetter  (function) :535
+[ ] weekNumberingYearGetter  (function) :559
+      -- Returns a date formatter that provides the week-numbering year for the input date.
+[ ] getDateFormatter  (function) :581
+      -- TODO(ocombe): support all missing cldr formats: U, Q, D, F, e, j, J, C, A, v, V, X, x
+[ ] timezoneToOffset  (function) :891
+[ ] addDateMinutes  (function) :899
+[ ] convertTimezoneToLocal  (function) :905
+[ ] toDate  (export function) :924
+      -- Converts a value to date. Supported input formats: - `Date` - number: timestamp - string: numeric (e.g. "1234"), ISO and date strings in a format supported by  
+[ ] isoStringToDate  (export function) :975
+      -- Converts a date in ISO8601 to a Date. Used instead of `Date.parse` because of browser discrepancies.
+[ ] isDate  (export function) :1001
+
+## packages/common/src/i18n/format_number.ts
+[ ] formatNumberToLocaleString  (function) :33
+      -- Transforms a number to a locale string based on a style and a format.
+[ ] formatCurrency  (export function) :182
+      -- Formats a number as currency using locale rules. such as "$" or "Canadian Dollar". Used in output string, but does not affect the operation of the function. cur
+[ ] formatPercent  (export function) :235
+      -- Formats a number as a percentage according to locale rules. `{minIntegerDigits}.{minFractionDigits}-{maxFractionDigits}`. See `DecimalPipe` for more details.
+[ ] formatNumber  (export function) :270
+      -- Formats a number as text, with group sizing, separator, and other parameters based on the locale. `{minIntegerDigits}.{minFractionDigits}-{maxFractionDigits}`. 
+[ ] parseNumberFormat  (function) :303
+[ ] toPercent  (function) :371
+      -- Transforms a parsed number into a percentage by multiplying it by 100
+[ ] parseNumber  (function) :397
+      -- Parses a number. Significant bits of this parse algorithm came from https://github.com/MikeMcl/big.js/
+[ ] roundNumber  (function) :457
+      -- Round the parsed number to the specified number of decimal places This function changes the parsedNumber in-place
+[ ] parseIntAutoRadix  (export function) :531
+
+## packages/common/src/i18n/locale_data.ts
+[ ] registerLocaleData  (export function) :20
+      -- Register global data to be used internally by Angular. See the ["I18n guide"](guide/i18n/format-data-locale) to know how to import additional locale data. The s
+
+## packages/common/src/i18n/locale_data_api.ts
+[ ] getLocaleId  (export function) :252
+      -- Retrieves the locale ID from the currently loaded locale. The loaded locale could be, for example, a global one rather than a regional one. This function serves
+[ ] getLocaleDayPeriods  (export function) :270
+      -- Retrieves day period strings for the given locale. Use `Intl.DateTimeFormat` for date formating instead.
+[ ] getLocaleDayNames  (export function) :299
+      -- Retrieves days of the week for the given locale, using the Gregorian calendar. For example,`[Sunday, Monday, ... Saturday]` for `en-US`. Use `Intl.DateTimeForma
+[ ] getLocaleMonthNames  (export function) :328
+      -- Retrieves months of the year for the given locale, using the Gregorian calendar. For example,  `[January, February, ...]` for `en-US`. Use `Intl.DateTimeFormat`
+[ ] getLocaleEraNames  (export function) :356
+      -- Retrieves Gregorian-calendar eras for the given locale. For example, `[AD, BC]` for `en-US`. Use `Intl.DateTimeFormat` for date formating instead.
+[ ] getLocaleFirstDayOfWeek  (export function) :382
+      -- Retrieves the first day of the week for the given locale. (Sunday = 0, Monday = 1, ...). For example, for `fr-FR`, returns 1 to indicate that the first day is M
+[ ] getLocaleWeekEndRange  (export function) :400
+      -- Range of week days that are considered the week-end for the given locale. Intl's [`getWeekInfo`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Referen
+[ ] getLocaleDateFormat  (export function) :419
+      -- Retrieves a localized date-value formatting string. Use `Intl.DateTimeFormat` for date formating instead.
+[ ] getLocaleTimeFormat  (export function) :437
+      -- Retrieves a localized time-value formatting string. Use `Intl.DateTimeFormat` for date formating instead.
+[ ] getLocaleDateTimeFormat  (export function) :456
+      -- Retrieves a localized date-time formatting string. Use `Intl.DateTimeFormat` for date formating instead.
+[ ] getLocaleNumberSymbol  (export function) :475
+      -- Retrieves a localized number symbol that can be used to replace placeholders in number formats. Use `Intl.NumberFormat` to format numbers instead.
+[ ] getLocaleNumberFormat  (export function) :526
+      -- Retrieves a number format for a given locale. Numbers are formatted using patterns, like `#,###.00`. For example, the pattern `#,###.00` when used to format the
+[ ] getLocaleCurrencySymbol  (export function) :544
+      -- Retrieves the symbol used to represent the currency for the main country corresponding to a given locale. For example, '$' for `en-US`. or `null` if the main co
+[ ] getLocaleCurrencyName  (export function) :561
+      -- Retrieves the name of the currency for the main country corresponding to a given locale. For example, 'US Dollar' for `en-US`. or `null` if the main country can
+[ ] getLocaleCurrencyCode  (export function) :579
+      -- Retrieves the default currency code for the given locale. The default is defined as the first currency which is still in use. Time relative currency data is pro
+[ ] getLocaleCurrencies  (function) :589
+      -- Retrieves the currency values for a given locale.
+[ ] checkFullData  (function) :603
+[ ] getLocaleExtraDayPeriodRules  (export function) :640
+      -- Retrieves locale-specific rules used to determine which day period to use when more than one period is defined for a locale. There is a rule for each defined da
+[ ] getLocaleExtraDayPeriods  (export function) :672
+      -- Retrieves locale-specific day periods, which indicate roughly how a day is broken up in different languages. For example, for `en-US`, periods are morning, noon
+[ ] getLocaleDirection  (export function) :700
+      -- Retrieves the writing direction of a specified locale For dates and numbers, let `Intl.DateTimeFormat()` and `Intl.NumberFormat()` determine the writing directi
+[ ] getLastDefinedValue  (function) :717
+      -- Retrieves the first value that is defined in an array, going backwards from an index position. To avoid repeating the same data (as when the "format" and "stand
+[ ] extractTime  (function) :744
+      -- Extracts the hours and minutes from a string like "15:45"
+[ ] getCurrencySymbol  (export function) :770
+      -- Retrieves the currency symbol for a given currency code. For example, for the default `en-US` locale, the code `USD` can be represented by the narrow symbol `$`
+[ ] getNumberOfCurrencyDigits  (export function) :797
+      -- Reports the number of decimal digits for a given currency. The value depends upon the presence of cents in that particular currency. This function should not be
+
+## packages/common/src/i18n/localization.ts
+[ ] NgLocalization  (export class) :25
+[ ] NgLocalization.getPluralCategory  (method) :26
+[ ] getPluralCategory  (export function) :34
+      -- Returns the plural category for a given value. - "=value" when the case exists, - the plural category otherwise
+[ ] NgLocaleLocalization  (export class) :68
+      -- Returns the plural case based on the locale
+[ ] NgLocaleLocalization.constructor  (ctor) :69
+[ ] NgLocaleLocalization.getPluralCategory  (method) :73
+
+## packages/common/src/location/hash_location_strategy.ts
+[ ] HashLocationStrategy  (export class) :34
+      -- A {@link LocationStrategy} used to configure the {@link Location} service to represent its state in the [hash fragment](https://en.wikipedia.org/wiki/Uniform_Re
+[ ] HashLocationStrategy.constructor  (ctor) :38
+[ ] HashLocationStrategy.ngOnDestroy  (method) :49
+      -- @docs-private
+[ ] HashLocationStrategy.onPopState  (method) :55
+[ ] HashLocationStrategy.getBaseHref  (method) :62
+[ ] HashLocationStrategy.path  (method) :66
+[ ] HashLocationStrategy.prepareExternalUrl  (method) :74
+[ ] HashLocationStrategy.pushState  (method) :79
+[ ] HashLocationStrategy.replaceState  (method) :86
+[ ] HashLocationStrategy.forward  (method) :93
+[ ] HashLocationStrategy.back  (method) :97
+[ ] HashLocationStrategy.getState  (method) :101
+[ ] HashLocationStrategy.historyGo  (method) :105
+
+## packages/common/src/location/location.ts
+[ ] Location  (export class) :55
+[ ] Location.constructor  (ctor) :67
+[ ] Location.ngOnDestroy  (method) :88
+      -- @docs-private
+[ ] Location.path  (method) :102
+      -- removed.
+[ ] Location.getState  (method) :110
+      -- Reports the current state of the location history.
+[ ] Location.isCurrentPathEqualTo  (method) :123
+      -- Normalizes the given path and compares to the current normalized path. otherwise.
+[ ] Location.normalize  (method) :134
+      -- Normalizes a URL path by stripping any trailing slashes.
+[ ] Location.prepareExternalUrl  (method) :148
+      -- Normalizes an external URL path. If the given URL doesn't begin with a leading slash (`'/'`), adds one before normalizing. Adds a hash if `HashLocationStrategy`
+[ ] Location.go  (method) :165
+      -- Changes the browser's URL to a normalized version of a given URL, and pushes a new item onto the platform's history.
+[ ] Location.replaceState  (method) :181
+      -- Changes the browser's URL to a normalized version of the given URL, and replaces the top item on the platform's history stack.
+[ ] Location.forward  (method) :192
+      -- Navigates forward in the platform's history.
+[ ] Location.back  (method) :199
+      -- Navigates back in the platform's history.
+[ ] Location.historyGo  (method) :215
+      -- Navigate to a specific page from session history, identified by its relative position to the current page.     page. A negative value moves backwards, a positiv
+[ ] Location.onUrlChange  (method) :226
+      -- Registers a URL change listener. Use to catch updates performed by the Angular framework that are not detectible through "popstate" or "hashchange" events.
+[ ] Location._notifyUrlChangeListeners  (method) :245
+      -- @internal
+[ ] Location.subscribe  (method) :262
+      -- Subscribes to the platform's `popState` events. Note: `Location.go()` does not trigger the `popState` event in the browser. Use `Location.onUrlChange()` to subs
+[ ] createLocation  (export function) :306
+[ ] _stripBasePath  (function) :310
+[ ] _stripIndexHtml  (function) :321
+[ ] _stripOrigin  (function) :325
+
+## packages/common/src/location/location_strategy.ts
+[ ] LocationStrategy  (export class) :40
+      -- Enables the `Location` service to read route state from the browser's URL. Angular provides two strategies: `HashLocationStrategy` and `PathLocationStrategy`. A
+[ ] LocationStrategy.path  (method) :41
+[ ] LocationStrategy.prepareExternalUrl  (method) :42
+[ ] LocationStrategy.getState  (method) :43
+[ ] LocationStrategy.pushState  (method) :44
+[ ] LocationStrategy.replaceState  (method) :45
+[ ] LocationStrategy.forward  (method) :46
+[ ] LocationStrategy.back  (method) :47
+[ ] LocationStrategy.onPopState  (method) :51
+[ ] LocationStrategy.getBaseHref  (method) :52
+[ ] PathLocationStrategy  (export class) :117
+      -- A {@link LocationStrategy} used to configure the {@link Location} service to represent its state in the [path](https://en.wikipedia.org/wiki/Uniform_Resource_Lo
+[ ] PathLocationStrategy.constructor  (ctor) :121
+[ ] PathLocationStrategy.ngOnDestroy  (method) :135
+      -- @docs-private
+[ ] PathLocationStrategy.onPopState  (method) :141
+[ ] PathLocationStrategy.getBaseHref  (method) :148
+[ ] PathLocationStrategy.prepareExternalUrl  (method) :152
+[ ] PathLocationStrategy.path  (method) :156
+[ ] PathLocationStrategy.pushState  (method) :163
+[ ] PathLocationStrategy.replaceState  (method) :168
+[ ] PathLocationStrategy.forward  (method) :173
+[ ] PathLocationStrategy.back  (method) :177
+[ ] PathLocationStrategy.getState  (method) :181
+[ ] PathLocationStrategy.historyGo  (method) :185
+[ ] NoTrailingSlashPathLocationStrategy  (export class) :198
+      -- A `LocationStrategy` that ensures URLs never have a trailing slash. This strategy only affects the URL written to the browser. `Location.path()` and `Location.n
+[ ] NoTrailingSlashPathLocationStrategy.prepareExternalUrl  (method) :199
+[ ] TrailingSlashPathLocationStrategy  (export class) :216
+      -- A `LocationStrategy` that ensures URLs always have a trailing slash. This strategy only affects the URL written to the browser. `Location.path()` and `Location.
+[ ] TrailingSlashPathLocationStrategy.prepareExternalUrl  (method) :217
+[ ] extractUrlPath  (function) :226
+
+## packages/common/src/location/navigation_adapter_for_location.ts
+[ ] NavigationAdapterForLocation  (export class) :31
+      -- A `Location` implementation that uses the browser's `Navigation` API. This class is an adapter that maps the methods of the `Location` service to the newer brow
+[ ] NavigationAdapterForLocation.constructor  (ctor) :35
+[ ] NavigationAdapterForLocation.registerNavigationListeners  (method) :41
+[ ] NavigationAdapterForLocation.getState  (method) :51
+[ ] NavigationAdapterForLocation.replaceState  (method) :55
+[ ] NavigationAdapterForLocation.go  (method) :62
+[ ] NavigationAdapterForLocation.back  (method) :71
+      -- https://github.com/WICG/navigation-api?tab=readme-ov-file#correspondence-with-the-joint-session-history
+[ ] NavigationAdapterForLocation.forward  (method) :75
+[ ] NavigationAdapterForLocation.onUrlChange  (method) :79
+
+## packages/common/src/location/platform_location.ts
+[ ] PlatformLocation  (export class) :36
+      -- This class should not be used directly by an application developer. Instead, use {@link Location}. `PlatformLocation` encapsulates all calls to DOM APIs, which 
+[ ] PlatformLocation.getBaseHrefFromDOM  (method) :37
+[ ] PlatformLocation.getState  (method) :38
+[ ] PlatformLocation.onPopState  (method) :42
+      -- Returns a function that, when executed, removes the `popstate` event handler.
+[ ] PlatformLocation.onHashChange  (method) :46
+      -- Returns a function that, when executed, removes the `hashchange` event handler.
+[ ] PlatformLocation.href  (accessor) :48
+[ ] PlatformLocation.protocol  (accessor) :49
+[ ] PlatformLocation.hostname  (accessor) :50
+[ ] PlatformLocation.port  (accessor) :51
+[ ] PlatformLocation.pathname  (accessor) :52
+[ ] PlatformLocation.search  (accessor) :53
+[ ] PlatformLocation.hash  (accessor) :54
+[ ] PlatformLocation.replaceState  (method) :56
+[ ] PlatformLocation.pushState  (method) :58
+[ ] PlatformLocation.forward  (method) :60
+[ ] PlatformLocation.back  (method) :62
+[ ] BrowserPlatformLocation  (export class) :108
+[ ] BrowserPlatformLocation.constructor  (ctor) :113
+[ ] BrowserPlatformLocation.getBaseHrefFromDOM  (method) :119
+[ ] BrowserPlatformLocation.onPopState  (method) :123
+[ ] BrowserPlatformLocation.onHashChange  (method) :129
+[ ] BrowserPlatformLocation.href  (accessor) :135
+[ ] BrowserPlatformLocation.protocol  (accessor) :138
+[ ] BrowserPlatformLocation.hostname  (accessor) :141
+[ ] BrowserPlatformLocation.port  (accessor) :144
+[ ] BrowserPlatformLocation.pathname  (accessor) :147
+[ ] BrowserPlatformLocation.search  (accessor) :150
+[ ] BrowserPlatformLocation.hash  (accessor) :153
+[ ] BrowserPlatformLocation.pathname  (accessor) :156
+[ ] BrowserPlatformLocation.pushState  (method) :160
+[ ] BrowserPlatformLocation.replaceState  (method) :164
+[ ] BrowserPlatformLocation.forward  (method) :168
+[ ] BrowserPlatformLocation.back  (method) :172
+[ ] BrowserPlatformLocation.historyGo  (method) :176
+[ ] BrowserPlatformLocation.getState  (method) :180
+
+## packages/common/src/location/util.ts
+[ ] joinWithSlash  (export function) :18
+      -- Joins two parts of a URL with a slash if needed.
+[ ] stripTrailingSlash  (export function) :40
+      -- Removes a trailing slash from a URL string if needed. Looks for the first occurrence of either `#`, `?`, or the end of the line as `/` characters and removes th
+[ ] normalizeQueryParams  (export function) :57
+      -- Normalizes URL parameters by prepending with `?` if needed.
+
+## packages/common/src/navigation/platform_navigation.ts
+[ ] PlatformNavigation  (export class) :47
+      -- This class wraps the platform Navigation API which allows server-specific and test implementations. Browser support is limited, so this API may not be available
+[ ] PlatformNavigation.entries  (method) :48
+[ ] PlatformNavigation.updateCurrentEntry  (method) :50
+[ ] PlatformNavigation.navigate  (method) :54
+[ ] PlatformNavigation.reload  (method) :55
+[ ] PlatformNavigation.traverseTo  (method) :56
+[ ] PlatformNavigation.back  (method) :57
+[ ] PlatformNavigation.forward  (method) :58
+[ ] PlatformNavigation.addEventListener  (method) :65
+[ ] PlatformNavigation.removeEventListener  (method) :66
+[ ] PlatformNavigation.dispatchEvent  (method) :67
+
+## packages/common/src/pipes/async_pipe.ts
+[ ] SubscribableStrategy  (class) :34
+[ ] SubscribableStrategy.createSubscription  (method) :35
+[ ] SubscribableStrategy.dispose  (method) :55
+[ ] PromiseStrategy  (class) :61
+[ ] PromiseStrategy.createSubscription  (method) :62
+[ ] PromiseStrategy.dispose  (method) :102
+[ ] AsyncPipe  (export class) :144
+[ ] AsyncPipe.constructor  (ctor) :154
+[ ] AsyncPipe.ngOnDestroy  (method) :160
+[ ] AsyncPipe.transform  (method) :175
+[ ] AsyncPipe.transform  (method) :176
+[ ] AsyncPipe.transform  (method) :177
+[ ] AsyncPipe.transform  (method) :178
+[ ] AsyncPipe._subscribe  (method) :202
+[ ] AsyncPipe._selectStrategy  (method) :212
+[ ] AsyncPipe._dispose  (method) :226
+[ ] AsyncPipe._updateLatestValue  (method) :235
+
+## packages/common/src/pipes/case_conversion_pipes.ts
+[ ] LowerCasePipe  (export class) :33
+[ ] LowerCasePipe.transform  (method) :37
+[ ] LowerCasePipe.transform  (method) :38
+[ ] LowerCasePipe.transform  (method) :39
+[ ] LowerCasePipe.transform  (method) :40
+[ ] TitleCasePipe  (export class) :81
+[ ] TitleCasePipe.transform  (method) :85
+[ ] TitleCasePipe.transform  (method) :86
+[ ] TitleCasePipe.transform  (method) :87
+[ ] TitleCasePipe.transform  (method) :88
+[ ] UpperCasePipe  (export class) :111
+[ ] UpperCasePipe.transform  (method) :115
+[ ] UpperCasePipe.transform  (method) :116
+[ ] UpperCasePipe.transform  (method) :117
+[ ] UpperCasePipe.transform  (method) :118
+[ ] assertPipeArgument  (function) :125
+
+## packages/common/src/pipes/date_pipe.ts
+[ ] DatePipe  (export class) :224
+[ ] DatePipe.constructor  (ctor) :225
+[ ] DatePipe.transform  (method) :250
+      -- (milliseconds since UTC epoch), or an ISO string (https://www.w3.org/TR/NOTE-datetime). custom format string.  When not provided, the `DatePipe` looks for the v
+[ ] DatePipe.transform  (method) :256
+[ ] DatePipe.transform  (method) :257
+[ ] DatePipe.transform  (method) :263
+
+## packages/common/src/pipes/i18n_plural_pipe.ts
+[ ] I18nPluralPipe  (export class) :36
+[ ] I18nPluralPipe.constructor  (ctor) :37
+[ ] I18nPluralPipe.transform  (method) :46
+      -- https://unicode-org.github.io/icu/userguide/format_parse/messages/. default).
+
+## packages/common/src/pipes/i18n_select_pipe.ts
+[ ] I18nSelectPipe  (export class) :35
+[ ] I18nSelectPipe.transform  (method) :41
+      -- for different values of the provided `value`.
+
+## packages/common/src/pipes/json_pipe.ts
+[ ] JsonPipe  (export class) :33
+[ ] JsonPipe.transform  (method) :37
+
+## packages/common/src/pipes/keyvalue_pipe.ts
+[ ] makeKeyValuePair  (function) :19
+[ ] KeyValuePipe  (export class) :61
+[ ] KeyValuePipe.constructor  (ctor) :62
+[ ] KeyValuePipe.transform  (method) :74
+      -- NOTE: when the `input` value is a simple Record<K, V> object, the keys are extracted with Object.keys(). This means that even if the `input` type is Record<numb
+[ ] KeyValuePipe.transform  (method) :78
+[ ] KeyValuePipe.transform  (method) :82
+[ ] KeyValuePipe.transform  (method) :86
+[ ] KeyValuePipe.transform  (method) :90
+[ ] KeyValuePipe.transform  (method) :94
+[ ] KeyValuePipe.transform  (method) :99
+[ ] KeyValuePipe.transform  (method) :104
+[ ] KeyValuePipe.transform  (method) :109
+[ ] defaultComparator  (export function) :141
+
+## packages/common/src/pipes/number_pipe.ts
+[ ] DecimalPipe  (export class) :92
+[ ] DecimalPipe.constructor  (ctor) :93
+[ ] DecimalPipe.transform  (method) :102
+      -- [See more](#digitsinfo). [See more](#locale).
+[ ] DecimalPipe.transform  (method) :103
+[ ] DecimalPipe.transform  (method) :104
+[ ] DecimalPipe.transform  (method) :109
+[ ] PercentPipe  (export class) :152
+[ ] PercentPipe.constructor  (ctor) :153
+[ ] PercentPipe.transform  (method) :155
+[ ] PercentPipe.transform  (method) :156
+[ ] PercentPipe.transform  (method) :157
+[ ] PercentPipe.transform  (method) :178
+      -- in the following format:<br> <code>{minIntegerDigits}.{minFractionDigits}-{maxFractionDigits}</code>.   - `minIntegerDigits`: The minimum number of integer digi
+[ ] CurrencyPipe  (export class) :220
+[ ] CurrencyPipe.constructor  (ctor) :221
+[ ] CurrencyPipe.transform  (method) :258
+      -- such as `USD` for the US dollar and `EUR` for the euro. The default currency code can be configured using the `DEFAULT_CURRENCY_CODE` injection token.   - `code
+[ ] CurrencyPipe.transform  (method) :265
+[ ] CurrencyPipe.transform  (method) :272
+[ ] CurrencyPipe.transform  (method) :279
+[ ] isValue  (function) :317
+[ ] strToNumber  (function) :324
+      -- Transforms a string into a number (if needed).
+
+## packages/common/src/pipes/slice_pipe.ts
+[ ] SlicePipe  (export class) :54
+[ ] SlicePipe.transform  (method) :70
+      --   - **a positive integer**: return the item at `start` index and all items after     in the list or string expression.   - **a negative integer**: return the it
+[ ] SlicePipe.transform  (method) :71
+[ ] SlicePipe.transform  (method) :72
+[ ] SlicePipe.transform  (method) :77
+[ ] SlicePipe.transform  (method) :78
+[ ] SlicePipe.transform  (method) :79
+
+## packages/common/src/pipes/utils.ts
+[ ] invalidPipeArgumentError  (export function) :18
+[ ] warnIfSignal  (export function) :25
+
+## packages/common/src/platform_id.ts
+[ ] isPlatformBrowser  (export function) :16
+      -- Returns whether a platform id represents a browser platform.
+[ ] isPlatformServer  (export function) :24
+      -- Returns whether a platform id represents a server platform.
+
+## packages/common/src/viewport_scroller.ts
+[ ] ViewportScroller  (export class) :22
+      -- Defines a scroll position manager. Implemented by `BrowserViewportScroller`.
+[ ] ViewportScroller.setOffset  (method) :41
+      -- Configures the top offset used when scrolling to an anchor. or a function that returns the top offset position.
+[ ] ViewportScroller.getScrollPosition  (method) :47
+      -- Retrieves the current scroll position.
+[ ] ViewportScroller.scrollToPosition  (method) :53
+      -- Scrolls to a specified position.
+[ ] ViewportScroller.scrollToAnchor  (method) :60
+      -- Scrolls to an anchor element.
+[ ] ViewportScroller.setHistoryScrollRestoration  (method) :67
+      -- Disables automatic scroll restoration provided by the browser. See also [window.history.scrollRestoration info](https://developers.google.com/web/updates/2015/0
+[ ] BrowserViewportScroller  (export class) :73
+      -- Manages the scroll position for a browser window.
+[ ] BrowserViewportScroller.constructor  (ctor) :76
+[ ] BrowserViewportScroller.setOffset  (method) :87
+      -- Configures the top offset used when scrolling to an anchor. or a function that returns the top offset position.
+[ ] BrowserViewportScroller.getScrollPosition  (method) :99
+      -- Retrieves the current scroll position.
+[ ] BrowserViewportScroller.scrollToPosition  (method) :107
+      -- Sets the scroll position.
+[ ] BrowserViewportScroller.scrollToAnchor  (method) :122
+      -- Scrolls to an element and attempts to focus the element. Note that the function name here is misleading in that the target string may be an ID for a non-anchor 
+[ ] BrowserViewportScroller.setHistoryScrollRestoration  (method) :141
+      -- Disables automatic scroll restoration provided by the browser.
+[ ] BrowserViewportScroller.scrollToElement  (method) :166
+      -- Scrolls to an element using the native offset and the specified offset set on this scroller. The offset can be used when we know that there is a floating header
+[ ] findAnchorFromDocument  (function) :179
+[ ] NullViewportScroller  (export class) :220
+      -- Provides an empty implementation of the viewport scroller.
+[ ] NullViewportScroller.setOffset  (method) :224
+      -- Empty implementation
+[ ] NullViewportScroller.getScrollPosition  (method) :229
+      -- Empty implementation
+[ ] NullViewportScroller.scrollToPosition  (method) :236
+      -- Empty implementation
+[ ] NullViewportScroller.scrollToAnchor  (method) :241
+      -- Empty implementation
+[ ] NullViewportScroller.setHistoryScrollRestoration  (method) :246
+      -- Empty implementation
+
+## packages/common/src/xhr.ts
+[ ] BrowserXhr  (export class) :15
+      -- A factory for `HttpXhrBackend` that uses the `XMLHttpRequest` browser API.
+[ ] BrowserXhr.build  (method) :16
+[ ] XhrFactory  (export class) :27
+      -- A wrapper around the `XMLHttpRequest` constructor.
+[ ] XhrFactory.build  (method) :28
+
+## packages/common/testing/src/location_mock.ts
+[ ] SpyLocation  (export class) :24
+      -- A spy for {@link Location} that allows tests to fire simulated location events.
+[ ] SpyLocation.ngOnDestroy  (method) :40
+      -- @docs-private
+[ ] SpyLocation.setInitialPath  (method) :45
+[ ] SpyLocation.setBaseHref  (method) :49
+[ ] SpyLocation.path  (method) :53
+[ ] SpyLocation.getState  (method) :57
+[ ] SpyLocation.isCurrentPathEqualTo  (method) :61
+[ ] SpyLocation.simulateUrlPop  (method) :70
+[ ] SpyLocation.simulateHashChange  (method) :74
+[ ] SpyLocation.prepareExternalUrl  (method) :85
+[ ] SpyLocation.go  (method) :92
+[ ] SpyLocation.replaceState  (method) :107
+[ ] SpyLocation.forward  (method) :126
+[ ] SpyLocation.back  (method) :138
+[ ] SpyLocation.historyGo  (method) :150
+[ ] SpyLocation.onUrlChange  (method) :163
+[ ] SpyLocation._notifyUrlChangeListeners  (method) :182
+      -- @internal
+[ ] SpyLocation.subscribe  (method) :186
+[ ] SpyLocation.normalize  (method) :198
+[ ] SpyLocation.pushHistory  (method) :202
+[ ] LocationState  (class) :211
+[ ] LocationState.constructor  (ctor) :212
+
+## packages/common/testing/src/mock_location_strategy.ts
+[ ] MockLocationStrategy  (export class) :20
+      -- A mock implementation of {@link LocationStrategy} that allows tests to fire simulated location events.
+[ ] MockLocationStrategy.constructor  (ctor) :28
+[ ] MockLocationStrategy.simulatePopState  (method) :32
+[ ] MockLocationStrategy.path  (method) :37
+[ ] MockLocationStrategy.prepareExternalUrl  (method) :41
+[ ] MockLocationStrategy.pushState  (method) :48
+[ ] MockLocationStrategy.replaceState  (method) :61
+[ ] MockLocationStrategy.onPopState  (method) :74
+[ ] MockLocationStrategy.getBaseHref  (method) :78
+[ ] MockLocationStrategy.back  (method) :82
+[ ] MockLocationStrategy.forward  (method) :91
+[ ] MockLocationStrategy.getState  (method) :95
+[ ] _MockPopStateEvent  (class) :100
+[ ] _MockPopStateEvent.constructor  (ctor) :103
+
+## packages/common/testing/src/mock_platform_location.ts
+[ ] parseUrl  (function) :41
+[ ] MockPlatformLocation  (export class) :113
+      -- Mock implementation of URL state.
+[ ] MockPlatformLocation.constructor  (ctor) :128
+[ ] MockPlatformLocation.hostname  (accessor) :143
+[ ] MockPlatformLocation.protocol  (accessor) :146
+[ ] MockPlatformLocation.port  (accessor) :149
+[ ] MockPlatformLocation.pathname  (accessor) :152
+[ ] MockPlatformLocation.search  (accessor) :155
+[ ] MockPlatformLocation.hash  (accessor) :158
+[ ] MockPlatformLocation.state  (accessor) :161
+[ ] MockPlatformLocation.getBaseHrefFromDOM  (method) :165
+[ ] MockPlatformLocation.onPopState  (method) :169
+[ ] MockPlatformLocation.onHashChange  (method) :174
+[ ] MockPlatformLocation.href  (accessor) :179
+[ ] MockPlatformLocation.url  (accessor) :185
+[ ] MockPlatformLocation.parseChanges  (method) :189
+[ ] MockPlatformLocation.replaceState  (method) :195
+[ ] MockPlatformLocation.pushState  (method) :207
+[ ] MockPlatformLocation.forward  (method) :222
+[ ] MockPlatformLocation.back  (method) :231
+[ ] MockPlatformLocation.historyGo  (method) :240
+[ ] MockPlatformLocation.getState  (method) :250
+[ ] MockPlatformLocation.emitEvents  (method) :264
+      -- Browsers are inconsistent in when they fire events and perform the state updates The most easiest thing to do in our mock is synchronous and that happens to mat
+[ ] FakeNavigationPlatformLocation  (export class) :286
+      -- Mock implementation of URL state.
+[ ] FakeNavigationPlatformLocation.constructor  (ctor) :289
+[ ] FakeNavigationPlatformLocation.getBaseHrefFromDOM  (method) :301
+[ ] FakeNavigationPlatformLocation.onPopState  (method) :306
+      -- window, addEventListener, removeEventListener might be undefined due to test mocks
+[ ] FakeNavigationPlatformLocation.onHashChange  (method) :311
+[ ] FakeNavigationPlatformLocation.href  (accessor) :316
+[ ] FakeNavigationPlatformLocation.protocol  (accessor) :319
+[ ] FakeNavigationPlatformLocation.hostname  (accessor) :322
+[ ] FakeNavigationPlatformLocation.port  (accessor) :325
+[ ] FakeNavigationPlatformLocation.pathname  (accessor) :328
+[ ] FakeNavigationPlatformLocation.search  (accessor) :331
+[ ] FakeNavigationPlatformLocation.hash  (accessor) :334
+[ ] FakeNavigationPlatformLocation.pushState  (method) :338
+[ ] FakeNavigationPlatformLocation.replaceState  (method) :342
+[ ] FakeNavigationPlatformLocation.forward  (method) :346
+[ ] FakeNavigationPlatformLocation.back  (method) :350
+[ ] FakeNavigationPlatformLocation.historyGo  (method) :354
+[ ] FakeNavigationPlatformLocation.getState  (method) :358
+
+## packages/common/testing/src/navigation/provide_fake_platform_navigation.ts
+[ ] provideFakePlatformNavigation  (export function) :35
+      -- Return a provider for the `FakeNavigation` in place of the real Navigation API.
+
+## packages/common/testing/src/provide_location_mocks.ts
+[ ] provideLocationMocks  (export function) :21
+      -- Returns mock providers for the `Location` and `LocationStrategy` classes. The mocks are helpful in tests to fire simulated location events.
+
+## packages/common/upgrade/src/location_shim.ts
+[ ] $locationShim  (export class) :32
+      -- Location service that provides a drop-in replacement for the $location service provided in AngularJS.
+[ ] $locationShim.constructor  (ctor) :62
+[ ] $locationShim.initialize  (method) :96
+[ ] $locationShim.resetBrowserUpdate  (method) :261
+[ ] $locationShim.browserUrl  (method) :270
+[ ] $locationShim.browserUrl  (method) :271
+[ ] $locationShim.browserUrl  (method) :272
+[ ] $locationShim.cacheState  (method) :316
+[ ] $locationShim.browserState  (method) :336
+      -- This function emulates the $browser.state() function from AngularJS. It will cause history.state to be cached unless changed with deep equality check.
+[ ] $locationShim.stripBaseUrl  (method) :340
+[ ] $locationShim.getServerBase  (method) :347
+[ ] $locationShim.parseAppUrl  (method) :354
+[ ] $locationShim.onChange  (method) :392
+      -- Registers listeners for URL changes. This API is used to catch updates performed by the AngularJS framework. These changes are a subset of the `$locationChangeS
+[ ] $locationShim.$$notifyChangeListeners  (method) :400
+      -- @internal
+[ ] $locationShim.$$parse  (method) :420
+      -- Parses the provided URL, and sets the current URL to the parsed result.
+[ ] $locationShim.$$parseLinkUrl  (method) :444
+      -- Parses the provided URL and its relative URL.
+[ ] $locationShim.setBrowserUrlWithFallback  (method) :464
+[ ] $locationShim.composeUrls  (method) :483
+[ ] $locationShim.absUrl  (method) :501
+      -- Retrieves the full URL representation with all segments encoded according to rules specified in [RFC 3986](https://tools.ietf.org/html/rfc3986). ```js // given 
+[ ] $locationShim.url  (method) :515
+      -- Retrieves the current URL, or sets a new URL. When setting a URL, changes the path, search, and hash, and returns a reference to its own instance. ```js // give
+[ ] $locationShim.url  (method) :516
+[ ] $locationShim.url  (method) :517
+[ ] $locationShim.protocol  (method) :545
+      -- Retrieves the protocol of the current URL. ```js // given URL http://example.com/#/some/path?foo=bar&baz=xoxo let protocol = $location.protocol(); // => "http" 
+[ ] $locationShim.host  (method) :568
+      -- Retrieves the protocol of the current URL. In contrast to the non-AngularJS version `location.host` which returns `hostname:port`, this returns the `hostname` p
+[ ] $locationShim.port  (method) :581
+      -- Retrieves the port of the current URL. ```js // given URL http://example.com/#/some/path?foo=bar&baz=xoxo let port = $location.port(); // => 80 ```
+[ ] $locationShim.path  (method) :598
+      -- Retrieves the path of the current URL, or changes the path and returns a reference to its own instance. Paths should always begin with forward slash (/). This m
+[ ] $locationShim.path  (method) :599
+[ ] $locationShim.path  (method) :600
+[ ] $locationShim.search  (method) :653
+      -- Retrieves a map of the search parameters of the current URL, or changes a search part and returns a reference to its own instance. ```js // given URL http://exa
+[ ] $locationShim.search  (method) :654
+[ ] $locationShim.search  (method) :655
+[ ] $locationShim.search  (method) :659
+[ ] $locationShim.hash  (method) :710
+      -- Retrieves the current hash fragment, or changes the hash fragment and returns a reference to its own instance. ```js // given URL http://example.com/#/some/path
+[ ] $locationShim.hash  (method) :711
+[ ] $locationShim.hash  (method) :712
+[ ] $locationShim.replace  (method) :727
+      -- Changes to `$location` during the current `$digest` will replace the current history record, instead of adding a new one.
+[ ] $locationShim.state  (method) :743
+      -- Retrieves the history state object when called without any parameter. Change the history state object when called with one parameter and return `$location`. The
+[ ] $locationShim.state  (method) :744
+[ ] $locationShim.state  (method) :745
+[ ] $locationShimProvider  (export class) :761
+      -- The factory function used to create an instance of the `$locationShim` in Angular, and provides an API-compatible `$locationProvider` for AngularJS.
+[ ] $locationShimProvider.constructor  (ctor) :762
+[ ] $locationShimProvider.$get  (method) :773
+      -- Factory method that returns an instance of the $locationShim
+[ ] $locationShimProvider.hashPrefix  (method) :787
+      -- Stub method used to keep API compatible with AngularJS. This setting is configured through the LocationUpgradeModule's `config` method in your Angular app.
+[ ] $locationShimProvider.html5Mode  (method) :795
+      -- Stub method used to keep API compatible with AngularJS. This setting is configured through the LocationUpgradeModule's `config` method in your Angular app.
+
+## packages/common/upgrade/src/location_upgrade_module.ts
+[ ] LocationUpgradeModule  (export class) :74
+      -- `NgModule` used for providing and configuring Angular's Unified Location Service for upgrading.
+[ ] LocationUpgradeModule.config  (method) :75
+[ ] provideAppBaseHref  (function) :99
+[ ] provideUrlCodec  (function) :111
+[ ] provideLocationStrategy  (function) :117
+[ ] provide$location  (function) :126
+
+## packages/common/upgrade/src/params.ts
+[ ] UrlCodec  (export class) :14
+[ ] UrlCodec.encodePath  (method) :20
+      -- Encodes the path from the provided string
+[ ] UrlCodec.decodePath  (method) :27
+      -- Decodes the path from the provided string
+[ ] UrlCodec.encodeSearch  (method) :34
+      -- Encodes the search string from the provided string or object
+[ ] UrlCodec.decodeSearch  (method) :41
+      -- Decodes the search objects from the provided string
+[ ] UrlCodec.encodeHash  (method) :48
+      -- Encodes the hash from the provided string
+[ ] UrlCodec.decodeHash  (method) :55
+      -- Decodes the hash from the provided string
+[ ] UrlCodec.normalize  (method) :62
+      -- Normalizes the URL from the provided string
+[ ] UrlCodec.normalize  (method) :72
+      -- Normalizes the URL from the provided string, search, hash, and base URL parameters
+[ ] UrlCodec.areEqual  (method) :84
+      -- Checks whether the two strings are equal
+[ ] UrlCodec.parse  (method) :92
+      -- Parses the URL string based on the base URL
+[ ] AngularJSUrlCodec  (export class) :113
+      -- A `UrlCodec` that uses logic from AngularJS to serialize and parse URLs and URL parameters.
+[ ] AngularJSUrlCodec.encodePath  (method) :115
+      -- https://github.com/angular/angular.js/blob/864c7f0/src/ng/location.js#L15
+[ ] AngularJSUrlCodec.encodeSearch  (method) :129
+      -- https://github.com/angular/angular.js/blob/864c7f0/src/ng/location.js#L42
+[ ] AngularJSUrlCodec.encodeHash  (method) :139
+      -- https://github.com/angular/angular.js/blob/864c7f0/src/ng/location.js#L44
+[ ] AngularJSUrlCodec.decodePath  (method) :145
+      -- https://github.com/angular/angular.js/blob/864c7f0/src/ng/location.js#L27
+[ ] AngularJSUrlCodec.decodeSearch  (method) :161
+      -- https://github.com/angular/angular.js/blob/864c7f0/src/ng/location.js#L72
+[ ] AngularJSUrlCodec.decodeHash  (method) :166
+      -- https://github.com/angular/angular.js/blob/864c7f0/src/ng/location.js#L73
+[ ] AngularJSUrlCodec.normalize  (method) :173
+      -- https://github.com/angular/angular.js/blob/864c7f0/src/ng/location.js#L42
+[ ] AngularJSUrlCodec.normalize  (method) :174
+[ ] AngularJSUrlCodec.normalize  (method) :175
+[ ] AngularJSUrlCodec.areEqual  (method) :212
+[ ] AngularJSUrlCodec.parse  (method) :217
+      -- https://github.com/angular/angular.js/blob/864c7f0/src/ng/urlUtils.js#L60
+[ ] _stripIndexHtml  (function) :237
+[ ] tryDecodeURIComponent  (function) :247
+      -- Tries to decode the URI component without throwing an exception.
+[ ] parseKeyValue  (function) :260
+      -- Parses an escaped url query string into key-value pairs. Logic taken from https://github.com/angular/angular.js/blob/864c7f0/src/Angular.js#L1382
+[ ] toKeyValue  (function) :291
+      -- Serializes into key-value pairs. Logic taken from https://github.com/angular/angular.js/blob/864c7f0/src/Angular.js#L1409
+[ ] encodeUriSegment  (function) :325
+      -- We need our custom method because encodeURIComponent is too aggressive and doesn't follow https://tools.ietf.org/html/rfc3986 with regards to the character set 
+[ ] encodeUriQuery  (function) :342
+      -- This method is intended for encoding *key* or *value* parts of query component. We need a custom method because encodeURIComponent is too aggressive and encodes
+
+## packages/common/upgrade/src/utils.ts
+[ ] stripPrefix  (export function) :9
+[ ] deepEqual  (export function) :13
+[ ] isAnchor  (export function) :30

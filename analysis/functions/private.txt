@@ -1,0 +1,49 @@
+INVENTORY FUNGSI :: private
+Total simbol: 29 | file: 3
+Rincian: function=29
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## packages/private/testing/matchers/index.ts
+[ ] buildError  (function) :102
+[ ] elementText  (function) :194
+[ ] hasShadowRoot  (function) :229
+
+## packages/private/testing/src/browser_utils.ts
+[ ] dispatchEvent  (export function) :12
+[ ] createMouseEvent  (export function) :19
+[ ] el  (export function) :25
+[ ] getAttributeMap  (function) :29
+[ ] stringifyElement  (export function) :40
+[ ] createNgZone  (export function) :93
+[ ] isCommentNode  (export function) :97
+[ ] isTextNode  (export function) :101
+[ ] getContent  (export function) :105
+[ ] templateAwareRoot  (export function) :113
+[ ] setCookie  (export function) :117
+[ ] hasStyle  (export function) :123
+[ ] hasClass  (export function) :128
+[ ] sortedClassList  (export function) :132
+[ ] createTemplate  (export function) :136
+[ ] childNodesAsList  (export function) :142
+
+## packages/private/testing/src/utils.ts
+[ ] withBody  (export function) :38
+      -- Wraps a function in a new function which sets up document and HTML for running a test. This function wraps an existing testing function. The wrapper adds HTML t
+[ ] withHead  (export function) :70
+      -- Wraps a function in a new function which sets up document and HTML for running a test. This function wraps an existing testing function. The wrapper adds HTML t
+[ ] wrapTestFn  (function) :81
+      -- Wraps provided function (which typically contains the code of a test) into a new function that performs the necessary setup of the environment.
+[ ] loadDominoOrNull  (function) :102
+[ ] ensureDocument  (export function) :120
+      -- Ensure that global has `Document` if we are in node.js
+[ ] cleanupDocument  (export function) :152
+      -- Restore the state of `Document` between tests.
+[ ] timeout  (export function) :183
+      -- Returns a promise that resolves after the specified time. ```ts await timeout(100); // Wait 100ms ```
+[ ] useAutoTick  (export function) :204
+      -- Installs Jasmine's fake clock with auto-tick enabled for all tests in the describe block. Call at the top level of a describe block to automatically advance tim
+[ ] expectText  (export function) :245
+      -- Returns a promise that resolves when the text content is found on the screen. ```ts await expectText('Hello'); await expectText(/Hello/); ```
+[ ] waitFor  (export function) :264

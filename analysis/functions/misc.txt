@@ -1,0 +1,121 @@
+INVENTORY FUNGSI :: misc
+Total simbol: 62 | file: 7
+Rincian: function=6, class=7, method=45, accessor=1, ctor=3
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## packages/misc/angular-in-memory-web-api/src/backend-service.ts
+[ ] BackendService  (export class) :37
+      -- Base class for in-memory web api back-ends Simulate the behavior of a RESTy web api backed by the simple in-memory data store provided by the injected `InMemory
+[ ] BackendService.constructor  (ctor) :44
+[ ] BackendService.dbReady  (accessor) :54
+[ ] BackendService.handleRequest  (method) :86
+      -- Process Request and return an Observable of Http Response object in the manner of a RESTy web api. Expect URI pattern in the form :base/:collectionName/:id? Exa
+[ ] BackendService.handleRequest_  (method) :91
+[ ] BackendService.addDelay  (method) :156
+      -- Add configured delay to response observable unless delay === 0
+[ ] BackendService.applyQuery  (method) :166
+      -- Apply query/search parameters as a filter over the collection This impl only supports RegExp queries on string properties of the collection ANDs the conditions 
+[ ] BackendService.bind  (method) :195
+      -- Get a method from the `InMemoryDbService` (if it exists), bound to that service
+[ ] BackendService.bodify  (method) :200
+[ ] BackendService.clone  (method) :204
+[ ] BackendService.collectionHandler  (method) :208
+[ ] BackendService.commands  (method) :255
+      -- Commands reconfigure the in-memory web api service or extract information from it. Commands ignore the latency delay and respond ASAP. When the last segment of 
+[ ] BackendService.createErrorResponseOptions  (method) :294
+[ ] BackendService.createHeaders  (method) :311
+      -- Create standard HTTP headers object from hash map of header strings
+[ ] BackendService.createPassThruBackend  (method) :316
+      -- create the function that passes unhandled requests through to the "real" backend.
+[ ] BackendService.createQueryMap  (method) :321
+      -- return a search map from a location query/search string
+[ ] BackendService.createResponse$  (method) :328
+      -- Create a cold response Observable from a factory for ResponseOptions
+[ ] BackendService.createResponse$fromResponseOptions$  (method) :340
+      -- Create a Response observable from ResponseOptions observable.
+[ ] BackendService.createResponseOptions$  (method) :348
+      -- Create a cold Observable of ResponseOptions.
+[ ] BackendService.findById  (method) :396
+      -- Find first instance of item in collection by `item.id`
+[ ] BackendService.genId  (method) :406
+      -- Generate the next available id for item in this collection Use method from `inMemDbService` if it exists and returns a value, else delegates to `genIdDefault`.
+[ ] BackendService.genIdDefault  (method) :423
+      -- Default generator of the next available id for item in this collection This default implementation works only for numeric ids.
+[ ] BackendService.get  (method) :437
+[ ] BackendService.getJsonBody  (method) :464
+      -- Get JSON body from the request object
+[ ] BackendService.getLocation  (method) :469
+      -- Get location info from a url, even on server where `document` is not defined
+[ ] BackendService.getPassThruBackend  (method) :484
+      -- get or create the function that passes unhandled requests through to the "real" backend.
+[ ] BackendService.getRequestInfoUtils  (method) :494
+      -- Get utility methods from this service instance. Useful within an HTTP method override
+[ ] BackendService.getRequestMethod  (method) :514
+      -- return canonical HTTP method name (lowercase) from the request object e.g. (req.method || 'get').toLowerCase();
+[ ] BackendService.indexOf  (method) :516
+[ ] BackendService.parseId  (method) :521
+      -- Parse the id as a number. Return original value if not a number.
+[ ] BackendService.isCollectionIdNumeric  (method) :535
+[ ] BackendService.parseRequestUrl  (method) :562
+      -- Parses the request URL into a `ParsedRequestUrl` object. Parsing depends upon certain values of `config`: `apiBase`, `host`, and `urlRoot`. Configuring the `api
+[ ] BackendService.post  (method) :610
+      -- Can update an existing entity too if post409 is false.
+[ ] BackendService.put  (method) :670
+      -- Can create an entity too if put404 is false.
+[ ] BackendService.removeById  (method) :710
+[ ] BackendService.resetDb  (method) :723
+      -- Tell your in-mem "database" to reset. returns Observable of the database because resetting it could be async
+
+## packages/misc/angular-in-memory-web-api/src/delay-response.ts
+[ ] delayResponse  (export function) :13
+      -- adds specified delay (in ms) to both next and error channels of the response observable
+
+## packages/misc/angular-in-memory-web-api/src/http-client-backend-service.ts
+[ ] HttpClientBackendService  (export class) :60
+      -- For Angular `HttpClient` simulate the behavior of a RESTy web api backed by the simple in-memory data store provided by the injected `InMemoryDbService`. Confor
+[ ] HttpClientBackendService.constructor  (ctor) :63
+[ ] HttpClientBackendService.handle  (method) :71
+[ ] HttpClientBackendService.getJsonBody  (method) :85
+[ ] HttpClientBackendService.getRequestMethod  (method) :89
+[ ] HttpClientBackendService.createHeaders  (method) :93
+[ ] HttpClientBackendService.createQueryMap  (method) :97
+[ ] HttpClientBackendService.createResponse$fromResponseOptions$  (method) :106
+[ ] HttpClientBackendService.createPassThruBackend  (method) :112
+
+## packages/misc/angular-in-memory-web-api/src/http-client-in-memory-web-api-module.ts
+[ ] httpClientInMemBackendServiceFactory  (export function) :18
+      -- AoT requires factory to be exported
+[ ] HttpClientInMemoryWebApiModule  (export class) :27
+[ ] HttpClientInMemoryWebApiModule.forRoot  (method) :46
+      --  Redirect the Angular `HttpClient` XHR calls  to in-memory data store that implements `InMemoryDbService`.  with class that implements InMemoryDbService and cre
+[ ] HttpClientInMemoryWebApiModule.forFeature  (method) :68
+      -- Enable and configure the in-memory web api in a lazy-loaded feature module. Same as `forRoot`. This is a feel-good method so you can follow the Angular style gu
+
+## packages/misc/angular-in-memory-web-api/src/http-status-codes.ts
+[ ] getStatusText  (export function) :517
+      -- get the status text from StatusCode
+[ ] isSuccess  (export function) :524
+      -- Returns true if the Http Status Code is 200-299 (success)
+
+## packages/misc/angular-in-memory-web-api/src/in-memory-web-api-module.ts
+[ ] InMemoryWebApiModule  (export class) :16
+[ ] InMemoryWebApiModule.forRoot  (method) :35
+      --  Redirect BOTH Angular `Http` and `HttpClient` XHR calls  to in-memory data store that implements `InMemoryDbService`.  with class that implements InMemoryDbSer
+[ ] InMemoryWebApiModule.forFeature  (method) :58
+      -- Enable and configure the in-memory web api in a lazy-loaded feature module. Same as `forRoot`. This is a feel-good method so you can follow the Angular style gu
+
+## packages/misc/angular-in-memory-web-api/src/interfaces.ts
+[ ] InMemoryDbService  (export class) :23
+      -- Interface for a class that creates an in-memory database Its `createDb` method creates a hash of named collections that represents the database For maximum flex
+[ ] InMemoryDbService.createDb  (method) :39
+      -- Creates an in-memory "database" hash whose keys are collection names and whose values are arrays of collection objects to return or update. returns Observable o
+[ ] InMemoryBackendConfigArgs  (export class) :45
+      -- Interface for InMemoryBackend configuration options
+[ ] InMemoryBackendConfig  (export class) :108
+      --  InMemoryBackendService configuration options  Usage:    InMemoryWebApiModule.forRoot(InMemHeroService, {delay: 600})  or if providing separately:    provide(In
+[ ] InMemoryBackendConfig.constructor  (ctor) :109
+[ ] parseUri  (export function) :133
+      -- Return information (UriInfo) about a URI
+[ ] removeTrailingSlash  (export function) :189

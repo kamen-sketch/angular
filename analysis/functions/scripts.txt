@@ -1,0 +1,64 @@
+INVENTORY FUNGSI :: scripts
+Total simbol: 24 | file: 8
+Rincian: function=24
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## scripts/benchmarks/index.mts
+[ ] promptForBenchmarkTarget  (function) :70
+      -- Prompts for a benchmark target.
+[ ] prepareForGitHubAction  (function) :87
+      -- Prepares a benchmark comparison running via GitHub action. This command is used by the GitHub action YML workflow and is responsible for extracting e.g. command
+[ ] runBenchmarkCmd  (function) :117
+      -- Runs a specified benchmark, or a benchmark selected via prompt.
+[ ] runBenchmarkTarget  (function) :134
+      -- Runs a benchmark Bazel target.
+[ ] runCompare  (function) :142
+      -- Performs a comparison of benchmark results between the current working stage and the comparison Git reference.
+
+## scripts/benchmarks/results.mts
+[ ] collectBenchmarkResults  (export function) :42
+      -- Collects and parses the benchmark results of the given Bazel target testlog directory.
+[ ] addScenarioResult  (function) :106
+[ ] isJsonReport  (function) :133
+
+## scripts/benchmarks/targets.mts
+[ ] findBenchmarkTargets  (export function) :19
+      -- Finds all benchmark Bazel targets in the project.
+[ ] getTestlogPath  (export function) :33
+      -- Gets the testlog path of a given Bazel target.
+[ ] resolveTarget  (export function) :52
+      -- Resolves a given benchmark Bazel target to the fully expanded label.
+
+## scripts/benchmarks/utils.mts
+[ ] exec  (export function) :25
+      -- Executes the given command with the provided arguments. Arguments are passed as a discrete array to the child process, bypassing shell interpretation. This ensu
+
+## scripts/build/angular-in-memory-web-api.mts
+[ ] buildAngularInMemoryWebApiPackage  (export function) :25
+      -- Build the `angular-in-memory-web-api` npm package and copies it into the release distribution directory. NOTE: The `angular-in-memory-web-api` package is not bu
+
+## scripts/build/package-builder.mts
+[ ] performNpmReleaseBuild  (export function) :33
+      -- Builds the release packages for NPM.
+[ ] performDefaultSnapshotBuild  (export function) :41
+      -- Builds the release packages as snapshot build. This means that the current Git HEAD SHA is included in the version (for easier debugging and back tracing).
+[ ] buildReleasePackages  (function) :49
+      -- Builds the release packages with the given compile mode and copies the package output into the given directory.
+[ ] getPackageNamesOfTargets  (function) :116
+      -- Gets the package names of the specified Bazel targets. e.g. //packages/core:npm_package => core
+[ ] exec  (export function) :135
+      -- Executes the given command in the project directory.
+[ ] exec  (export function) :137
+      -- Executes the given command in the project directory and returns its stdout.
+[ ] exec  (export function) :138
+
+## scripts/build/zone-js-builder.mts
+[ ] buildZoneJsPackage  (export function) :25
+      -- Build the `zone.js` npm package into `dist/bin/packages/zone.js/npm_package/` and copy it to `destDir` for other scripts/tests to use. NOTE: The `zone.js` packa
+
+## scripts/diff-release-package.mts
+[ ] main  (function) :55
+[ ] deleteDir  (function) :177
+[ ] recursiveChmod  (function) :187

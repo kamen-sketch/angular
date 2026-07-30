@@ -1,0 +1,495 @@
+INVENTORY FUNGSI :: zone.js
+Total simbol: 344 | file: 54
+Rincian: function=179, class=12, method=133, accessor=11, ctor=9
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## packages/zone.js/lib/browser/api-util.ts
+[ ] patchUtil  (export function) :41
+
+## packages/zone.js/lib/browser/browser-util.ts
+[ ] patchCallbacks  (export function) :8
+      -- Copyright Google LLC All Rights Reserved. Use of this source code is governed by an MIT-style license that can be found in the LICENSE file at https://angular.d
+
+## packages/zone.js/lib/browser/browser.ts
+[ ] patchBrowser  (export function) :31
+[ ] patchXHR  (function) :107
+[ ] findPendingTask  (function) :115
+[ ] scheduleTask  (function) :133
+[ ] placeholderCallback  (function) :197
+[ ] clearTask  (function) :199
+[ ] findPromiseRejectionHandler  (function) :301
+      -- handle unhandled promise rejection
+
+## packages/zone.js/lib/browser/canvas.ts
+[ ] patchCanvas  (export function) :11
+
+## packages/zone.js/lib/browser/custom-elements.ts
+[ ] patchCustomElements  (export function) :9
+
+## packages/zone.js/lib/browser/define-property.ts
+[ ] propertyPatch  (export function) :20
+[ ] _redefineProperty  (export function) :82
+[ ] isUnconfigurable  (function) :88
+[ ] rewriteDescriptor  (function) :92
+[ ] _tryDefineProperty  (function) :109
+
+## packages/zone.js/lib/browser/event-target.ts
+[ ] eventTargetPatch  (export function) :9
+[ ] patchEvent  (export function) :37
+
+## packages/zone.js/lib/browser/message-port.ts
+[ ] patchMessagePort  (export function) :11
+
+## packages/zone.js/lib/browser/property-descriptor.ts
+[ ] filterProperties  (export function) :20
+[ ] patchFilteredProperties  (export function) :38
+[ ] getOnEventNames  (export function) :57
+      -- Get all event name properties which the event name startsWith `on` from the target object itself, inherited properties are not considered.
+[ ] propertyDescriptorPatch  (export function) :63
+
+## packages/zone.js/lib/browser/register-element.ts
+[ ] registerElementPatch  (export function) :9
+
+## packages/zone.js/lib/browser/rollup-common.ts
+[ ] patchCommon  (export function) :15
+
+## packages/zone.js/lib/browser/shadydom.ts
+[ ] patchShadyDom  (export function) :11
+
+## packages/zone.js/lib/browser/webapis-media-query.ts
+[ ] patchMediaQuery  (export function) :11
+[ ] patchAddListener  (function) :13
+[ ] patchRemoveListener  (function) :26
+
+## packages/zone.js/lib/browser/webapis-notification.ts
+[ ] patchNotifications  (export function) :11
+
+## packages/zone.js/lib/browser/webapis-resize-observer.ts
+[ ] patchResizeObserver  (export function) :11
+
+## packages/zone.js/lib/browser/webapis-rtc-peer-connection.ts
+[ ] patchRtcPeerConnection  (export function) :11
+
+## packages/zone.js/lib/browser/webapis-user-media.ts
+[ ] patchUserMedia  (export function) :11
+[ ] wrapFunctionArgs  (function) :13
+
+## packages/zone.js/lib/browser/websocket.ts
+[ ] apply  (export function) :10
+      -- we have to patch the instance since the proto is non-configurable
+
+## packages/zone.js/lib/common/error-rewrite.ts
+[ ] patchError  (export function) :15
+[ ] buildZoneFrameNames  (function) :55
+[ ] buildZoneAwareStackFrames  (function) :67
+[ ] ZoneAwareError  (function) :118
+      -- This is ZoneAwareError which processes the stack frame and cleans up extra frames as well as adds zone information to it.
+
+## packages/zone.js/lib/common/events.ts
+[ ] prepareEventNames  (function) :95
+[ ] patchEventTarget  (export function) :196
+[ ] globalCallback  (function) :249
+[ ] patchEventTargetMethods  (function) :305
+[ ] buildEventListenerOptions  (function) :373
+      -- This util function will build an option object with passive option to handle all possible input from the user.
+[ ] copyEventListenerOptions  (function) :494
+[ ] findEventTasks  (export function) :907
+[ ] patchEventPrototype  (export function) :940
+
+## packages/zone.js/lib/common/fetch.ts
+[ ] patchFetch  (export function) :15
+
+## packages/zone.js/lib/common/promise.ts
+[ ] patchPromise  (export function) :12
+[ ] readableObjectToString  (function) :17
+[ ] handleUnhandledRejection  (function) :75
+[ ] isThenable  (function) :85
+[ ] forwardResolution  (function) :89
+[ ] forwardRejection  (function) :93
+[ ] makeResolver  (function) :108
+[ ] resolvePromise  (function) :137
+      -- Promise Resolution
+[ ] clearRejectedNoCatch  (function) :252
+[ ] scheduleResolveOrReject  (function) :274
+[ ] ZoneAwarePromise  (class) :326
+[ ] ZoneAwarePromise.toString  (method) :327
+[ ] ZoneAwarePromise.resolve  (method) :331
+[ ] ZoneAwarePromise.reject  (method) :338
+[ ] ZoneAwarePromise.withResolvers  (method) :342
+[ ] ZoneAwarePromise.any  (method) :355
+[ ] ZoneAwarePromise.race  (method) :397
+[ ] onResolve  (function) :404
+[ ] onReject  (function) :407
+[ ] ZoneAwarePromise.all  (method) :420
+[ ] ZoneAwarePromise.allSettled  (method) :424
+[ ] ZoneAwarePromise.allWithCallback  (method) :432
+[ ] ZoneAwarePromise.constructor  (ctor) :496
+[ ] ZoneAwarePromise.[Symbol.toStringTag]  (accessor) :520
+[ ] ZoneAwarePromise.[Symbol.species]  (accessor) :524
+[ ] ZoneAwarePromise.then  (method) :528
+[ ] ZoneAwarePromise.finally  (method) :560
+[ ] patchThen  (function) :589
+[ ] zoneify  (function) :614
+
+## packages/zone.js/lib/common/queue-microtask.ts
+[ ] patchQueueMicrotask  (export function) :13
+
+## packages/zone.js/lib/common/timers.ts
+[ ] patchTimer  (export function) :28
+[ ] scheduleTask  (function) :36
+[ ] clearTask  (function) :58
+
+## packages/zone.js/lib/common/to-string.ts
+[ ] patchToString  (export function) :12
+
+## packages/zone.js/lib/common/utils.ts
+[ ] wrapWithCurrentZone  (export function) :44
+[ ] scheduleMacroTaskWithCurrentZone  (export function) :48
+[ ] bindArguments  (export function) :68
+[ ] patchPrototype  (export function) :77
+[ ] isPropertyWritable  (export function) :98
+[ ] patchProperty  (export function) :197
+[ ] patchOnProperties  (export function) :302
+[ ] patchClass  (export function) :323
+      -- wrap some native API on `window`
+[ ] copySymbolProperties  (export function) :394
+[ ] setShouldCopySymbolProperties  (export function) :420
+[ ] patchMethod  (export function) :424
+[ ] patchMacroTask  (export function) :471
+      -- TODO: @JiaLiPassion, support cancel task later if necessary
+[ ] scheduleTask  (function) :478
+[ ] patchMicroTask  (export function) :510
+[ ] scheduleTask  (function) :517
+[ ] attachOriginToPatched  (export function) :542
+[ ] isFunction  (export function) :546
+[ ] isNumber  (export function) :550
+
+## packages/zone.js/lib/extra/bluebird.ts
+[ ] patchBluebird  (export function) :11
+
+## packages/zone.js/lib/extra/cordova.ts
+[ ] patchCordova  (export function) :11
+
+## packages/zone.js/lib/extra/electron.ts
+[ ] patchElectron  (export function) :11
+[ ] patchArguments  (function) :13
+
+## packages/zone.js/lib/extra/jsonp.ts
+[ ] patchJsonp  (export function) :11
+
+## packages/zone.js/lib/extra/socket-io.ts
+[ ] patchSocketIo  (export function) :11
+
+## packages/zone.js/lib/jasmine/jasmine.ts
+[ ] patchJasmine  (export function) :16
+[ ] __  (function) :20
+[ ] wrapDescribeInZone  (function) :173
+      -- Gets a function wrapping the body of a Jasmine `describe` block to execute in a synchronous-only zone.
+[ ] runInTestZone  (function) :182
+[ ] wrapTestInZone  (function) :211
+      -- Gets a function wrapping the body of a Jasmine `it/beforeEach/afterEach` block to execute in a ProxyZone zone. This will run in `testProxyZone`. The `testProxyZ
+[ ] ZoneQueueRunner  (function) :252
+
+## packages/zone.js/lib/jest/jest.ts
+[ ] patchJest  (export function) :14
+[ ] wrapDescribeFactoryInZone  (function) :43
+[ ] wrapTestFactoryInZone  (function) :53
+[ ] wrapDescribeInZone  (function) :66
+      -- Gets a function wrapping the body of a jest `describe` block to execute in a synchronous-only zone.
+[ ] wrapTestInZone  (function) :77
+      -- Gets a function wrapping the body of a jest `it/beforeEach/afterEach` block to execute in a ProxyZone zone. This will run in the `proxyZone`.
+[ ] isPatchingFakeTimer  (function) :156
+      -- check whether currently the test is inside fakeAsync()
+[ ] isInTestFunc  (function) :163
+      -- such as `describe/beforeEach`
+
+## packages/zone.js/lib/mocha/mocha.ts
+[ ] patchMocha  (export function) :13
+[ ] modifyArguments  (function) :54
+[ ] wrapDescribeInZone  (function) :75
+[ ] wrapTestInZone  (function) :85
+[ ] wrapSuiteInZone  (function) :101
+
+## packages/zone.js/lib/node/events.ts
+[ ] patchEvents  (export function) :12
+[ ] patchEventEmitterMethods  (function) :38
+
+## packages/zone.js/lib/node/fs.ts
+[ ] patchFs  (export function) :12
+
+## packages/zone.js/lib/node/main.ts
+[ ] rollupMain  (export function) :16
+
+## packages/zone.js/lib/node/node.ts
+[ ] patchNode  (export function) :22
+[ ] findProcessPromiseRejectionHandler  (function) :103
+      -- handle unhandled promise rejection
+
+## packages/zone.js/lib/node/node_util.ts
+[ ] patchNodeUtil  (export function) :18
+
+## packages/zone.js/lib/rxjs/rxjs-fake-async.ts
+[ ] patchRxJsFakeAsync  (export function) :13
+
+## packages/zone.js/lib/rxjs/rxjs.ts
+[ ] patchRxJs  (export function) :17
+
+## packages/zone.js/lib/testing/promise-testing.ts
+[ ] patchPromiseTesting  (export function) :11
+
+## packages/zone.js/lib/testing/zone-testing.ts
+[ ] rollupTesting  (export function) :21
+
+## packages/zone.js/lib/vitest/vitest.ts
+[ ] patchVitest  (export function) :48
+[ ] wrapDescribeInZone  (function) :76
+      -- Gets a function wrapping the body of a vitest `describe` block to execute in a synchronous-only zone.
+[ ] wrapTestInZone  (function) :91
+      -- Gets a function wrapping the body of a vitest `it/beforeEach/afterEach` block to execute in a ProxyZone zone. This will run in the `proxyZone`.
+[ ] patchFnWithModifiers  (function) :110
+      -- Patch functions with modifiers (i.e. `describe`/`it`).
+
+## packages/zone.js/lib/zone-impl.ts
+[ ] __symbol__  (export function) :766
+      -- __Zone_symbol_prefix can be set globally to override the default zone symbol prefix.
+[ ] initZone  (export function) :774
+[ ] mark  (function) :777
+[ ] performanceMeasure  (function) :780
+[ ] ZoneImpl  (class) :785
+[ ] ZoneImpl.assertZonePatched  (method) :788
+[ ] ZoneImpl.root  (accessor) :800
+[ ] ZoneImpl.current  (accessor) :808
+[ ] ZoneImpl.currentTask  (accessor) :812
+[ ] ZoneImpl.__load_patch  (method) :816
+[ ] ZoneImpl.parent  (accessor) :833
+[ ] ZoneImpl.name  (accessor) :837
+[ ] ZoneImpl.constructor  (ctor) :846
+[ ] ZoneImpl.get  (method) :857
+[ ] ZoneImpl.getZoneWith  (method) :862
+[ ] ZoneImpl.fork  (method) :873
+[ ] ZoneImpl.wrap  (method) :878
+[ ] ZoneImpl.run  (method) :889
+[ ] ZoneImpl.run  (method) :890
+[ ] ZoneImpl.runGuarded  (method) :904
+[ ] ZoneImpl.runGuarded  (method) :905
+[ ] ZoneImpl.runTask  (method) :925
+[ ] ZoneImpl.scheduleTask  (method) :985
+[ ] ZoneImpl.scheduleMicroTask  (method) :1023
+[ ] ZoneImpl.scheduleMacroTask  (method) :1034
+[ ] ZoneImpl.scheduleEventTask  (method) :1046
+[ ] ZoneImpl.cancelTask  (method) :1058
+[ ] ZoneImpl._updateTaskCount  (method) :1087
+[ ] _ZoneDelegate  (class) :1124
+[ ] _ZoneDelegate.zone  (accessor) :1125
+[ ] _ZoneDelegate.constructor  (ctor) :1169
+[ ] _ZoneDelegate.fork  (method) :1250
+[ ] _ZoneDelegate.intercept  (method) :1256
+[ ] _ZoneDelegate.invoke  (method) :1268
+[ ] _ZoneDelegate.handleError  (method) :1288
+[ ] _ZoneDelegate.scheduleTask  (method) :1299
+[ ] _ZoneDelegate.invokeTask  (method) :1324
+[ ] _ZoneDelegate.cancelTask  (method) :1337
+[ ] _ZoneDelegate.hasTask  (method) :1355
+[ ] _ZoneDelegate._updateTaskCount  (method) :1371
+[ ] ZoneTask  (class) :1390
+[ ] ZoneTask.constructor  (ctor) :1403
+[ ] ZoneTask.invokeTask  (method) :1431
+[ ] ZoneTask.zone  (accessor) :1450
+[ ] ZoneTask.state  (accessor) :1454
+[ ] ZoneTask.cancelScheduleRequest  (method) :1458
+[ ] ZoneTask._transitionTo  (method) :1462
+[ ] ZoneTask.toString  (method) :1479
+[ ] ZoneTask.toJSON  (method) :1489
+      -- call JSON.stringify(zoneTask)
+[ ] nativeScheduleMicroTask  (function) :1518
+[ ] scheduleMicroTask  (function) :1533
+[ ] drainMicroTaskQueueSynchronously  (function) :1552
+[ ] noop  (function) :1636
+
+## packages/zone.js/lib/zone-spec/async-test.ts
+[ ] AsyncTestZoneSpec  (class) :12
+[ ] AsyncTestZoneSpec.symbolParentUnresolved  (accessor) :16
+      -- changed for tests.
+[ ] AsyncTestZoneSpec.constructor  (ctor) :32
+[ ] AsyncTestZoneSpec.isUnresolvedChainedPromisePending  (method) :43
+[ ] AsyncTestZoneSpec._finishCallbackIfDone  (method) :47
+[ ] AsyncTestZoneSpec.patchPromiseForTest  (method) :86
+[ ] AsyncTestZoneSpec.unPatchPromiseForTest  (method) :96
+[ ] AsyncTestZoneSpec.onScheduleTask  (method) :112
+[ ] AsyncTestZoneSpec.onInvokeTask  (method) :126
+[ ] AsyncTestZoneSpec.onCancelTask  (method) :140
+[ ] AsyncTestZoneSpec.onInvoke  (method) :152
+      -- was scheduled/invoked/canceled.
+[ ] AsyncTestZoneSpec.onHandleError  (method) :184
+[ ] AsyncTestZoneSpec.onHasTask  (method) :199
+[ ] patchAsyncTest  (export function) :226
+[ ] runInTestZone  (function) :270
+
+## packages/zone.js/lib/zone-spec/fake-async-test.ts
+[ ] FakeDate  (function) :45
+      -- so we need to use function implementation here.
+[ ] Scheduler  (class) :81
+[ ] Scheduler.constructor  (ctor) :95
+[ ] Scheduler.getNextId  (method) :97
+[ ] Scheduler.getCurrentTickTime  (method) :108
+[ ] Scheduler.getFakeSystemTime  (method) :112
+[ ] Scheduler.setFakeBaseSystemTime  (method) :116
+[ ] Scheduler.getRealSystemTime  (method) :120
+[ ] Scheduler.scheduleFunction  (method) :124
+[ ] Scheduler.removeScheduledFunctionWithId  (method) :173
+[ ] Scheduler.removeAll  (method) :182
+[ ] Scheduler.getTimerCount  (method) :186
+[ ] Scheduler.tickToNext  (method) :190
+[ ] Scheduler.tick  (method) :207
+[ ] Scheduler.executeNextTask  (method) :280
+[ ] Scheduler.flushOnlyPendingTimers  (method) :293
+[ ] Scheduler.flush  (method) :305
+[ ] Scheduler.flushPeriodic  (method) :313
+[ ] Scheduler.flushNonPeriodic  (method) :325
+[ ] FakeAsyncTestZoneSpec  (class) :365
+[ ] FakeAsyncTestZoneSpec.assertInZone  (method) :366
+[ ] FakeAsyncTestZoneSpec.constructor  (ctor) :384
+[ ] FakeAsyncTestZoneSpec._fnAndFlush  (method) :397
+[ ] FakeAsyncTestZoneSpec._removeTimer  (method) :422
+[ ] FakeAsyncTestZoneSpec._dequeueTimer  (method) :429
+[ ] FakeAsyncTestZoneSpec._requeuePeriodicTimer  (method) :435
+[ ] FakeAsyncTestZoneSpec._dequeuePeriodicTimer  (method) :449
+[ ] FakeAsyncTestZoneSpec._setTimeout  (method) :455
+[ ] FakeAsyncTestZoneSpec._clearTimeout  (method) :466
+[ ] FakeAsyncTestZoneSpec._setInterval  (method) :471
+[ ] FakeAsyncTestZoneSpec._clearInterval  (method) :485
+[ ] FakeAsyncTestZoneSpec._resetLastErrorAndThrow  (method) :490
+[ ] FakeAsyncTestZoneSpec.getCurrentTickTime  (method) :497
+[ ] FakeAsyncTestZoneSpec.getFakeSystemTime  (method) :501
+[ ] FakeAsyncTestZoneSpec.setFakeBaseSystemTime  (method) :505
+[ ] FakeAsyncTestZoneSpec.getRealSystemTime  (method) :509
+[ ] FakeAsyncTestZoneSpec.patchDate  (method) :513
+[ ] FakeAsyncTestZoneSpec.resetDate  (method) :536
+[ ] FakeAsyncTestZoneSpec.checkTimerPatch  (method) :542
+[ ] FakeAsyncTestZoneSpec.lockDatePatch  (method) :557
+[ ] FakeAsyncTestZoneSpec.unlockDatePatch  (method) :561
+[ ] FakeAsyncTestZoneSpec.setTickMode  (method) :572
+      -- @experimental
+[ ] FakeAsyncTestZoneSpec.advanceUntilModeChanges  (method) :583
+[ ] FakeAsyncTestZoneSpec.newMacrotask  (method) :627
+      -- @return {!Promise<undefined>}
+[ ] FakeAsyncTestZoneSpec.tickToNext  (method) :659
+[ ] FakeAsyncTestZoneSpec.tick  (method) :677
+[ ] FakeAsyncTestZoneSpec.flushMicrotasks  (method) :692
+[ ] FakeAsyncTestZoneSpec.flush  (method) :707
+[ ] FakeAsyncTestZoneSpec.flushOnlyPendingTimers  (method) :717
+[ ] FakeAsyncTestZoneSpec.removeAllTimers  (method) :727
+[ ] FakeAsyncTestZoneSpec.getTimerCount  (method) :734
+[ ] FakeAsyncTestZoneSpec.onScheduleTask  (method) :744
+[ ] FakeAsyncTestZoneSpec.onCancelTask  (method) :838
+[ ] FakeAsyncTestZoneSpec.onInvoke  (method) :861
+[ ] FakeAsyncTestZoneSpec.findMacroTaskOption  (method) :880
+[ ] FakeAsyncTestZoneSpec.onHandleError  (method) :893
+[ ] getProxyZoneSpec  (function) :908
+[ ] resetFakeAsyncZone  (export function) :921
+      -- Clears out the shared fake async zone for a test. To be called in a global `beforeEach`.
+[ ] fakeAsync  (export function) :951
+      -- Wraps a function to be executed in the fakeAsync zone: - microtasks are manually executed by calling `flushMicrotasks()`, - timers are synchronous, `tick()` sim
+[ ] _getFakeAsyncZoneSpec  (function) :1012
+[ ] tick  (export function) :1034
+      -- Simulates the asynchronous passage of time for the timers in the fakeAsync zone. The microtasks queue is drained at the very start of this function and after an
+[ ] flush  (export function) :1048
+      -- Simulates the asynchronous passage of time for the timers in the fakeAsync zone by draining the macrotask queue until it is empty. The returned value is the mil
+[ ] discardPeriodicTasks  (export function) :1057
+      -- Discard all remaining periodic tasks.
+[ ] withProxyZone  (export function) :1075
+      -- Wraps a function to be executed in a shared ProxyZone. If no shared ProxyZone exists, one is created and reused for subsequent calls. Useful for wrapping test s
+[ ] getOrCreateRootProxy  (function) :1091
+[ ] flushMicrotasks  (export function) :1113
+      -- Flush any pending microtasks.
+[ ] patchFakeAsyncTest  (export function) :1117
+[ ] safeAsync  (function) :1150
+[ ] hostReportError  (function) :1158
+
+## packages/zone.js/lib/zone-spec/long-stack-trace.ts
+[ ] patchLongStackTrace  (export function) :15
+[ ] LongStackTrace  (class) :23
+[ ] getStacktraceWithUncaughtError  (function) :28
+[ ] getStacktraceWithCaughtError  (function) :32
+[ ] getFrames  (function) :50
+[ ] addErrorStack  (function) :54
+[ ] renderLongStackTrace  (function) :65
+[ ] stackTracesEnabled  (function) :91
+      -- set stackTraceLimit to 0, https://github.com/angular/zone.js/issues/698
+[ ] captureStackTraces  (function) :166
+[ ] computeIgnoreFrames  (function) :173
+
+## packages/zone.js/lib/zone-spec/proxy.ts
+[ ] throwProxyZoneError  (export function) :13
+[ ] ProxyZoneSpec  (export class) :27
+[ ] ProxyZoneSpec.get  (method) :40
+[ ] ProxyZoneSpec.isLoaded  (method) :44
+[ ] ProxyZoneSpec.assertPresent  (method) :48
+[ ] ProxyZoneSpec.constructor  (ctor) :56
+[ ] ProxyZoneSpec.setDelegate  (method) :60
+[ ] ProxyZoneSpec.getDelegate  (method) :79
+[ ] ProxyZoneSpec.resetDelegate  (method) :83
+[ ] ProxyZoneSpec.tryTriggerHasTask  (method) :88
+[ ] ProxyZoneSpec.removeFromTasks  (method) :97
+[ ] ProxyZoneSpec.getAndClearPendingTasksInfo  (method) :109
+[ ] ProxyZoneSpec.onFork  (method) :130
+[ ] ProxyZoneSpec.onIntercept  (method) :143
+[ ] ProxyZoneSpec.onInvoke  (method) :163
+[ ] ProxyZoneSpec.onHandleError  (method) :188
+[ ] ProxyZoneSpec.onScheduleTask  (method) :201
+[ ] ProxyZoneSpec.onInvokeTask  (method) :217
+[ ] ProxyZoneSpec.onCancelTask  (method) :243
+[ ] ProxyZoneSpec.onHasTask  (method) :260
+[ ] patchProxyZoneSpec  (export function) :270
+
+## packages/zone.js/lib/zone-spec/sync-test.ts
+[ ] patchSyncTest  (export function) :11
+[ ] SyncTestZoneSpec  (class) :12
+[ ] SyncTestZoneSpec.constructor  (ctor) :15
+[ ] SyncTestZoneSpec.onScheduleTask  (method) :23
+
+## packages/zone.js/lib/zone-spec/task-tracking.ts
+[ ] TaskTrackingZoneSpec  (export class) :17
+      -- A `TaskTrackingZoneSpec` allows one to track all outstanding Tasks. This is useful in tests. For example to see which tasks are preventing a test from completin
+[ ] TaskTrackingZoneSpec.get  (method) :24
+[ ] TaskTrackingZoneSpec.getTasksFor  (method) :28
+[ ] TaskTrackingZoneSpec.onScheduleTask  (method) :40
+[ ] TaskTrackingZoneSpec.onCancelTask  (method) :52
+[ ] TaskTrackingZoneSpec.onInvokeTask  (method) :68
+[ ] TaskTrackingZoneSpec.clearEvents  (method) :88
+[ ] patchTaskTracking  (export function) :95
+
+## packages/zone.js/lib/zone-spec/wtf.ts
+[ ] patchWtf  (export function) :18
+[ ] WtfZoneSpec  (class) :53
+[ ] WtfZoneSpec.onFork  (method) :64
+[ ] WtfZoneSpec.onInvoke  (method) :75
+[ ] WtfZoneSpec.onHandleError  (method) :97
+[ ] WtfZoneSpec.onScheduleTask  (method) :106
+[ ] WtfZoneSpec.onInvokeTask  (method) :124
+[ ] WtfZoneSpec.onCancelTask  (method) :145
+[ ] shallowObj  (function) :164
+[ ] zonePathName  (function) :186
+
+## packages/zone.js/lib/zone.ts
+[ ] loadZone  (export function) :70
+
+## packages/zone.js/tools/release.mts
+[ ] main  (function) :35
+[ ] createPrWorkflow  (function) :64
+      -- Workflow for creating a PR for release. 1. Clean node_modules and install. 2. Determine previous tag. 3. Update version in package.json. 4. Generate changelog. 
+[ ] cutReleaseWorkflow  (function) :165
+      -- Workflow for cutting a release. 1. Checkout upstream/main. 2. Find SHA of the release commit. 3. Checkout SHA. 4. Build. 5. Publish. 6. Tag and push.
+[ ] cleanAndInstall  (function) :230
+[ ] checkCleanWorkingDirectory  (function) :236
+[ ] getCurrentVersion  (function) :243
+[ ] getNewVersion  (function) :248
+[ ] getPreviousTag  (function) :269
+[ ] updatingPackageJsonVersion  (function) :289
+[ ] ensureNpmLogin  (function) :295
+[ ] execAndStream  (function) :306
+[ ] ensureGithubToken  (function) :325
+[ ] getForkRemoteName  (function) :338
+[ ] getRepoDetails  (function) :376

@@ -1,0 +1,948 @@
+INVENTORY FUNGSI :: router
+Total simbol: 602 | file: 50
+Rincian: function=203, class=77, method=212, accessor=55, ctor=55
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## packages/router/src/apply_redirects.ts
+[ ] NoMatch  (export class) :20
+[ ] NoMatch.constructor  (ctor) :23
+[ ] AbsoluteRedirect  (export class) :34
+[ ] AbsoluteRedirect.constructor  (ctor) :35
+[ ] namedOutletsRedirect  (export function) :45
+[ ] canLoadFails  (export function) :53
+[ ] ApplyRedirects  (export class) :61
+[ ] ApplyRedirects.constructor  (ctor) :62
+[ ] ApplyRedirects.lineralizeSegments  (method) :67
+[ ] ApplyRedirects.applyRedirectCommands  (method) :84
+[ ] ApplyRedirects.applyRedirectCreateUrlTree  (method) :109
+[ ] ApplyRedirects.createQueryParams  (method) :123
+[ ] ApplyRedirects.createSegmentGroup  (method) :137
+[ ] ApplyRedirects.createSegments  (method) :154
+[ ] ApplyRedirects.findPosParam  (method) :167
+[ ] ApplyRedirects.findOrReturn  (method) :182
+[ ] getRedirectResult  (function) :195
+
+## packages/router/src/components/empty_outlet.ts
+[ ] ɵEmptyOutletComponent  (export class) :32
+[ ] standardizeConfig  (export function) :37
+      -- Makes a copy of the config and adds any default required properties.
+
+## packages/router/src/create_router_state.ts
+[ ] createRouterState  (export function) :20
+[ ] createNode  (function) :35
+[ ] createOrReuseChildren  (function) :70
+[ ] createActivatedRoute  (function) :86
+
+## packages/router/src/create_url_tree.ts
+[ ] createUrlTreeFromSnapshot  (export function) :79
+      -- Creates a `UrlTree` relative to an `ActivatedRouteSnapshot`. If the path is static, can be the literal URL string. For a dynamic path, pass an array of path seg
+[ ] createSegmentGroupFromRoute  (export function) :96
+[ ] createSegmentGroupFromRouteRecursive  (function) :99
+[ ] createUrlTreeFromSegmentGroup  (export function) :119
+[ ] isMatrixParams  (function) :150
+[ ] isCommandWithOutlets  (function) :158
+      -- Determines if a given command has an `outlets` map. When we encounter a command with an outlets k/v map, we need to apply each outlet individually to the existi
+[ ] normalizeQueryParams  (function) :172
+      -- Normalizes a query parameter value by using the `UrlSerializer` to serialize then parse the value. This ensures that the value is consistent between parsing a U
+[ ] tree  (function) :182
+[ ] replaceSegment  (function) :223
+      -- Replaces the `oldSegment` which is located in some child of the `current` with the `newSegment`. This also has the effect of creating new `UrlSegmentGroup` copi
+[ ] Navigation  (class) :240
+[ ] Navigation.constructor  (ctor) :241
+[ ] Navigation.toRoot  (method) :264
+[ ] computeNavigation  (function) :270
+      -- Transforms commands to a normalized `Navigation`
+[ ] Position  (class) :321
+[ ] Position.constructor  (ctor) :322
+[ ] findStartingPositionForTargetGroup  (function) :329
+[ ] createPositionApplyingDoubleDots  (function) :354
+[ ] getOutlets  (function) :376
+[ ] updateSegmentGroup  (function) :384
+[ ] updateSegmentGroupChildren  (function) :414
+[ ] prefixedWith  (function) :478
+[ ] createNewSegmentGroup  (function) :512
+[ ] createNewSegmentChildren  (function) :548
+[ ] stringify  (function) :563
+[ ] compare  (function) :569
+
+## packages/router/src/directives/router_link.ts
+[ ] ReactiveRouterState  (export class) :49
+      -- breaking tests which have mocked the Router.
+[ ] ReactiveRouterState.constructor  (ctor) :57
+[ ] ReactiveRouterState.updateState  (method) :66
+[ ] RouterLink  (export class) :190
+[ ] RouterLink.href  (accessor) :205
+      -- Represents an `href` attribute value applied to a host element, when a host element is an `<a>`/`<area>` tag or a compatible custom element. For other tags, the
+[ ] RouterLink.href  (accessor) :209
+      -- @deprecated
+[ ] RouterLink.target  (accessor) :221
+[ ] RouterLink.queryParams  (accessor) :240
+[ ] RouterLink.fragment  (accessor) :255
+[ ] RouterLink.queryParamsHandling  (accessor) :268
+[ ] RouterLink.state  (accessor) :281
+[ ] RouterLink.info  (accessor) :294
+[ ] RouterLink.relativeTo  (accessor) :310
+[ ] RouterLink.preserveFragment  (accessor) :324
+[ ] RouterLink.skipLocationChange  (accessor) :338
+[ ] RouterLink.replaceUrl  (accessor) :352
+[ ] RouterLink.constructor  (ctor) :376
+[ ] RouterLink.setTabIndexIfNotOnNativeEl  (method) :425
+      -- Modifies the tab index if there was not a tabindex attribute on the element during instantiation.
+[ ] RouterLink.ngOnChanges  (method) :435
+      -- change.
+[ ] RouterLink.routerLink  (accessor) :455
+      -- Commands to pass to {@link Router#createUrlTree} or a `UrlTree`.   - **array**: commands to pass to {@link Router#createUrlTree}.   - **string**: shorthand for 
+[ ] RouterLink.onClick  (method) :479
+[ ] RouterLink.ngOnDestroy  (method) :525
+      -- @docs-private
+[ ] RouterLink.applyAttributeValue  (method) :527
+[ ] RouterLink.urlTree  (accessor) :574
+[ ] RouterLink.computeHref  (method) :578
+
+## packages/router/src/directives/router_link_active.ts
+[ ] RouterLinkActive  (export class) :113
+[ ] RouterLinkActive.isActive  (accessor) :121
+[ ] RouterLinkActive.constructor  (ctor) :170
+[ ] RouterLinkActive.ngAfterContentInit  (method) :184
+      -- @docs-private
+[ ] RouterLinkActive.subscribeToEachLinkOnChanges  (method) :194
+[ ] RouterLinkActive.routerLinkActive  (accessor) :209
+[ ] RouterLinkActive.ngOnChanges  (method) :219
+      -- @docs-private
+[ ] RouterLinkActive.ngOnDestroy  (method) :223
+      -- @docs-private
+[ ] RouterLinkActive.update  (method) :228
+[ ] RouterLinkActive.isLinkActive  (method) :261
+[ ] RouterLinkActive.hasActiveLinks  (method) :292
+[ ] isActiveMatchOptions  (function) :301
+      -- Use instead of `'paths' in options` to be compatible with property renaming
+
+## packages/router/src/directives/router_outlet.ts
+[ ] RouterOutlet  (export class) :212
+[ ] RouterOutlet.activatedComponentRef  (accessor) :215
+      -- @internal
+[ ] RouterOutlet.ngOnChanges  (method) :253
+      -- @docs-private
+[ ] RouterOutlet.ngOnDestroy  (method) :273
+      -- @docs-private
+[ ] RouterOutlet.isTrackedInParentContexts  (method) :281
+[ ] RouterOutlet.ngOnInit  (method) :286
+      -- @docs-private
+[ ] RouterOutlet.initializeOutletWithName  (method) :290
+[ ] RouterOutlet.isActivated  (accessor) :310
+[ ] RouterOutlet.component  (accessor) :318
+[ ] RouterOutlet.activatedRoute  (accessor) :327
+[ ] RouterOutlet.activatedRouteData  (accessor) :336
+[ ] RouterOutlet.detach  (method) :346
+      -- Called when the `RouteReuseStrategy` instructs to detach the subtree
+[ ] RouterOutlet.attach  (method) :363
+      -- Called when the `RouteReuseStrategy` instructs to re-attach a previously detached subtree
+[ ] RouterOutlet.deactivate  (method) :371
+[ ] RouterOutlet.activateWith  (method) :381
+[ ] OutletInjector  (class) :414
+[ ] OutletInjector.constructor  (ctor) :415
+[ ] OutletInjector.get  (method) :422
+[ ] RoutedComponentInputBinder  (export class) :459
+      -- Injectable used as a tree-shakable provider for opting in to binding router data to component inputs. The RouterOutlet registers itself with this service when a
+[ ] RoutedComponentInputBinder.constructor  (ctor) :463
+[ ] RoutedComponentInputBinder.bindActivatedRouteToOutletComponent  (method) :467
+[ ] RoutedComponentInputBinder.unsubscribeFromRouteData  (method) :472
+[ ] RoutedComponentInputBinder.subscribeToRouteData  (method) :478
+
+## packages/router/src/events.ts
+[ ] RouterEvent  (export class) :77
+      -- Base for events the router goes through, as opposed to events tied to a specific route. Fired one time for any given navigation. The following code shows how a 
+[ ] RouterEvent.constructor  (ctor) :78
+[ ] NavigationStart  (export class) :91
+      -- An event triggered when a navigation starts.
+[ ] NavigationStart.constructor  (ctor) :123
+[ ] NavigationStart.toString  (method) :139
+      -- @docs-private
+[ ] NavigationEnd  (export class) :153
+      -- An event triggered when a navigation ends successfully.
+[ ] NavigationEnd.constructor  (ctor) :156
+[ ] NavigationEnd.toString  (method) :168
+      -- @docs-private
+[ ] NavigationCancel  (export class) :235
+      -- An event triggered when a navigation is canceled, directly or indirectly. This can happen for several reasons including when a route guard returns `false` or in
+[ ] NavigationCancel.constructor  (ctor) :238
+[ ] NavigationCancel.toString  (method) :259
+      -- @docs-private
+[ ] isRedirectingEvent  (export function) :264
+[ ] NavigationSkipped  (export class) :280
+      -- An event triggered when a navigation is skipped. This can happen for a couple reasons including onSameUrlHandling is set to `ignore` and the navigation URL is n
+[ ] NavigationSkipped.constructor  (ctor) :283
+[ ] NavigationError  (export class) :313
+      -- An event triggered when a navigation fails due to an unexpected error.
+[ ] NavigationError.constructor  (ctor) :316
+[ ] NavigationError.toString  (method) :335
+      -- @docs-private
+[ ] RoutesRecognized  (export class) :345
+      -- An event triggered when routes are recognized.
+[ ] RoutesRecognized.constructor  (ctor) :348
+[ ] RoutesRecognized.toString  (method) :362
+      -- @docs-private
+[ ] GuardsCheckStart  (export class) :374
+      -- An event triggered at the start of the Guard phase of routing.
+[ ] GuardsCheckStart.constructor  (ctor) :377
+[ ] GuardsCheckStart.toString  (method) :391
+      -- @docs-private
+[ ] GuardsCheckEnd  (export class) :403
+      -- An event triggered at the end of the Guard phase of routing.
+[ ] GuardsCheckEnd.constructor  (ctor) :406
+[ ] GuardsCheckEnd.toString  (method) :422
+      -- @docs-private
+[ ] ResolveStart  (export class) :437
+      -- An event triggered at the start of the Resolve phase of routing. Runs in the "resolve" phase whether or not there is anything to resolve. In future, may change 
+[ ] ResolveStart.constructor  (ctor) :440
+[ ] ResolveStart.toString  (method) :454
+      -- @docs-private
+[ ] ResolveEnd  (export class) :465
+      -- An event triggered at the end of the Resolve phase of routing.
+[ ] ResolveEnd.constructor  (ctor) :468
+[ ] ResolveEnd.toString  (method) :482
+      -- @docs-private
+[ ] RouteConfigLoadStart  (export class) :494
+      -- An event triggered before lazy loading a route configuration.
+[ ] RouteConfigLoadStart.constructor  (ctor) :497
+[ ] RouteConfigLoadStart.toString  (method) :503
+      -- @docs-private
+[ ] RouteConfigLoadEnd  (export class) :515
+      -- An event triggered when a route has been lazy loaded.
+[ ] RouteConfigLoadEnd.constructor  (ctor) :518
+[ ] RouteConfigLoadEnd.toString  (method) :524
+      -- @docs-private
+[ ] ChildActivationStart  (export class) :537
+      -- An event triggered at the start of the child-activation part of the Resolve phase of routing.
+[ ] ChildActivationStart.constructor  (ctor) :540
+[ ] ChildActivationStart.toString  (method) :546
+      -- @docs-private
+[ ] ChildActivationEnd  (export class) :559
+      -- An event triggered at the end of the child-activation part of the Resolve phase of routing.
+[ ] ChildActivationEnd.constructor  (ctor) :562
+[ ] ChildActivationEnd.toString  (method) :568
+      -- @docs-private
+[ ] ActivationStart  (export class) :582
+      -- An event triggered at the start of the activation part of the Resolve phase of routing.
+[ ] ActivationStart.constructor  (ctor) :585
+[ ] ActivationStart.toString  (method) :591
+      -- @docs-private
+[ ] ActivationEnd  (export class) :605
+      -- An event triggered at the end of the activation part of the Resolve phase of routing.
+[ ] ActivationEnd.constructor  (ctor) :608
+[ ] ActivationEnd.toString  (method) :614
+      -- @docs-private
+[ ] Scroll  (export class) :625
+      -- An event triggered by scrolling.
+[ ] Scroll.constructor  (ctor) :628
+[ ] Scroll.toString  (method) :643
+      -- @docs-private
+[ ] BeforeActivateRoutes  (export class) :649
+[ ] BeforeRoutesRecognized  (export class) :650
+[ ] RedirectRequest  (export class) :651
+[ ] RedirectRequest.constructor  (ctor) :652
+[ ] isPublicRouterEvent  (export function) :658
+[ ] stringifyEvent  (export function) :718
+
+## packages/router/src/models.ts
+[ ] RedirectCommand  (export class) :120
+      -- Can be returned by a `Router` guard to instruct the `Router` to redirect rather than continue processing the path of the in-flight navigation. The `redirectTo` 
+[ ] RedirectCommand.constructor  (ctor) :121
+
+## packages/router/src/navigation_canceling_error.ts
+[ ] redirectingNavigationError  (export function) :25
+[ ] navigationCancelingError  (export function) :41
+[ ] isRedirectingNavigationCancelingError  (export function) :51
+[ ] isNavigationCancelingError  (export function) :60
+
+## packages/router/src/navigation_transition.ts
+[ ] NavigationTransitions  (export class) :342
+[ ] NavigationTransitions.hasRequestedNavigation  (accessor) :377
+[ ] NavigationTransitions.constructor  (ctor) :393
+[ ] NavigationTransitions.complete  (method) :403
+[ ] NavigationTransitions.handleNavigationRequest  (method) :407
+[ ] NavigationTransitions.setupNavigations  (method) :444
+[ ] NavigationTransitions.cancelNavigationTransition  (method) :990
+[ ] NavigationTransitions.isUpdatingInternalState  (method) :1010
+      -- currently set to.
+[ ] NavigationTransitions.isUpdatedBrowserUrl  (method) :1028
+      -- to somewhere not displayed in the URL bar and we will update the URL bar if navigation succeeds).
+[ ] isBrowserTriggeredNavigation  (export function) :1045
+[ ] discardNewActivatedRoutes  (function) :1049
+
+## packages/router/src/operators/activate_routes.ts
+[ ] ActivateRoutes  (export class) :16
+[ ] ActivateRoutes.constructor  (ctor) :17
+[ ] ActivateRoutes.activate  (method) :25
+[ ] ActivateRoutes.deactivateChildRoutes  (method) :35
+      -- De-activate the child route that are not re-used for the future state
+[ ] ActivateRoutes.deactivateRoutes  (method) :55
+[ ] ActivateRoutes.deactivateRouteAndItsChildren  (method) :83
+[ ] ActivateRoutes.detachAndStoreRouteSubtree  (method) :96
+[ ] ActivateRoutes.deactivateRouteAndOutlet  (method) :115
+[ ] ActivateRoutes.activateChildRoutes  (method) :150
+[ ] ActivateRoutes.activateRoutes  (method) :165
+
+## packages/router/src/operators/check_guards.ts
+[ ] checkGuards  (export function) :56
+[ ] runCanDeactivateChecks  (function) :80
+[ ] runCanActivateChecks  (function) :93
+[ ] fireActivationStart  (function) :121
+      -- This should fire off `ActivationStart` events for each route being activated at this level. In other words, if you're activating `a` and `b` below, `path` will 
+[ ] fireChildActivationStart  (function) :139
+      -- This should fire off `ChildActivationStart` events for each route being activated at this level. In other words, if you're activating `a` and `b` below, `path` 
+[ ] runCanActivate  (function) :149
+[ ] runCanActivateChild  (function) :174
+[ ] runCanDeactivate  (function) :209
+[ ] runCanLoadGuards  (export function) :230
+[ ] redirectIfUrlTree  (function) :254
+[ ] runCanMatchGuards  (export function) :265
+
+## packages/router/src/operators/prioritized_guard_value.ts
+[ ] prioritizedGuardValue  (export function) :18
+[ ] isRedirect  (function) :47
+
+## packages/router/src/operators/recognize.ts
+[ ] recognize  (export function) :19
+
+## packages/router/src/operators/resolve_data.ts
+[ ] resolveData  (export function) :28
+[ ] flattenRouteTree  (function) :74
+      --  Returns the `ActivatedRouteSnapshot` tree as an array, using DFS to traverse the route tree.
+[ ] runResolve  (function) :79
+[ ] resolveNode  (function) :101
+[ ] getResolver  (function) :129
+
+## packages/router/src/operators/setup_activated_route_injectors.ts
+[ ] setupActivatedRouteInjectors  (export function) :16
+[ ] processRoute  (function) :43
+[ ] setupNewActivatedRouteInjector  (function) :57
+
+## packages/router/src/operators/switch_tap.ts
+[ ] switchTap  (export function) :18
+      -- Perform a side effect through a switchMap for every emission on the source Observable, but return an Observable that is identical to the source. It's essentiall
+
+## packages/router/src/page_title_strategy.ts
+[ ] TitleStrategy  (export class) :39
+      -- Provides a strategy for setting the page title after a router navigation. The built-in implementation traverses the router state snapshot and finds the deepest 
+[ ] TitleStrategy.updateTitle  (method) :41
+      -- Performs the application title update.
+[ ] TitleStrategy.buildTitle  (method) :46
+[ ] TitleStrategy.getResolvedTitleForRoute  (method) :60
+      -- Given an `ActivatedRouteSnapshot`, returns the final value of the `Route.title` property, which can either be a static string or a resolved value.
+[ ] DefaultTitleStrategy  (export class) :69
+      -- The default `TitleStrategy` used by the router that updates the title using the `Title` service.
+[ ] DefaultTitleStrategy.constructor  (ctor) :70
+[ ] DefaultTitleStrategy.updateTitle  (method) :79
+      -- Sets the title of the browser to the given value.
+
+## packages/router/src/provide_router.ts
+[ ] provideRouter  (export function) :106
+      -- Sets up providers necessary to enable `Router` functionality for the application. Allows to configure a set of routes as well as extra features that should be e
+[ ] rootRoute  (export function) :122
+[ ] routerFeature  (function) :139
+      -- Helper function to create an object that represents a Router feature.
+[ ] withInMemoryScrolling  (export function) :181
+      -- Enables customizable scrolling behavior for router navigations. Basic example of how you can enable scrolling feature: ```ts const appRoutes: Routes = []; boots
+[ ] withExperimentalPlatformNavigation  (export function) :246
+      -- Enables interop with the browser's `Navigation` API for router navigations. CRITICAL: This feature is _highly_ experimental and should not be used in production
+[ ] getBootstrapListener  (export function) :273
+[ ] withEnabledBlockingInitialNavigation  (export function) :395
+      -- Configures initial navigation to start before the root component is created. The bootstrap is blocked until the initial navigation is complete. This should be s
+[ ] withDisabledInitialNavigation  (export function) :469
+      -- Disables initial navigation. Use if there is a reason to have more control over when the router starts its initial navigation due to some complex initialization
+[ ] withDebugTracing  (export function) :513
+      -- Enables logging of all internal navigation events to the console. Extra logging might be useful for debugging purposes to inspect Router event sequence. Basic e
+[ ] withPreloading  (export function) :583
+      -- Allows to configure a preloading strategy to use. The strategy is configured by providing a reference to a class that implements a `PreloadingStrategy`. Basic e
+[ ] withRouterConfig  (export function) :631
+      -- Allows to provide extra parameters to configure Router. Basic example of how you can provide extra configuration options: ```ts const appRoutes: Routes = []; bo
+[ ] withHashLocation  (export function) :670
+      -- Provides the location strategy that uses the URL fragment instead of the history API. Basic example of how you can use the hash location option: ```ts const app
+[ ] withNavigationErrorHandler  (export function) :722
+      -- Provides a function which is called when a navigation error occurs. This function is run inside application's [injection context](guide/di/dependency-injection-
+[ ] withExperimentalAutoCleanupInjectors  (export function) :760
+      -- Enables automatic destruction of unused route injectors. When enabled, the router will automatically destroy `EnvironmentInjector`s associated with `Route`s tha
+[ ] withComponentInputBinding  (export function) :839
+      -- Enables binding information from the `Router` state directly to the inputs of the component in `Route` configurations. Can also accept an `ComponentInputBinding
+[ ] withViewTransitions  (export function) :877
+      -- Enables view transitions in the Router by running the route activation and deactivation inside of `document.startViewTransition`. Note: The View Transitions API
+[ ] withActivatedRouteInjectors  (export function) :893
+
+## packages/router/src/recognize.ts
+[ ] NoLeftoversInUrl  (class) :44
+      -- Class used to indicate there were no additional route config matches but that all segments of the URL were consumed during matching so the route was URL matched
+[ ] recognize  (export function) :46
+[ ] Recognizer  (export class) :70
+[ ] Recognizer.constructor  (ctor) :75
+[ ] Recognizer.noMatchError  (method) :88
+[ ] Recognizer.recognize  (method) :97
+[ ] Recognizer.match  (method) :117
+[ ] Recognizer.processSegmentGroup  (method) :157
+[ ] Recognizer.processChildren  (method) :188
+      -- Matches every child outlet in the `segmentGroup` to a `Route` in the config. Returns `null` if we cannot find a match for _any_ of the children.     config.
+[ ] Recognizer.processSegment  (method) :235
+[ ] Recognizer.processSegmentAgainstRoute  (method) :270
+[ ] Recognizer.expandSegmentAgainstRouteUsingRedirect  (method) :324
+[ ] Recognizer.createSnapshot  (method) :377
+[ ] Recognizer.matchSegmentAgainstRoute  (method) :402
+[ ] Recognizer.getChildConfig  (method) :494
+[ ] sortActivatedRouteSnapshots  (function) :534
+[ ] hasEmptyPathConfig  (function) :542
+[ ] mergeEmptyPathMatches  (function) :552
+      -- Finds `TreeNode`s with matching empty path route configs and merges them into `TreeNode` with the children from each duplicate. This is necessary because differ
+[ ] checkOutletNameUniqueness  (function) :586
+[ ] getData  (function) :603
+[ ] getResolve  (function) :607
+
+## packages/router/src/route_injector_cleanup.ts
+[ ] routeInjectorCleanup  (export function) :28
+[ ] collectDescendants  (function) :56
+[ ] destroyUnusedInjectors  (function) :66
+
+## packages/router/src/route_reuse_strategy.ts
+[ ] destroyDetachedRouteHandle  (export function) :48
+      -- Destroys the component associated with a `DetachedRouteHandle`. This function should be used when a `RouteReuseStrategy` decides to drop a stored handle and wan
+[ ] RouteReuseStrategy  (export class) :74
+      -- Provides a way to customize when activated routes get reused.
+[ ] RouteReuseStrategy.shouldDetach  (method) :76
+      -- Determines if this route (and its subtree) should be detached to be reused later
+[ ] RouteReuseStrategy.store  (method) :83
+      -- Stores the detached route. Storing a `null` value should erase the previously stored value.
+[ ] RouteReuseStrategy.shouldAttach  (method) :86
+      -- Determines if this route (and its subtree) should be reattached
+[ ] RouteReuseStrategy.retrieve  (method) :89
+      -- Retrieves the previously stored route
+[ ] RouteReuseStrategy.shouldReuseRoute  (method) :92
+      -- Determines if a route should be reused
+[ ] BaseRouteReuseStrategy  (export class) :112
+      -- This base route reuse strategy only reuses routes when the matched router configs are identical. This prevents components from being destroyed and recreated whe
+[ ] BaseRouteReuseStrategy.shouldDetach  (method) :117
+[ ] BaseRouteReuseStrategy.store  (method) :124
+      -- A no-op; the route is never stored since this strategy never detaches routes for later re-use.
+[ ] BaseRouteReuseStrategy.shouldAttach  (method) :127
+      -- Returns `false`, meaning the route (and its subtree) is never reattached
+[ ] BaseRouteReuseStrategy.retrieve  (method) :132
+      -- Returns `null` because this strategy does not store routes for later re-use.
+[ ] BaseRouteReuseStrategy.shouldReuseRoute  (method) :141
+      -- Determines if a route should be reused. This strategy returns `true` when the future route config and current route config are identical.
+[ ] BaseRouteReuseStrategy.shouldDestroyInjector  (method) :154
+      -- Determines if the injector for the given route should be destroyed. This method is called by the router when the `RouteReuseStrategy` is destroyed. If this meth
+[ ] DefaultRouteReuseStrategy  (export class) :160
+
+## packages/router/src/router.ts
+[ ] Router  (export class) :88
+      -- A service that facilitates navigation among views and URL manipulation capabilities. This service is provided in the root scope and configured with [provideRout
+[ ] Router.currentUrlTree  (accessor) :89
+[ ] Router.rawUrlTree  (accessor) :92
+[ ] Router.events  (accessor) :118
+      -- An event stream for routing events.
+[ ] Router.routerState  (accessor) :128
+      -- The current state of routing in this NgModule.
+[ ] Router.constructor  (ctor) :179
+[ ] Router.subscribeToNavigationEvents  (method) :193
+[ ] Router.resetRootComponentType  (method) :258
+      -- @internal
+[ ] Router.initialNavigation  (method) :268
+      -- Sets up the location change listener and performs the initial navigation.
+[ ] Router.setUpLocationChangeListener  (method) :285
+      -- Sets up the location change listener. This listener detects navigations triggered from outside the Router (the browser back/forward buttons, for example) and sc
+[ ] Router.navigateToSyncWithBrowser  (method) :304
+      -- Schedules a router navigation to synchronize Router state with the browser state. This is done as a response to a popstate event and the initial navigation. The
+[ ] Router.url  (accessor) :350
+      -- The current URL.
+[ ] Router.getCurrentNavigation  (method) :360
+      -- Returns the current `Navigation` object when the router is navigating, and `null` when idle.
+[ ] Router.lastSuccessfulNavigation  (accessor) :368
+      -- The `Navigation` object of the most recent navigation to succeed and `null` if there     has not been a successful navigation yet.
+[ ] Router.resetConfig  (method) :388
+      -- Resets the route configuration used for navigation and generating links. ```ts router.resetConfig([  { path: 'team/:id', component: TeamCmp, children: [    { pa
+[ ] Router.ngOnDestroy  (method) :395
+      -- @docs-private
+[ ] Router.dispose  (method) :400
+      -- Disposes of the router.
+[ ] Router.createUrlTree  (method) :462
+      -- Appends URL segments to the current URL tree to create a new URL tree. If the path is static, can be the literal URL string. For a dynamic path, pass an array o
+[ ] Router.navigateByUrl  (method) :536
+      -- Navigates to a view using an absolute route path.     current URL. to 'false' when navigation fails, or is rejected on error. The following calls request naviga
+[ ] Router.navigate  (method) :578
+      -- Navigate based on the provided array of commands and a starting point. If no starting route is provided, the navigation is absolute. If the path is static, can 
+[ ] Router.serializeUrl  (method) :587
+      -- Serializes a `UrlTree` into a string
+[ ] Router.parseUrl  (method) :592
+      -- Parses a string into a `UrlTree`
+[ ] Router.isActive  (method) :617
+      -- Returns whether the url is activated. Use `IsActiveMatchOptions` instead. - The equivalent `IsActiveMatchOptions` for `true` is `{paths: 'exact', queryParams: '
+[ ] Router.isActive  (method) :622
+[ ] Router.isActive  (method) :624
+      -- @internal
+[ ] Router.isActive  (method) :629
+[ ] Router.removeEmptyProps  (method) :646
+[ ] Router.scheduleNavigation  (method) :655
+[ ] validateCommands  (function) :713
+
+## packages/router/src/router_config_loader.ts
+[ ] RouterConfigLoader  (export class) :43
+[ ] RouterConfigLoader.loadComponent  (method) :50
+[ ] RouterConfigLoader.loadChildren  (method) :82
+[ ] loadChildren  (export function) :121
+      -- Executes a `route.loadChildren` callback and converts the result to an array of child routes and an injector if that callback returned a module. This function i
+[ ] maybeResolveResources  (function) :166
+
+## packages/router/src/router_devtools.ts
+[ ] getLoadedRoutes  (export function) :16
+      -- Returns the loaded routes for a given route.
+[ ] getRouterInstance  (export function) :23
+      -- Returns the Router instance from the given injector, or null if not available.
+[ ] navigateByUrl  (export function) :31
+      -- Navigates the given router to the specified URL. Throws if the provided router is not an Angular Router.
+
+## packages/router/src/router_module.ts
+[ ] RouterModule  (export class) :102
+[ ] RouterModule.constructor  (ctor) :103
+[ ] RouterModule.forRoot  (method) :127
+      -- Creates and configures a module with all the router providers and directives. Optionally sets up an application listener to perform an initial navigation. When 
+[ ] RouterModule.forChild  (method) :182
+      -- Creates a module with all the router directives and a provider registering routes, without creating a new Router service. When registering for submodules and la
+[ ] provideRouterScroller  (export function) :194
+      -- For internal use by `RouterModule` only. Note that this differs from `withInMemoryRouterScroller` because it reads from the `ExtraOptions` which should not be u
+[ ] provideHashLocationStrategy  (function) :210
+      -- provide hash location directly via `{provide: LocationStrategy, useClass: HashLocationStrategy}`.
+[ ] providePathLocationStrategy  (function) :216
+      -- need this at all because `PathLocationStrategy` is the default factory for `LocationStrategy`.
+[ ] provideForRootGuard  (export function) :220
+[ ] provideInitialNavigation  (function) :235
+      -- users call `withXInitialNavigation` directly.
+[ ] provideRouterInitializer  (function) :255
+
+## packages/router/src/router_outlet_context.ts
+[ ] OutletContext  (export class) :19
+      -- Store contextual information about a `RouterOutlet`
+[ ] OutletContext.injector  (accessor) :24
+[ ] OutletContext.constructor  (ctor) :28
+[ ] ChildrenOutletContexts  (export class) :39
+      -- Store contextual information about the children (= nested) `RouterOutlet`
+[ ] ChildrenOutletContexts.constructor  (ctor) :44
+[ ] ChildrenOutletContexts.onChildOutletCreated  (method) :47
+      -- Called when a `RouterOutlet` directive is instantiated
+[ ] ChildrenOutletContexts.onChildOutletDestroyed  (method) :58
+      -- Called when a `RouterOutlet` directive is destroyed. We need to keep the context as the outlet could be destroyed inside a NgIf and might be re-created later.
+[ ] ChildrenOutletContexts.onOutletDeactivated  (method) :70
+      -- Called when the corresponding route is deactivated during navigation. Because the component get destroyed, all children outlet are destroyed.
+[ ] ChildrenOutletContexts.onOutletReAttached  (method) :76
+[ ] ChildrenOutletContexts.getOrCreateContext  (method) :80
+[ ] ChildrenOutletContexts.getContext  (method) :91
+
+## packages/router/src/router_preloader.ts
+[ ] PreloadingStrategy  (export class) :32
+      -- Provides a preloading strategy.
+[ ] PreloadingStrategy.preload  (method) :33
+[ ] PreloadAllModules  (export class) :62
+      -- Provides a preloading strategy that preloads all modules as quickly as possible. ```ts RouterModule.forRoot(ROUTES, {preloadingStrategy: PreloadAllModules}) ```
+[ ] PreloadAllModules.preload  (method) :63
+[ ] NoPreloading  (export class) :80
+      -- Provides a preloading strategy that does not preload any modules. This strategy is enabled by default.
+[ ] NoPreloading.preload  (method) :81
+[ ] RouterPreloader  (export class) :99
+      -- The preloader optimistically loads all router configurations to make navigations into lazily-loaded sections of the application faster. The preloader runs in th
+[ ] RouterPreloader.constructor  (ctor) :102
+[ ] RouterPreloader.setUpPreloading  (method) :109
+[ ] RouterPreloader.preload  (method) :118
+[ ] RouterPreloader.ngOnDestroy  (method) :123
+      -- @docs-private
+[ ] RouterPreloader.processRoutes  (method) :127
+[ ] RouterPreloader.preloadConfig  (method) :166
+
+## packages/router/src/router_scroller.ts
+[ ] RouterScroller  (export class) :39
+[ ] RouterScroller.constructor  (ctor) :56
+[ ] RouterScroller.init  (method) :74
+[ ] RouterScroller.createScrollEvents  (method) :85
+[ ] RouterScroller.consumeScrollEvents  (method) :106
+[ ] RouterScroller.scheduleScrollEvent  (method) :128
+[ ] RouterScroller.ngOnDestroy  (method) :163
+      -- @docs-private
+
+## packages/router/src/router_state.ts
+[ ] RouterState  (export class) :50
+      -- Represents the state of the router as a tree of activated routes. Every node in the route tree is an `ActivatedRoute` instance that knows about the "consumed" U
+[ ] RouterState.constructor  (ctor) :52
+[ ] RouterState.toString  (method) :61
+[ ] createEmptyState  (export function) :66
+[ ] createEmptyStateSnapshot  (export function) :90
+[ ] ActivatedRoute  (export class) :131
+      -- Provides access to information about a route associated with a component that is loaded in an outlet. Use to traverse the `RouterState` tree and extract informa
+[ ] ActivatedRoute.constructor  (ctor) :166
+[ ] ActivatedRoute.routeConfig  (accessor) :194
+      -- The configuration used to match this route.
+[ ] ActivatedRoute.root  (accessor) :199
+      -- The root of the router state.
+[ ] ActivatedRoute.parent  (accessor) :204
+      -- The parent of this route in the router state tree.
+[ ] ActivatedRoute.firstChild  (accessor) :209
+      -- The first child of this route in the router state tree.
+[ ] ActivatedRoute.children  (accessor) :214
+      -- The children of this route in the router state tree.
+[ ] ActivatedRoute.pathFromRoot  (accessor) :219
+      -- The path from the root of the router state tree to this route.
+[ ] ActivatedRoute.paramMap  (accessor) :228
+      -- An Observable that contains a map of the required and optional parameters specific to the route. The map supports retrieving single and multiple values from the
+[ ] ActivatedRoute.queryParamMap  (accessor) :237
+      -- An Observable that contains a map of the query parameters available to all routes. The map supports retrieving single and multiple values from the query paramet
+[ ] ActivatedRoute.toString  (method) :244
+[ ] getInherited  (export function) :267
+      -- Returns the inherited params, data, and resolve for a given route. By default, we do not inherit parent data unless the current route is path-less or the parent
+[ ] ActivatedRouteSnapshot  (export class) :340
+      -- Contains the information about a route associated with a component loaded in an outlet at a particular moment in time. ActivatedRouteSnapshot can also be used t
+[ ] ActivatedRouteSnapshot.title  (accessor) :357
+      -- The resolved route title
+[ ] ActivatedRouteSnapshot.constructor  (ctor) :364
+[ ] ActivatedRouteSnapshot.root  (accessor) :407
+      -- The root of the router state
+[ ] ActivatedRouteSnapshot.parent  (accessor) :412
+      -- The parent of this route in the router state tree
+[ ] ActivatedRouteSnapshot.firstChild  (accessor) :417
+      -- The first child of this route in the router state tree
+[ ] ActivatedRouteSnapshot.children  (accessor) :422
+      -- The children of this route in the router state tree
+[ ] ActivatedRouteSnapshot.pathFromRoot  (accessor) :427
+      -- The path from the root of the router state tree to this route
+[ ] ActivatedRouteSnapshot.paramMap  (accessor) :431
+[ ] ActivatedRouteSnapshot.queryParamMap  (accessor) :436
+[ ] ActivatedRouteSnapshot.toString  (method) :441
+[ ] RouterStateSnapshot  (export class) :475
+      -- Represents the state of the router at a moment in time. This is a tree of activated route snapshots. Every node in this tree knows about the "consumed" URL segm
+[ ] RouterStateSnapshot.constructor  (ctor) :477
+[ ] RouterStateSnapshot.toString  (method) :486
+[ ] setRouterState  (function) :491
+[ ] serializeNode  (function) :496
+[ ] advanceActivatedRoute  (export function) :506
+      -- The expectation is that the activate route is created with the right set of parameters. So we push new values into the observables only when they are not the in
+[ ] equalParamsAndUrlSegments  (export function) :534
+[ ] hasStaticTitle  (export function) :548
+
+## packages/router/src/shared.ts
+[ ] ParamsAsMap  (class) :75
+[ ] ParamsAsMap.constructor  (ctor) :78
+[ ] ParamsAsMap.has  (method) :82
+[ ] ParamsAsMap.get  (method) :86
+[ ] ParamsAsMap.getAll  (method) :95
+[ ] ParamsAsMap.keys  (accessor) :104
+[ ] convertToParamMap  (export function) :116
+      -- Converts a `Params` instance to a `ParamMap`.
+[ ] matchParts  (function) :120
+[ ] defaultUrlMatcher  (export function) :153
+      -- Matches the route configuration (`route`) against the actual URL (`segments`). When no matcher is defined on a `Route`, this is the matcher used by the Router b
+
+## packages/router/src/statemanager/navigation_state_manager.ts
+[ ] NavigationStateManager  (export class) :62
+      -- A `StateManager` that uses the browser's Navigation API to get the state of a `popstate` event. This class is currently an extension of `HistoryStateManager` an
+[ ] NavigationStateManager.registered  (accessor) :107
+[ ] NavigationStateManager.constructor  (ctor) :113
+[ ] NavigationStateManager.registerNonRouterCurrentEntryChangeListener  (method) :127
+[ ] NavigationStateManager.handleRouterEvent  (method) :157
+      -- Handles router events emitted by the `NavigationTransitions` service. This method orchestrates the interaction with the Navigation API based on the current stag
+[ ] NavigationStateManager.maybeCreateNavigationForTransition  (method) :232
+[ ] NavigationStateManager.navigate  (method) :262
+      -- Initiates a navigation using the browser's Navigation API (`navigation.navigate`). This is called when the Angular Router starts an imperative navigation.
+[ ] NavigationStateManager.finishNavigation  (method) :306
+      -- Finalizes the current navigation by committing the URL (if not already done) and resolving the post-commit handler promise. Clears the `currentNavigation` state
+[ ] NavigationStateManager.cancel  (method) :316
+      -- Performs the necessary rollback action to restore the browser URL to the state before the transition.
+[ ] NavigationStateManager.resetInternalState  (method) :372
+[ ] NavigationStateManager.handleNavigate  (method) :386
+      -- Handles the `navigate` event from the browser's Navigation API. This is the core interception point.
+[ ] NavigationStateManager.handleNavigateEventTriggeredOutsideRouterAPIs  (method) :536
+      -- Handles `NavigateEvent`s that were not initiated by the Angular Router's own API calls (e.g., `router.navigate()`). These are typically from user interactions l
+[ ] NavigationStateManager.eventAndRouterDestinationsMatch  (method) :544
+[ ] NavigationStateManager.generateNgRouterState  (method) :573
+[ ] NavigationStateManager.deferredCommitSupported  (method) :581
+[ ] handleResultRejections  (function) :600
+      -- Attaches a no-op `.catch(() => {})` to the `committed` and `finished` promises of a `NavigationResult`. This is to prevent unhandled promise rejection errors in
+
+## packages/router/src/statemanager/state_manager.ts
+[ ] StateManager  (export class) :33
+[ ] StateManager.getCurrentUrlTree  (method) :52
+      -- Returns the currently activated `UrlTree`. This `UrlTree` shows only URLs that the `Router` is configured to handle (through `UrlHandlingStrategy`). The value i
+[ ] StateManager.getRawUrlTree  (method) :82
+      -- Returns a `UrlTree` that is represents what the browser is actually showing. In the life of a navigation transition: 1. When a navigation begins, the raw `UrlTr
+[ ] StateManager.createBrowserPath  (method) :86
+[ ] StateManager.routerUrlState  (method) :94
+[ ] StateManager.commitTransition  (method) :103
+[ ] StateManager.getRouterState  (method) :119
+      -- Returns the current RouterState.
+[ ] StateManager.stateMemento  (accessor) :124
+[ ] StateManager.updateStateMemento  (method) :128
+[ ] StateManager.createStateMemento  (method) :132
+[ ] StateManager.restoredState  (method) :141
+      -- Returns the current state stored by the browser for the current history entry.
+[ ] StateManager.registerNonRouterCurrentEntryChangeListener  (method) :150
+      -- Registers a listener that is called whenever the current history entry changes by some API outside the Router. This includes user-activated changes like back bu
+[ ] StateManager.handleRouterEvent  (method) :163
+      -- Handles a navigation event sent from the Router. These are typically events that indicate a navigation has started, progressed, been cancelled, or finished.
+[ ] HistoryStateManager  (export class) :167
+[ ] HistoryStateManager.browserPageId  (accessor) :184
+      -- The ɵrouterPageId of whatever page is currently active in the browser history. This is important for computing the target page id for new navigations because we
+[ ] HistoryStateManager.registerNonRouterCurrentEntryChangeListener  (method) :191
+[ ] HistoryStateManager.handleRouterEvent  (method) :212
+[ ] HistoryStateManager.setBrowserUrl  (method) :238
+[ ] HistoryStateManager.restoreHistory  (method) :263
+      -- Performs the necessary rollback action to restore the browser URL to the state before the transition.
+[ ] HistoryStateManager.resetInternalState  (method) :291
+[ ] HistoryStateManager.resetUrlToCurrentUrlTree  (method) :305
+[ ] HistoryStateManager.generateNgRouterState  (method) :313
+
+## packages/router/src/url_handling_strategy.ts
+[ ] UrlHandlingStrategy  (export class) :23
+      -- Provides a way to migrate AngularJS applications to Angular.
+[ ] UrlHandlingStrategy.shouldProcessUrl  (method) :32
+      -- Tells the router if this URL should be processed. When it returns true, the router will execute the regular navigation. When it returns false, the router will s
+[ ] UrlHandlingStrategy.extract  (method) :38
+      -- Extracts the part of the URL that should be handled by the router. The rest of the URL will remain untouched.
+[ ] UrlHandlingStrategy.merge  (method) :43
+      -- Merges the URL fragment with the rest of the URL.
+[ ] DefaultUrlHandlingStrategy  (export class) :50
+[ ] DefaultUrlHandlingStrategy.shouldProcessUrl  (method) :51
+[ ] DefaultUrlHandlingStrategy.extract  (method) :54
+[ ] DefaultUrlHandlingStrategy.merge  (method) :57
+
+## packages/router/src/url_tree.ts
+[ ] isActive  (export function) :119
+      -- Returns a computed signal of whether the given url is activated in the Router. As the router state changes, the signal will update to reflect whether the url is
+[ ] containsTree  (export function) :133
+[ ] equalParams  (function) :145
+[ ] equalSegmentGroups  (function) :150
+[ ] containsParams  (function) :168
+[ ] containsSegmentGroup  (function) :175
+[ ] containsSegmentGroupHelper  (function) :183
+[ ] matrixParamsMatch  (function) :220
+[ ] UrlTree  (export class) :260
+      -- Represents the parsed URL. Since a router state is a tree, and the URL is nothing but a serialized state, the URL is a serialized tree. UrlTree is a data struct
+[ ] UrlTree.constructor  (ctor) :264
+[ ] UrlTree.queryParamMap  (accessor) :283
+[ ] UrlTree.toString  (method) :289
+      -- @docs-private
+[ ] UrlSegmentGroup  (export class) :303
+      -- Represents the parsed URL segment group. See `UrlTree` for more information.
+[ ] UrlSegmentGroup.constructor  (ctor) :307
+[ ] UrlSegmentGroup.hasChildren  (method) :317
+      -- Whether the segment has child segments
+[ ] UrlSegmentGroup.numberOfChildren  (accessor) :322
+      -- Number of child segments
+[ ] UrlSegmentGroup.toString  (method) :327
+      -- @docs-private
+[ ] UrlSegment  (export class) :358
+      -- Represents a single URL segment. A UrlSegment is a part of a URL between the two slashes. It contains a path and the matrix parameters associated with the segme
+[ ] UrlSegment.constructor  (ctor) :362
+[ ] UrlSegment.parameterMap  (accessor) :370
+[ ] UrlSegment.toString  (method) :376
+      -- @docs-private
+[ ] equalSegments  (export function) :381
+[ ] equalPath  (export function) :385
+[ ] mapChildrenIntoArray  (export function) :390
+[ ] UrlSerializer  (export class) :421
+      -- Serializes and deserializes a URL string into a URL tree. The url serialization strategy is customizable. You can make all URLs case insensitive by providing a 
+[ ] UrlSerializer.parse  (method) :423
+      -- Parse a url into a `UrlTree`
+[ ] UrlSerializer.serialize  (method) :426
+      -- Converts a `UrlTree` into a url
+[ ] DefaultUrlSerializer  (export class) :447
+      -- A default implementation of the `UrlSerializer`. Example URLs: ``` /inbox/33(popup:compose) /inbox/33;open=true/messages/44 ``` DefaultUrlSerializer uses parent
+[ ] DefaultUrlSerializer.parse  (method) :449
+      -- Parses a url into a `UrlTree`
+[ ] DefaultUrlSerializer.serialize  (method) :455
+      -- Converts a `UrlTree` into a url
+[ ] serializePaths  (export function) :467
+[ ] serializeSegment  (function) :471
+[ ] encodeUriString  (function) :513
+      -- Encodes a URI string with the default encoding. This function will only ever be called from `encodeUriQuery` or `encodeUriSegment` as it's the base set of encod
+[ ] encodeUriQuery  (export function) :527
+      -- This function should be used to encode both keys and values in a query string key/value. In the following URL, you need to call encodeUriQuery on "k" and "v": h
+[ ] encodeUriFragment  (export function) :537
+      -- This function should be used to encode a URL fragment. In the following URL, you need to call encodeUriFragment on "f": http://www.site.org/html;mk=mv?k=v#f
+[ ] encodeUriSegment  (export function) :548
+      -- This function should be run on any URI segment as well as the key and value in a key/value pair for matrix params. In the following URL, you need to call encode
+[ ] decode  (export function) :552
+[ ] decodeQuery  (export function) :558
+      -- decodeURIComponent function will not decode "+" as a space.
+[ ] serializePath  (export function) :562
+[ ] serializeMatrixParams  (function) :566
+[ ] serializeQueryParams  (function) :572
+[ ] matchSegments  (function) :585
+[ ] matchMatrixKeySegments  (function) :591
+[ ] matchQueryParams  (function) :598
+      -- Return the name of the query param at the start of the string or an empty string
+[ ] matchUrlQueryParamValue  (function) :605
+      -- Return the value of the query param at the start of the string or an empty string
+[ ] UrlParser  (class) :610
+[ ] UrlParser.constructor  (ctor) :613
+[ ] UrlParser.parseRootSegment  (method) :617
+[ ] UrlParser.parseQueryParams  (method) :632
+[ ] UrlParser.parseFragment  (method) :642
+[ ] UrlParser.parseChildren  (method) :646
+[ ] UrlParser.parseSegment  (method) :689
+      -- ie `name;k1=v1;k2`
+[ ] UrlParser.parseMatrixParams  (method) :703
+[ ] UrlParser.parseParam  (method) :711
+[ ] UrlParser.parseQueryParam  (method) :730
+      -- Parse a single query parameter `name[=value]`
+[ ] UrlParser.parseParens  (method) :763
+      -- parse `(a/b//outlet_name:c/d)`
+[ ] UrlParser.peekStartsWith  (method) :805
+[ ] UrlParser.consumeOptional  (method) :810
+      -- Consumes the prefix when it is present and returns whether it has been consumed
+[ ] UrlParser.capture  (method) :818
+[ ] createRoot  (export function) :828
+[ ] squashSegmentGroup  (export function) :844
+      -- Recursively - merges primary segment children into their parents - drops empty children (those which have no segments and no children themselves). This latter p
+[ ] mergeTrivialChildren  (function) :875
+      -- When possible, merges the primary outlet child into the parent `UrlSegmentGroup`. When a segment group has only one child which is a primary outlet, merges that
+[ ] isUrlTree  (export function) :884
+
+## packages/router/src/utils/abort_signal_to_observable.ts
+[ ] abortSignalToObservable  (export function) :17
+      -- Converts an AbortSignal to an Observable<void>. Emits and completes when the signal is aborted. If the signal is already aborted, it emits and completes immedia
+[ ] takeUntilAbort  (export function) :31
+
+## packages/router/src/utils/collection.ts
+[ ] shallowEqualArrays  (export function) :13
+[ ] shallowEqual  (export function) :21
+[ ] getDataKeys  (export function) :45
+      -- Gets the keys of an object, including `symbol` keys.
+[ ] equalArraysOrString  (export function) :52
+      -- Test equality for arrays of strings or a string.
+[ ] last  (export function) :69
+      -- Return the last element of an array.
+[ ] wrapIntoObservable  (export function) :73
+[ ] wrapIntoPromise  (export function) :88
+
+## packages/router/src/utils/config.ts
+[ ] getOrCreateRouteInjectorIfNeeded  (export function) :31
+      -- Creates an `EnvironmentInjector` if the `Route` has providers and one does not already exist and returns the injector. Otherwise, if the `Route` does not have `
+[ ] getLoadedRoutes  (export function) :45
+[ ] getLoadedInjector  (export function) :49
+[ ] getLoadedComponent  (export function) :52
+[ ] getProvidersInjector  (export function) :56
+[ ] validateConfig  (export function) :60
+[ ] assertStandalone  (export function) :73
+[ ] validateNode  (function) :88
+[ ] getFullPath  (function) :213
+[ ] getOutlet  (export function) :229
+      -- Returns the `route.outlet` or PRIMARY_OUTLET if none exists.
+[ ] sortByMatchingOutlets  (export function) :237
+      -- Sorts the `routes` such that the ones with an outlet matching `outletName` come first. The order of the configs is otherwise preserved.
+
+## packages/router/src/utils/config_matching.ts
+[ ] createPreMatchRouteSnapshot  (export function) :37
+[ ] matchWithChecks  (export function) :54
+[ ] match  (export function) :82
+[ ] split  (export function) :124
+[ ] addEmptyPathsToChildrenIfNeeded  (function) :163
+[ ] createChildrenForEmptyPaths  (function) :179
+[ ] containsEmptyPathMatchesWithNamedOutlets  (function) :195
+[ ] containsEmptyPathMatches  (function) :219
+[ ] emptyPathMatch  (export function) :227
+[ ] noLeftoversInUrl  (export function) :239
+
+## packages/router/src/utils/first_value_from.ts
+[ ] firstValueFrom  (export function) :13
+      -- replacement for firstValueFrom in rxjs 7. We must support rxjs v6 so we cannot use it
+
+## packages/router/src/utils/functional_guards.ts
+[ ] mapToCanMatch  (export function) :33
+      -- Maps an array of injectable classes with canMatch functions to an array of equivalent `CanMatchFn` for use in a `Route` definition. Usage {@example router/utils
+[ ] mapToCanActivate  (export function) :50
+      -- Maps an array of injectable classes with canActivate functions to an array of equivalent `CanActivateFn` for use in a `Route` definition. Usage {@example router
+[ ] mapToCanActivateChild  (export function) :66
+      -- Maps an array of injectable classes with canActivateChild functions to an array of equivalent `CanActivateChildFn` for use in a `Route` definition. Usage {@exam
+[ ] mapToCanDeactivate  (export function) :84
+      -- Maps an array of injectable classes with canDeactivate functions to an array of equivalent `CanDeactivateFn` for use in a `Route` definition. Usage {@example ro
+[ ] mapToResolve  (export function) :102
+      -- Maps an injectable class with a resolve function to an equivalent `ResolveFn` for use in a `Route` definition. Usage {@example router/utils/functional_guards.ts
+
+## packages/router/src/utils/navigations.ts
+[ ] afterNextNavigation  (export function) :36
+      -- Performs the given action once the router finishes its next/current navigation. The navigation is considered complete under the following conditions: - `Navigat
+
+## packages/router/src/utils/preactivation.ts
+[ ] CanActivate  (export class) :28
+[ ] CanActivate.constructor  (ctor) :30
+[ ] CanDeactivate  (export class) :35
+[ ] CanDeactivate.constructor  (ctor) :36
+[ ] getAllRouteGuards  (export function) :47
+[ ] getCanActivateChild  (export function) :58
+[ ] getTokenOrFunctionIdentity  (export function) :66
+[ ] getChildRouteGuards  (function) :84
+[ ] getRouteGuards  (function) :110
+[ ] shouldRunGuardsAndResolvers  (function) :176
+[ ] deactivateRouteAndItsChildren  (function) :208
+
+## packages/router/src/utils/tree.ts
+[ ] Tree  (export class) :9
+[ ] Tree.constructor  (ctor) :13
+[ ] Tree.root  (accessor) :17
+[ ] Tree.parent  (method) :24
+[ ] Tree.children  (method) :32
+[ ] Tree.firstChild  (method) :40
+[ ] Tree.siblings  (method) :48
+[ ] Tree.pathFromRoot  (method) :59
+[ ] findNode  (function) :65
+      -- DFS for the node matching the value
+[ ] findPath  (function) :77
+      -- Return the path to the node with the given value using DFS
+[ ] TreeNode  (export class) :91
+[ ] TreeNode.constructor  (ctor) :92
+[ ] TreeNode.toString  (method) :97
+[ ] nodeChildrenAsMap  (export function) :103
+      -- Return the list of T indexed by outlet name
+
+## packages/router/src/utils/type_guards.ts
+[ ] isFunction  (export function) :26
+      -- Simple function check, but generic so type inference will flow. Example: function product(a: number, b: number) {   return a * b; } if (isFunction<product>(fn))
+[ ] isBoolean  (export function) :30
+[ ] isCanLoad  (export function) :34
+[ ] isCanActivate  (export function) :38
+[ ] isCanActivateChild  (export function) :42
+[ ] isCanDeactivate  (export function) :46
+[ ] isCanMatch  (export function) :49
+[ ] isEmptyError  (export function) :53
+
+## packages/router/src/utils/view_transition.ts
+[ ] createViewTransition  (export function) :70
+      -- A helper function for using browser view transitions. This function skips the call to `startViewTransition` if the browser does not support it.
+[ ] createRenderPromise  (function) :122
+      -- Creates a promise that resolves after next render.
+
+## packages/router/testing/src/router_testing_harness.ts
+[ ] RootFixtureService  (export class) :23
+[ ] RootFixtureService.createHarness  (method) :27
+[ ] RootFixtureService.getRootFixture  (method) :35
+[ ] RootCmp  (export class) :50
+[ ] RouterTestingHarness  (export class) :61
+      -- A testing harness for the `Router` to reduce the boilerplate needed to test routes and routed components.
+[ ] RouterTestingHarness.create  (method) :73
+      -- Creates a `RouterTestingHarness` instance. The `RouterTestingHarness` also creates its own root component with a `RouterOutlet` for the purposes of rendering ro
+[ ] RouterTestingHarness.constructor  (ctor) :87
+[ ] RouterTestingHarness.detectChanges  (method) :92
+      -- Instructs the root fixture to run change detection.
+[ ] RouterTestingHarness.routeDebugElement  (accessor) :96
+      -- The `DebugElement` of the `RouterOutlet` component. `null` if the outlet is not activated.
+[ ] RouterTestingHarness.routeNativeElement  (accessor) :104
+      -- The native element of the `RouterOutlet` component. `null` if the outlet is not activated.
+[ ] RouterTestingHarness.navigateByUrl  (method) :124
+      -- Triggers a `Router` navigation and waits for it to complete. The root component with a `RouterOutlet` created for the harness is used to render `Route` componen
+[ ] RouterTestingHarness.navigateByUrl  (method) :145
+      -- Triggers a router navigation and waits for it to complete. The root component with a `RouterOutlet` created for the harness is used to render `Route` components
+[ ] RouterTestingHarness.navigateByUrl  (method) :146
+
+## packages/router/testing/src/router_testing_module.ts
+[ ] RouterTestingModule  (export class) :61
+[ ] RouterTestingModule.withRoutes  (method) :62
+
+## packages/router/upgrade/src/upgrade.ts
+[ ] locationSyncBootstrapListener  (export function) :54
+[ ] setUpLocationSync  (export function) :74
+      -- Sets up a location change listener to trigger `history.pushState`. Works around the problem that `onPopState` does not trigger `history.pushState`. Must be call
+[ ] resolveUrl  (function) :144

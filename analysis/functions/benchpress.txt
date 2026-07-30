@@ -1,0 +1,245 @@
+INVENTORY FUNGSI :: benchpress
+Total simbol: 158 | file: 25
+Rincian: function=13, class=27, method=98, ctor=20
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## packages/benchpress/src/common_options.ts
+[ ] Options  (export class) :12
+[ ] writeFile  (function) :46
+
+## packages/benchpress/src/measure_values.ts
+[ ] MeasureValues  (export class) :9
+[ ] MeasureValues.constructor  (ctor) :10
+[ ] MeasureValues.toJson  (method) :16
+
+## packages/benchpress/src/metric.ts
+[ ] Metric  (export class) :12
+      -- A metric is measures values
+[ ] Metric.beginMeasure  (method) :16
+      -- Starts measuring
+[ ] Metric.endMeasure  (method) :25
+      -- Ends measuring and reports the data since the begin call.
+[ ] Metric.describe  (method) :33
+      -- Describes the metrics provided by this metric implementation. (e.g. units, ...)
+
+## packages/benchpress/src/metric/multi_metric.ts
+[ ] MultiMetric  (export class) :13
+[ ] MultiMetric.provideWith  (method) :14
+[ ] MultiMetric.constructor  (ctor) :29
+[ ] MultiMetric.beginMeasure  (method) :36
+      -- Starts measuring
+[ ] MultiMetric.endMeasure  (method) :45
+      -- Ends measuring and reports the data since the begin call.
+[ ] MultiMetric.describe  (method) :55
+      -- Describes the metrics provided by this metric implementation. (e.g. units, ...)
+[ ] mergeStringMaps  (function) :60
+
+## packages/benchpress/src/metric/perflog_metric.ts
+[ ] PerflogMetric  (export class) :19
+      -- A metric that reads out the performance log
+[ ] PerflogMetric.constructor  (ctor) :54
+[ ] PerflogMetric.describe  (method) :76
+[ ] PerflogMetric.beginMeasure  (method) :122
+[ ] PerflogMetric.endMeasure  (method) :130
+[ ] PerflogMetric._endPlainMeasureAndMeasureForceGc  (method) :139
+      -- @internal
+[ ] PerflogMetric._beginMeasure  (method) :156
+[ ] PerflogMetric._endMeasure  (method) :160
+[ ] PerflogMetric._readUntilEndMark  (method) :168
+[ ] PerflogMetric._addEvents  (method) :192
+[ ] PerflogMetric._aggregateEvents  (method) :221
+[ ] PerflogMetric._addFrameMetrics  (method) :408
+[ ] PerflogMetric._markName  (method) :417
+
+## packages/benchpress/src/metric/user_metric.ts
+[ ] UserMetric  (export class) :16
+[ ] UserMetric.constructor  (ctor) :21
+[ ] UserMetric.beginMeasure  (method) :31
+      -- Starts measuring
+[ ] UserMetric.endMeasure  (method) :38
+      -- Ends measuring.
+[ ] getAndClearValues  (function) :48
+[ ] UserMetric.describe  (method) :77
+      -- Describes the metrics provided by this metric implementation. (e.g. units, ...)
+
+## packages/benchpress/src/reporter.ts
+[ ] Reporter  (export class) :14
+      -- A reporter reports measure values and the valid sample.
+[ ] Reporter.reportMeasureValues  (method) :15
+[ ] Reporter.reportSample  (method) :19
+
+## packages/benchpress/src/reporter/console_reporter.ts
+[ ] ConsoleReporter  (export class) :21
+      -- A reporter for the console
+[ ] ConsoleReporter.constructor  (ctor) :37
+[ ] ConsoleReporter.reportMeasureValues  (method) :47
+[ ] ConsoleReporter.reportSample  (method) :52
+
+## packages/benchpress/src/reporter/json_file_reporter.ts
+[ ] JsonFileReporter  (export class) :24
+      -- A reporter that writes results into a json file.
+[ ] JsonFileReporter.constructor  (ctor) :41
+[ ] JsonFileReporter.reportMeasureValues  (method) :55
+[ ] JsonFileReporter.reportSample  (method) :59
+
+## packages/benchpress/src/reporter/multi_reporter.ts
+[ ] MultiReporter  (export class) :14
+[ ] MultiReporter.provideWith  (method) :15
+[ ] MultiReporter.constructor  (ctor) :30
+[ ] MultiReporter.reportMeasureValues  (method) :34
+[ ] MultiReporter.reportSample  (method) :38
+
+## packages/benchpress/src/reporter/text_reporter_base.ts
+[ ] TextReporterBase  (export class) :19
+[ ] TextReporterBase.constructor  (ctor) :22
+[ ] TextReporterBase.description  (method) :29
+[ ] TextReporterBase.metricsHeader  (method) :49
+[ ] TextReporterBase.sampleMetrics  (method) :53
+[ ] TextReporterBase.separator  (method) :61
+[ ] TextReporterBase.sampleStats  (method) :68
+[ ] TextReporterBase._stringRow  (method) :74
+
+## packages/benchpress/src/reporter/util.ts
+[ ] formatNum  (export function) :12
+[ ] sortedProps  (export function) :16
+[ ] formatStats  (export function) :20
+
+## packages/benchpress/src/runner.ts
+[ ] Runner  (export class) :34
+      -- The Runner is the main entry point for executing a sample run. It provides defaults, creates the injector and calls the sampler.
+[ ] Runner.constructor  (ctor) :35
+[ ] Runner.sample  (method) :37
+
+## packages/benchpress/src/sample_description.ts
+[ ] SampleDescription  (export class) :12
+      -- SampleDescription merges all available descriptions about a sample
+[ ] SampleDescription.constructor  (ctor) :15
+[ ] SampleDescription.toJson  (method) :28
+
+## packages/benchpress/src/sampler.ts
+[ ] Sampler  (export class) :27
+      -- The Sampler owns the sample loop: 1. calls the prepare/execute callbacks, 2. gets data from the metric 3. asks the validator for a valid sample 4. reports the n
+[ ] Sampler.constructor  (ctor) :42
+[ ] Sampler.sample  (method) :52
+[ ] Sampler._iterate  (method) :65
+[ ] Sampler._report  (method) :86
+[ ] SampleState  (export class) :100
+[ ] SampleState.constructor  (ctor) :101
+
+## packages/benchpress/src/statistic.ts
+[ ] Statistic  (export class) :9
+[ ] Statistic.calculateCoefficientOfVariation  (method) :10
+[ ] Statistic.calculateMean  (method) :14
+[ ] Statistic.calculateStandardDeviation  (method) :20
+[ ] Statistic.calculateRegressionSlope  (method) :28
+
+## packages/benchpress/src/validator.ts
+[ ] Validator  (export class) :16
+      -- A Validator calculates a valid sample out of the complete sample. A valid sample is a sample that represents the population that should be observed in the corre
+[ ] Validator.validate  (method) :20
+      -- Calculates a valid sample out of the complete sample
+[ ] Validator.describe  (method) :28
+      -- Returns a Map that describes the properties of the validator (e.g. sample size, ...)
+
+## packages/benchpress/src/validator/regression_slope_validator.ts
+[ ] RegressionSlopeValidator  (export class) :20
+      -- A validator that checks the regression slope of a specific metric. Waits for the regression slope to be >=0.
+[ ] RegressionSlopeValidator.constructor  (ctor) :32
+[ ] RegressionSlopeValidator.describe  (method) :39
+[ ] RegressionSlopeValidator.validate  (method) :43
+
+## packages/benchpress/src/validator/size_validator.ts
+[ ] SizeValidator  (export class) :18
+      -- A validator that waits for the sample to have a certain size.
+[ ] SizeValidator.constructor  (ctor) :25
+[ ] SizeValidator.describe  (method) :29
+[ ] SizeValidator.validate  (method) :33
+
+## packages/benchpress/src/web_driver_adapter.ts
+[ ] WebDriverAdapter  (export class) :14
+      -- A WebDriverAdapter bridges API differences between different WebDriver clients, e.g. JS vs Dart Async vs Dart Sync webdriver. Needs one implementation for every
+[ ] WebDriverAdapter.waitFor  (method) :15
+[ ] WebDriverAdapter.executeScript  (method) :18
+[ ] WebDriverAdapter.executeAsyncScript  (method) :21
+[ ] WebDriverAdapter.capabilities  (method) :24
+[ ] WebDriverAdapter.logs  (method) :27
+
+## packages/benchpress/src/web_driver_extension.ts
+[ ] WebDriverExtension  (export class) :36
+      -- A WebDriverExtension implements extended commands of the webdriver protocol for a given browser, independent of the WebDriverAdapter. Needs one implementation f
+[ ] WebDriverExtension.provideFirstSupported  (method) :37
+[ ] WebDriverExtension.gc  (method) :64
+[ ] WebDriverExtension.timeBegin  (method) :68
+[ ] WebDriverExtension.timeEnd  (method) :72
+[ ] WebDriverExtension.readPerfLog  (method) :88
+[ ] WebDriverExtension.perfLogFeatures  (method) :92
+[ ] WebDriverExtension.supports  (method) :96
+[ ] PerfLogFeatures  (export class) :101
+[ ] PerfLogFeatures.constructor  (ctor) :107
+
+## packages/benchpress/src/webdriver/chrome_driver_extension.ts
+[ ] ChromeDriverExtension  (export class) :24
+      -- Set the following 'traceCategories' to collect metrics in Chrome: 'v8,blink.console,disabled-by-default-devtools.timeline,devtools.timeline,blink.user_timing' I
+[ ] ChromeDriverExtension.constructor  (ctor) :36
+[ ] ChromeDriverExtension._parseChromeVersion  (method) :46
+[ ] ChromeDriverExtension.gc  (method) :61
+[ ] ChromeDriverExtension.timeBegin  (method) :65
+[ ] ChromeDriverExtension.timeEnd  (method) :75
+[ ] ChromeDriverExtension.readPerfLog  (method) :85
+      -- Format](https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/edit)
+[ ] ChromeDriverExtension._convertPerfRecordsToEvents  (method) :112
+[ ] ChromeDriverExtension._convertEvent  (method) :127
+[ ] ChromeDriverExtension._parseCategories  (method) :197
+[ ] ChromeDriverExtension._isEvent  (method) :201
+[ ] ChromeDriverExtension.perfLogFeatures  (method) :214
+[ ] ChromeDriverExtension.supports  (method) :218
+[ ] normalizeEvent  (function) :227
+[ ] normalizeGCEvent  (function) :265
+
+## packages/benchpress/src/webdriver/firefox_driver_extension.ts
+[ ] FirefoxDriverExtension  (export class) :15
+[ ] FirefoxDriverExtension.constructor  (ctor) :20
+[ ] FirefoxDriverExtension.gc  (method) :25
+[ ] FirefoxDriverExtension.timeBegin  (method) :29
+[ ] FirefoxDriverExtension.timeEnd  (method) :37
+[ ] FirefoxDriverExtension.readPerfLog  (method) :45
+[ ] FirefoxDriverExtension.perfLogFeatures  (method) :49
+[ ] FirefoxDriverExtension.supports  (method) :53
+
+## packages/benchpress/src/webdriver/ios_driver_extension.ts
+[ ] IOsDriverExtension  (export class) :15
+[ ] IOsDriverExtension.constructor  (ctor) :18
+[ ] IOsDriverExtension.gc  (method) :22
+[ ] IOsDriverExtension.timeBegin  (method) :26
+[ ] IOsDriverExtension.timeEnd  (method) :30
+[ ] IOsDriverExtension.readPerfLog  (method) :39
+      -- See https://github.com/WebKit/webkit/tree/master/Source/WebInspectorUI/Versions
+[ ] IOsDriverExtension._convertPerfRecordsToEvents  (method) :60
+      -- @internal
+[ ] IOsDriverExtension.perfLogFeatures  (method) :100
+[ ] IOsDriverExtension.supports  (method) :104
+[ ] createEvent  (function) :109
+[ ] createStartEvent  (function) :130
+[ ] createEndEvent  (function) :134
+[ ] createMarkStartEvent  (function) :138
+[ ] createMarkEndEvent  (function) :142
+
+## packages/benchpress/src/webdriver/selenium_webdriver_adapter.ts
+[ ] SeleniumWebDriverAdapter  (export class) :16
+      -- Adapter for the selenium-webdriver.
+[ ] SeleniumWebDriverAdapter.constructor  (ctor) :25
+[ ] SeleniumWebDriverAdapter.waitFor  (method) :29
+[ ] SeleniumWebDriverAdapter.executeScript  (method) :33
+[ ] SeleniumWebDriverAdapter.executeAsyncScript  (method) :37
+[ ] SeleniumWebDriverAdapter.capabilities  (method) :41
+[ ] SeleniumWebDriverAdapter.logs  (method) :51
+[ ] Command  (class) :65
+      -- Copy of the `Command` class of webdriver as it is not exposed via index.js in selenium-webdriver.
+[ ] Command.constructor  (ctor) :67
+[ ] Command.getName  (method) :69
+[ ] Command.setParameter  (method) :73
+[ ] Command.setParameters  (method) :78
+[ ] Command.getParameter  (method) :83
+[ ] Command.getParameters  (method) :87

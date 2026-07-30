@@ -1,0 +1,137 @@
+SUBSISTEM 01 :: @angular/core/primitives/signals  (mesin reaktif / reactive graph)
+Lokasi   : packages/core/primitives/signals/src/
+Status   : SELESAI DIANALISIS
+==============================================================================
+
+RINGKASAN ARSITEKTUR
+--------------------
+Ini adalah lapisan paling bawah dari sistem reaktif Angular. Sengaja dipisah
+sebagai "primitive" tanpa ketergantungan ke DI maupun render3, sehingga bisa
+dipakai ulang (dan di-tree-shake) oleh core, forms, router, dan devtools.
+
+Model datanya adalah graf dua arah antara PRODUCER dan CONSUMER, di mana satu
+node (`ReactiveNode`) bisa berperan sebagai keduanya (contoh: `computed`).
+
+  signal (producer)  ->  computed (producer + consumer)  ->  effect (consumer)
+
+Konsep kunci yang harus dipahami:
+
+1. `activeConsumer` (variabel modul di graph.ts)
+   Satu-satunya "konteks reaktif" global. Saat sebuah computation berjalan,
+   node-nya dipasang ke sini; setiap pembacaan signal saat itu otomatis
+   terekam sebagai dependensi. Inilah alasan pelacakan dependensi Angular
+   bersifat implisit (tidak perlu daftar dependensi manual seperti React).
+
+2. `version` (per node) vs `epoch` (global)
+   - `version` naik hanya jika nilai node benar-benar berubah (lolos `equal`).
+   - `epoch` naik setiap kali ADA source signal mana pun yang di-set.
+   Kombinasi keduanya memungkinkan dua optimasi besar:
+   - Sebuah consumer yang bersih pada `epoch` tertentu boleh melewati polling
+     sepenuhnya (`lastCleanEpoch === epoch`) karena mustahil ada perubahan.
+   - Perbandingan `lastReadVersion` vs `producer.version` mendeteksi perubahan
+     tanpa perlu menyimpan nilai lama.
+
+3. LIVE vs NON-LIVE consumer
+   - Consumer "live" (`consumerIsAlwaysLive`, mis. effect/watch, atau computed
+     yang punya consumer live) mendapat edge balik producer->consumer, sehingga
+     bisa DI-PUSH notifikasi kotor (`producerNotifyConsumers`).
+   - Consumer non-live (mis. computed yang tidak diamati siapa pun) memakai
+     model PULL: saat dibaca, ia mem-polling produsennya
+     (`consumerPollProducersForChange`).
+   Hibrida push/pull inilah yang membuat computed yang tidak dipakai tidak
+   pernah menghitung ulang, sekaligus membuat effect tetap responsif.
+
+4. Struktur data: linked list `ReactiveLink`, bukan array.
+   Setiap link adalah satu edge (producer,consumer) dan berada di DUA rantai
+   sekaligus: rantai `producers` milik consumer (via `nextProducer`) dan rantai
+   `consumers` milik producer (via `prevConsumer`/`nextConsumer`, dua arah agar
+   penghapusan O(1)). Ini menghindari alokasi array dan memungkinkan
+   pembangunan ulang daftar dependensi secara INKREMENTAL.
+
+5. Rekonsiliasi dependensi inkremental (`recomputing`)
+   Saat computation dijalankan ulang, `producersTail` di-reset dan node masuk
+   mode `recomputing`. Setiap pembacaan mencoba mencocokkan link lama pada
+   posisi yang sama; jika cocok, link dipakai ulang tanpa alokasi. Sisa link
+   setelah `producersTail` di akhir computation dianggap basi dan dibuang
+   (`finalizeConsumerAfterComputation`). Ini penting untuk template Angular
+   yang membaca signal dengan urutan hampir selalu sama.
+
+6. Nilai sentinel pada computed: `UNSET`, `COMPUTING`, `ERRORED`.
+   `COMPUTING` dipakai untuk mendeteksi siklus; `ERRORED` menyimpan error agar
+   di-throw ulang secara konsisten sampai node kotor lagi (error di-cache).
+
+7. Fase notifikasi (`inNotificationPhase`)
+   Selama propagasi dirty, pembacaan signal DILARANG (lempar error). Ini
+   mencegah pembacaan nilai setengah-jadi saat graf sedang diperbarui.
+
+CATATAN IMPLEMENTASI PENTING
+----------------------------
+- `producerAccessed` punya tiga jalur fast-path sebelum mengalokasi link baru:
+  (a) producer sama dengan yang barusan diakses, (b) saat `recomputing`, link
+  berikutnya di daftar lama cocok, (c) producer sudah punya link ke consumer
+  ini pada epoch yang sama (kasus baca berselang-seling).
+- `prevConsumer` sengaja TIDAK diisi saat link dibuat; hanya diisi oleh
+  `producerAddLiveConsumer`. Komentar di kode menjelaskan ini mencegah
+  referensi menggantung yang menahan GC.
+- "Liveness" bersifat transitif: `producerAddLiveConsumer` merekursi ke semua
+  producer dari node yang baru menjadi live, dan
+  `producerRemoveLiveConsumerLink` merekursi saat node berhenti live.
+- `linkedSignal` = computed yang bisa ditulis. Setelah ditulis, node langsung
+  ditandai bersih (`producerMarkClean`) supaya nilai tulisan tidak langsung
+  ditimpa hasil komputasi sampai `source` berubah.
+- `weak_ref.ts` sudah menjadi stub kosong (ada TODO penghapusan) - sisa dari
+  implementasi lama yang memakai WeakRef untuk consumer.
+
+DAFTAR FUNGSI YANG SUDAH DIPAHAMI
+---------------------------------
+[x] setActiveConsumer | packages/core/primitives/signals/src/graph.ts:42 | Memasang consumer aktif, mengembalikan yang sebelumnya (pola save/restore).
+[x] getActiveConsumer | packages/core/primitives/signals/src/graph.ts:48 | Membaca consumer aktif; dipakai core untuk cek konteks reaktif.
+[x] isInNotificationPhase | packages/core/primitives/signals/src/graph.ts:52 | True saat propagasi dirty berlangsung; dipakai untuk melarang baca/schedule.
+[x] isReactive | packages/core/primitives/signals/src/graph.ts:60 | Type guard: nilai punya properti simbol SIGNAL.
+[x] producerAccessed | packages/core/primitives/signals/src/graph.ts:212 | Inti pelacakan dependensi: mencatat edge producer->consumer aktif, dengan tiga fast-path reuse link.
+[x] producerIncrementEpoch | packages/core/primitives/signals/src/graph.ts:302 | Menaikkan epoch global; dipanggil source signal saat nilainya berubah.
+[x] producerUpdateValueVersion | packages/core/primitives/signals/src/graph.ts:309 | Memastikan version node mutakhir: skip jika live+bersih atau bersih pada epoch ini, jika tidak polling lalu recompute.
+[x] producerNotifyConsumers | packages/core/primitives/signals/src/graph.ts:339 | Menyebarkan notifikasi kotor ke semua live consumer dalam fase notifikasi.
+[x] producerUpdatesAllowed | packages/core/primitives/signals/src/graph.ts:367 | Guard: apakah menulis signal diizinkan pada konteks consumer saat ini.
+[x] consumerMarkDirty | packages/core/primitives/signals/src/graph.ts:371 | Menandai node kotor, meneruskan notifikasi ke hilir, lalu memanggil hook consumerMarkedDirty (yang menjadwalkan effect).
+[x] producerMarkClean | packages/core/primitives/signals/src/graph.ts:377 | Reset dirty dan catat lastCleanEpoch untuk fast-path polling.
+[x] consumerBeforeComputation | packages/core/primitives/signals/src/graph.ts:389 | Reset state dependensi lalu jadikan node consumer aktif.
+[x] resetConsumerBeforeComputation | packages/core/primitives/signals/src/graph.ts:403 | Membatalkan knownValidAtEpoch link lama dan membuka mode recomputing.
+[x] consumerAfterComputation | packages/core/primitives/signals/src/graph.ts:427 | Kembalikan consumer sebelumnya lalu finalisasi daftar dependensi.
+[x] finalizeConsumerAfterComputation | packages/core/primitives/signals/src/graph.ts:444 | Memotong dan melepas link dependensi basi setelah rekonsiliasi inkremental.
+[x] consumerPollProducersForChange | packages/core/primitives/signals/src/graph.ts:472 | Model PULL: bandingkan lastReadVersion dengan version producer (memaksa producer memutakhirkan diri lebih dulu).
+[x] consumerDestroy | packages/core/primitives/signals/src/graph.ts:501 | Memutus node dari graf dua arah dan mengosongkan seluruh rantai link.
+[x] producerAddLiveConsumer | packages/core/primitives/signals/src/graph.ts:523 | Menyisipkan link ke rantai consumer; jika node baru menjadi live, merekursi ke seluruh producernya.
+[x] producerRemoveLiveConsumerLink | packages/core/primitives/signals/src/graph.ts:546 | Melepas satu edge O(1) dari rantai dua arah; merekursi turun bila producer berhenti live.
+[x] consumerIsLive | packages/core/primitives/signals/src/graph.ts:572 | Live = selalu-live (effect) atau punya minimal satu consumer.
+[x] runPostProducerCreatedFn | packages/core/primitives/signals/src/graph.ts:576 | Hook pembuatan producer; dipakai DevTools untuk merekam graf signal.
+[x] setPostProducerCreatedFn | packages/core/primitives/signals/src/graph.ts:580 | Memasang hook di atas (save/restore).
+[x] createSignal | packages/core/primitives/signals/src/signal.ts:53 | Membuat tuple [getter, set, update]; getter membawa node lewat properti SIGNAL, plus toString ramah-debug di dev mode.
+[x] setPostSignalSetFn | packages/core/primitives/signals/src/signal.ts:75 | Memasang hook pasca-set; dipakai core untuk effect sinkron/penjadwalan CD.
+[x] signalGetFn | packages/core/primitives/signals/src/signal.ts:81 | Baca nilai + daftarkan dependensi via producerAccessed.
+[x] signalSetFn | packages/core/primitives/signals/src/signal.ts:86 | Tulis nilai bila tidak equal, setelah lolos guard producerUpdatesAllowed.
+[x] signalUpdateFn | packages/core/primitives/signals/src/signal.ts:97 | Varian set berbasis fungsi updater terhadap nilai saat ini.
+[x] runPostSignalSetFn | packages/core/primitives/signals/src/signal.ts:105 | Memanggil hook pasca-set secara manual (dipakai node turunan seperti input signal).
+[x] SIGNAL_NODE | packages/core/primitives/signals/src/signal.ts:111 | Prototipe node signal (kind 'signal', equal default Object.is); dibuat via IIFE @__PURE__ agar tree-shakable.
+[x] signalValueChanged | packages/core/primitives/signals/src/signal.ts:120 | Urutan wajib saat nilai berubah: version++, epoch++, notifikasi consumer, hook pasca-set.
+[x] createComputed | packages/core/primitives/signals/src/computed.ts:59 | Membuat getter computed: memutakhirkan versi, mendaftar sebagai producer, melempar ulang error yang di-cache.
+[x] COMPUTED_NODE | packages/core/primitives/signals/src/computed.ts:117 | Prototipe computed: dirty awal true, plus implementasi producerMustRecompute/producerRecomputeValue dengan deteksi siklus dan caching error.
+[x] createLinkedSignal | packages/core/primitives/signals/src/linked_signal.ts:67 | Computed yang menyimpan sourceValue sehingga computation bisa melihat pasangan (source, value) sebelumnya.
+[x] linkedSignalSetFn | packages/core/primitives/signals/src/linked_signal.ts:106 | Tulis manual ke linkedSignal lalu tandai bersih agar tidak langsung ditimpa komputasi.
+[x] linkedSignalUpdateFn | packages/core/primitives/signals/src/linked_signal.ts:112 | Sama seperti di atas untuk updater; menolak update saat state ERRORED.
+[x] LINKED_SIGNAL_NODE | packages/core/primitives/signals/src/linked_signal.ts:127 | Prototipe linkedSignal; producerRecomputeValue memanggil source() lalu computation(source, prev).
+[x] createWatch | packages/core/primitives/signals/src/watch.ts:65 | Membangun consumer selalu-live dengan siklus hidup notify/run/cleanup/destroy; run melewati eksekusi jika polling menyatakan tidak ada perubahan.
+[x] isWatchNodeDestroyed | packages/core/primitives/signals/src/watch.ts:82 | Node dianggap mati jika fn dan schedule sudah di-null-kan.
+[x] destroyWatchNode | packages/core/primitives/signals/src/watch.ts:86 | Putuskan dari graf, jalankan cleanup terakhir, null-kan referensi (idempoten).
+[x] WATCH_NODE | packages/core/primitives/signals/src/watch.ts:143 | Prototipe watch: consumerIsAlwaysLive, consumerMarkedDirty meneruskan ke scheduler pengguna.
+[x] runEffect | packages/core/primitives/signals/src/effect.ts:45 | Runner effect generik: bersihkan dirty, polling perubahan, cleanup lalu jalankan fn di konteks consumer.
+[x] BASE_EFFECT_NODE | packages/core/primitives/signals/src/effect.ts:36 | Prototipe effect: selalu live, boleh menulis signal, dirty awal true.
+[x] defaultEquals | packages/core/primitives/signals/src/equality.ts:17 | Kesetaraan default memakai Object.is (referensial, NaN-safe).
+[x] defaultThrowError | packages/core/primitives/signals/src/errors.ts:11 | Pelempar error minimal sebelum core memasang pesan detail.
+[x] throwInvalidWriteToSignalError | packages/core/primitives/signals/src/errors.ts:17 | Indireksi agar primitives tidak bergantung pada infrastruktur error core.
+[x] setThrowInvalidWriteToSignalError | packages/core/primitives/signals/src/errors.ts:21 | Titik injeksi pesan error kaya dari @angular/core.
+[x] untracked | packages/core/primitives/signals/src/untracked.ts:15 | Jalankan fungsi dengan activeConsumer=null sehingga pembacaan tidak terlacak.
+[x] prettifyPreview | packages/core/primitives/signals/src/formatter.ts:112 | Meringkas nilai menjadi label pendek untuk pratinjau custom formatter DevTools.
+[x] isSignal | packages/core/primitives/signals/src/formatter.ts:145 | Cek keberadaan simbol SIGNAL (versi lokal formatter).
+[x] installDevToolsSignalFormatter | packages/core/primitives/signals/src/formatter.ts:156 | Mendaftarkan custom formatter ke globalThis.devtoolsFormatters (Chrome/Firefox), idempoten.
+[x] setAlternateWeakRefImpl | packages/core/primitives/signals/src/weak_ref.ts:9 | Stub kosong bersisa TODO penghapusan; tidak lagi berefek.

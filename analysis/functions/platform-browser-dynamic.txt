@@ -1,0 +1,22 @@
+INVENTORY FUNGSI :: platform-browser-dynamic
+Total simbol: 9 | file: 3
+Rincian: function=3, class=3, method=2, ctor=1
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## packages/platform-browser-dynamic/src/compiler_factory.ts
+[ ] JitCompilerFactory  (export class) :28
+      -- Ivy JIT mode doesn't require accessing this symbol.
+[ ] JitCompilerFactory.constructor  (ctor) :32
+[ ] JitCompilerFactory.createCompiler  (method) :40
+[ ] _mergeOptions  (function) :62
+[ ] _lastDefined  (function) :70
+[ ] _mergeArrays  (function) :79
+
+## packages/platform-browser-dynamic/src/resource_loader/resource_loader_impl.ts
+[ ] ResourceLoaderImpl  (export class) :12
+[ ] ResourceLoaderImpl.get  (method) :13
+
+## packages/platform-browser-dynamic/testing/src/testing.ts
+[ ] BrowserDynamicTestingModule  (export class) :28
