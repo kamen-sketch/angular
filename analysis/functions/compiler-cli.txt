@@ -580,27 +580,27 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] ComponentDecoratorHandler  (export class) :240
       -- `DecoratorHandler` which handles the `@Component` annotation.
 [ ] ComponentDecoratorHandler.constructor  (ctor) :246
-[ ] ComponentDecoratorHandler.detect  (method) :344
-[ ] ComponentDecoratorHandler.preanalyze  (method) :363
-[ ] ComponentDecoratorHandler.analyze  (method) :483
+[x] ComponentDecoratorHandler.detect  (method) :344
+[x] ComponentDecoratorHandler.preanalyze  (method) :363
+[x] ComponentDecoratorHandler.analyze  (method) :483
 [ ] ComponentDecoratorHandler.symbol  (method) :1074
-[ ] ComponentDecoratorHandler.register  (method) :1088
-[ ] ComponentDecoratorHandler.index  (method) :1132
-[ ] ComponentDecoratorHandler.typeCheck  (method) :1197
+[x] ComponentDecoratorHandler.register  (method) :1088
+[x] ComponentDecoratorHandler.index  (method) :1132
+[x] ComponentDecoratorHandler.typeCheck  (method) :1197
 [ ] ComponentDecoratorHandler.extendedTemplateCheck  (method) :1254
 [ ] ComponentDecoratorHandler.templateSemanticsCheck  (method) :1261
-[ ] ComponentDecoratorHandler.resolve  (method) :1268
+[x] ComponentDecoratorHandler.resolve  (method) :1268
 [ ] ComponentDecoratorHandler.xi18n  (method) :1429
-[ ] ComponentDecoratorHandler.updateResources  (method) :1440
-[ ] ComponentDecoratorHandler.compileFull  (method) :1485
-[ ] ComponentDecoratorHandler.compilePartial  (method) :1552
-[ ] ComponentDecoratorHandler.compileLocal  (method) :1619
+[x] ComponentDecoratorHandler.updateResources  (method) :1440
+[x] ComponentDecoratorHandler.compileFull  (method) :1485
+[x] ComponentDecoratorHandler.compilePartial  (method) :1552
+[x] ComponentDecoratorHandler.compileLocal  (method) :1619
 [ ] ComponentDecoratorHandler.compileHmrUpdateDeclaration  (method) :1684
-[ ] ComponentDecoratorHandler.resolveComponentDependencies  (method) :1737
+[x] ComponentDecoratorHandler.resolveComponentDependencies  (method) :1737
       -- Determines the dependencies of a component and categorizes them based on how they were introduced.
 [ ] ComponentDecoratorHandler.componentDependenciesToDeclarations  (method) :1913
       -- Converts component dependencies into declarations by resolving their metadata and deduplicating them.
-[ ] ComponentDecoratorHandler.handleDependencyCycles  (method) :1988
+[x] ComponentDecoratorHandler.handleDependencyCycles  (method) :1988
       -- Handles any cycles in the dependencies of a component.
 [ ] ComponentDecoratorHandler.getNonLocalDiagnostics  (method) :2129
       -- Produces diagnostics that require more than local information.
@@ -615,19 +615,19 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] ComponentDecoratorHandler.maybeRecordSyntheticImport  (method) :2322
 [ ] ComponentDecoratorHandler.resolveForeignComponentImports  (method) :2338
       -- Resolves imported foreign components for code generation.
-[ ] ComponentDecoratorHandler.resolveDeferBlocks  (method) :2361
+[x] ComponentDecoratorHandler.resolveDeferBlocks  (method) :2361
       -- Resolves information about defer blocks dependencies to make it available for the final `compile` step.
-[ ] ComponentDecoratorHandler.registerDeferrableCandidate  (method) :2471
+[x] ComponentDecoratorHandler.registerDeferrableCandidate  (method) :2471
       -- Inspects provided imports expression (either `@Component.imports` or `@Component.deferredImports`) and registers imported types as deferrable candidates.
-[ ] ComponentDecoratorHandler.compileDeferBlocks  (method) :2544
+[x] ComponentDecoratorHandler.compileDeferBlocks  (method) :2544
 [ ] ComponentDecoratorHandler.getNewBindingParser  (method) :2590
       -- Creates a new binding parser.
-[ ] createMatcherFromScope  (function) :2595
-[ ] removeDeferrableTypesFromComponentDecorator  (function) :2630
+[x] createMatcherFromScope  (function) :2595
+[x] removeDeferrableTypesFromComponentDecorator  (function) :2630
       -- Drop references to existing imports for deferrable symbols that should be present in the `setClassMetadataAsync` call. Otherwise, an import declaration gets ret
-[ ] validateNoImportOverlap  (function) :2648
+[x] validateNoImportOverlap  (function) :2648
       -- Validates that `@Component.imports` and `@Component.deferredImports` do not have overlapping dependencies.
-[ ] validateStandaloneImports  (function) :2676
+[x] validateStandaloneImports  (function) :2676
 [ ] isDefaultImport  (function) :2727
       -- Returns whether an ImportDeclaration is a default import.
 
@@ -911,27 +911,27 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] makeConstructorDependencyInjectionDiagnostic  (function) :312
 
 ## packages/compiler-cli/src/ngtsc/core/src/compiler.ts
-[ ] freshCompilationTicket  (export function) :222
+[x] freshCompilationTicket  (export function) :222
       -- Create a `CompilationTicket` for a brand new compilation, using no prior state.
-[ ] incrementalFromCompilerTicket  (export function) :247
+[x] incrementalFromCompilerTicket  (export function) :247
       -- Create a `CompilationTicket` as efficiently as possible, based on a previous `NgCompiler` instance and a new `ts.Program`.
-[ ] incrementalFromStateTicket  (export function) :301
+[x] incrementalFromStateTicket  (export function) :301
       -- Create a `CompilationTicket` directly from an old `ts.Program` and associated Angular compilation state, along with a new `ts.Program`.
-[ ] resourceChangeTicket  (export function) :337
+[x] resourceChangeTicket  (export function) :337
 [ ] NgCompiler  (export class) :361
       -- The heart of the Angular Ivy compiler. The `NgCompiler` provides an API for performing Angular compilation within a custom TypeScript compiler. Each instance of
-[ ] NgCompiler.fromTicket  (method) :417
+[x] NgCompiler.fromTicket  (method) :417
       -- Convert a `CompilationTicket` into an `NgCompiler` instance for the requested compilation. Depending on the nature of the compilation request, the `NgCompiler` 
 [ ] NgCompiler.constructor  (ctor) :452
 [ ] NgCompiler.perfRecorder  (accessor) :535
-[ ] NgCompiler.updateWithChangedResources  (method) :539
+[x] NgCompiler.updateWithChangedResources  (method) :539
 [ ] NgCompiler.getResourceDependencies  (method) :582
       -- Get the resource dependencies of a file. If the file is not part of the compilation, an empty array will be returned.
-[ ] NgCompiler.getDiagnostics  (method) :591
+[x] NgCompiler.getDiagnostics  (method) :591
       -- Get all Angular-related diagnostics for this compilation.
-[ ] NgCompiler.getDiagnosticsForFile  (method) :616
+[x] NgCompiler.getDiagnosticsForFile  (method) :616
       -- Get all Angular-related diagnostics for this compilation. If a `ts.SourceFile` is passed, only diagnostics related to that file are returned.
-[ ] NgCompiler.getDiagnosticsForComponent  (method) :644
+[x] NgCompiler.getDiagnosticsForComponent  (method) :644
       -- Get all `ts.Diagnostic`s currently available that pertain to the given component.
 [ ] NgCompiler.addMessageTextDetails  (method) :677
       -- Add https://angular.dev/errors error guide links to diagnostics for this compilation.
@@ -939,17 +939,17 @@ Format: [ ] Nama  (export|kind) :baris
       -- Get all setup-related diagnostics for this compilation.
 [ ] NgCompiler.getCurrentProgram  (method) :713
       -- Get the current `ts.Program` known to this `NgCompiler`. Compilation begins with an input `ts.Program`, and during template type-checking operations new `ts.Pro
-[ ] NgCompiler.getTemplateTypeChecker  (method) :717
-[ ] NgCompiler.getComponentsWithTemplateFile  (method) :729
+[x] NgCompiler.getTemplateTypeChecker  (method) :717
+[x] NgCompiler.getComponentsWithTemplateFile  (method) :729
       -- Retrieves the `ts.Declaration`s for any component(s) which use the given template file.
-[ ] NgCompiler.getComponentsWithStyleFile  (method) :737
+[x] NgCompiler.getComponentsWithStyleFile  (method) :737
       -- Retrieves the `ts.Declaration`s for any component(s) which use the given template file.
 [ ] NgCompiler.getDirectiveResources  (method) :745
       -- Retrieves external resources for the given directive.
-[ ] NgCompiler.getMeta  (method) :756
-[ ] NgCompiler.analyzeAsync  (method) :778
+[x] NgCompiler.getMeta  (method) :756
+[x] NgCompiler.analyzeAsync  (method) :778
       -- Perform Angular's analysis step (as a precursor to `getDiagnostics` or `prepareEmit`) asynchronously. Normally, this operation happens lazily whenever `getDiagn
-[ ] NgCompiler.prepareEmit  (method) :809
+[x] NgCompiler.prepareEmit  (method) :809
       -- Fetch transformers and other information which is necessary for a consumer to `emit` the program with Angular-added definitions.
 [ ] NgCompiler.getIndexedComponents  (method) :919
       -- Run the indexing process and return a `Map` of all indexed components. See the `indexing` package for more details.
@@ -957,20 +957,20 @@ Format: [ ] Nama  (export|kind) :baris
       -- Gets information for the current program that may be used to generate API reference documentation. This includes Angular-specific information, such as component
 [ ] NgCompiler.xi18n  (method) :973
       -- Collect i18n messages into the `Xi18nContext`.
-[ ] NgCompiler.emitHmrUpdateModule  (method) :984
+[x] NgCompiler.emitHmrUpdateModule  (method) :984
       -- Emits the JavaScript module that can be used to replace the metadata of a class during HMR.
-[ ] NgCompiler.ensureAnalyzed  (method) :1016
-[ ] NgCompiler.analyzeSync  (method) :1023
-[ ] NgCompiler.resolveCompilation  (method) :1039
+[x] NgCompiler.ensureAnalyzed  (method) :1016
+[x] NgCompiler.analyzeSync  (method) :1023
+[x] NgCompiler.resolveCompilation  (method) :1039
 [ ] NgCompiler.strictTemplates  (accessor) :1055
       -- strictTemplate is `true` by default. Explicit opt-out is required to disable strictness
-[ ] NgCompiler.getTypeCheckingConfig  (method) :1059
-[ ] NgCompiler.getTemplateDiagnostics  (method) :1202
-[ ] NgCompiler.getTemplateDiagnosticsForFile  (method) :1224
-[ ] NgCompiler.getNonTemplateDiagnostics  (method) :1243
-[ ] NgCompiler.runAdditionalChecks  (method) :1260
-[ ] NgCompiler.makeCompilation  (method) :1293
-[ ] isAngularCorePackage  (export function) :1724
+[x] NgCompiler.getTypeCheckingConfig  (method) :1059
+[x] NgCompiler.getTemplateDiagnostics  (method) :1202
+[x] NgCompiler.getTemplateDiagnosticsForFile  (method) :1224
+[x] NgCompiler.getNonTemplateDiagnostics  (method) :1243
+[x] NgCompiler.runAdditionalChecks  (method) :1260
+[x] NgCompiler.makeCompilation  (method) :1293
+[x] isAngularCorePackage  (export function) :1724
       -- Determine if the given `Program` is @angular/core.
 [ ] getR3SymbolsFile  (function) :1764
       -- Find the 'r3_symbols.ts' file in the given `Program`, or return `null` if it wasn't there.
@@ -2205,25 +2205,25 @@ Format: [ ] Nama  (export|kind) :baris
 ## packages/compiler-cli/src/ngtsc/program.ts
 [ ] NgtscProgram  (export class) :39
       -- Entrypoint to the Angular Compiler (Ivy+) which sits behind the `api.Program` interface, allowing it to be a drop-in replacement for the legacy View Engine comp
-[ ] NgtscProgram.constructor  (ctor) :50
-[ ] NgtscProgram.getTsProgram  (method) :138
+[x] NgtscProgram.constructor  (ctor) :50
+[x] NgtscProgram.getTsProgram  (method) :138
 [ ] NgtscProgram.getReuseTsProgram  (method) :142
 [ ] NgtscProgram.getTsOptionDiagnostics  (method) :146
 [ ] NgtscProgram.getTsSyntacticDiagnostics  (method) :154
-[ ] NgtscProgram.getTsSemanticDiagnostics  (method) :180
+[x] NgtscProgram.getTsSemanticDiagnostics  (method) :180
 [ ] NgtscProgram.getNgOptionDiagnostics  (method) :212
-[ ] NgtscProgram.getNgStructuralDiagnostics  (method) :218
-[ ] NgtscProgram.getNgSemanticDiagnostics  (method) :224
-[ ] NgtscProgram.loadNgStructureAsync  (method) :252
+[x] NgtscProgram.getNgStructuralDiagnostics  (method) :218
+[x] NgtscProgram.getNgSemanticDiagnostics  (method) :224
+[x] NgtscProgram.loadNgStructureAsync  (method) :252
       -- Ensure that the `NgCompiler` has properly analyzed the program, and allow for the asynchronous loading of any resources during the process. This is used by the 
 [ ] NgtscProgram.listLazyRoutes  (method) :256
-[ ] NgtscProgram.emitXi18n  (method) :260
-[ ] NgtscProgram.emit  (method) :279
-[ ] NgtscProgram.getIndexedComponents  (method) :390
-[ ] NgtscProgram.getApiDocumentation  (method) :402
+[x] NgtscProgram.emitXi18n  (method) :260
+[x] NgtscProgram.emit  (method) :279
+[x] NgtscProgram.getIndexedComponents  (method) :390
+[x] NgtscProgram.getApiDocumentation  (method) :402
       -- Gets information for the current program that may be used to generate API reference documentation. This includes Angular-specific information, such as component
 [ ] NgtscProgram.getEmittedSourceFiles  (method) :409
-[ ] mergeEmitResults  (function) :430
+[x] mergeEmitResults  (function) :430
 
 ## packages/compiler-cli/src/ngtsc/program_driver/src/ts_create_program_driver.ts
 [ ] DelegatingCompilerHost  (export class) :31
@@ -2654,33 +2654,33 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] TraitCompiler  (export class) :85
       -- The heart of Angular compilation. The `TraitCompiler` is responsible for processing all classes in the program. Any time a `DecoratorHandler` matches a class, a
 [ ] TraitCompiler.constructor  (ctor) :111
-[ ] TraitCompiler.analyzeSync  (method) :129
-[ ] TraitCompiler.analyzeAsync  (method) :133
+[x] TraitCompiler.analyzeSync  (method) :129
+[x] TraitCompiler.analyzeAsync  (method) :133
 [ ] TraitCompiler.analyze  (method) :137
 [ ] TraitCompiler.analyze  (method) :138
 [ ] TraitCompiler.analyze  (method) :139
-[ ] TraitCompiler.recordFor  (method) :198
-[ ] TraitCompiler.getAnalyzedRecords  (method) :206
-[ ] TraitCompiler.adopt  (method) :230
+[x] TraitCompiler.recordFor  (method) :198
+[x] TraitCompiler.getAnalyzedRecords  (method) :206
+[x] TraitCompiler.adopt  (method) :230
       -- Import a `ClassRecord` from a previous compilation (only to be used in global compilation modes) Traits from the `ClassRecord` have accurate metadata, but the `
-[ ] TraitCompiler.scanClassForTraits  (method) :267
-[ ] TraitCompiler.detectTraits  (method) :275
-[ ] TraitCompiler.makeSymbolForTrait  (method) :392
-[ ] TraitCompiler.analyzeClass  (method) :414
-[ ] TraitCompiler.analyzeTrait  (method) :448
-[ ] TraitCompiler.resolve  (method) :492
-[ ] TraitCompiler.typeCheck  (method) :552
+[x] TraitCompiler.scanClassForTraits  (method) :267
+[x] TraitCompiler.detectTraits  (method) :275
+[x] TraitCompiler.makeSymbolForTrait  (method) :392
+[x] TraitCompiler.analyzeClass  (method) :414
+[x] TraitCompiler.analyzeTrait  (method) :448
+[x] TraitCompiler.resolve  (method) :492
+[x] TraitCompiler.typeCheck  (method) :552
       -- Generate type-checking code into the `TypeCheckContext` for any components within the given `ts.SourceFile`.
 [ ] TraitCompiler.runAdditionalChecks  (method) :572
-[ ] TraitCompiler.index  (method) :603
-[ ] TraitCompiler.xi18n  (method) :622
-[ ] TraitCompiler.updateResources  (method) :641
-[ ] TraitCompiler.compile  (method) :660
-[ ] TraitCompiler.compileHmrUpdateCallback  (method) :737
-[ ] TraitCompiler.decoratorsFor  (method) :765
+[x] TraitCompiler.index  (method) :603
+[x] TraitCompiler.xi18n  (method) :622
+[x] TraitCompiler.updateResources  (method) :641
+[x] TraitCompiler.compile  (method) :660
+[x] TraitCompiler.compileHmrUpdateCallback  (method) :737
+[x] TraitCompiler.decoratorsFor  (method) :765
 [ ] TraitCompiler.diagnostics  (accessor) :788
 [ ] TraitCompiler.exportStatements  (accessor) :810
-[ ] containsErrors  (function) :815
+[x] containsErrors  (function) :815
 
 ## packages/compiler-cli/src/ngtsc/transform/src/declaration.ts
 [ ] DtsTransformRegistry  (export class) :26

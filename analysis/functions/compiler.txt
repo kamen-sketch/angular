@@ -1117,7 +1117,7 @@ Format: [ ] Nama  (export|kind) :baris
 ## packages/compiler/src/ml_parser/lexer.ts
 [ ] TokenizeResult  (export class) :23
 [ ] TokenizeResult.constructor  (ctor) :24
-[ ] tokenize  (export function) :109
+[x] tokenize  (export function) :109
 [ ] _unexpectedCharacterErrorMsg  (function) :126
 [ ] _unknownEntityErrorMsg  (function) :131
 [ ] _unparsableEntityErrorMsg  (function) :135
@@ -2139,38 +2139,38 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] createPipeType  (export function) :79
 
 ## packages/compiler/src/render3/r3_template_transform.ts
-[ ] htmlAstToRender3Ast  (export function) :92
+[x] htmlAstToRender3Ast  (export function) :92
 [ ] HtmlAstToIvyAst  (class) :116
 [ ] HtmlAstToIvyAst.constructor  (ctor) :131
-[ ] HtmlAstToIvyAst.visitElement  (method) :137
+[x] HtmlAstToIvyAst.visitElement  (method) :137
       -- HTML visitor
-[ ] HtmlAstToIvyAst.visitAttribute  (method) :291
-[ ] HtmlAstToIvyAst.visitText  (method) :302
-[ ] HtmlAstToIvyAst.visitExpansion  (method) :308
+[x] HtmlAstToIvyAst.visitAttribute  (method) :291
+[x] HtmlAstToIvyAst.visitText  (method) :302
+[x] HtmlAstToIvyAst.visitExpansion  (method) :308
 [ ] HtmlAstToIvyAst.visitExpansionCase  (method) :347
 [ ] HtmlAstToIvyAst.visitComment  (method) :351
 [ ] HtmlAstToIvyAst.visitStartTagComment  (method) :358
-[ ] HtmlAstToIvyAst.visitLetDeclaration  (method) :365
+[x] HtmlAstToIvyAst.visitLetDeclaration  (method) :365
 [ ] HtmlAstToIvyAst.visitComponent  (method) :380
 [ ] HtmlAstToIvyAst.visitDirective  (method) :470
 [ ] HtmlAstToIvyAst.visitBlockParameter  (method) :474
-[ ] HtmlAstToIvyAst.visitBlock  (method) :478
-[ ] HtmlAstToIvyAst.findConnectedBlocks  (method) :557
-[ ] HtmlAstToIvyAst.categorizePropertyAttributes  (method) :593
+[x] HtmlAstToIvyAst.visitBlock  (method) :478
+[x] HtmlAstToIvyAst.findConnectedBlocks  (method) :557
+[x] HtmlAstToIvyAst.categorizePropertyAttributes  (method) :593
       -- Splits up the property attributes depending on whether they're static or bound.
 [ ] HtmlAstToIvyAst.prepareAttributes  (method) :632
-[ ] HtmlAstToIvyAst.parseAttribute  (method) :723
+[x] HtmlAstToIvyAst.parseAttribute  (method) :723
 [ ] createKeySpan  (function) :739
-[ ] HtmlAstToIvyAst.extractDirectives  (method) :929
+[x] HtmlAstToIvyAst.extractDirectives  (method) :929
 [ ] HtmlAstToIvyAst.filterAnimationAttributes  (method) :1005
 [ ] HtmlAstToIvyAst.filterAnimationInputs  (method) :1009
-[ ] HtmlAstToIvyAst.wrapInTemplate  (method) :1013
+[x] HtmlAstToIvyAst.wrapInTemplate  (method) :1013
 [ ] HtmlAstToIvyAst._visitTextWithInterpolation  (method) :1079
-[ ] HtmlAstToIvyAst.parseVariable  (method) :1090
-[ ] HtmlAstToIvyAst.parseReference  (method) :1107
-[ ] HtmlAstToIvyAst.parseAssignmentEvent  (method) :1126
+[x] HtmlAstToIvyAst.parseVariable  (method) :1090
+[x] HtmlAstToIvyAst.parseReference  (method) :1107
+[x] HtmlAstToIvyAst.parseAssignmentEvent  (method) :1126
 [ ] HtmlAstToIvyAst.validateSelectorlessReferences  (method) :1150
-[ ] HtmlAstToIvyAst.reportError  (method) :1171
+[x] HtmlAstToIvyAst.reportError  (method) :1171
 [ ] NonBindableVisitor  (class) :1180
 [ ] NonBindableVisitor.visitElement  (method) :1181
 [ ] NonBindableVisitor.visitComment  (method) :1211
@@ -2206,14 +2206,14 @@ Format: [ ] Nama  (export|kind) :baris
       -- Generate an expression that has the given `expr` wrapped in the following form: ```ts forwardRef(() => expr) ```
 
 ## packages/compiler/src/render3/view/compiler.ts
-[ ] baseDirectiveFields  (function) :39
-[ ] addFeatures  (function) :108
+[x] baseDirectiveFields  (function) :39
+[x] addFeatures  (function) :108
       -- Add features to the definition map.
-[ ] compileDirectiveFromMetadata  (export function) :160
+[x] compileDirectiveFromMetadata  (export function) :160
       -- Compile a directive for the render3 runtime as defined by the `R3DirectiveMetadata`.
-[ ] compileComponentFromMetadata  (export function) :178
+[x] compileComponentFromMetadata  (export function) :178
       -- Compile a component for the render3 runtime as defined by the `R3ComponentMetadata`.
-[ ] createComponentType  (export function) :335
+[x] createComponentType  (export function) :335
       -- Creates the type specification from the component meta. This type is inserted into .d.ts files to be consumed by upstream compilations.
 [ ] compileDeclarationList  (function) :353
       -- Compiles the array literal of declarations into an expression according to the provided emit mode.
@@ -2222,23 +2222,23 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] stringArrayAsType  (function) :390
 [ ] createBaseDirectiveTypeParams  (function) :396
 [ ] getInputsTypeExpression  (function) :411
-[ ] createDirectiveType  (export function) :435
+[x] createDirectiveType  (export function) :435
       -- Creates the type specification from the directive meta. This type is inserted into .d.ts files to be consumed by upstream compilations.
-[ ] createHostBindingsFunction  (function) :452
+[x] createHostBindingsFunction  (function) :452
       -- Return a host binding function or null if one is not necessary.
-[ ] parseHostBindings  (export function) :521
-[ ] verifyHostBindings  (export function) :584
+[x] parseHostBindings  (export function) :521
+[x] verifyHostBindings  (export function) :584
       -- Verifies host bindings and returns the list of errors (if any). Empty array indicates that a given set of host bindings has no errors.
-[ ] validateNoEventBindings  (function) :605
+[x] validateNoEventBindings  (function) :605
       -- Validates that there are no event attribute bindings in the host bindings.
-[ ] compileStyles  (function) :628
-[ ] encapsulateStyle  (export function) :644
+[x] compileStyles  (function) :628
+[x] encapsulateStyle  (export function) :644
       -- Encapsulates a CSS stylesheet with emulated view encapsulation. This allows a stylesheet to be used with an Angular component that is using the `ViewEncapsulati
 [ ] createHostDirectivesType  (function) :655
-[ ] createHostDirectivesFeatureArg  (function) :681
-[ ] createHostDirectivesMappingArray  (export function) :732
+[x] createHostDirectivesFeatureArg  (function) :681
+[x] createHostDirectivesMappingArray  (export function) :732
       -- Converts an input/output mapping object literal into an array where the even keys are the public name of the binding and the odd ones are the name it was aliase
-[ ] compileDeferResolverFunction  (export function) :749
+[x] compileDeferResolverFunction  (export function) :749
       -- Compiles the dependency resolver function for a defer block.
 
 ## packages/compiler/src/render3/view/config.ts
@@ -3049,61 +3049,61 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] literalOrArrayLiteral  (export function) :79
 
 ## packages/compiler/src/template/pipeline/src/emit.ts
-[ ] transform  (export function) :189
+[x] transform  (export function) :189
       -- Run all transformation phases in the correct order against a compilation job. After this processing, the compilation should be in a state where it can be emitte
-[ ] emitTemplateFn  (export function) :203
+[x] emitTemplateFn  (export function) :203
       -- Compile all views in the given `ComponentCompilation` into the final template function, which may reference constants defined in a `ConstantPool`.
-[ ] emitChildViews  (function) :209
-[ ] emitView  (function) :227
+[x] emitChildViews  (function) :209
+[x] emitView  (function) :227
       -- Emit a template function for an individual `ViewCompilation` (which may be either the root view or an embedded view).
-[ ] maybeGenerateRfBlock  (function) :266
-[ ] emitHostBindingFunction  (export function) :283
+[x] maybeGenerateRfBlock  (function) :266
+[x] emitHostBindingFunction  (export function) :283
 
 ## packages/compiler/src/template/pipeline/src/ingest.ts
 [ ] isI18nRootNode  (export function) :47
 [ ] isSingleI18nIcu  (export function) :51
-[ ] ingestComponent  (export function) :60
+[x] ingestComponent  (export function) :60
       -- Process a template AST and convert it into a `ComponentCompilation` in the intermediate representation. TODO: Refactor more of the ingestion code into phases.
-[ ] ingestHostBinding  (export function) :104
+[x] ingestHostBinding  (export function) :104
       -- Process a host binding AST and convert it into a `HostBindingCompilationJob` in the intermediate representation.
-[ ] calcHostBindingSecurityContexts  (function) :151
-[ ] ingestDomProperty  (export function) :189
+[x] calcHostBindingSecurityContexts  (function) :151
+[x] ingestDomProperty  (export function) :189
       -- with ordinary components. This would allow us to share a lot more ingestion code.
-[ ] ingestHostAttribute  (export function) :223
-[ ] ingestHostEvent  (export function) :247
-[ ] ingestNodes  (function) :285
+[x] ingestHostAttribute  (export function) :223
+[x] ingestHostEvent  (export function) :247
+[x] ingestNodes  (function) :285
       -- Ingest the nodes of a template AST into the given `ViewCompilation`.
-[ ] ingestElement  (function) :320
+[x] ingestElement  (function) :320
       -- Ingest an element AST from the template into the given `ViewCompilation`.
 [ ] ingestForeignComponent  (function) :381
       -- Ingest a foreign component's element AST from the template into the given `ViewCompilation`.
-[ ] ingestTemplate  (function) :448
+[x] ingestTemplate  (function) :448
       -- Ingest an `ng-template` node from the AST into the given `ViewCompilation`.
-[ ] ingestContent  (function) :510
+[x] ingestContent  (function) :510
       -- Ingest a content node from the AST into the given `ViewCompilation`.
-[ ] ingestText  (function) :563
+[x] ingestText  (function) :563
       -- Ingest a literal text node from the AST into the given `ViewCompilation`.
-[ ] ingestBoundText  (function) :572
+[x] ingestBoundText  (function) :572
       -- Ingest an interpolated text node from the AST into the given `ViewCompilation`.
-[ ] ingestIfBlock  (function) :622
+[x] ingestIfBlock  (function) :622
       -- Ingest an `@if` block into the given `ViewCompilation`.
-[ ] ingestSwitchBlock  (function) :676
+[x] ingestSwitchBlock  (function) :676
       -- Ingest an `@switch` block into the given `ViewCompilation`.
-[ ] ingestDeferView  (function) :739
-[ ] ingestDeferBlock  (function) :768
-[ ] calcDeferBlockFlags  (function) :884
-[ ] ingestDeferTriggers  (function) :891
-[ ] ingestIcu  (function) :1002
-[ ] ingestForBlock  (function) :1022
+[x] ingestDeferView  (function) :739
+[x] ingestDeferBlock  (function) :768
+[x] calcDeferBlockFlags  (function) :884
+[x] ingestDeferTriggers  (function) :891
+[x] ingestIcu  (function) :1002
+[x] ingestForBlock  (function) :1022
       -- Ingest an `@for` block into the given `ViewCompilation`.
-[ ] getComputedForLoopVariableExpression  (function) :1131
+[x] getComputedForLoopVariableExpression  (function) :1131
       -- Gets an expression that represents a variable in an `@for` loop.
-[ ] ingestLetDeclaration  (function) :1162
-[ ] convertAst  (function) :1179
+[x] ingestLetDeclaration  (function) :1162
+[x] convertAst  (function) :1179
       -- Convert a template AST expression into an output AST expression.
-[ ] convertTemplateLiteral  (function) :1354
-[ ] convertAstWithInterpolation  (function) :1368
-[ ] isPlainTemplate  (function) :1417
+[x] convertTemplateLiteral  (function) :1354
+[x] convertAstWithInterpolation  (function) :1368
+[x] isPlainTemplate  (function) :1417
       -- Checks whether the given template is a plain ng-template (as opposed to another kind of template such as a structural directive template or control flow templat
 [ ] asMessage  (function) :1424
       -- Ensures that the i18nMeta, if provided, is an i18n.Message.

@@ -1,0 +1,161 @@
+SUBSISTEM 05 :: API Signal & Authoring (@angular/core)
+Lokasi   : packages/core/src/render3/reactivity/**, packages/core/src/authoring/**,
+           packages/core/src/render3/queries/query_reactive.ts
+Status   : SELESAI DIANALISIS
+==============================================================================
+
+POSISI LAPIS INI
+----------------
+Subsistem 01 memberi mesin reaktif murni. Subsistem ini adalah PEMBUNGKUS
+Angular di atasnya: menambahkan DI, siklus hidup view, penjadwalan, dan
+integrasi dengan change detection.
+
+    primitives/signals            ->  src/render3/reactivity  ->  API publik
+    (createSignal/createComputed)     (signal/computed/effect)    (signal(), effect())
+
+DUA JENIS EFFECT - PERBEDAAN YANG PALING SERING SALAH DIPAHAMI
+---------------------------------------------------------------
+`effect()` menghasilkan salah satu dari dua node, ditentukan oleh apakah ada
+`ViewContext` di injector saat pemanggilan:
+
+  VIEW EFFECT (component effect)
+    - dibuat di komponen/directive (atau service milik komponen).
+    - disimpan di `lView[EFFECTS]`.
+    - saat kotor: set `HasChildViewsToRefresh` + `markAncestorsForTraversal`,
+      lalu beri tahu scheduler (NotificationSource.ViewEffect).
+    - DIJALANKAN SEBAGAI BAGIAN DARI CHANGE DETECTION view tersebut
+      (`runEffectsInView` dipanggil di dalam `refreshView`), sehingga aman
+      membaca input signal dan memanipulasi view.
+    - ikut hancur otomatis saat view dihancurkan.
+
+  ROOT EFFECT
+    - dibuat di luar pohon komponen (mis. service `providedIn:'root'`).
+    - dikelola `ZoneAwareEffectScheduler`, dijalankan sebagai microtask lewat
+      `ApplicationRef.synchronizeOnce` (flag RootEffects) - TANPA kaitan dengan
+      pohon komponen.
+
+Keduanya berbagi `EFFECT_NODE` yang menyediakan `run()` dan `cleanup()`.
+Detail penting di `run()`: `setIsRefreshingViews(false)` dipasang sementara,
+supaya `markForCheck()` yang dipanggil DI DALAM effect benar-benar sampai ke
+komponen bersangkutan (lihat pembahasan bit Dirty vs RefreshView di subsistem 03).
+
+`cleanup()` menjalankan fungsi cleanup terdaftar dengan `setActiveConsumer(null)`
+dan selalu mengosongkan daftar meski terjadi error.
+
+`runEffectsInView` melakukan flush berulang: effect bisa mengotori effect lain,
+jadi ia berputar selama masih ada effect kotor DAN view masih bertanda
+`HasChildViewsToRefresh`. Setiap effect dijalankan kembali di zone tempat ia
+dibuat (`effect.zone`), penting untuk aplikasi berbasis Zone.
+
+`ZoneAwareEffectScheduler` menyimpan antrean TERPISAH PER ZONE (`Map<Zone, Set>`).
+Urutan eksekusi dijamin FIFO di dalam satu zone, tapi tidak antar-zone. Ada
+pengaman: jika `dirtyEffectCount` tidak sinkron dengan flag effect, counter
+dipaksa nol agar tidak berputar selamanya.
+
+INPUT SIGNAL
+------------
+`input()` membuat node berbasis `INPUT_SIGNAL_NODE` yang merupakan SignalNode
+biasa plus:
+  - `transformFn` (opsi `transform`) - selalu di-set walau undefined, dengan
+    komentar perf eksplisit agar bentuk objek tetap monomorfik di V8.
+  - sentinel `REQUIRED_UNSET_VALUE` untuk `input.required()`: membaca sebelum
+    nilai tersedia melempar NG0950.
+Penulisan nilai TIDAK dilakukan lewat API publik - runtime menulisnya lewat
+`applyValueToInputField`/`setDirectiveInput` saat binding berubah. Jadi input
+signal adalah signal read-only dari sudut pandang komponen, tapi writable dari
+sudut pandang runtime.
+
+MODEL SIGNAL
+------------
+`model()` = InputSignalNode + `OutputEmitterRef`. `set`/`update` menulis nilai
+LALU meng-emit ke output pasangannya (nama output = `<name>Change`), sehingga
+two-way binding `[(x)]` bekerja tanpa mekanisme khusus. `asReadonly()` memakai
+`signalAsReadonlyFn` yang di-bind ke getter.
+
+OUTPUT
+------
+`output()` mengembalikan `OutputEmitterRef` - bukan RxJS Subject. Ia menyimpan
+daftar listener sederhana, terikat `DestroyRef` sehingga langganan otomatis
+dilepas saat komponen hancur, dan `emit()` menolak emit setelah destroy.
+`removeNullValues` membersihkan slot listener yang sudah dilepas.
+
+QUERY BERBASIS SIGNAL (viewChild/contentChild/viewChildren/contentChildren)
+--------------------------------------------------------------------------
+Implementasinya elegan: query signal adalah COMPUTED biasa yang membaca sebuah
+"dirty counter" signal internal (`node._dirtyCounter`). Runtime tinggal menaikkan
+counter itu ketika hasil query mungkin berubah (view selesai dibuat, view
+disisipkan/dihapus), dan computed akan menghitung ulang hasilnya.
+
+Optimasi: `_flatValue` menyimpan hasil rata terakhir sehingga manipulasi view
+yang TIDAK mengubah hasil akhir tidak membuat computed dianggap berubah
+(pembanding kesetaraan bekerja di level hasil, bukan di level notifikasi).
+`bindQueryToSignal` menghubungkan node signal ke slot QueryList di LView.
+
+Varian required melempar NG0951 bila hasilnya undefined.
+
+API LAIN
+--------
+- `signal()`/`computed()`/`linkedSignal()` di `render3/reactivity` hanya
+  membungkus fungsi primitives dan menambahkan `debugName`, `asReadonly`,
+  serta hook DevTools.
+- `untracked()` dan `assertNotInReactiveContext` menjaga batas konteks reaktif;
+  `effect()` menolak dipanggil dari dalam konteks reaktif.
+- `ɵunwrapWritableSignal` adalah utilitas kompilasi untuk two-way binding.
+
+DAFTAR FUNGSI YANG SUDAH DIPAHAMI
+---------------------------------
+[x] effect | packages/core/src/render3/reactivity/effect.ts:137 | Titik masuk publik: validasi konteks, pilih view effect vs root effect berdasarkan ViewContext, daftarkan cleanup ke DestroyRef.
+[x] EffectRefImpl.destroy | packages/core/src/render3/reactivity/effect.ts:56 | Meneruskan destroy ke node effect.
+[x] EffectRefImpl.constructor | packages/core/src/render3/reactivity/effect.ts:52 | Menyimpan node di properti simbol SIGNAL.
+[x] EFFECT_NODE | packages/core/src/render3/reactivity/effect.ts:215 | Prototipe effect bersama: run() mematikan isRefreshingViews agar markForCheck di dalam effect efektif; cleanup() menjalankan dan mengosongkan daftar cleanup.
+[x] ROOT_EFFECT_NODE | packages/core/src/render3/reactivity/effect.ts:254 | Varian root: saat kotor menjadwal ke EffectScheduler dan memberi notifikasi RootEffect.
+[x] VIEW_EFFECT_NODE | packages/core/src/render3/reactivity/effect.ts:275 | Varian view: saat kotor menandai view + leluhur untuk traversal; destroy melepas diri dari lView[EFFECTS].
+[x] createViewEffect | packages/core/src/render3/reactivity/effect.ts:297 | Membuat node effect terikat LView, menyimpan zone pembuat, langsung menandai kotor agar berjalan pada CD berikutnya.
+[x] createRootEffect | packages/core/src/render3/reactivity/effect.ts:315 | Membuat node effect independen dan mendaftarkannya ke scheduler global.
+[x] createEffectFn | packages/core/src/render3/reactivity/effect.ts:330 | Membungkus fungsi pengguna dengan registrar onCleanup.
+[x] runEffectsInView | packages/core/src/render3/reactivity/view_effect_runner.ts:11 | Flush berulang effect view sampai tidak ada lagi yang kotor, menghormati zone asal tiap effect.
+[x] EffectScheduler.add | packages/core/src/render3/reactivity/root_effect_scheduler.ts:26 | Kontrak abstrak pendaftaran effect.
+[x] EffectScheduler.schedule | packages/core/src/render3/reactivity/root_effect_scheduler.ts:33 | Kontrak abstrak penjadwalan effect kotor.
+[x] EffectScheduler.flush | packages/core/src/render3/reactivity/root_effect_scheduler.ts:38 | Kontrak abstrak eksekusi effect terjadwal.
+[x] EffectScheduler.remove | packages/core/src/render3/reactivity/root_effect_scheduler.ts:41 | Kontrak abstrak pelepasan effect.
+[x] ZoneAwareEffectScheduler.add | packages/core/src/render3/reactivity/root_effect_scheduler.ts:59 | Masukkan ke antrean zone lalu tandai perlu dijalankan.
+[x] ZoneAwareEffectScheduler.schedule | packages/core/src/render3/reactivity/root_effect_scheduler.ts:64 | Menaikkan penghitung effect kotor (tanpa alokasi antrean baru).
+[x] ZoneAwareEffectScheduler.remove | packages/core/src/render3/reactivity/root_effect_scheduler.ts:71 | Melepas effect dari antrean zone-nya dan menyesuaikan penghitung.
+[x] ZoneAwareEffectScheduler.enqueue | packages/core/src/render3/reactivity/root_effect_scheduler.ts:84 | Menempatkan effect ke Set milik zone tempat ia dibuat.
+[x] ZoneAwareEffectScheduler.flush | packages/core/src/render3/reactivity/root_effect_scheduler.ts:103 | Menjalankan seluruh antrean per zone sampai penghitung kotor habis, dengan pengaman anti-loop.
+[x] ZoneAwareEffectScheduler.flushQueue | packages/core/src/render3/reactivity/root_effect_scheduler.ts:123 | Menjalankan satu antrean; melewati effect yang sudah bersih.
+[x] signal | packages/core/src/render3/reactivity/signal.ts:72 | API publik signal(): membungkus createSignal dan memasang set/update/asReadonly serta debugName.
+[x] signalAsReadonlyFn | packages/core/src/render3/reactivity/signal.ts:91 | Menghasilkan tampilan read-only yang berbagi node yang sama (di-cache pada node).
+[x] ɵunwrapWritableSignal | packages/core/src/render3/reactivity/signal.ts:47 | Utilitas kompilasi untuk two-way binding: membuka signal writable menjadi nilainya.
+[x] computed | packages/core/src/render3/reactivity/computed.ts:32 | API publik computed(): createComputed + debugName + hook DevTools.
+[x] linkedSignal | packages/core/src/render3/reactivity/linked_signal.ts:55 | API publik linkedSignal(): bentuk ringkas (source saja) maupun bentuk {source, computation}.
+[x] upgradeLinkedSignalGetter | packages/core/src/render3/reactivity/linked_signal.ts:92 | Menambahkan set/update/asReadonly ke getter linkedSignal.
+[x] untracked | packages/core/src/render3/reactivity/untracked.ts:16 | Re-ekspor publik dari primitives untuk membaca signal tanpa melacak dependensi.
+[x] assertNotInReactiveContext | packages/core/src/render3/reactivity/asserts.ts:22 | Guard: melarang pemanggilan API tertentu (mis. effect) dari dalam konteks reaktif.
+[x] createInputSignal | packages/core/src/authoring/input/input_signal.ts:115 | Membuat node input: transformFn selalu di-set demi monomorfisme, sentinel REQUIRED_UNSET_VALUE untuk input wajib.
+[x] inputValueFn | packages/core/src/authoring/input/input_signal.ts:127 | Getter input: mendaftar sebagai producer dan melempar NG0950 bila input wajib belum terisi.
+[x] inputFunction | packages/core/src/authoring/input/input.ts:21 | Implementasi input() opsional dengan nilai awal dan opsi.
+[x] inputRequiredFunction | packages/core/src/authoring/input/input.ts:29 | Implementasi input.required() memakai sentinel nilai belum-terisi.
+[x] createModelSignal | packages/core/src/authoring/model/model_signal.ts:64 | Menggabungkan InputSignalNode dengan OutputEmitterRef sehingga set/update sekaligus meng-emit perubahan (dasar two-way binding).
+[x] getter | packages/core/src/authoring/model/model_signal.ts:70 | Getter model signal dengan asersi nilai wajib.
+[x] assertModelSet | packages/core/src/authoring/model/model_signal.ts:110 | Melempar NG0952 bila model wajib dibaca sebelum terisi.
+[x] modelFunction | packages/core/src/authoring/model/model.ts:14 | Implementasi model() dengan nilai awal.
+[x] modelRequiredFunction | packages/core/src/authoring/model/model.ts:23 | Implementasi model.required().
+[x] output | packages/core/src/authoring/output/output.ts:69 | API output(): membuat OutputEmitterRef terikat konteks injeksi saat ini.
+[x] OutputEmitterRef.subscribe | packages/core/src/authoring/output/output_emitter_ref.ts:51 | Mendaftarkan listener dan mengembalikan objek unsubscribe; menolak setelah destroy.
+[x] OutputEmitterRef.emit | packages/core/src/authoring/output/output_emitter_ref.ts:83 | Memanggil seluruh listener; memperingatkan/menolak emit pada emitter yang sudah dihancurkan.
+[x] OutputEmitterRef.constructor | packages/core/src/authoring/output/output_emitter_ref.ts:43 | Mengaitkan diri ke DestroyRef konteks saat ini bila ada.
+[x] removeNullValues | packages/core/src/authoring/output/output_emitter_ref.ts:123 | Memadatkan daftar listener setelah unsubscribe.
+[x] getOutputDestroyRef | packages/core/src/authoring/output/output_emitter_ref.ts:135 | Mengambil DestroyRef milik sebuah OutputRef (dipakai interop RxJS).
+[x] createQuerySignalFn | packages/core/src/render3/queries/query_reactive.ts:43 | Inti query berbasis signal: computed yang membaca dirty counter lalu menghitung ulang hasil query.
+[x] createSingleResultOptionalQuerySignalFn | packages/core/src/render3/queries/query_reactive.ts:81 | Pabrik untuk viewChild/contentChild opsional.
+[x] createSingleResultRequiredQuerySignalFn | packages/core/src/render3/queries/query_reactive.ts:89 | Pabrik varian required yang melempar bila hasil kosong.
+[x] createMultiResultQuerySignalFn | packages/core/src/render3/queries/query_reactive.ts:95 | Pabrik untuk viewChildren/contentChildren (hasil array read-only).
+[x] bindQueryToSignal | packages/core/src/render3/queries/query_reactive.ts:103 | Menautkan node signal query ke slot QueryList pada LView.
+[x] refreshSignalQuery | packages/core/src/render3/queries/query_reactive.ts:111 | Menghitung hasil query terkini dan memakai _flatValue agar hasil identik tidak dianggap berubah.
+[x] viewChildFn | packages/core/src/authoring/queries.ts:18 | Implementasi viewChild() opsional.
+[x] viewChildRequiredFn | packages/core/src/authoring/queries.ts:26 | Implementasi viewChild.required().
+[x] viewChildren | packages/core/src/authoring/queries.ts:155 | Implementasi viewChildren() dengan opsi read/descendants.
+[x] contentChildFn | packages/core/src/authoring/queries.ts:166 | Implementasi contentChild() opsional.
+[x] contentChildRequiredFn | packages/core/src/authoring/queries.ts:178 | Implementasi contentChild.required().
+[x] contentChildren | packages/core/src/authoring/queries.ts:322 | Implementasi contentChildren() dengan opsi read/descendants.

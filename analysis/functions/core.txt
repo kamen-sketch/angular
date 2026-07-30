@@ -2421,64 +2421,64 @@ Format: [ ] Nama  (export|kind) :baris
       -- Provides an application initializer that will log information about what tasks are keeping the application from stabilizing if the application does not stabiliz
 
 ## packages/core/src/authoring/input/input.ts
-[ ] inputFunction  (export function) :21
-[ ] inputRequiredFunction  (export function) :29
+[x] inputFunction  (export function) :21
+[x] inputRequiredFunction  (export function) :29
 [ ] input  (export arrow) :171
       -- The `input` function allows declaration of Angular inputs in directives and components. There are two variants of inputs that can be declared:   1. **Optional i
 
 ## packages/core/src/authoring/input/input_signal.ts
-[ ] createInputSignal  (export function) :115
+[x] createInputSignal  (export function) :115
       -- Creates an input signal.   Can be set to {@link REQUIRED_UNSET_VALUE} for required inputs.
-[ ] inputValueFn  (function) :127
+[x] inputValueFn  (function) :127
 
 ## packages/core/src/authoring/input/input_signal_node.ts
 [ ] INPUT_SIGNAL_NODE  (export arrow) :42
       -- a side-effect, ending up preserving `COMPUTED_NODE` and `REACTIVE_NODE`.
 
 ## packages/core/src/authoring/model/model.ts
-[ ] modelFunction  (export function) :14
-[ ] modelRequiredFunction  (export function) :23
+[x] modelFunction  (export function) :14
+[x] modelRequiredFunction  (export function) :23
 [ ] model  (export arrow) :114
       -- `model` declares a writeable signal that is exposed as an input/output pair on the containing directive. The input name is taken either from the class member or
 
 ## packages/core/src/authoring/model/model_signal.ts
-[ ] createModelSignal  (export function) :64
+[x] createModelSignal  (export function) :64
       -- Creates a model signal.   Can be set to {@link REQUIRED_UNSET_VALUE} for required model signals.
-[ ] getter  (function) :70
-[ ] assertModelSet  (function) :110
+[x] getter  (function) :70
+[x] assertModelSet  (function) :110
       -- Asserts that a model's value is set.
 
 ## packages/core/src/authoring/output/output.ts
-[ ] output  (export function) :69
+[x] output  (export function) :69
       -- The `output` function allows declaration of Angular outputs in directives and components. You can use outputs to emit values to parent directives and component.
 
 ## packages/core/src/authoring/output/output_emitter_ref.ts
 [ ] OutputEmitterRef  (export class) :33
       -- An `OutputEmitterRef` is created by the `output()` function and can be used to emit values to consumers of your directive or component. Consumers of your direct
-[ ] OutputEmitterRef.constructor  (ctor) :43
-[ ] OutputEmitterRef.subscribe  (method) :51
-[ ] OutputEmitterRef.emit  (method) :83
+[x] OutputEmitterRef.constructor  (ctor) :43
+[x] OutputEmitterRef.subscribe  (method) :51
+[x] OutputEmitterRef.emit  (method) :83
       -- Emits a new value to the output.
-[ ] removeNullValues  (function) :123
-[ ] getOutputDestroyRef  (export function) :135
+[x] removeNullValues  (function) :123
+[x] getOutputDestroyRef  (export function) :135
       -- Gets the owning `DestroyRef` for the given output.
 
 ## packages/core/src/authoring/queries.ts
-[ ] viewChildFn  (function) :18
-[ ] viewChildRequiredFn  (function) :26
+[x] viewChildFn  (function) :18
+[x] viewChildRequiredFn  (function) :26
 [ ] viewChild  (export arrow) :113
       -- Initializes a view child query. Consider using `viewChild.required` for queries that should always match. Create a child query in your component by declaring a 
 [ ] viewChildren  (export function) :121
 [ ] viewChildren  (export function) :125
-[ ] viewChildren  (export function) :155
+[x] viewChildren  (export function) :155
       -- Initializes a view children query. Query results are represented as a signal of a read-only collection containing all matched elements. Create a children query 
-[ ] contentChildFn  (export function) :166
-[ ] contentChildRequiredFn  (function) :178
+[x] contentChildFn  (export function) :166
+[x] contentChildRequiredFn  (function) :178
 [ ] contentChild  (export arrow) :273
       -- Initializes a content child query. Consider using `contentChild.required` for queries that should always match. Create a child query in your component by declar
 [ ] contentChildren  (export function) :281
 [ ] contentChildren  (export function) :289
-[ ] contentChildren  (export function) :322
+[x] contentChildren  (export function) :322
       -- Initializes a content children query. Query results are represented as a signal of a read-only collection containing all matched elements. Create a children que
 
 ## packages/core/src/cached_injector_service.ts
@@ -5663,13 +5663,13 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] executeContentQueries  (export function) :56
 
 ## packages/core/src/render3/queries/query_reactive.ts
-[ ] createQuerySignalFn  (function) :43
+[x] createQuerySignalFn  (function) :43
       -- A signal factory function in charge of creating a new computed signal capturing query results. This centralized creation function is used by all types of querie
-[ ] createSingleResultOptionalQuerySignalFn  (export function) :81
-[ ] createSingleResultRequiredQuerySignalFn  (export function) :89
-[ ] createMultiResultQuerySignalFn  (export function) :95
-[ ] bindQueryToSignal  (export function) :103
-[ ] refreshSignalQuery  (function) :111
+[x] createSingleResultOptionalQuerySignalFn  (export function) :81
+[x] createSingleResultRequiredQuerySignalFn  (export function) :89
+[x] createMultiResultQuerySignalFn  (export function) :95
+[x] bindQueryToSignal  (export function) :103
+[x] refreshSignalQuery  (function) :111
 
 ## packages/core/src/render3/reactive_lview_consumer.ts
 [x] getOrBorrowReactiveLViewConsumer  (export function) :24
@@ -5703,67 +5703,67 @@ Format: [ ] Nama  (export|kind) :baris
       -- Checks if the given `value` is a writeable signal.
 
 ## packages/core/src/render3/reactivity/asserts.ts
-[ ] assertNotInReactiveContext  (export function) :22
+[x] assertNotInReactiveContext  (export function) :22
       -- Asserts that the current stack frame is not within a reactive context. Useful to disallow certain code from running inside a reactive context (see {@link /api/c
 
 ## packages/core/src/render3/reactivity/computed.ts
-[ ] computed  (export function) :32
+[x] computed  (export function) :32
       -- Create a computed `Signal` which derives a reactive value from an expression.
 
 ## packages/core/src/render3/reactivity/effect.ts
 [ ] EffectRefImpl  (export class) :49
-[ ] EffectRefImpl.constructor  (ctor) :52
-[ ] EffectRefImpl.destroy  (method) :56
-[ ] effect  (export function) :137
+[x] EffectRefImpl.constructor  (ctor) :52
+[x] EffectRefImpl.destroy  (method) :56
+[x] effect  (export function) :137
       -- Registers an "effect" that will be scheduled & executed whenever the signals that it reads changes. Angular has two different kinds of effect: component effects
-[ ] EFFECT_NODE  (export arrow) :215
-[ ] ROOT_EFFECT_NODE  (export arrow) :254
-[ ] VIEW_EFFECT_NODE  (export arrow) :275
-[ ] createViewEffect  (export function) :297
-[ ] createRootEffect  (export function) :315
-[ ] createEffectFn  (function) :330
+[x] EFFECT_NODE  (export arrow) :215
+[x] ROOT_EFFECT_NODE  (export arrow) :254
+[x] VIEW_EFFECT_NODE  (export arrow) :275
+[x] createViewEffect  (export function) :297
+[x] createRootEffect  (export function) :315
+[x] createEffectFn  (function) :330
 
 ## packages/core/src/render3/reactivity/linked_signal.ts
 [ ] linkedSignal  (export function) :29
       -- Creates a writable signal whose value is initialized and reset by the linked, reactive computation.
 [ ] linkedSignal  (export function) :47
       -- Creates a writable signal whose value is initialized and reset by the linked, reactive computation. This is an advanced API form where the computation has acces
-[ ] linkedSignal  (export function) :55
-[ ] upgradeLinkedSignalGetter  (function) :92
+[x] linkedSignal  (export function) :55
+[x] upgradeLinkedSignalGetter  (function) :92
 
 ## packages/core/src/render3/reactivity/root_effect_scheduler.ts
 [ ] EffectScheduler  (export class) :25
       -- A scheduler which manages the execution of effects.
-[ ] EffectScheduler.add  (method) :26
-[ ] EffectScheduler.schedule  (method) :33
+[x] EffectScheduler.add  (method) :26
+[x] EffectScheduler.schedule  (method) :33
       -- Schedule the given effect to be executed at a later time. It is an error to attempt to execute any effects synchronously during a scheduling operation.
-[ ] EffectScheduler.flush  (method) :38
+[x] EffectScheduler.flush  (method) :38
       -- Run any scheduled effects.
-[ ] EffectScheduler.remove  (method) :41
+[x] EffectScheduler.remove  (method) :41
       -- Remove a scheduled effect
 [ ] ZoneAwareEffectScheduler  (export class) :55
       -- A wrapper around `ZoneAwareQueueingScheduler` that schedules flushing via the microtask queue when.
-[ ] ZoneAwareEffectScheduler.add  (method) :59
-[ ] ZoneAwareEffectScheduler.schedule  (method) :64
-[ ] ZoneAwareEffectScheduler.remove  (method) :71
-[ ] ZoneAwareEffectScheduler.enqueue  (method) :84
-[ ] ZoneAwareEffectScheduler.flush  (method) :103
+[x] ZoneAwareEffectScheduler.add  (method) :59
+[x] ZoneAwareEffectScheduler.schedule  (method) :64
+[x] ZoneAwareEffectScheduler.remove  (method) :71
+[x] ZoneAwareEffectScheduler.enqueue  (method) :84
+[x] ZoneAwareEffectScheduler.flush  (method) :103
       -- Run all scheduled effects. Execution order of effects within the same zone is guaranteed to be FIFO, but there is no ordering guarantee between effects schedule
-[ ] ZoneAwareEffectScheduler.flushQueue  (method) :123
+[x] ZoneAwareEffectScheduler.flushQueue  (method) :123
 
 ## packages/core/src/render3/reactivity/signal.ts
-[ ] ɵunwrapWritableSignal  (export function) :47
+[x] ɵunwrapWritableSignal  (export function) :47
       -- Utility function used during template type checking to extract the value from a `WritableSignal`.
-[ ] signal  (export function) :72
+[x] signal  (export function) :72
       -- Create a `Signal` that can be set or updated directly.
-[ ] signalAsReadonlyFn  (export function) :91
+[x] signalAsReadonlyFn  (export function) :91
 
 ## packages/core/src/render3/reactivity/untracked.ts
-[ ] untracked  (export function) :16
+[x] untracked  (export function) :16
       -- Execute an arbitrary function in a non-reactive (non-tracking) context. The executed function can, optionally, return a value.
 
 ## packages/core/src/render3/reactivity/view_effect_runner.ts
-[ ] runEffectsInView  (export function) :11
+[x] runEffectsInView  (export function) :11
 
 ## packages/core/src/render3/scope.ts
 [ ] ɵɵsetComponentScope  (export function) :35

@@ -1,7 +1,7 @@
 DAFTAR FUNGSI YANG SUDAH DIANALISIS
 Dihasilkan otomatis oleh analysis/tools/sync-checklist.mjs -- jangan diedit manual.
 Sumber: analysis/subsystems/*.txt
-Total fungsi tercentang: 276
+Total fungsi tercentang: 471
 ==============================================================================
 
 ### 01-core-signals-primitives
@@ -563,3 +563,399 @@ Total fungsi tercentang: 276
       Menambah slot ke LView, blueprint, dan TView.data secara sinkron untuk node yang dibuat dinamis.
 [x] addToEndOfViewTree  --  packages/core/src/render3/view/construction.ts:320
       Merangkai LView/LContainer anak sebagai linked list CHILD_HEAD/CHILD_TAIL/NEXT.
+
+### 05-core-signals-api-authoring
+[x] createInputSignal  --  packages/core/src/authoring/input/input_signal.ts:115
+      Membuat node input: transformFn selalu di-set demi monomorfisme, sentinel REQUIRED_UNSET_VALUE untuk input wajib.
+[x] inputValueFn  --  packages/core/src/authoring/input/input_signal.ts:127
+      Getter input: mendaftar sebagai producer dan melempar NG0950 bila input wajib belum terisi.
+[x] inputFunction  --  packages/core/src/authoring/input/input.ts:21
+      Implementasi input() opsional dengan nilai awal dan opsi.
+[x] inputRequiredFunction  --  packages/core/src/authoring/input/input.ts:29
+      Implementasi input.required() memakai sentinel nilai belum-terisi.
+[x] createModelSignal  --  packages/core/src/authoring/model/model_signal.ts:64
+      Menggabungkan InputSignalNode dengan OutputEmitterRef sehingga set/update sekaligus meng-emit perubahan (dasar two-way binding).
+[x] getter  --  packages/core/src/authoring/model/model_signal.ts:70
+      Getter model signal dengan asersi nilai wajib.
+[x] assertModelSet  --  packages/core/src/authoring/model/model_signal.ts:110
+      Melempar NG0952 bila model wajib dibaca sebelum terisi.
+[x] modelFunction  --  packages/core/src/authoring/model/model.ts:14
+      Implementasi model() dengan nilai awal.
+[x] modelRequiredFunction  --  packages/core/src/authoring/model/model.ts:23
+      Implementasi model.required().
+[x] OutputEmitterRef.constructor  --  packages/core/src/authoring/output/output_emitter_ref.ts:43
+      Mengaitkan diri ke DestroyRef konteks saat ini bila ada.
+[x] OutputEmitterRef.subscribe  --  packages/core/src/authoring/output/output_emitter_ref.ts:51
+      Mendaftarkan listener dan mengembalikan objek unsubscribe; menolak setelah destroy.
+[x] OutputEmitterRef.emit  --  packages/core/src/authoring/output/output_emitter_ref.ts:83
+      Memanggil seluruh listener; memperingatkan/menolak emit pada emitter yang sudah dihancurkan.
+[x] removeNullValues  --  packages/core/src/authoring/output/output_emitter_ref.ts:123
+      Memadatkan daftar listener setelah unsubscribe.
+[x] getOutputDestroyRef  --  packages/core/src/authoring/output/output_emitter_ref.ts:135
+      Mengambil DestroyRef milik sebuah OutputRef (dipakai interop RxJS).
+[x] output  --  packages/core/src/authoring/output/output.ts:69
+      API output(): membuat OutputEmitterRef terikat konteks injeksi saat ini.
+[x] viewChildFn  --  packages/core/src/authoring/queries.ts:18
+      Implementasi viewChild() opsional.
+[x] viewChildRequiredFn  --  packages/core/src/authoring/queries.ts:26
+      Implementasi viewChild.required().
+[x] viewChildren  --  packages/core/src/authoring/queries.ts:155
+      Implementasi viewChildren() dengan opsi read/descendants.
+[x] contentChildFn  --  packages/core/src/authoring/queries.ts:166
+      Implementasi contentChild() opsional.
+[x] contentChildRequiredFn  --  packages/core/src/authoring/queries.ts:178
+      Implementasi contentChild.required().
+[x] contentChildren  --  packages/core/src/authoring/queries.ts:322
+      Implementasi contentChildren() dengan opsi read/descendants.
+[x] createQuerySignalFn  --  packages/core/src/render3/queries/query_reactive.ts:43
+      Inti query berbasis signal: computed yang membaca dirty counter lalu menghitung ulang hasil query.
+[x] createSingleResultOptionalQuerySignalFn  --  packages/core/src/render3/queries/query_reactive.ts:81
+      Pabrik untuk viewChild/contentChild opsional.
+[x] createSingleResultRequiredQuerySignalFn  --  packages/core/src/render3/queries/query_reactive.ts:89
+      Pabrik varian required yang melempar bila hasil kosong.
+[x] createMultiResultQuerySignalFn  --  packages/core/src/render3/queries/query_reactive.ts:95
+      Pabrik untuk viewChildren/contentChildren (hasil array read-only).
+[x] bindQueryToSignal  --  packages/core/src/render3/queries/query_reactive.ts:103
+      Menautkan node signal query ke slot QueryList pada LView.
+[x] refreshSignalQuery  --  packages/core/src/render3/queries/query_reactive.ts:111
+      Menghitung hasil query terkini dan memakai _flatValue agar hasil identik tidak dianggap berubah.
+[x] assertNotInReactiveContext  --  packages/core/src/render3/reactivity/asserts.ts:22
+      Guard: melarang pemanggilan API tertentu (mis. effect) dari dalam konteks reaktif.
+[x] computed  --  packages/core/src/render3/reactivity/computed.ts:32
+      API publik computed(): createComputed + debugName + hook DevTools.
+[x] EffectRefImpl.constructor  --  packages/core/src/render3/reactivity/effect.ts:52
+      Menyimpan node di properti simbol SIGNAL.
+[x] EffectRefImpl.destroy  --  packages/core/src/render3/reactivity/effect.ts:56
+      Meneruskan destroy ke node effect.
+[x] effect  --  packages/core/src/render3/reactivity/effect.ts:137
+      Titik masuk publik: validasi konteks, pilih view effect vs root effect berdasarkan ViewContext, daftarkan cleanup ke DestroyRef.
+[x] EFFECT_NODE  --  packages/core/src/render3/reactivity/effect.ts:215
+      Prototipe effect bersama: run() mematikan isRefreshingViews agar markForCheck di dalam effect efektif; cleanup() menjalankan dan mengosongkan daftar cleanup.
+[x] ROOT_EFFECT_NODE  --  packages/core/src/render3/reactivity/effect.ts:254
+      Varian root: saat kotor menjadwal ke EffectScheduler dan memberi notifikasi RootEffect.
+[x] VIEW_EFFECT_NODE  --  packages/core/src/render3/reactivity/effect.ts:275
+      Varian view: saat kotor menandai view + leluhur untuk traversal; destroy melepas diri dari lView[EFFECTS].
+[x] createViewEffect  --  packages/core/src/render3/reactivity/effect.ts:297
+      Membuat node effect terikat LView, menyimpan zone pembuat, langsung menandai kotor agar berjalan pada CD berikutnya.
+[x] createRootEffect  --  packages/core/src/render3/reactivity/effect.ts:315
+      Membuat node effect independen dan mendaftarkannya ke scheduler global.
+[x] createEffectFn  --  packages/core/src/render3/reactivity/effect.ts:330
+      Membungkus fungsi pengguna dengan registrar onCleanup.
+[x] linkedSignal  --  packages/core/src/render3/reactivity/linked_signal.ts:55
+      API publik linkedSignal(): bentuk ringkas (source saja) maupun bentuk {source, computation}.
+[x] upgradeLinkedSignalGetter  --  packages/core/src/render3/reactivity/linked_signal.ts:92
+      Menambahkan set/update/asReadonly ke getter linkedSignal.
+[x] EffectScheduler.add  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:26
+      Kontrak abstrak pendaftaran effect.
+[x] EffectScheduler.schedule  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:33
+      Kontrak abstrak penjadwalan effect kotor.
+[x] EffectScheduler.flush  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:38
+      Kontrak abstrak eksekusi effect terjadwal.
+[x] EffectScheduler.remove  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:41
+      Kontrak abstrak pelepasan effect.
+[x] ZoneAwareEffectScheduler.add  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:59
+      Masukkan ke antrean zone lalu tandai perlu dijalankan.
+[x] ZoneAwareEffectScheduler.schedule  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:64
+      Menaikkan penghitung effect kotor (tanpa alokasi antrean baru).
+[x] ZoneAwareEffectScheduler.remove  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:71
+      Melepas effect dari antrean zone-nya dan menyesuaikan penghitung.
+[x] ZoneAwareEffectScheduler.enqueue  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:84
+      Menempatkan effect ke Set milik zone tempat ia dibuat.
+[x] ZoneAwareEffectScheduler.flush  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:103
+      Menjalankan seluruh antrean per zone sampai penghitung kotor habis, dengan pengaman anti-loop.
+[x] ZoneAwareEffectScheduler.flushQueue  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:123
+      Menjalankan satu antrean; melewati effect yang sudah bersih.
+[x] ɵunwrapWritableSignal  --  packages/core/src/render3/reactivity/signal.ts:47
+      Utilitas kompilasi untuk two-way binding: membuka signal writable menjadi nilainya.
+[x] signal  --  packages/core/src/render3/reactivity/signal.ts:72
+      API publik signal(): membungkus createSignal dan memasang set/update/asReadonly serta debugName.
+[x] signalAsReadonlyFn  --  packages/core/src/render3/reactivity/signal.ts:91
+      Menghasilkan tampilan read-only yang berbagi node yang sama (di-cache pada node).
+[x] untracked  --  packages/core/src/render3/reactivity/untracked.ts:16
+      Re-ekspor publik dari primitives untuk membaca signal tanpa melacak dependensi.
+[x] runEffectsInView  --  packages/core/src/render3/reactivity/view_effect_runner.ts:11
+      Flush berulang effect view sampai tidak ada lagi yang kotor, menghormati zone asal tiap effect.
+
+### 06-compiler-template-pipeline
+[x] tokenize  --  packages/compiler/src/ml_parser/lexer.ts:109
+      Lexer HTML: mengubah string template menjadi token, menangani interpolasi, blok (@if), dan ICU.
+[x] htmlAstToRender3Ast  --  packages/compiler/src/render3/r3_template_transform.ts:92
+      Titik masuk transformasi AST HTML menjadi AST R3 (t.Node) yang dipakai compiler dan type-checker.
+[x] HtmlAstToIvyAst.visitElement  --  packages/compiler/src/render3/r3_template_transform.ts:137
+      Mengelompokkan atribut menjadi input/output/reference/variable, membungkus elemen ber-*ngIf ke dalam template.
+[x] HtmlAstToIvyAst.visitAttribute  --  packages/compiler/src/render3/r3_template_transform.ts:291
+      Mengurai satu atribut menjadi bentuk terikat atau statis.
+[x] HtmlAstToIvyAst.visitText  --  packages/compiler/src/render3/r3_template_transform.ts:302
+      Teks statis atau teks dengan interpolasi.
+[x] HtmlAstToIvyAst.visitExpansion  --  packages/compiler/src/render3/r3_template_transform.ts:308
+      Menangani ekspansi ICU (plural/select) i18n.
+[x] HtmlAstToIvyAst.visitLetDeclaration  --  packages/compiler/src/render3/r3_template_transform.ts:365
+      Menangani deklarasi @let dalam template.
+[x] HtmlAstToIvyAst.visitBlock  --  packages/compiler/src/render3/r3_template_transform.ts:478
+      Menerjemahkan blok kontrol (@if/@for/@switch/@defer) beserta blok terhubungnya.
+[x] HtmlAstToIvyAst.findConnectedBlocks  --  packages/compiler/src/render3/r3_template_transform.ts:557
+      Menemukan @else/@empty/@placeholder yang mengikuti sebuah blok.
+[x] HtmlAstToIvyAst.categorizePropertyAttributes  --  packages/compiler/src/render3/r3_template_transform.ts:593
+      Memilah atribut menjadi properti, atribut biasa, dan animasi.
+[x] HtmlAstToIvyAst.parseAttribute  --  packages/compiler/src/render3/r3_template_transform.ts:723
+      Mengurai sintaks [x], (y), [(z)], #ref, *dir menjadi struktur AST.
+[x] HtmlAstToIvyAst.extractDirectives  --  packages/compiler/src/render3/r3_template_transform.ts:929
+      Mengumpulkan directive selectorless (@Directive pada tag komponen).
+[x] HtmlAstToIvyAst.wrapInTemplate  --  packages/compiler/src/render3/r3_template_transform.ts:1013
+      Membungkus elemen dengan template implisit untuk directive struktural.
+[x] HtmlAstToIvyAst.parseVariable  --  packages/compiler/src/render3/r3_template_transform.ts:1090
+      Mengurai deklarasi variabel template (let-x).
+[x] HtmlAstToIvyAst.parseReference  --  packages/compiler/src/render3/r3_template_transform.ts:1107
+      Mengurai referensi lokal #ref (opsional dengan target directive).
+[x] HtmlAstToIvyAst.parseAssignmentEvent  --  packages/compiler/src/render3/r3_template_transform.ts:1126
+      Menghasilkan listener xChange untuk two-way binding.
+[x] HtmlAstToIvyAst.reportError  --  packages/compiler/src/render3/r3_template_transform.ts:1171
+      Mengumpulkan ParseError dengan span sumber untuk pelaporan diagnostik.
+[x] baseDirectiveFields  --  packages/compiler/src/render3/view/compiler.ts:39
+      Bagian definisi yang sama untuk directive dan komponen (type, selectors, queries, hostBindings, inputs/outputs).
+[x] addFeatures  --  packages/compiler/src/render3/view/compiler.ts:108
+      Menambahkan feature runtime (Inherit, NgOnChanges, Providers, HostDirectives) ke definisi.
+[x] compileDirectiveFromMetadata  --  packages/compiler/src/render3/view/compiler.ts:160
+      Menyusun objek ɵdir dari metadata directive.
+[x] compileComponentFromMetadata  --  packages/compiler/src/render3/view/compiler.ts:178
+      Menyusun objek ɵcmp lengkap: definisi dasar, features, fungsi template, styles, dependensi, konfigurasi defer.
+[x] createComponentType  --  packages/compiler/src/render3/view/compiler.ts:335
+      Menghasilkan tipe deklarasi ɵcmp untuk berkas .d.ts.
+[x] createDirectiveType  --  packages/compiler/src/render3/view/compiler.ts:435
+      Menghasilkan tipe deklarasi ɵdir untuk berkas .d.ts.
+[x] createHostBindingsFunction  --  packages/compiler/src/render3/view/compiler.ts:452
+      Mengompilasi host bindings menjadi fungsi lewat pipeline job Host.
+[x] parseHostBindings  --  packages/compiler/src/render3/view/compiler.ts:521
+      Memilah objek host: {...} menjadi attributes, properties, dan listeners.
+[x] verifyHostBindings  --  packages/compiler/src/render3/view/compiler.ts:584
+      Memvalidasi ekspresi host binding dan mengembalikan diagnostik.
+[x] validateNoEventBindings  --  packages/compiler/src/render3/view/compiler.ts:605
+      Melarang binding event pada posisi yang tidak mendukungnya.
+[x] compileStyles  --  packages/compiler/src/render3/view/compiler.ts:628
+      Memroses styles komponen sesuai mode encapsulation.
+[x] encapsulateStyle  --  packages/compiler/src/render3/view/compiler.ts:644
+      Menerapkan shadow CSS (emulated encapsulation) pada satu style.
+[x] createHostDirectivesFeatureArg  --  packages/compiler/src/render3/view/compiler.ts:681
+      Menyusun argumen ɵɵHostDirectivesFeature termasuk pemetaan input/output.
+[x] createHostDirectivesMappingArray  --  packages/compiler/src/render3/view/compiler.ts:732
+      Meratakan pemetaan alias input/output host directive menjadi array.
+[x] compileDeferResolverFunction  --  packages/compiler/src/render3/view/compiler.ts:749
+      Menghasilkan fungsi resolver dependensi untuk blok @defer (dynamic import).
+[x] transform  --  packages/compiler/src/template/pipeline/src/emit.ts:189
+      Menjalankan seluruh 72 phase sesuai jenis job (template/host/keduanya).
+[x] emitTemplateFn  --  packages/compiler/src/template/pipeline/src/emit.ts:203
+      Menghasilkan fungsi template akhir untuk view root beserta seluruh view anak.
+[x] emitChildViews  --  packages/compiler/src/template/pipeline/src/emit.ts:209
+      Emisi view anak secara depth-first ke dalam ConstantPool.
+[x] emitView  --  packages/compiler/src/template/pipeline/src/emit.ts:227
+      Menyusun badan fungsi template dari operasi create/update; memastikan semua operasi sudah ter-reify.
+[x] maybeGenerateRfBlock  --  packages/compiler/src/template/pipeline/src/emit.ts:266
+      Membungkus statement dalam `if (rf & 1)` / `if (rf & 2)`.
+[x] emitHostBindingFunction  --  packages/compiler/src/template/pipeline/src/emit.ts:283
+      Menghasilkan fungsi hostBindings, atau null bila tidak ada operasi.
+[x] ingestComponent  --  packages/compiler/src/template/pipeline/src/ingest.ts:60
+      Membuat ComponentCompilationJob dan mengisi operasi IR dari AST R3.
+[x] ingestHostBinding  --  packages/compiler/src/template/pipeline/src/ingest.ts:104
+      Membuat job terpisah untuk host bindings sebuah directive.
+[x] calcHostBindingSecurityContexts  --  packages/compiler/src/template/pipeline/src/ingest.ts:151
+      Menentukan konteks keamanan (sanitasi) untuk properti host.
+[x] ingestDomProperty  --  packages/compiler/src/template/pipeline/src/ingest.ts:189
+      Menangani binding properti DOM pada host binding.
+[x] ingestHostAttribute  --  packages/compiler/src/template/pipeline/src/ingest.ts:223
+      Menangani atribut statis pada host binding.
+[x] ingestHostEvent  --  packages/compiler/src/template/pipeline/src/ingest.ts:247
+      Menangani listener pada host binding.
+[x] ingestNodes  --  packages/compiler/src/template/pipeline/src/ingest.ts:285
+      Dispatcher: memilih fungsi ingest sesuai jenis node AST.
+[x] ingestElement  --  packages/compiler/src/template/pipeline/src/ingest.ts:320
+      Menghasilkan operasi elementStart/elementEnd beserta binding dan referensi lokal.
+[x] ingestTemplate  --  packages/compiler/src/template/pipeline/src/ingest.ts:448
+      Membuat ViewCompilationUnit baru untuk embedded view.
+[x] ingestContent  --  packages/compiler/src/template/pipeline/src/ingest.ts:510
+      Menangani <ng-content> dan selektor proyeksi.
+[x] ingestText  --  packages/compiler/src/template/pipeline/src/ingest.ts:563
+      Teks statis menjadi operasi text.
+[x] ingestBoundText  --  packages/compiler/src/template/pipeline/src/ingest.ts:572
+      Teks terinterpolasi menjadi operasi text + update interpolate.
+[x] ingestIfBlock  --  packages/compiler/src/template/pipeline/src/ingest.ts:622
+      @if beserta cabang @else if/@else menjadi satu operasi conditional multi-cabang.
+[x] ingestSwitchBlock  --  packages/compiler/src/template/pipeline/src/ingest.ts:676
+      @switch/@case/@default menjadi conditional dengan ekspresi pembanding.
+[x] ingestDeferView  --  packages/compiler/src/template/pipeline/src/ingest.ts:739
+      Membuat view terpisah untuk tiap sub-blok @defer.
+[x] ingestDeferBlock  --  packages/compiler/src/template/pipeline/src/ingest.ts:768
+      @defer beserta blok @placeholder/@loading/@error dan konfigurasinya.
+[x] calcDeferBlockFlags  --  packages/compiler/src/template/pipeline/src/ingest.ts:884
+      Menghitung bendera blok defer (mis. hidrasi inkremental).
+[x] ingestDeferTriggers  --  packages/compiler/src/template/pipeline/src/ingest.ts:891
+      Menerjemahkan trigger (on idle/hover/viewport/interaction/timer, when) menjadi operasi.
+[x] ingestIcu  --  packages/compiler/src/template/pipeline/src/ingest.ts:1002
+      Menangani pesan ICU dalam blok i18n.
+[x] ingestForBlock  --  packages/compiler/src/template/pipeline/src/ingest.ts:1022
+      @for menjadi repeaterCreate + repeater, termasuk blok @empty dan variabel $index/$count dll.
+[x] getComputedForLoopVariableExpression  --  packages/compiler/src/template/pipeline/src/ingest.ts:1131
+      Menurunkan variabel kontekstual @for ($first/$last/$even/$odd) dari $index dan $count.
+[x] ingestLetDeclaration  --  packages/compiler/src/template/pipeline/src/ingest.ts:1162
+      @let menjadi operasi deklarasi variabel lokal.
+[x] convertAst  --  packages/compiler/src/template/pipeline/src/ingest.ts:1179
+      Penerjemah AST ekspresi Angular ke ekspresi IR (property read, call, pipe, safe navigation, dll).
+[x] convertTemplateLiteral  --  packages/compiler/src/template/pipeline/src/ingest.ts:1354
+      Menerjemahkan template literal dalam ekspresi template.
+[x] convertAstWithInterpolation  --  packages/compiler/src/template/pipeline/src/ingest.ts:1368
+      Menangani nilai yang bisa berupa interpolasi maupun ekspresi tunggal.
+[x] isPlainTemplate  --  packages/compiler/src/template/pipeline/src/ingest.ts:1417
+      Membedakan <ng-template> asli dari template hasil pembungkusan directive struktural.
+
+### 07-compiler-cli-ngtsc
+[x] ComponentDecoratorHandler.detect  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:344
+      Mengenali dekorator @Component pada sebuah kelas.
+[x] ComponentDecoratorHandler.preanalyze  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:363
+      Memuat templateUrl/styleUrls secara asinkron sebelum analisis.
+[x] ComponentDecoratorHandler.analyze  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:483
+      Ekstraksi metadata komponen: evaluasi objek dekorator, parse template, kumpulkan style, deteksi blok defer.
+[x] ComponentDecoratorHandler.register  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1088
+      Mendaftarkan metadata komponen ke registry (tahap berefek samping).
+[x] ComponentDecoratorHandler.index  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1132
+      Mengindeks penggunaan directive/pipe dalam template.
+[x] ComponentDecoratorHandler.typeCheck  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1197
+      Menyumbangkan Type Check Block template komponen.
+[x] ComponentDecoratorHandler.resolve  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1268
+      Menyelesaikan scope directive/pipe, dependensi defer, dan siklus impor.
+[x] ComponentDecoratorHandler.updateResources  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1440
+      Memuat ulang template/style saat resource berubah.
+[x] ComponentDecoratorHandler.compileFull  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1485
+      Menghasilkan ɵcmp lengkap lewat compileComponentFromMetadata.
+[x] ComponentDecoratorHandler.compilePartial  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1552
+      Menghasilkan ɵɵngDeclareComponent untuk distribusi pustaka.
+[x] ComponentDecoratorHandler.compileLocal  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1619
+      Kompilasi mode lokal tanpa informasi lintas-berkas.
+[x] ComponentDecoratorHandler.resolveComponentDependencies  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1737
+      Menentukan directive/pipe yang benar-benar dipakai template (basis tree-shaking dependensi).
+[x] ComponentDecoratorHandler.handleDependencyCycles  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1988
+      Menangani siklus impor dengan mengalihkan ke referensi tak-langsung.
+[x] ComponentDecoratorHandler.resolveDeferBlocks  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2361
+      Menentukan dependensi yang bisa di-defer beserta fungsi dynamic import-nya.
+[x] ComponentDecoratorHandler.registerDeferrableCandidate  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2471
+      Menandai impor yang memenuhi syarat untuk pemuatan tertunda.
+[x] ComponentDecoratorHandler.compileDeferBlocks  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2544
+      Menghasilkan kode konfigurasi blok @defer.
+[x] createMatcherFromScope  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2595
+      Membangun SelectorMatcher dari scope komponen untuk pencocokan directive di template.
+[x] removeDeferrableTypesFromComponentDecorator  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2630
+      Menghapus tipe yang di-defer dari dekorator agar tidak menjadi impor eager.
+[x] validateNoImportOverlap  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2648
+      Melarang simbol yang sama muncul di imports dan deferredImports.
+[x] validateStandaloneImports  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2676
+      Memvalidasi bahwa `imports:` komponen standalone berisi hal yang sah.
+[x] freshCompilationTicket  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:222
+      Tiket kompilasi dari nol (tanpa state sebelumnya).
+[x] incrementalFromCompilerTicket  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:247
+      Tiket inkremental yang mewarisi state dari NgCompiler sebelumnya.
+[x] incrementalFromStateTicket  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:301
+      Tiket inkremental dari state yang diserialisasi (dipakai build system).
+[x] resourceChangeTicket  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:337
+      Jalur cepat ketika hanya template/style yang berubah.
+[x] NgCompiler.fromTicket  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:417
+      Pabrik NgCompiler sesuai jenis tiket.
+[x] NgCompiler.updateWithChangedResources  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:539
+      Memperbarui hasil kompilasi ketika hanya resource (HTML/CSS) berubah.
+[x] NgCompiler.getDiagnostics  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:591
+      Gabungan diagnostik non-template dan template untuk seluruh program.
+[x] NgCompiler.getDiagnosticsForFile  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:616
+      Diagnostik untuk satu berkas (dipakai language service).
+[x] NgCompiler.getDiagnosticsForComponent  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:644
+      Diagnostik untuk satu kelas komponen.
+[x] NgCompiler.getTemplateTypeChecker  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:717
+      Akses TemplateTypeChecker untuk language service.
+[x] NgCompiler.getComponentsWithTemplateFile  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:729
+      Peta balik dari berkas template ke komponen pemakainya.
+[x] NgCompiler.getComponentsWithStyleFile  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:737
+      Peta balik dari berkas style ke komponen pemakainya.
+[x] NgCompiler.getMeta  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:756
+      Metadata directive/pipe sebuah kelas (untuk tooling).
+[x] NgCompiler.analyzeAsync  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:778
+      Varian asinkron yang menunggu preanalyze (resource eksternal).
+[x] NgCompiler.prepareEmit  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:809
+      Menyiapkan transformer emit dan daftar berkas yang boleh dilewati.
+[x] NgCompiler.emitHmrUpdateModule  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:984
+      Menghasilkan modul pembaruan HMR untuk satu komponen.
+[x] NgCompiler.ensureAnalyzed  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1016
+      Memastikan analisis sudah berjalan sebelum operasi lain.
+[x] NgCompiler.analyzeSync  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1023
+      Analisis seluruh berkas sumber lalu resolve; diinstrumentasi PerfPhase.
+[x] NgCompiler.resolveCompilation  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1039
+      Menjalankan tahap resolve dan mencatat hasil analisis ke state inkremental.
+[x] NgCompiler.getTypeCheckingConfig  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1059
+      Menerjemahkan opsi strictness menjadi konfigurasi pembangkitan Type Check Block.
+[x] NgCompiler.getTemplateDiagnostics  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1202
+      Menjalankan TemplateTypeChecker untuk seluruh program.
+[x] NgCompiler.getTemplateDiagnosticsForFile  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1224
+      Versi per-berkas untuk pemeriksaan template.
+[x] NgCompiler.getNonTemplateDiagnostics  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1243
+      Diagnostik dari handler (metadata tidak valid, scope salah, dll).
+[x] NgCompiler.runAdditionalChecks  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1260
+      Menjalankan extended template checks (mis. pemakaian pipe/binding mencurigakan).
+[x] NgCompiler.makeCompilation  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1293
+      Merakit seluruh subsistem: mode kompilasi, reflector, ReferenceEmitter, evaluator, registry metadata, scope registry, daftar handler.
+[x] isAngularCorePackage  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1724
+      Deteksi bahwa program yang dikompilasi adalah @angular/core itu sendiri.
+[x] NgtscProgram.constructor  --  packages/compiler-cli/src/ngtsc/program.ts:50
+      Membangun ts.Program + adapter + NgCompiler dari opsi dan daftar berkas.
+[x] NgtscProgram.getTsProgram  --  packages/compiler-cli/src/ngtsc/program.ts:138
+      Mengembalikan ts.Program terkini (dipakai tooling).
+[x] NgtscProgram.getTsSemanticDiagnostics  --  packages/compiler-cli/src/ngtsc/program.ts:180
+      Diagnostik semantik TS untuk berkas non-shim.
+[x] NgtscProgram.getNgStructuralDiagnostics  --  packages/compiler-cli/src/ngtsc/program.ts:218
+      Diagnostik struktural (selalu kosong pada ngtsc modern).
+[x] NgtscProgram.getNgSemanticDiagnostics  --  packages/compiler-cli/src/ngtsc/program.ts:224
+      Diagnostik Angular (termasuk hasil pemeriksaan template).
+[x] NgtscProgram.loadNgStructureAsync  --  packages/compiler-cli/src/ngtsc/program.ts:252
+      Menjalankan analisis asinkron (memuat templateUrl/styleUrls).
+[x] NgtscProgram.emitXi18n  --  packages/compiler-cli/src/ngtsc/program.ts:260
+      Ekstraksi pesan i18n ke berkas terjemahan.
+[x] NgtscProgram.emit  --  packages/compiler-cli/src/ngtsc/program.ts:279
+      Emit dengan transformer Angular tersisip; menyaring berkas yang tidak perlu di-emit ulang.
+[x] NgtscProgram.getIndexedComponents  --  packages/compiler-cli/src/ngtsc/program.ts:390
+      Indeks komponen untuk tooling (language service, docs).
+[x] NgtscProgram.getApiDocumentation  --  packages/compiler-cli/src/ngtsc/program.ts:402
+      Ekstraksi dokumentasi API untuk adev.
+[x] mergeEmitResults  --  packages/compiler-cli/src/ngtsc/program.ts:430
+      Menggabungkan beberapa hasil emit menjadi satu.
+[x] TraitCompiler.analyzeSync  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:129
+      Analisis satu berkas secara sinkron.
+[x] TraitCompiler.analyzeAsync  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:133
+      Analisis dengan menunggu preanalyze asinkron.
+[x] TraitCompiler.recordFor  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:198
+      Mengambil ClassRecord milik sebuah kelas.
+[x] TraitCompiler.getAnalyzedRecords  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:206
+      Seluruh record hasil analisis (dipakai state inkremental).
+[x] TraitCompiler.adopt  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:230
+      Mengambil alih hasil analisis berkas lama pada build inkremental.
+[x] TraitCompiler.scanClassForTraits  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:267
+      Memindai kelas dan membuat trait untuk setiap handler yang cocok.
+[x] TraitCompiler.detectTraits  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:275
+      Menjalankan detect() semua handler dengan aturan precedence.
+[x] TraitCompiler.makeSymbolForTrait  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:392
+      Membuat simbol semantik untuk perbandingan perubahan inkremental.
+[x] TraitCompiler.analyzeClass  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:414
+      Menganalisis seluruh trait pada satu kelas.
+[x] TraitCompiler.analyzeTrait  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:448
+      Menjalankan analyze() lalu register(); menyimpan diagnostik bila gagal.
+[x] TraitCompiler.resolve  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:492
+      Tahap resolve lintas-berkas untuk semua trait yang sudah dianalisis.
+[x] TraitCompiler.typeCheck  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:552
+      Mengumpulkan Type Check Block dari seluruh trait.
+[x] TraitCompiler.index  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:603
+      Mengisi indeks komponen/template untuk tooling.
+[x] TraitCompiler.xi18n  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:622
+      Mengumpulkan pesan i18n dari seluruh trait.
+[x] TraitCompiler.updateResources  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:641
+      Memperbarui template/style yang berubah tanpa analisis ulang penuh.
+[x] TraitCompiler.compile  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:660
+      Menghasilkan hasil kompilasi (full/partial/local) untuk satu kelas.
+[x] TraitCompiler.compileHmrUpdateCallback  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:737
+      Menghasilkan callback pembaruan HMR.
+[x] TraitCompiler.decoratorsFor  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:765
+      Dekorator Angular pada sebuah kelas (dipakai transformer untuk menghapusnya).
+[x] containsErrors  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:815
+      Predikat diagnostik: ada error (bukan sekadar warning).

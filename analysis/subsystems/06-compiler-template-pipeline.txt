@@ -1,0 +1,188 @@
+SUBSISTEM 06 :: Compiler - dari HTML ke fungsi template
+Lokasi   : packages/compiler/src/**
+Status   : DIANALISIS PADA TINGKAT ALUR + FUNGSI KUNCI
+           (72 phase pipeline dipetakan sebagai daftar, bukan satu per satu)
+==============================================================================
+
+RANTAI TRANSFORMASI LENGKAP
+---------------------------
+Template Angular melewati lima representasi berbeda sebelum menjadi JavaScript:
+
+  1. STRING HTML
+        |  lexer.ts (tokenize)
+  2. TOKEN
+        |  ml_parser/parser.ts (Parser/HtmlParser)
+  3. AST HTML  (html.Element, html.Attribute, html.Block, html.Expansion/ICU)
+        |  r3_template_transform.ts (HtmlAstToIvyAst)
+  4. AST R3 (t.Element, t.Template, t.IfBlock, t.ForLoopBlock, t.DeferredBlock)
+        |  template/pipeline/src/ingest.ts
+  5. IR (Intermediate Representation) berbasis OPERASI
+        |  72 phase transformasi (emit.ts `phases`)
+  6. AST OUTPUT (output_ast.ts) -> teks JavaScript / TypeScript
+
+Ekspresi di dalam template ({{...}}, [x]="expr") punya jalur parser sendiri:
+`expression_parser/lexer.ts` + `expression_parser/parser.ts` menghasilkan AST
+ekspresi Angular (bukan AST TypeScript), lalu `convertAst` di ingest.ts
+menerjemahkannya ke IR.
+
+MENGAPA ADA IR (arsitektur "template pipeline")
+-----------------------------------------------
+Versi lama compiler membangun output secara langsung saat menelusuri AST.
+Arsitektur sekarang memakai IR berisi daftar OPERASI (create ops dan update ops)
+per view, lalu menjalankan puluhan phase kecil yang masing-masing melakukan SATU
+transformasi. Keuntungannya: tiap phase bisa diuji sendiri, urutan transformasi
+menjadi eksplisit, dan optimasi (chaining, pure function extraction, const
+collection) tinggal menjadi phase tambahan.
+
+Struktur inti:
+  - `CompilationJob` : satu unit kompilasi (komponen atau host binding).
+  - `ViewCompilationUnit` : satu view (root atau embedded); punya dua daftar
+    operasi: `create` dan `update` - persis dua fase runtime di subsistem 04.
+  - `XrefId` : identitas simbolik antar-operasi, diselesaikan menjadi indeks
+    slot nyata pada phase-phase akhir.
+
+URUTAN PHASE (emit.ts, dijalankan oleh `transform`)
+---------------------------------------------------
+Dikelompokkan menurut tujuan (nama sesuai berkas di phases/):
+
+  NORMALISASI AWAL
+    resolveForeignContent, removeContentSelectors, optimizeRegularExpressions,
+    parseHostStyleProperties, emitNamespaceChanges
+  I18N (bagian 1)
+    propagateI18nBlocks, wrapI18nIcus, createI18nContexts
+  SPESIALISASI BINDING
+    deduplicateTextBindings, specializeStyleBindings, specializeBindings,
+    specializeControlProperties, convertAnimations, extractAttributes,
+    parseExtractedStyles, removeEmptyBindings, collapseSingletonInterpolations
+  PENGURUTAN & PEMBENTUKAN STRUKTUR
+    orderOps, generateConditionalExpressions, createPipes,
+    configureDeferInstructions, insertIncrementalHydrationRuntime,
+    createVariadicPipes, generateArrowFunctions, generatePureLiteralStructures,
+    generateProjectionDefs, generateLocalLetReferences, generateVariables,
+    saveAndRestoreView, deleteAnyCasts
+  RESOLUSI NAMA & KONTEKS
+    resolveNames, resolveContexts, resolveDollarEvent, liftLocalRefs,
+    mergeNextContextExpressions, expandSafeReads
+  I18N (bagian 2)
+    convertI18nText, convertI18nBindings, applyI18nExpressions,
+    extractI18nMessages, resolveI18nElementPlaceholders,
+    resolveI18nExpressionPlaceholders, resolveI18nAttrSanitizers,
+    assignI18nSlotDependencies, removeI18nContexts, collectI18nConsts,
+    removeUnusedI18nAttributesOps
+  ALOKASI SLOT & OPTIMASI AKHIR
+    collectElementConsts, collectConstExpressions, extractPureFunctions,
+    generateAdvance, nameFunctionsAndVariables, reify, chain,
+    collapseEmptyInstructions, attachSourceLocations
+
+Dua phase paling menentukan bentuk output:
+  - `generateAdvance` menyisipkan `ɵɵadvance(n)` berdasarkan selisih slot antar
+    operasi update - inilah pasangan compile-time dari mekanisme "selected index"
+    di runtime (subsistem 04).
+  - `reify` mengubah operasi IR abstrak menjadi pemanggilan instruksi konkret
+    (`ɵɵelementStart`, `ɵɵproperty`, ...); setelah phase ini semua operasi harus
+    sudah berupa `Statement`, dan `emitView` melempar AssertionError bila tidak.
+  - `chain` menggabungkan instruksi berurutan yang sama menjadi rantai
+    (`ɵɵelementStart(...)(...)`) untuk memperkecil ukuran bundel.
+
+INGEST: DARI AST R3 KE IR
+-------------------------
+`ingestComponent` membangun `ComponentCompilationJob` lalu `ingestNodes`
+menelusuri AST. Setiap bentuk sintaks punya fungsi ingest sendiri:
+elemen, template, ng-content, teks (statis vs terinterpolasi), @if, @switch,
+@for, @defer (+ trigger), ICU, dan `@let`. Fungsi `convertAst` menerjemahkan AST
+ekspresi Angular ke ekspresi IR, menangani hal-hal seperti safe navigation
+(`a?.b`), pipe, dan `$event`.
+
+`ingestHostBinding` menangani host bindings sebagai job terpisah - itulah sebabnya
+ada `Kind.Host` / `Kind.Tmpl` / `Kind.Both` pada daftar phase.
+
+DEFINISI KOMPONEN/DIRECTIVE
+---------------------------
+`compileComponentFromMetadata` dan `compileDirectiveFromMetadata` menyusun objek
+literal yang menjadi `ɵcmp`/`ɵdir`: selectors, inputs, outputs, features,
+hostBindings, contentQueries, viewQuery, template fn, styles, encapsulation,
+dan daftar dependensi. `addFeatures` menambahkan feature seperti
+`ɵɵInheritDefinitionFeature`, `ɵɵNgOnChangesFeature`, `ɵɵProvidersFeature`,
+`ɵɵHostDirectivesFeature` - yaitu fungsi runtime yang menambal definisi.
+
+`parseHostBindings`/`verifyHostBindings` mengurai objek `host: {...}` menjadi
+atribut, properti, dan listener, sekaligus melarang binding event di tempat yang
+tidak sah.
+
+`compileStyles`/`encapsulateStyle` memroses CSS komponen; `shadow_css.ts`
+mengimplementasikan emulated encapsulation (menambahkan atribut _ngcontent-*/
+_nghost-*).
+
+MODE KOMPILASI
+--------------
+Ada tiga: FULL (definisi lengkap), PARTIAL (untuk pustaka - menghasilkan
+`ɵɵngDeclareComponent` yang nanti diterjemahkan linker di `render3/partial/`),
+dan LOCAL (kompilasi tanpa informasi lintas-berkas). `compileComponentFromMetadata`
+memilih jalur berdasarkan `meta.isStandalone`, dependensi, dan mode.
+
+DAFTAR FUNGSI YANG SUDAH DIPAHAMI
+---------------------------------
+[x] tokenize | packages/compiler/src/ml_parser/lexer.ts:109 | Lexer HTML: mengubah string template menjadi token, menangani interpolasi, blok (@if), dan ICU.
+[x] htmlAstToRender3Ast | packages/compiler/src/render3/r3_template_transform.ts:92 | Titik masuk transformasi AST HTML menjadi AST R3 (t.Node) yang dipakai compiler dan type-checker.
+[x] HtmlAstToIvyAst.visitElement | packages/compiler/src/render3/r3_template_transform.ts:137 | Mengelompokkan atribut menjadi input/output/reference/variable, membungkus elemen ber-*ngIf ke dalam template.
+[x] HtmlAstToIvyAst.visitAttribute | packages/compiler/src/render3/r3_template_transform.ts:291 | Mengurai satu atribut menjadi bentuk terikat atau statis.
+[x] HtmlAstToIvyAst.visitText | packages/compiler/src/render3/r3_template_transform.ts:302 | Teks statis atau teks dengan interpolasi.
+[x] HtmlAstToIvyAst.visitExpansion | packages/compiler/src/render3/r3_template_transform.ts:308 | Menangani ekspansi ICU (plural/select) i18n.
+[x] HtmlAstToIvyAst.visitBlock | packages/compiler/src/render3/r3_template_transform.ts:478 | Menerjemahkan blok kontrol (@if/@for/@switch/@defer) beserta blok terhubungnya.
+[x] HtmlAstToIvyAst.findConnectedBlocks | packages/compiler/src/render3/r3_template_transform.ts:557 | Menemukan @else/@empty/@placeholder yang mengikuti sebuah blok.
+[x] HtmlAstToIvyAst.categorizePropertyAttributes | packages/compiler/src/render3/r3_template_transform.ts:593 | Memilah atribut menjadi properti, atribut biasa, dan animasi.
+[x] HtmlAstToIvyAst.parseAttribute | packages/compiler/src/render3/r3_template_transform.ts:723 | Mengurai sintaks [x], (y), [(z)], #ref, *dir menjadi struktur AST.
+[x] HtmlAstToIvyAst.parseVariable | packages/compiler/src/render3/r3_template_transform.ts:1090 | Mengurai deklarasi variabel template (let-x).
+[x] HtmlAstToIvyAst.parseReference | packages/compiler/src/render3/r3_template_transform.ts:1107 | Mengurai referensi lokal #ref (opsional dengan target directive).
+[x] HtmlAstToIvyAst.parseAssignmentEvent | packages/compiler/src/render3/r3_template_transform.ts:1126 | Menghasilkan listener xChange untuk two-way binding.
+[x] HtmlAstToIvyAst.wrapInTemplate | packages/compiler/src/render3/r3_template_transform.ts:1013 | Membungkus elemen dengan template implisit untuk directive struktural.
+[x] HtmlAstToIvyAst.extractDirectives | packages/compiler/src/render3/r3_template_transform.ts:929 | Mengumpulkan directive selectorless (@Directive pada tag komponen).
+[x] HtmlAstToIvyAst.visitLetDeclaration | packages/compiler/src/render3/r3_template_transform.ts:365 | Menangani deklarasi @let dalam template.
+[x] HtmlAstToIvyAst.reportError | packages/compiler/src/render3/r3_template_transform.ts:1171 | Mengumpulkan ParseError dengan span sumber untuk pelaporan diagnostik.
+[x] ingestComponent | packages/compiler/src/template/pipeline/src/ingest.ts:60 | Membuat ComponentCompilationJob dan mengisi operasi IR dari AST R3.
+[x] ingestHostBinding | packages/compiler/src/template/pipeline/src/ingest.ts:104 | Membuat job terpisah untuk host bindings sebuah directive.
+[x] ingestNodes | packages/compiler/src/template/pipeline/src/ingest.ts:285 | Dispatcher: memilih fungsi ingest sesuai jenis node AST.
+[x] ingestElement | packages/compiler/src/template/pipeline/src/ingest.ts:320 | Menghasilkan operasi elementStart/elementEnd beserta binding dan referensi lokal.
+[x] ingestTemplate | packages/compiler/src/template/pipeline/src/ingest.ts:448 | Membuat ViewCompilationUnit baru untuk embedded view.
+[x] ingestContent | packages/compiler/src/template/pipeline/src/ingest.ts:510 | Menangani <ng-content> dan selektor proyeksi.
+[x] ingestText | packages/compiler/src/template/pipeline/src/ingest.ts:563 | Teks statis menjadi operasi text.
+[x] ingestBoundText | packages/compiler/src/template/pipeline/src/ingest.ts:572 | Teks terinterpolasi menjadi operasi text + update interpolate.
+[x] ingestIfBlock | packages/compiler/src/template/pipeline/src/ingest.ts:622 | @if beserta cabang @else if/@else menjadi satu operasi conditional multi-cabang.
+[x] ingestSwitchBlock | packages/compiler/src/template/pipeline/src/ingest.ts:676 | @switch/@case/@default menjadi conditional dengan ekspresi pembanding.
+[x] ingestForBlock | packages/compiler/src/template/pipeline/src/ingest.ts:1022 | @for menjadi repeaterCreate + repeater, termasuk blok @empty dan variabel $index/$count dll.
+[x] getComputedForLoopVariableExpression | packages/compiler/src/template/pipeline/src/ingest.ts:1131 | Menurunkan variabel kontekstual @for ($first/$last/$even/$odd) dari $index dan $count.
+[x] ingestDeferBlock | packages/compiler/src/template/pipeline/src/ingest.ts:768 | @defer beserta blok @placeholder/@loading/@error dan konfigurasinya.
+[x] ingestDeferView | packages/compiler/src/template/pipeline/src/ingest.ts:739 | Membuat view terpisah untuk tiap sub-blok @defer.
+[x] ingestDeferTriggers | packages/compiler/src/template/pipeline/src/ingest.ts:891 | Menerjemahkan trigger (on idle/hover/viewport/interaction/timer, when) menjadi operasi.
+[x] calcDeferBlockFlags | packages/compiler/src/template/pipeline/src/ingest.ts:884 | Menghitung bendera blok defer (mis. hidrasi inkremental).
+[x] ingestIcu | packages/compiler/src/template/pipeline/src/ingest.ts:1002 | Menangani pesan ICU dalam blok i18n.
+[x] ingestLetDeclaration | packages/compiler/src/template/pipeline/src/ingest.ts:1162 | @let menjadi operasi deklarasi variabel lokal.
+[x] convertAst | packages/compiler/src/template/pipeline/src/ingest.ts:1179 | Penerjemah AST ekspresi Angular ke ekspresi IR (property read, call, pipe, safe navigation, dll).
+[x] convertAstWithInterpolation | packages/compiler/src/template/pipeline/src/ingest.ts:1368 | Menangani nilai yang bisa berupa interpolasi maupun ekspresi tunggal.
+[x] convertTemplateLiteral | packages/compiler/src/template/pipeline/src/ingest.ts:1354 | Menerjemahkan template literal dalam ekspresi template.
+[x] isPlainTemplate | packages/compiler/src/template/pipeline/src/ingest.ts:1417 | Membedakan <ng-template> asli dari template hasil pembungkusan directive struktural.
+[x] ingestDomProperty | packages/compiler/src/template/pipeline/src/ingest.ts:189 | Menangani binding properti DOM pada host binding.
+[x] ingestHostAttribute | packages/compiler/src/template/pipeline/src/ingest.ts:223 | Menangani atribut statis pada host binding.
+[x] ingestHostEvent | packages/compiler/src/template/pipeline/src/ingest.ts:247 | Menangani listener pada host binding.
+[x] calcHostBindingSecurityContexts | packages/compiler/src/template/pipeline/src/ingest.ts:151 | Menentukan konteks keamanan (sanitasi) untuk properti host.
+[x] transform | packages/compiler/src/template/pipeline/src/emit.ts:189 | Menjalankan seluruh 72 phase sesuai jenis job (template/host/keduanya).
+[x] emitTemplateFn | packages/compiler/src/template/pipeline/src/emit.ts:203 | Menghasilkan fungsi template akhir untuk view root beserta seluruh view anak.
+[x] emitChildViews | packages/compiler/src/template/pipeline/src/emit.ts:209 | Emisi view anak secara depth-first ke dalam ConstantPool.
+[x] emitView | packages/compiler/src/template/pipeline/src/emit.ts:227 | Menyusun badan fungsi template dari operasi create/update; memastikan semua operasi sudah ter-reify.
+[x] maybeGenerateRfBlock | packages/compiler/src/template/pipeline/src/emit.ts:266 | Membungkus statement dalam `if (rf & 1)` / `if (rf & 2)`.
+[x] emitHostBindingFunction | packages/compiler/src/template/pipeline/src/emit.ts:283 | Menghasilkan fungsi hostBindings, atau null bila tidak ada operasi.
+[x] compileComponentFromMetadata | packages/compiler/src/render3/view/compiler.ts:178 | Menyusun objek ɵcmp lengkap: definisi dasar, features, fungsi template, styles, dependensi, konfigurasi defer.
+[x] compileDirectiveFromMetadata | packages/compiler/src/render3/view/compiler.ts:160 | Menyusun objek ɵdir dari metadata directive.
+[x] baseDirectiveFields | packages/compiler/src/render3/view/compiler.ts:39 | Bagian definisi yang sama untuk directive dan komponen (type, selectors, queries, hostBindings, inputs/outputs).
+[x] addFeatures | packages/compiler/src/render3/view/compiler.ts:108 | Menambahkan feature runtime (Inherit, NgOnChanges, Providers, HostDirectives) ke definisi.
+[x] createDirectiveType | packages/compiler/src/render3/view/compiler.ts:435 | Menghasilkan tipe deklarasi ɵdir untuk berkas .d.ts.
+[x] createComponentType | packages/compiler/src/render3/view/compiler.ts:335 | Menghasilkan tipe deklarasi ɵcmp untuk berkas .d.ts.
+[x] createHostBindingsFunction | packages/compiler/src/render3/view/compiler.ts:452 | Mengompilasi host bindings menjadi fungsi lewat pipeline job Host.
+[x] parseHostBindings | packages/compiler/src/render3/view/compiler.ts:521 | Memilah objek host: {...} menjadi attributes, properties, dan listeners.
+[x] verifyHostBindings | packages/compiler/src/render3/view/compiler.ts:584 | Memvalidasi ekspresi host binding dan mengembalikan diagnostik.
+[x] validateNoEventBindings | packages/compiler/src/render3/view/compiler.ts:605 | Melarang binding event pada posisi yang tidak mendukungnya.
+[x] compileStyles | packages/compiler/src/render3/view/compiler.ts:628 | Memroses styles komponen sesuai mode encapsulation.
+[x] encapsulateStyle | packages/compiler/src/render3/view/compiler.ts:644 | Menerapkan shadow CSS (emulated encapsulation) pada satu style.
+[x] createHostDirectivesFeatureArg | packages/compiler/src/render3/view/compiler.ts:681 | Menyusun argumen ɵɵHostDirectivesFeature termasuk pemetaan input/output.
+[x] createHostDirectivesMappingArray | packages/compiler/src/render3/view/compiler.ts:732 | Meratakan pemetaan alias input/output host directive menjadi array.
+[x] compileDeferResolverFunction | packages/compiler/src/render3/view/compiler.ts:749 | Menghasilkan fungsi resolver dependensi untuk blok @defer (dynamic import).

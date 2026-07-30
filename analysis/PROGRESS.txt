@@ -1,9 +1,9 @@
 PROGRES ANALISIS FUNGSI
 Diperbarui: 2026-07-30
 ==============================================================================
-core                         275/3922   #...................   7.0%
-compiler                       0/3130   ....................   0.0%
-compiler-cli                   0/2383   ....................   0.0%
+core                         330/3922   ##..................   8.4%
+compiler                      64/3130   ....................   2.0%
+compiler-cli                  76/2383   #...................   3.2%
 adev                           0/1409   ....................   0.0%
 forms                          0/1053   ....................   0.0%
 devtools                       0/1051   ....................   0.0%
@@ -28,9 +28,9 @@ scripts                        0/24     ....................   0.0%
 platform-browser-dynamic       0/9      ....................   0.0%
 dev-app                        0/1      ....................   0.0%
 ------------------------------------------------------------------------------
-TOTAL                        275/18072  1.52%
+TOTAL                        470/18072  2.60%
 
-Catatan subsistem: 4 berkas di analysis/subsystems/
+Catatan subsistem: 7 berkas di analysis/subsystems/
 
 Entri catatan yang tidak punya padanan di inventory otomatis
 (umumnya konstanta multi-baris yang tidak terdeteksi pemindai):
