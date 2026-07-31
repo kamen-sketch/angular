@@ -267,6 +267,103 @@ F-04  Pembacaan `firstChild` pertama melewati pemeriksaan DOM clobbering
   inkonsistensi yang sebaiknya dirapikan agar niat defensifnya seragam.
 
 ==============================================================================
+F-05  Validator APP_ID hanya ada di ngDevMode, sedangkan nilainya
+      diinterpolasi TANPA escaping ke dalam <script> pada SSR PRODUKSI
+      BERKAS  : packages/platform-server/src/utils.ts:171-177   (sink)
+                packages/core/src/application/application_tokens.ts:55-70 (guard)
+                packages/core/src/platform/platform_ref.ts:55        (guard dev-only)
+                packages/core/src/application/create_application.ts:69 (guard dev-only)
+      SIFAT   : guard dilucuti tepat pada mode build tempat nilainya berbahaya
+==============================================================================
+
+  SINK — interpolasi mentah ke literal string JS di dalam <script>
+  ---------------------------------------------------------------
+      const replayScriptContents =
+        `window.__jsaction_bootstrap(` +
+        `document.body,` +
+        `"${appId}",` +                                   // <- MENTAH, tanpa escaping
+        `${JSON.stringify(Array.from(regular))},` +       // <- tanpa escaping '<'
+        `${JSON.stringify(Array.from(capture))}` +
+        `);`;
+      const replayScript = createScript(doc, replayScriptContents, nonce);
+
+  `createScript` menetapkan `script.textContent = textContent`. Karena
+  `<script>` adalah RAW TEXT ELEMENT, isinya diserialisasi apa adanya tanpa
+  entity-escaping — sehingga `</script>` di dalamnya benar-benar menutup tag.
+
+  GUARD YANG ADA — dan dilucuti di produksi
+  -----------------------------------------
+      // application_tokens.ts:55-70
+      export const validAppIdInitializer: StaticProvider = {
+        provide: ENVIRONMENT_INITIALIZER, multi: true,
+        useValue: () => {
+          const appId = inject(APP_ID);
+          const isAlphanumeric = /^[a-zA-Z0-9\-_]+$/.test(appId);
+          if (!isAlphanumeric) throw new RuntimeError(INVALID_APP_ID, ...);
+        },
+      };
+
+  Regex itu allowlist ketat: tidak mengizinkan kutip, `<`, maupun backslash —
+  bukti bahwa penulis SADAR nilai ini harus dibatasi. Tetapi pendaftarannya:
+
+      platform_ref.ts:55        ...(ngDevMode ? [validAppIdInitializer] : []),
+      create_application.ts:69  ...(ngDevMode ? [validAppIdInitializer] : []),
+
+  Kedua call site membungkusnya dengan `ngDevMode`. Pada build produksi
+  (termasuk SSR produksi) validator TIDAK ADA sama sekali.
+
+  BUKTI (analysis/tools/appid-demo.mjs, replikasi persis template literal)
+  -----------------------------------------------------------------------
+      appId "x\";alert(document.domain);//"   -> ditolak dev, LOLOS produksi
+        window.__jsaction_bootstrap(document.body,"x";alert(document.domain);//",["click"],[]);
+                                                    ^ literal string JS tertutup dini
+
+      appId "x</script><img src=x onerror=alert(1)>" -> ditolak dev, LOLOS produksi
+        window.__jsaction_bootstrap(document.body,"x</script><img src=x onerror=alert(1)>",...);
+                                                     ^ tag <script> tertutup, HTML menyusul
+
+  INKONSISTENSI DENGAN BERKAS SAUDARA
+  -----------------------------------
+  `TransferState.toJson()` (core/src/transfer_state.ts:143-146) menulis ke
+  jenis `<script>` yang SAMA dan meng-escape dengan sengaja:
+
+      // Escape script tag to avoid break out of <script> tag in serialized output.
+      return JSON.stringify(this.store).replace(/</g, '\\u003C').replace(/\//g, '\\u002F');
+
+  Jadi basis kode ini TAHU aturannya dan menerapkannya di satu tempat, lalu
+  melanggarnya di tempat lain yang konteksnya identik. Persis kelas cacat yang
+  sama dengan F-01/F-02: kontrak yang dinyatakan sendiri tidak dipenuhi.
+
+  PRASYARAT & PENILAIAN JUJUR
+  ---------------------------
+  Jalur ini hanya aktif bila:
+    - SSR dipakai, DAN
+    - event replay aktif (skrip event-dispatch disisipkan CLI —
+      `if (eventDispatchScript)` pada utils.ts:169), DAN
+    - build produksi (ngDevMode false, validator hilang)
+
+  Yang TIDAK saya klaim: ini BUKAN kerentanan jarak jauh pada aplikasi biasa.
+  `APP_ID` normalnya konstanta statis yang ditulis pengembang, bukan masukan
+  pengguna. Untuk dieksploitasi, `APP_ID` harus berasal dari sumber yang bisa
+  dipengaruhi penyerang — mis. server SSR multi-tenant yang menyetel APP_ID per
+  tenant dari berkas konfigurasi atau variabel lingkungan. Itu mungkin, tetapi
+  tidak umum.
+
+  Yang saya klaim: ini cacat sejati. Sebuah guard yang dibuat KHUSUS untuk
+  membatasi nilai ini dikompilasi keluar tepat pada satu-satunya mode build
+  di mana nilai tersebut mencapai sink tanpa escaping. Perbaikannya ada dua
+  pilihan, keduanya murah:
+    (a) escape di sink — samakan dengan pola toJson():
+        `"${appId.replace(/</g,'\\u003C').replace(/"/g,'\\"')}"` — atau lebih
+        baik lagi pakai JSON.stringify(appId) alih-alih kutip manual, LALU
+        escape `<`; atau
+    (b) jadikan validator APP_ID selalu aktif (lepas dari ngDevMode) —
+        biayanya satu regex sekali saat bootstrap.
+  Opsi (a) lebih tepat karena memperbaiki sink, bukan hanya satu sumbernya;
+  perhatikan bahwa nama event pada `JSON.stringify(...)` juga belum di-escape
+  terhadap `<` di konteks raw-text yang sama.
+
+==============================================================================
 RINGKASAN
 ==============================================================================
 
@@ -279,10 +376,29 @@ RINGKASAN
           (dua salinan)                 (kontrol pemeliharaan)
   F-03    html_sanitizer.ts:79-89       inkonsistensi srcset     tidak
   F-04    html_sanitizer.ts:133         inkonsistensi defensif   tidak
+  F-05    platform-server/utils.ts:171  guard APP_ID dev-only,   hanya bila APP_ID
+          + application_tokens.ts:55    sink tanpa escaping      berasal dari sumber
+                                        di SSR produksi          tak-tepercaya
+                                                                 (SSR multi-tenant)
 
-  Yang layak dilaporkan ke tim Angular: F-01 (lewat jalur keamanan) dan
-  F-02 (lewat isu/PR biasa — murni pemeliharaan). F-03 dan F-04 bersifat
+  Yang layak dilaporkan ke tim Angular: F-01 dan F-05 (lewat jalur keamanan)
+  dan F-02 (lewat isu/PR biasa — murni pemeliharaan). F-03 dan F-04 bersifat
   kerapian kode.
+
+  AREA YANG SUDAH DIPERIKSA DAN TERNYATA BENAR (perluasan cakupan)
+  ----------------------------------------------------------------
+  Setelah cakupan diperlebar melampaui html_sanitizer.ts, empat permukaan
+  keamanan lain diperiksa dan TIDAK ditemukan cacat:
+    - TransferState.toJson()      escape `<` dan `/` dengan benar; `<script>`
+                                  raw-text tidak bisa ditembus
+    - xsrfInterceptorFn           cek same-origin benar (URL relatif di-resolve
+                                  dulu); `catch` gagal ke arah aman
+    - enforceIframeSecurity       membersihkan src/srcdoc lalu melepas node;
+                                  ɵɵvalidateAttribute fail-closed (throw)
+    - resolveElement / '#host'    sinkron: tag dipasok tNode.value, '#host'
+                                  memicu pembacaan tag asli dari DOM
+    - SVG_ANIMATION_SENSITIVE_*   entri yang hilang jatuh ke throw -> LEBIH
+                                  ketat, bukan lebih lemah
 
   Catatan kejujuran: dari seluruh pemindaian yang dilakukan pada fase-fase
   sebelumnya (~360 kandidat), hanya F-01 yang merupakan cacat logika sejati
