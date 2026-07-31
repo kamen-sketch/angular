@@ -198,6 +198,54 @@ Keduanya sudah ditriase:
   memakai `createHTML: (s) => s` (identitas, tanpa sanitasi) dan nama policy-nya
   sendiri mengumumkannya — `angular#unsafe-upgrade`. Bukan cacat.
 
+## Perluasan: G-08…G-11 (kelas yang lahir dari F-07 dan F-08)
+
+Empat pola ditambahkan setelah dua temuan terakhir memperlihatkan bentuk cacat
+yang tidak terjangkau G-01…G-07. Validasi-diri naik ke **6/6** — G-09 menemukan
+kembali F-07 tanpa diberi tahu lokasinya.
+
+| Pola | Hipotesis | Hasil |
+|---|---|---:|
+| G-08 tipe `T \| T[]` | tipe mengizinkan dua bentuk, pemakainya sering menangani satu | 106 |
+| G-09 `switch` tanpa `default` | nilai di luar dugaan lolos tanpa perlakuan | 10 |
+| G-10 pasangan parse/serialize | menjanjikan round-trip yang jarang diuji | 5 |
+| G-11 normalisasi membuang bagian kosong | dua masukan berbeda menjadi satu keluaran | 5 |
+
+### Triase kandidat baru
+
+**G-09 → `i18n_apply.ts:427` — POSITIF PALSU.** Ini `switch` tanpa `default`,
+tetapi operandnya `opCode & I18nUpdateOpCode.MASK_OPCODE`: bilangan yang
+DIHASILKAN COMPILER dari enum tertutup, bukan data eksternal. Opcode tak dikenal
+berarti ketidakcocokan versi compiler/runtime, bukan masukan penyerang.
+
+Perbedaannya dengan F-07 penting dan menjadi aturan triase pola ini:
+
+> `switch` tanpa `default` baru berarti bila **tipe operandnya sendiri
+> mengizinkan bentuk yang tidak tertangani**. Pada F-07 tipenya
+> `SecurityContext | SecurityContext[]` — array tidak pernah cocok dengan case
+> mana pun. Pada `i18n_apply` operandnya bilangan bertopeng dari enum tertutup.
+
+**G-08 terlalu luas (106).** Tipe union skalar-atau-array lazim di IR compiler.
+Pola ini baru berguna bila dipasangkan dengan pemeriksaan lanjutan: *satu*
+pemakai field memanggil `Array.isArray` sementara pemakai lain tidak. Itu
+menuntut analisis pemakaian per-field, bukan pencocokan teks — dicatat sebagai
+batas, bukan diklaim selesai.
+
+**G-10 menemukan kembali rumah F-08** (`router/src/url_tree.ts:423`), yang
+memvalidasi polanya. Empat kandidat lain belum diuji dan semuanya pasangan
+parse/serialize sungguhan:
+
+```
+compiler/src/i18n/serializers/xliff.ts:225
+compiler/src/i18n/serializers/xliff2.ts:249
+localize/tools/.../xliff1_translation_parser.ts:39
+router/src/navigation_transition.ts:484
+```
+
+Keempatnya dapat difuzz dengan properti yang sama persis seperti F-08 —
+bandingkan hasil TERSTRUKTUR, bukan string, karena F-08 stabil pada string
+tetapi tidak pada pohon. Ini pekerjaan berikutnya yang paling jelas.
+
 ## Yang masih kurang
 
 Korpus ini murni leksikal, jadi ada batas yang jelas:

@@ -205,4 +205,69 @@ export const GUARDS = [
   },
 ];
 
-export const SEMUA = {CATATAN_RISET, SINKS, NATIVE, GUARDS};
+// ============================================================================
+// 4. GUARD LANJUTAN — kelas yang lahir dari F-07 dan F-08
+//    Ditambahkan setelah dua temuan terakhir memperlihatkan bentuk cacat baru
+//    yang tidak terjangkau G-01..G-07.
+// ============================================================================
+export const GUARDS_LANJUTAN = [
+  {
+    id: 'G-08-tipe-skalar-atau-array',
+    hipotesis:
+      'Sebuah nilai bertipe `T | T[]`. Tipe itu MENGIZINKAN dua bentuk, tetapi ' +
+      'pemakainya kerap hanya menangani satu. Ini akar F-07.',
+    // Menangkap `X | X[]` dengan backreference: tipe yang sama muncul sebagai
+    // skalar DAN array. Bentuk inilah yang menciptakan cabang tak tertangani.
+    re: /:\s*([A-Z]\w+)\s*\|\s*\1\[\]/,
+    temuan: 'F-07 — ExtractedAttributeOp.securityContext: SecurityContext | SecurityContext[]',
+    triase:
+      'Untuk tiap pemakai field ini: apakah ada `Array.isArray` atau padanannya? ' +
+      'Bila satu pemakai memeriksanya dan pemakai lain tidak, yang tidak memeriksa ' +
+      'itulah cabang yang gagal diam-diam.',
+  },
+  {
+    id: 'G-09-switch-tanpa-default',
+    hipotesis:
+      '`switch` atas nilai keamanan tanpa cabang `default`. Bila nilainya di luar ' +
+      'dugaan (mis. array), TIDAK ADA case yang cocok dan alur lolos tanpa ' +
+      'perlakuan apa pun — gagal secara diam.',
+    re: /switch\s*\([^)]*\)\s*\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}/,
+    multiline: true,
+    tolakCocokan: /\bdefault\s*:/,
+    konteks: /SecurityContext|sanitiz|Trusted|securityContext/i,
+    konteksBaris: 25,
+    temuan: 'F-07 — resolve_i18n_attr_sanitizers.ts:49 switch tanpa default',
+    triase:
+      'Bandingkan dengan penanganan setara di tempat lain. Bila salinan lain punya ' +
+      '`default` yang melempar sementara yang ini tidak, sikap kegagalan keduanya ' +
+      'berlawanan (fail-closed vs fail-open).',
+  },
+  {
+    id: 'G-10-pasangan-roundtrip',
+    hipotesis:
+      'Berkas yang mendefinisikan parse DAN serialize (atau encode/decode, ' +
+      'stringify/parse) menjanjikan sifat round-trip yang jarang diuji. Ini akar F-08.',
+    berkasPenuh: true,
+    re: /\b(?:parse|deserialize|decode)\s*\([^)]*\)\s*[:{]/,
+    konteks: /\b(?:serialize|encode|stringify)\s*\(/,
+    temuan: 'F-08 — DefaultUrlSerializer.parse/serialize tidak idempoten pada level pohon',
+    triase:
+      'Uji propertinya, jangan dibaca: apakah f(g(f(x))) == f(x)? Bandingkan HASIL ' +
+      'TERSTRUKTUR, bukan hanya string — F-08 stabil pada string tetapi TIDAK pada pohon.',
+  },
+  {
+    id: 'G-11-normalisasi-membuang',
+    hipotesis:
+      'Normalisasi yang MEMBUANG bagian kosong. Informasi yang dibuang tidak dapat ' +
+      'dipulihkan, sehingga dua masukan berbeda menjadi satu keluaran.',
+    re: /\.filter\s*\(\s*(?:\(?\s*\w+\s*\)?\s*=>\s*(?:\w+\s*(?:!==?\s*['"]{2}|\.length)|!!?\s*\w+)|Boolean\s*\))/,
+    konteks: /url|path|segment|route|normaliz|sanitiz/i,
+    konteksBaris: 12,
+    temuan: 'terkait F-08 — segmen kosong hilang saat serialisasi',
+    triase:
+      'Apakah yang dibuang bermakna di hilir? Bila pencocokan rute/otorisasi ' +
+      'membedakan "kosong" dari "tidak ada", pembuangan itu menggabungkan dua keadaan.',
+  },
+];
+
+export const SEMUA = {CATATAN_RISET, SINKS, NATIVE, GUARDS, GUARDS_LANJUTAN};

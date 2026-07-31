@@ -10,7 +10,10 @@
  */
 import {readFileSync, readdirSync, statSync} from 'fs';
 import {join, relative} from 'path';
-import {GUARDS} from './corpus.mjs';
+import {GUARDS, GUARDS_LANJUTAN} from './corpus.mjs';
+
+// G-01..G-07 (kelas garda) + G-08..G-11 (kelas yang lahir dari F-07/F-08).
+const SEMUA_POLA = [...GUARDS, ...GUARDS_LANJUTAN];
 
 const AKAR = process.cwd();
 const TARGET = join(AKAR, 'packages');
@@ -45,7 +48,7 @@ function kumpulkanBerkas(dir, keluar = []) {
 }
 
 const berkas = kumpulkanBerkas(TARGET);
-const hasil = new Map(GUARDS.map((g) => [g.id, []]));
+const hasil = new Map(SEMUA_POLA.map((g) => [g.id, []]));
 
 for (const f of berkas) {
   let teks;
@@ -57,15 +60,34 @@ for (const f of berkas) {
   const rel = relative(AKAR, f);
   const baris = teks.split('\n');
 
-  for (const g of GUARDS) {
+  for (const g of SEMUA_POLA) {
+    // Pola tingkat-BERKAS: kecocokan hanya berarti bila sinyal pendukung ada di
+    // mana pun dalam berkas yang sama (mis. parse ada, serialize juga ada).
+    if (g.berkasPenuh) {
+      if (g.konteks && !g.konteks.test(teks)) continue;
+      const m = teks.match(g.re);
+      if (m) {
+        const nomor = teks.slice(0, teks.indexOf(m[0])).split('\n').length;
+        hasil.get(g.id).push({berkas: rel, baris: nomor, kutipan: (baris[nomor - 1] ?? '').trim()});
+      }
+      continue;
+    }
     if (g.multiline) {
       // Pola lintas-baris: cari pada teks utuh, lalu petakan offset -> nomor baris.
       const re = new RegExp(g.re.source, g.re.flags.includes('g') ? g.re.flags : g.re.flags + 'g');
       let m;
       while ((m = re.exec(teks))) {
-        const nomor = teks.slice(0, m.index).split('\n').length;
-        hasil.get(g.id).push({berkas: rel, baris: nomor, kutipan: baris[nomor - 1]?.trim() ?? ''});
         if (m.index === re.lastIndex) re.lastIndex++;
+        // tolakCocokan: buang bila TEKS YANG COCOK sendiri memuat penawarnya
+        // (mis. switch yang ternyata punya `default:` -> bukan kandidat).
+        if (g.tolakCocokan && g.tolakCocokan.test(m[0])) continue;
+        const nomor = teks.slice(0, m.index).split('\n').length;
+        if (g.konteks) {
+          const lebar = g.konteksBaris ?? 5;
+          const sekitar = baris.slice(Math.max(0, nomor - 1 - lebar), nomor + lebar).join('\n');
+          if (!g.konteks.test(sekitar) && !g.konteks.test(m[0])) continue;
+        }
+        hasil.get(g.id).push({berkas: rel, baris: nomor, kutipan: baris[nomor - 1]?.trim() ?? ''});
       }
     } else {
       for (let i = 0; i < baris.length; i++) {
@@ -95,7 +117,7 @@ for (const f of berkas) {
 // Triase otomatis untuk pola ber-verifikasiSimbol (G-07):
 // ambil simbol yang dirujuk, lalu buktikan ada/tidaknya di seluruh repositori.
 // ---------------------------------------------------------------------------
-const perluVerifikasi = GUARDS.filter((g) => g.verifikasiSimbol);
+const perluVerifikasi = SEMUA_POLA.filter((g) => g.verifikasiSimbol);
 if (perluVerifikasi.length) {
   const simbol = new Set();
   for (const g of perluVerifikasi) {
@@ -146,7 +168,7 @@ console.log('PEMINDAI KELAS "GARDA YANG GAGAL MENJAGA"');
 console.log(`Berkas diperiksa: ${berkas.length}`);
 console.log('='.repeat(78));
 
-for (const g of GUARDS) {
+for (const g of SEMUA_POLA) {
   let temuan = hasil.get(g.id);
 
   // Untuk pola ber-verifikasi, tampilkan lebih dulu yang simbolnya TIDAK ADA.
@@ -182,6 +204,7 @@ const harusKetemu = [
   {kode: 'F-05', pola: 'G-04-interpolasi-ke-string-kutip', berkas: 'utils.ts', baris: 174},
   {kode: 'F-06', pola: 'G-02-gate-bracket', berkas: 'i18n_parse.ts', baris: 841},
   {kode: 'F-02', pola: 'G-07-sinkron-dua-salinan', berkas: 'dom_security_schema.ts', baris: 112},
+  {kode: 'F-07', pola: 'G-09-switch-tanpa-default', berkas: 'resolve_i18n_attr_sanitizers.ts', baris: 49},
 ];
 
 console.log('\n' + '='.repeat(78));
