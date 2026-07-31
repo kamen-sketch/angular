@@ -1,0 +1,18 @@
+import {chromium} from 'playwright';
+import {fileURLToPath} from 'url';
+import path from 'path';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const url = 'file://' + path.join(__dirname, 'harness.html');
+const browser = await chromium.launch({executablePath:'/opt/pw-browsers/chromium-1194/chrome-linux/chrome',args:['--no-sandbox']});
+const page = await browser.newPage({viewport:{width:1200,height:900}});
+const logs=[];
+page.on('console',m=>logs.push('['+m.type()+'] '+m.text()));
+page.on('pageerror',e=>logs.push('PAGEERROR: '+e.stack));
+await page.goto(url,{waitUntil:'load'});
+await page.waitForTimeout(1500);
+const result = await page.evaluate(()=>window.__RESULT__ ?? null);
+console.log('RESULT:',JSON.stringify(result,null,2));
+console.log('CONSOLE/ERRORS:\n'+(logs.join('\n')||'(none)'));
+await page.screenshot({path:path.join(__dirname,'proof.png'),fullPage:true});
+console.log('screenshot -> proof.png');
+await browser.close();

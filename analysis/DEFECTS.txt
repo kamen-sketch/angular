@@ -23,7 +23,10 @@ R-07 ngSrc) TIDAK masuk daftar ini — sudah dikeluarkan sesuai arahan.
 F-01  Loop proteksi mXSS berhenti prematur, tidak pernah mencapai fixed point
       BERKAS  : packages/core/src/sanitization/html_sanitizer.ts:314-326
       SIFAT   : cacat logika (off-by-one pada pipelining)
-      DAMPAK  : melemahkan lapisan defense-in-depth; dua mekanisme jadi mati
+      DAMPAK  : garda fail-closed menjadi fail-open (kode mati); regresi
+                defense-in-depth. BUKAN XSS — dibuktikan di Chromium 141 nyata.
+      BUKTI   : analysis/evidence/mxss-loop-real-chromium.png
+                analysis/tools/mxss-browser/ (reproduksi Playwright)
 ==============================================================================
 
   KODE APA ADANYA
@@ -68,22 +71,37 @@ F-01  Loop proteksi mXSS berhenti prematur, tidak pernah mencapai fixed point
   KONSTRUKSI, karena keduanya sama-sama bernilai S(P(H0)). Kondisi keluar
   karena itu selalu terpenuhi di iterasi ke-2, apa pun masukannya.
 
-  BUKTI EMPIRIS
-  -------------
-  Simulasi yang mereplikasi loop persis (scratchpad/mxss-loop-proof.mjs),
-  dijalankan dengan transform yang SENGAJA tidak pernah stabil (s => s + 'x'):
+  BUKTI DI PERAMBAN NYATA (Chromium 141) — bukan lagi simulasi abstrak
+  --------------------------------------------------------------------
+  Laporan pertama ditolak karena buktinya hanya simulasi JS dengan `transform`
+  abstrak. Kini kode SANITIZER ASLI (port verbatim html_sanitizer.ts +
+  inert_body.ts) dijalankan di Chromium 141 memakai DOMParser peramban sendiri,
+  lewat Playwright. Perkakas: analysis/tools/mxss-browser/ (report.html,
+  sanitizer.js, shot.mjs). Tangkapan layar: analysis/evidence/
+  mxss-loop-real-chromium.png.
 
-      Jumlah iterasi loop Angular : 2
-      Sisa jatah mXSSAttempts     : 3  (mulai dari 5)
-      Keluar tanpa melempar error : ya
-        iter 1: unsafeHtml="a"  parsedHtml="ax" -> lanjut=true
-        iter 2: unsafeHtml="ax" parsedHtml="ax" -> lanjut=false
+  Hasil terukur atas 32+ vektor (foreign content, raw-text element, dsb.):
 
-  Dengan masukan yang baru stabil pada ronde ke-3 (H0->H1->H2->H2):
+  1. Loop yang DIKIRIM berputar MAKSIMAL 2 kali untuk SEMUA masukan.
+     `maxBuggyIter = 2`. Anggaran 5 tidak pernah terpakai; galat "input is
+     unstable" tidak pernah terlempar (`buggyEverThrew = false`).
 
-      Jumlah iterasi loop Angular : 2
-      Serializer bekerja pada     : parse(H1)
-      Titik stabil sesungguhnya   : H2      <- tidak pernah dicapai
+  2. Ada masukan yang BENAR-BENAR butuh 3 ronde untuk stabil di Chromium nyata:
+        <math><mtext><table><mglyph><style><img src=x onerror=alert(1)>   -> 3 ronde
+        <ul><li><table><li>                                              -> 3 ronde
+     Loop yang diperbaiki melakukan 3 iterasi; loop yang dikirim berhenti di 2,
+     yakni SEBELUM titik stabil. Membuktikan ">=3 ronde" itu nyata, bukan teori.
+
+  3. Ada masukan yang TIDAK PERNAH stabil di Chromium nyata:
+        <plaintext><img src=x onerror=alert(1)>
+     Setiap ronde parse menambah satu `</plaintext>` (rantai H0..H6 terukur,
+     tumbuh tanpa batas). Loop yang DIPERBAIKI mendeteksi ini lalu MELEMPAR
+     "input is unstable" (fail-closed). Loop yang DIKIRIM diam-diam kembali
+     setelah 2 iterasi (fail-open) dan tidak pernah menyadarinya.
+
+  Jadi galat "input is unstable" BUKAN mustahil secara prinsip — masukan
+  peramban nyata memicunya. Cacatnya: loop versi rilis tidak akan pernah
+  mencapai galat itu.
 
   TIGA AKIBAT YANG BISA DIVERIFIKASI
   ----------------------------------
@@ -117,38 +135,56 @@ F-01  Loop proteksi mXSS berhenti prematur, tidak pernah mencapai fixed point
       stabil ronde 3    : 3 iterasi, mencapai H2            (benar)
       sudah stabil      : 1 iterasi                         (benar, tidak berubah)
 
-  DAMPAK KEAMANAN — PENILAIAN JUJUR
-  ---------------------------------
-  Ini BUKAN XSS siap pakai, dan saya tidak mengklaim demikian. Alasannya:
-  langkah terakhir `_sanitizeHtml` bukan meneruskan string mentah, melainkan
-  `SanitizingHtmlSerializer.sanitizeChildren()` yang MEMBANGUN ULANG keluaran
-  dari nol memakai allowlist elemen (`VALID_ELEMENTS`) dan atribut
-  (`VALID_ATTRS`), dengan semua nilai melewati `encodeEntities`. Allowlist itu
-  tetap utuh dan tetap menjadi benteng utama.
+  DAMPAK KEAMANAN — PENILAIAN JUJUR (mengapa laporan pertama ditolak)
+  ------------------------------------------------------------------
+  Ini BUKAN XSS siap pakai, dan setelah pengujian peramban nyata saya justru
+  MEMPERKUAT sikap itu, bukan melemahkannya. Diuji langsung: apakah keluaran
+  loop yang cacat, saat DIPARSE ULANG peramban (seperti aplikasi menetapkan
+  el.innerHTML), pernah menghasilkan simpul berbahaya (img[onerror]/script)?
 
-  Yang rusak adalah LAPISAN KEDUA. Loop mXSS ada supaya HTML yang "diperbaiki
-  otomatis" peramban tidak berubah sifat setelah sanitasi. Lapisan itu kini
-  hanya bekerja untuk rantai mutasi 1 ronde, padahal dirancang untuk 5.
-  Untuk mengeksploitasi, penyerang butuh rantai mXSS >=3 ronde yang juga lolos
-  serializer allowlist — jauh lebih sukar, tetapi ruang yang seharusnya
-  tertutup kini terbuka.
+      Battery 6+ vektor mXSS klasik -> `anyLiveDanger = false`.
+      Contoh math/mtext: baik loop cacat maupun loop benar menghasilkan
+      keluaran IDENTIK dan AMAN: `<img src="x">` (atribut onerror dibuang
+      allowlist, apa pun jumlah rondenya).
+
+  Sebabnya: langkah akhir `_sanitizeHtml` bukan meneruskan string mentah,
+  melainkan `SanitizingHtmlSerializer.sanitizeChildren()` yang MEMBANGUN ULANG
+  keluaran dari nol via allowlist (`VALID_ELEMENTS`/`VALID_ATTRS`) +
+  `encodeEntities`. Benteng utama itu tetap utuh dan efektif TERLEPAS dari
+  berapa ronde loop berputar. Itulah kemungkinan besar alasan tim keamanan
+  menolak laporan pertama: tanpa eksploitasi tingkat-keluaran, loop yang rusak
+  adalah regresi defense-in-depth, bukan kerentanan.
+
+  APA YANG SESUNGGUHNYA TERBUKTI (dan layak dilaporkan)
+  -----------------------------------------------------
+  Bukan XSS. Yang terbukti di peramban nyata adalah: sebuah GARDA FAIL-CLOSED
+  telah diam-diam menjadi FAIL-OPEN.
+    - Niat kode: bila HTML tak kunjung stabil setelah 5 ronde, TOLAK (lempar).
+    - Kenyataan: loop tak pernah mencapai ronde ke-3, sehingga masukan yang
+      benar-benar tak stabil (`<plaintext>...`) LOLOS diam-diam alih-alih
+      ditolak. Garda backstop-nya mati total (kode mati).
+  Nilainya: garda mXSS ada justru sebagai jaring pengaman untuk saat asumsi
+  serializer allowlist suatu hari tak berlaku (mis. elemen/atribut baru, bug
+  peramban baru). Jaring itu kini bolong. Itu cacat keamanan yang sah untuk
+  diperbaiki — dengan perbaikan 2 baris — meski hari ini belum bisa dieksploitasi.
 
   CAKUPAN TES
   -----------
   Satu-satunya tes bernama mXSS (html_sanitizer_spec.ts:292) sebenarnya menguji
-  jalur `_sanitizeUrl`:
-      sanitizeHtml(doc, '<a href="&#x3000;javascript:alert(1)">CLICKME</a>')
-  Tes itu lolos tanpa menyentuh perilaku multi-ronde loop. Tidak ada satu pun
-  tes yang menegaskan berapa kali loop berputar atau bahwa galat "unstable"
-  dapat terjadi. Inilah sebabnya cacat ini tidak tertangkap.
+  jalur `_sanitizeUrl`, bukan perilaku multi-ronde loop. Tidak ada tes yang
+  menegaskan berapa kali loop berputar atau bahwa galat "unstable" dapat
+  terjadi. Inilah sebabnya cacat ini tidak tertangkap.
 
-  CATATAN PELAPORAN
-  -----------------
-  Karena ini menyangkut komponen keamanan pada framework yang dipakai luas,
-  jalur yang tepat adalah proses keamanan Angular (security@angular.io /
-  https://angular.dev/best-practices/security), BUKAN isu publik. Saya tidak
-  menyusun rantai mXSS yang dapat dieksekusi; temuan ini berdiri sendiri
-  sebagai cacat logika yang dapat diverifikasi dari kode.
+  CATATAN PELAPORAN (untuk pengajuan ulang)
+  -----------------------------------------
+  Framing ulang yang disarankan saat mengajukan kembali ke security@angular.io:
+  JANGAN mengklaim XSS. Ajukan sebagai "fail-closed mXSS guard rendered
+  unreachable (dead code) — defense-in-depth regression", lampirkan tangkapan
+  layar peramban nyata (analysis/evidence/mxss-loop-real-chromium.png) dan
+  perkakas reproduksi (analysis/tools/mxss-browser/). Tekankan tiga fakta
+  terukur: (1) loop <=2 iterasi selalu; (2) masukan 3-ronde nyata ada; (3)
+  masukan tak-stabil nyata (<plaintext>) lolos diam-diam alih-alih ditolak.
+  Perbaikan bersifat sepele (tukar dua baris) dan tanpa risiko regresi.
 
 ==============================================================================
 F-02  Referensi menggantung `SECURITY_SENSITIVE_ELEMENTS` di KEDUA salinan schema
@@ -236,9 +272,9 @@ RINGKASAN
 
   Kode    Berkas                        Sifat                    Dapat dieksploitasi
   ------  ----------------------------  -----------------------  -------------------
-  F-01    html_sanitizer.ts:314-326     cacat logika             tidak langsung;
-                                        (loop berhenti dini)     melemahkan lapisan
-                                                                 kedua mXSS
+  F-01    html_sanitizer.ts:314-326     cacat logika: garda      TIDAK (diuji di
+                                        fail-closed jadi         Chromium 141 nyata:
+                                        fail-open (kode mati)    keluaran tetap aman)
   F-02    dom_security_schema.ts:112    referensi menggantung    tidak
           (dua salinan)                 (kontrol pemeliharaan)
   F-03    html_sanitizer.ts:79-89       inkonsistensi srcset     tidak
