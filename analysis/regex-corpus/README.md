@@ -329,6 +329,43 @@ Pelajarannya: **daftar penolak harus mengejar MAKNA, bukan satu idiom.** Setelah
 diperluas (`[Cc]leanup`, `teardown`, `[Dd]estroy`, `.complete(`), sisa turun ke 10
 dan seluruhnya test/example/build-time.
 
+## Area ReDoS: regex milik Angular sendiri (hasil NEGATIF, dan itu bernilai)
+
+Dipicu dua hal: korpus NATIVE sudah mendata regex Angular, dan pola G-12 SAYA
+SENDIRI sempat kena catastrophic backtracking (tercatat di CATATAN_RISET). Kalau
+regex saya bisa, regex Angular pun perlu diperiksa.
+
+`scan-redos.mjs` mengekstrak seluruh literal regex dari paket TERKIRIM (core,
+common, http, router, forms, platform-browser, animations), menandai yang
+berbentuk kuantifier bersarang, lalu **menguji tiap kandidat secara empiris** —
+bukan berhenti pada bentuk.
+
+Hasil atas 655 berkas, 123 regex, 32 berbentuk mencurigakan:
+
+- **0 ReDoS eksponensial.**
+- **2 regex kuadratik** (`i18n_parse.ts:667`, `i18n_postprocess.ts:17`), keduanya
+  tak-berjangkar sehingga diulang di tiap posisi awal → O(n²). Diukur: rasio ~4×
+  per penggandaan panjang (kuadratik), bukan >>4 (eksponensial). 40k karakter →
+  ~2 detik.
+
+Kenapa BUKAN cacat, dengan disiplin dampak yang sama seperti F-10:
+
+1. **Sumbernya build-time.** Keduanya memproses pesan ICU/i18n (kunci plural
+   `=x`, ID placeholder template) yang berasal dari `.xlf`/`.xtb` hasil kompilasi
+   — aset pengembang, bukan data pengguna runtime. Sama seperti F-06.
+2. **Kuadratik, bukan eksponensial.** Untuk menyebabkan hang bermakna butuh pesan
+   terjemahan >100k karakter, yang tidak terjadi.
+
+Pelajaran yang menyempurnakan pola: **kuantifier bersarang saja bukan ReDoS.**
+`((\s*\d+w\s*(,|$)){1,})` (srcset NgOptimizedImage) AMAN diukur sampai n=2000,
+karena `\d+w` adalah anchor WAJIB non-kosong di tiap iterasi → partisi linear.
+Yang berbahaya adalah grup berulang yang bisa cocok KOSONG atau tak-berjangkar
+yang diulang di tiap posisi.
+
+Ini hasil negatif, dan seperti G-20 (`toLocaleLowerCase` nol), nilainya adalah
+mengubah "area ReDoS belum diperiksa" menjadi "diperiksa, tidak ada yang
+terjangkau penyerang".
+
 ## Yang masih kurang
 
 Korpus ini murni leksikal, jadi ada batas yang jelas:
