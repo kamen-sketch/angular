@@ -586,9 +586,80 @@ F-08  UrlTree hasil parse tidak idempoten: dua URL berbeda menghasilkan pohon
       atau menyimpulkan otorisasi dari `router.url` (yang berbunyi `/`)
       alih-alih dari rute yang benar-benar aktif.
 
-  Karena itu F-08 naik dari "inkonsistensi normalisasi" menjadi "kebingungan
-  rute", tetapi TIDAK naik menjadi "kerentanan". Untuk itu masih dibutuhkan
-  aplikasi nyata yang keputusan keamanannya bergantung pada perbedaan ini.
+  KASUS DUNIA NYATA — DESINKRONISASI ANTAR-LAPISAN
+  ------------------------------------------------
+  Menelusuri "aplikasi nyata seperti apa yang terdampak" menghasilkan bentuk yang
+  jauh lebih tajam daripada `)` vs `/`. Petunjuknya: `)` MEMOTONG sisa URL.
+
+  Terukur (analysis/evidence/f08-crosslayer-desync.txt, tools/router-fuzz/):
+
+  (1) Angular mencocokkan SEMUA varian ini ke rute `admin`, dan `router.url`
+      menjadi `/admin` — sampahnya dibuang:
+          /admin)     /admin)x     /admin)/y     /admin(     /admin)?q=1
+      Dua kontrol membuktikan presisinya:
+          /ADMIN)     -> wildcard  (pencocokan rute peka huruf besar-kecil)
+          /admin%29   -> wildcard  (segmen literal "admin)"; jadi yang istimewa
+                                    memang karakter `)` MENTAH, bukan bentuk
+                                    ter-encode)
+
+  (2) Peramban mengirim `)` MENTAH ke server (diverifikasi dengan server yang
+      mencatat req.url):
+          diminta "/admin)"   -> server menerima "/admin)"
+          diminta "/admin)/y" -> server menerima "/admin)/y"
+      `)` adalah sub-delim yang sah pada path (RFC 3986), jadi peramban tidak
+      meng-encode-nya.
+
+  (3) Pencocok path sisi-server yang lazim TIDAK menganggapnya `/admin`:
+          req.path === '/admin'                          -> TIDAK cocok
+          p === '/admin' || p.startsWith('/admin/')      -> TIDAK cocok
+          nginx  location = /admin                        -> TIDAK cocok
+          regex  ^/admin$                                 -> TIDAK cocok
+          nginx  location /admin  (prefix)                -> cocok (satu-satunya)
+
+  Jadi primitifnya: SATU URL yang oleh lapisan server dinilai BUKAN `/admin`,
+  tetapi oleh router Angular dirender SEBAGAI rute `admin`.
+
+  BENTUK APLIKASI YANG BENAR-BENAR RENTAN
+  ---------------------------------------
+  Yang dibutuhkan: otorisasi berbasis STRING PATH dilakukan di lapisan lain,
+  DAN Angular merender rutenya. Itu berarti SSR/prerender, bukan SPA murni:
+
+      // Express di depan Angular SSR — pola yang sangat lazim
+      app.use((req, res, next) => {
+        if (req.path === '/admin' || req.path.startsWith('/admin/')) {
+          if (!isAuthed(req)) return res.status(403).send('Forbidden');
+        }
+        next();
+      });
+      app.get('*', angularSsrHandler);
+
+  Permintaan `/admin)`:
+    - middleware: req.path = "/admin)" -> tidak cocok -> PEMERIKSAAN AUTH DILEWATI
+    - app.get('*') -> Angular SSR -> router mencocokkan rute `admin`
+    - halaman admin dirender di server dan dikirim ke penyerang tanpa autentikasi
+
+  Bentuk setara: aturan auth di CDN/WAF/reverse proxy atas path eksak, dan
+  konfigurasi server-route @angular/ssr yang mencocokkan path secara harfiah.
+
+  BATAS YANG HARUS DINYATAKAN
+  ---------------------------
+  - Pada SPA MURNI ini BUKAN bypass. Server memang menyajikan index.html untuk
+    semua path, dan guard klien TETAP BERJALAN — terukur: `rute-admin` berjalan
+    untuk `/admin)`. Jadi ini bukan bypass guard Angular.
+  - Yang saya UKUR terpisah: (1) pencocokan rute Angular, (2) apa yang diterima
+    server, (3) perilaku pencocok server. Yang saya SIMPULKAN, bukan jalankan
+    ujung-ke-ujung: komposisi ketiganya pada aplikasi SSR nyata dengan middleware
+    auth. Membangun aplikasi SSR berautentikasi sungguhan adalah langkah
+    berikutnya yang belum dikerjakan.
+  - Tanggung jawabnya bisa diperdebatkan: sebagian akan menyebut ini kesalahan
+    aplikasi (jangan otorisasi berdasarkan string path). Bantahannya: Angular
+    MENDIAMKAN karakter yang mengubah arti path, sehingga dua lapisan yang sama-
+    sama masuk akal menjadi tidak sinkron. Menolak `)` liar, atau tidak
+    memotongnya diam-diam, menutup seluruh kelas ini.
+
+  Karena itu F-08 naik dari "inkonsistensi normalisasi" menjadi "desinkronisasi
+  path antar-lapisan" — dengan jalur eksploitasi yang masuk akal dan komponennya
+  terukur, tetapi komposisi ujung-ke-ujungnya belum didemonstrasikan.
 
   Status rantai validasi sekarang:
       hipotesis YA | trace YA | neg-ctl YA | pos-ctl YA | runtime YA
@@ -615,10 +686,11 @@ RINGKASAN
   F-06    i18n_parse.ts:841             gate allowlist bocor     tidak (nama yang
                                         lewat rantai prototipe   lolos semuanya
                                                                  inert)
-  F-08    @angular/router               kebingungan rute: `)`    TERUKUR: rute &
-          DefaultUrlSerializer          dan `/` -> rute & guard   guard berbeda;
-          + pencocokan rute             BERBEDA, bilah alamat     eskalasi hak
-                                        sama-sama `/`             TIDAK terbukti
+  F-08    @angular/router               desinkronisasi path      YA bila SSR +
+          DefaultUrlSerializer          antar-lapisan: `/admin)`  otorisasi path
+          + pencocokan rute             dinilai server BUKAN      sisi-server;
+                                        /admin, dirender Angular  komposisi belum
+                                        SEBAGAI /admin            diuji ujung-ke-ujung
   F-07    resolve_i18n_attr_            salinan pemetaan         tidak (LATEN:
           sanitizers.ts:49-70           sanitizer tak menangani  irisan i18n x
                                         konteks array; salinan   konteks-array

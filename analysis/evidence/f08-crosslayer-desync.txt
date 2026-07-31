@@ -1,0 +1,20 @@
+APA YANG DITERIMA SERVER DARI PERAMBAN
+==============================================================================
+diminta "/admin"       -> server menerima "/admin"
+diminta "/admin)"      -> server menerima "/admin)"
+diminta "/admin)x"     -> server menerima "/admin)x"
+diminta "/admin("      -> server menerima "/admin("
+diminta "/admin)/y"    -> server menerima "/admin)/y"
+
+APAKAH PENCOCOK SISI-SERVER MENGANGGAPNYA "/admin"?
+==============================================================================
+pencocok                                  | /admin     | /admin)    | /admin)x   | /admin(    | /admin)/y  
+----------------------------------------------------------------------------------------------------------
+req.path === "/admin"                     | COCOK      | -          | -          | -          | -          
+p.startsWith("/admin/")                   | -          | -          | -          | -          | -          
+p === "/admin" || p.startsWith("/admin/") | COCOK      | -          | -          | -          | -          
+nginx: location = /admin                  | COCOK      | -          | -          | -          | -          
+nginx: location /admin (prefix)           | COCOK      | COCOK      | COCOK      | COCOK      | COCOK      
+regex ^/admin$                            | COCOK      | -          | -          | -          | -          
+
+Angular router mencocokkan SEMUA path di atas ke rute `admin` (terukur sebelumnya).
