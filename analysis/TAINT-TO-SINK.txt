@@ -49,8 +49,13 @@ S6. iframe.src / iframe.srcdoc
 S7. TransferState.toJson() -> disisipkan ke dalam <script> HTML server
     packages/core/src/transfer_state.ts:146
 
-S8. document.write / insertAdjacentHTML - TIDAK ADA di packages/core dan
-    packages/platform-browser (diverifikasi lewat pencarian menyeluruh).
+S8. document.write / insertAdjacentHTML / createContextualFragment - TIDAK ADA
+    di seluruh repositori (diverifikasi ulang oleh pemindaian pola menyeluruh,
+    lihat Bagian 12: 0 kecocokan untuk ketiga pola tersebut).
+
+    Sink tambahan S9-S13 yang ditemukan pemindaian menyeluruh dirinci di
+    Bagian 12 - termasuk innerHTML di @angular/upgrade yang TIDAK tercakup
+    oleh penelusuran manual Bagian 1-11.
 
 ==============================================================================
 BAGIAN 2 - RANTAI UTAMA: BINDING TEMPLATE -> DOM  [AMAN, dengan syarat]
@@ -434,7 +439,107 @@ BAGIAN 11 - TITIK AUDIT PRIORITAS (untuk peninjau kode framework)
       setelah allowSanitizationBypassAndThrow yang mencocokkan tipe konteks.
 
 ==============================================================================
-BAGIAN 12 - DAFTAR PERIKSA UNTUK APLIKASI PENGGUNA ANGULAR
+BAGIAN 12 - PEMINDAIAN POLA MENYELURUH (koreksi cakupan)
+==============================================================================
+Bagian 1-11 di atas menelusuri sink yang DIPILIH MANUAL, sehingga cakupannya
+terbatas pada apa yang teringat oleh penganalisis. Untuk menutup celah itu,
+seluruh repositori dipindai dengan katalog pola:
+
+    node analysis/tools/scan-sinks.mjs      -> analysis/SINK-INVENTORY.txt
+    3.373 berkas, 28 pola (sink/source/guard)
+
+SINK YANG TERLEWAT OLEH ANALISIS MANUAL
+---------------------------------------
+S9. @angular/upgrade -> innerHTML   [KONDISI - batas kepercayaan eksplisit]
+    packages/upgrade/src/common/src/upgrade_helper.ts:254
+        private compileHtml(html) { this.element.innerHTML = html; ... }
+    Rantai: directive.template ATAU $templateCache/$http(templateUrl)
+        -> UpgradeHelper.getTemplate (:96-121)
+        -> trustedHTMLFromLegacyTemplate (security/trusted_types.ts:59)
+        -> compileHtml -> innerHTML
+    Policy Trusted Types-nya bernama `angular#unsafe-upgrade` dengan
+    `createHTML: (s) => s` - IDENTITAS, tanpa sanitasi sama sekali. Ini disengaja
+    dan didokumentasikan: "the template string should always be under full
+    control of the application author, as untrusted input can cause an XSS
+    vulnerability".
+    Implikasi praktis: aplikasi hybrid yang memuat `templateUrl` dari host yang
+    bisa dipengaruhi penyerang mendapat XSS langsung. Seluruh paket ini tidak
+    tersentuh Bagian 1-11.
+
+S10. core/schematics -> new Function   [KONDISI - waktu build, Node]
+    packages/core/schematics/utils/load_esm.ts:25
+        await new Function('modulePath', `return import(modulePath);`)(...)
+    Solusi standar untuk memuat modul ESM dari konteks CommonJS. Berjalan di
+    Node saat `ng update`/migrasi, bukan di browser. Masukannya jalur modul dari
+    perkakas, bukan data pengguna.
+
+S11. platform-browser -> <link rel=stylesheet href>   [KONDISI]
+    packages/platform-browser/src/dom/shared_styles_host.ts:103
+        createLinkElement(url, doc) { linkElement.setAttribute('href', url); }
+    Pemuatan stylesheet eksternal. Nilainya berasal dari metadata komponen hasil
+    kompilasi (`styleUrls`/external styles), bukan binding runtime - sehingga
+    TIDAK melewati jalur sanitizer di Bagian 2. Aman selama metadata komponen
+    tidak dibangun dari data runtime.
+
+S12. adev (situs angular.dev) -> innerHTML   [KONDISI - konten build-time]
+    adev/shared-docs/components/viewers/docs-viewer/docs-viewer.component.ts:108
+        contentContainer.innerHTML = content;
+    `content` adalah HTML dokumentasi hasil build dari berkas markdown di repo.
+    Bukan data pengguna, tetapi ini sink innerHTML tanpa sanitasi di aplikasi
+    yang benar-benar dideploy - layak dicatat sebagai aset yang integritas
+    build-nya harus dijaga.
+    Serupa: table-of-contents-loader.service.ts:48, tab-group.component.ts:66,
+    dan tooltip.ts:103/149 (dua terakhir memakai variabel bernama `sanitizedHtml`).
+
+S13. devtools -> DOMParser   [AMAN]
+    devtools/projects/ng-devtools-backend/src/lib/shared/highlighter/highlights.ts:225
+    Mem-parse ikon SVG konstan; inert dan tidak berasal dari data pengguna.
+
+KELAS POSITIF PALSU YANG DITEMUKAN (berguna untuk pemindaian berikutnya)
+------------------------------------------------------------------------
+Pemindaian pertama menghasilkan beberapa jenis kekeliruan yang khas TypeScript;
+polanya sudah diperbaiki dan alasannya dicatat langsung di scan-sinks.mjs:
+
+  FP1. `\beval\b` mencocokkan `a.eval(`, `$eval(`, `['eval']` karena `.`, `$`,
+       dan `'` bukan karakter kata. Diuji pada satu baris contoh: 5 kecocokan,
+       hanya 1 yang benar. Solusi: lookbehind `(?<![\w$.])`.
+       Konsekuensi: lookbehind membuang `global['eval']` yang justru dipakai
+       Angular, sehingga akses lewat bracket BUTUH POLA SENDIRI.
+       Catatan: ripgrep (regex Rust) tidak mendukung lookbehind - inilah alasan
+       pemindai ditulis sebagai skrip Node, bukan satu baris grep.
+
+  FP2. `Function` sebagai TIPE TypeScript (`fn: Function`, `Array<Function>`,
+       `as Function`) bukan pemanggilan konstruktor. Disaring lewat pola tolak.
+
+  FP3. Metode bernama `open`. Pola `(?<![\w$.])open\s*\(` mencocokkan
+       `async open(name: string)` di service-worker - 3 dari 3 kecocokan salah.
+       Penerima kini dibatasi: `window|self|globalThis|top|parent` saja.
+
+  FP4. Nama atribut berupa KONSTANTA (`NGH_ATTR_NAME`) atau anggota enum
+       (`Attribute.JSACTION`) tetap statis walau bukan literal string. Tanpa
+       penyaring, 8 dari 10 kecocokan `setAttribute` dinamis adalah positif
+       palsu. Setelah disaring: 35 -> 30 kecocokan.
+
+  FP5. ELEMEN TERLEPAS dipakai sebagai parser URL, bukan sebagai sink:
+       packages/router/upgrade/src/upgrade.ts:147-148 memanggil
+       `anchor.setAttribute('href', url)` dua kali pada anchor yang TIDAK PERNAH
+       dimasukkan ke dokumen (trik normalisasi URL warisan AngularJS). Pola
+       tekstual tidak bisa membedakan ini; hanya pembacaan konteks yang bisa.
+
+  FP6. Komentar dan JSDoc menyebut nama sink. Pemindai mengosongkan komentar
+       lebih dulu (mempertahankan nomor baris) agar dokumentasi tidak terhitung.
+
+BATAS METODE PEMINDAIAN POLA
+----------------------------
+Pemindai ini menemukan TITIK sink, bukan ALIRAN taint. Ia tidak bisa memutuskan
+apakah nilai yang sampai ke sink dikendalikan penyerang - itu tetap memerlukan
+pembacaan rantai seperti Bagian 2-11. Ia juga tidak melihat aliasing
+(`const el = node; el.innerHTML = x` tetap tertangkap, tetapi
+`const set = (o,v) => o.innerHTML = v` yang dipanggil dari tempat lain hanya
+tertangkap di titik definisinya).
+
+==============================================================================
+BAGIAN 13 - DAFTAR PERIKSA UNTUK APLIKASI PENGGUNA ANGULAR
 ==============================================================================
   [ ] grep "bypassSecurityTrust" - tiap kemunculan butuh justifikasi tertulis
   [ ] grep "\[innerHTML\]" - pastikan sumber datanya tepercaya atau tersanitasi

@@ -17,6 +17,9 @@ ISI DIREKTORI
   TAINT-TO-SINK.txt       ANALISIS KEAMANAN: penelusuran aliran data tidak
                           tepercaya (source) menuju titik berbahaya (sink),
                           beserta matriks status dan titik audit prioritas
+  SINK-INVENTORY.txt      HASIL PEMINDAIAN POLA seluruh repositori: setiap
+                          kandidat sink/source beserta file:line dan regex yang
+                          menemukannya (dihasilkan otomatis)
 
   functions/<area>.txt    INVENTORY LENGKAP seluruh simbol per area.
                           Satu baris per fungsi/kelas/metode:
@@ -34,6 +37,9 @@ ISI DIREKTORI
   tools/check-security-schema-sync.mjs
                               memverifikasi dua skema keamanan DOM (compiler vs
                               core) tetap identik -- lihat TAINT-TO-SINK.txt P1
+  tools/scan-sinks.mjs        memindai seluruh repo dengan katalog 28 pola
+                              sink/source; catatan riset regex ada di kepala
+                              berkas -- lihat TAINT-TO-SINK.txt bagian 12
 
 ANGKA CAKUPAN
 -------------
