@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>F-12 — pengungkapan lintas-akun lewat cache Service Worker Angular</title>
+<style>
+ body{font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;margin:24px;max-width:880px}
+ h1{font-size:17px;margin-bottom:4px}
+ .sub{color:#555;margin-top:0}
+ table{border-collapse:collapse;width:100%;margin-top:14px}
+ td,th{border:1px solid #bbb;padding:6px 9px;text-align:left;vertical-align:top}
+ th{background:#f4f4f4}
+ .bad{background:#ffe1e1}
+ .ok{background:#e8f6e8}
+ code{background:#f2f2f2;padding:1px 4px}
+ #sw{margin-top:10px;color:#333}
+</style>
+</head>
+<body>
+<h1>F-12 — respons ber-otentikasi pengguna A disajikan ke pengguna B</h1>
+<p class="sub">Service Worker Angular (<code>ngsw-worker.js</code>) terdaftar sungguhan di peramban ini.</p>
+<div id="sw">status service worker: belum didaftarkan</div>
+<div id="hasil"></div>
+
+<script>
+window.__daftarkanSW = async function () {
+  try {
+    if (!('serviceWorker' in navigator)) {
+      return {ok: false, pesan: 'serviceWorker tidak tersedia (konteks tidak aman?)'};
+    }
+    const reg = await navigator.serviceWorker.register('/ngsw-worker.js', {scope: '/'});
+    await navigator.serviceWorker.ready;
+
+    // Tunggu sampai worker BENAR-BENAR mengendalikan halaman ini. Tanpa ini,
+    // permintaan pertama tidak akan lewat SW dan seluruh uji jadi no-op yang
+    // tampak "aman".
+    if (!navigator.serviceWorker.controller) {
+      await new Promise((res, rej) => {
+        const t = setTimeout(() => rej(new Error('tidak pernah mengendalikan halaman')), 15000);
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          clearTimeout(t);
+          res();
+        });
+      });
+    }
+
+    // Driver ngsw menginisialisasi dirinya secara asinkron (unduh ngsw.json,
+    // bangun AppVersion). Pancing dengan satu permintaan same-origin dan beri
+    // waktu sampai manifestnya siap.
+    for (let i = 0; i < 40; i++) {
+      const r = await fetch('/ngsw/state', {cache: 'no-store'}).then((x) => x.text()).catch(() => '');
+      if (/Latest manifest hash: [0-9a-f]{8}/.test(r)) {
+        document.getElementById('sw').textContent =
+          'status service worker: aktif dan mengendalikan halaman, manifest termuat';
+        return {ok: true};
+      }
+      await new Promise((r2) => setTimeout(r2, 150));
+    }
+    return {ok: false, pesan: 'SW aktif tetapi manifest tidak pernah termuat'};
+  } catch (e) {
+    return {ok: false, pesan: e.message};
+  }
+};
+
+window.__ambil = async function (url, token) {
+  const res = await fetch(url, {
+    mode: 'cors',
+    cache: 'no-store',
+    headers: {Authorization: 'Bearer ' + token},
+  });
+  return {status: res.status, body: await res.text()};
+};
+
+/**
+ * Menyematkan sebabnya, bukan menduganya.
+ *
+ * Entri cache yang SAMA (yang barusan ditulis ngsw) dicocokkan dua kali dengan
+ * permintaan Bob: sekali dengan {ignoreVary:true} — persis yang dipakai ngsw —
+ * dan sekali dengan default peramban yang MENGHORMATI Vary. Kalau yang pertama
+ * mengembalikan respons Alice dan yang kedua tidak, maka `ignoreVary` memang
+ * penyebabnya, bukan hal lain.
+ */
+window.__ujiVary = async function (url) {
+  const reqBob = new Request(url, {headers: {Authorization: 'Bearer BOB'}});
+  const keluar = {};
+  for (const nama of await caches.keys()) {
+    const c = await caches.open(nama);
+    const punyaUrl = (await c.keys()).some((r) => r.url === url);
+    if (!punyaUrl) continue;
+    const abaikanVary = await c.match(reqBob, {ignoreVary: true});
+    const hormatiVary = await c.match(reqBob);
+    keluar[nama] = {
+      denganIgnoreVaryTrue: abaikanVary ? await abaikanVary.text() : null,
+      denganDefaultPeramban: hormatiVary ? await hormatiVary.text() : null,
+    };
+  }
+  return keluar;
+};
+
+window.__lapor = function (alice, bob) {
+  const bocor = alice.body === bob.body;
+  document.getElementById('hasil').innerHTML =
+    '<table>' +
+    '<tr><th>langkah</th><th>token yang dikirim</th><th>body yang diterima peramban</th></tr>' +
+    '<tr><td>T0 — Alice login</td><td><code>Bearer ALICE</code></td><td>' +
+    esc(alice.body) + '</td></tr>' +
+    '<tr class="' + (bocor ? 'bad' : 'ok') + '"><td>T2 — Bob login, peramban yang sama</td>' +
+    '<td><code>Bearer BOB</code></td><td>' + esc(bob.body) + '</td></tr>' +
+    '</table>' +
+    '<p class="' + (bocor ? 'bad' : 'ok') + '" style="padding:8px;margin-top:12px">' +
+    (bocor
+      ? 'Bob menerima profil, email, dan role milik Alice. Permintaan Bob tidak pernah mencapai server IdP, sehingga server tidak punya kesempatan menolaknya.'
+      : 'Bob menerima datanya sendiri.') +
+    '</p>';
+};
+
+function esc(s) {
+  return String(s).replace(/[&<>]/g, (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'})[c]);
+}
+</script>
+</body>
+</html>

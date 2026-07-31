@@ -959,7 +959,7 @@ F-11  AngularJSUrlCodec: pembungkus aman ADA di berkas yang sama, tapi
   4. KONTROL POSITIF  decodeSearch('a=%zz') dan decodeSearch('%zz=1') SELAMAT
                  pada harness yang sama. Membuktikan harness memanggil kode
                  nyata dan pembeda satu-satunya adalah ada/tidaknya try/catch.
-  5. KONTROL NEGATIF  decodePath('/a%20b'), '/a%2Fb', '/<script>', '/ '
+  5. KONTROL NEGATIF  decodePath('/a%20b'), '/a%2Fb', '/<script>', '/\0'
                  semuanya OK. Pemicunya spesifik pada escape persen cacat,
                  bukan "masukan aneh apa pun melempar".
   6. RUNTIME PROOF  Terhadap ARTEFAK npm ASLI @angular/common@22.1.0
@@ -1052,6 +1052,24 @@ F-12  Pola dataGroup service worker dicocokkan sebagai SUBSTRING terhadap URL
   diuji terhadap `https://origin-lain/...`. Ia cocok di mana pun — termasuk
   ketika `/api/` hanya muncul di QUERY STRING.
 
+  RUMUSAN AKAR MASALAH YANG TAHAN TRIAGE
+  --------------------------------------
+  Dokumentasi Angular MEMANG menyatakan pencocokan glob bersifat parsial dan
+  developer boleh meng-anchor sendiri. Laporan ini TIDAK menyangkal itu, dan
+  klaim "pola /api/** jelas dimaksudkan hanya path origin sendiri" sengaja
+  TIDAK ditekankan. Rumusan yang dipakai:
+
+      Pola dataGroups bergaya path dievaluasi sebagai substring tanpa anchor
+      terhadap URL permintaan absolut. Akibatnya konfigurasi TIDAK DAPAT
+      mengungkapkan makna alaminya — "path ini pada origin aplikasi sendiri" —
+      tanpa menanam origin deployment ke dalam regex.
+
+  Menulis `^/api/.*$` tidak menolong: pola itu tidak akan pernah cocok karena
+  yang diuji URL absolut. Satu-satunya bentuk aman adalah
+  `^https://app\.example\.com/api/.*$`, yang memaksa developer meng-hardcode
+  origin dan memelihara konfigurasi berbeda untuk staging, produksi, custom
+  domain, dan hosting multi-tenant.
+
   RANTAI VALIDASI
   ---------------
   1. HIPOTESIS   Pola tanpa anchor yang diuji terhadap URL absolut akan cocok
@@ -1113,21 +1131,57 @@ F-12  Pola dataGroup service worker dicocokkan sebagai SUBSTRING terhadap URL
   Ini cacat pertama dalam seri ini yang dampaknya PERSISTEN dan LINTAS-ORIGIN.
   F-09/F-10/F-11 semuanya sementara dan sebatas satu pengguna satu halaman.
 
-  ESKALASI SEVERITY — respons basi -> KEPUTUSAN KEAMANAN SALAH
+  DAMPAK UTAMA — PENGUNGKAPAN RESPONS LINTAS-AKUN (peramban sungguhan)
+  --------------------------------------------------------------------
+  Diverifikasi di Chromium dengan Service Worker yang BENAR-BENAR terdaftar
+  lewat navigator.serviceWorker.register('/ngsw-worker.js'). Cache Storage,
+  pencocokan Vary, dan interception seluruhnya milik peramban.
+    analysis/tools/ngsw/browser/poc.mjs
+    analysis/tools/ngsw/browser/index.html
+    analysis/evidence/F-12-crossaccount.png
+
+    origin aplikasi : http://localhost:PORT_A   (SW terdaftar di sini)
+    origin IdP      : http://127.0.0.1:PORT_B   (ORIGIN BERBEDA)
+
+    T0  Alice login -> GET {IdP}/v2/api/profile  Authorization: Bearer ALICE
+    T1  Alice logout
+    T2  Bob login pada peramban yang sama, GET URL yang sama, Bearer BOB
+
+    endpoint                       T0 Alice   T2 Bob    IdP dihubungi
+    /v2/api/profile      (A)       Alice      ALICE     1x
+    /v2/profile          (B)       Alice      Bob       2x
+    /v2/api/profile +Vary(C)       Alice      ALICE     1x
+
+    Cache Storage peramban sesudah A dan C:
+      ngsw:/:1:data:api:cache
+        LINTAS-ORIGIN http://127.0.0.1:PORT_B/v2/api/profile
+
+  Bob menerima nama, email, dan role Alice. Permintaan Bob TIDAK PERNAH
+  mencapai server IdP, jadi server tidak punya kesempatan menolaknya. Ini
+  pelanggaran kerahasiaan konkret — bukan UI basi — dan tidak bergantung pada
+  asumsi bahwa otorisasi sisi klien bersifat otoritatif.
+
+  Batas: butuh peramban bersama atau pergantian akun pada peramban yang sama
+  (kiosk, perangkat keluarga, workstation bersama, logout/login berurutan).
+  Penyerang tidak perlu berbuat apa pun; peracunan terjadi lewat pemakaian
+  normal di T0.
+
+  DAMPAK TAMBAHAN — keputusan keamanan sisi klien menjadi salah
   ------------------------------------------------------------
-  "Respons pihak ketiga bisa di-cache" saja belum menaikkan severity. Yang
-  menaikkannya adalah menunjukkan keputusan keamanan yang benar-benar berbeda.
-  Dua skenario dijalankan lewat ngsw-worker.js npm yang sama:
+  Dua skenario berikut menyerang pemeriksaan SISI KLIEN, sehingga menentukan
+  hanya pada aplikasi yang pemeriksaan sisi kliennya satu-satunya. Karena itu
+  keduanya TAMBAHAN, bukan dampak utama.
     analysis/tools/ngsw/stale-authz.mjs
 
-  SKENARIO 1 — kunci yang sudah dirotasi keluar tetap diterima
+  TAMBAHAN 1 — kunci yang sudah dirotasi keluar tetap diterima
     Premis: dataGroup `/api/**`; JWKS IdP ada di /v1/api/keys.
     Verifikasi memakai WebCrypto ASLI (ECDSA P-256 / ES256), bukan tiruan.
     Kode aplikasinya jujur: cek kid, verifikasi tanda tangan, tolak kid yang
     tidak ada di JWKS.
       T0  k1 sah, aplikasi ambil JWKS               -> masuk cache
       T1  k1 BOCOR, IdP merotasinya keluar (JWKS = k2 saja)
-      T2  penyerang menyodorkan JWT role=admin bertanda tangan k1
+      T2  JWT role=admin bertanda tangan k1 disodorkan. Tanda tangannya SAH
+          secara kriptografis; yang salah adalah k1 sudah DICABUT.
 
       A RENTAN    pola \/api\/.*, JWKS /v1/api/keys
                   IdP dihubungi setelah rotasi = false
@@ -1138,10 +1192,22 @@ F-12  Pola dataGroup service worker dicocokkan sebagai SUBSTRING terhadap URL
                   IdP dihubungi = true  -> DITOLAK
 
     Kode aplikasi, pasangan kunci, token, dan kode verifikasi IDENTIK di
-    ketiganya. Pembeda diterimanya token palsu hanyalah BENTUK URL IdP —
-    di luar kendali developer aplikasi.
+    ketiganya. Pembeda diterimanya token itu hanyalah BENTUK URL IdP.
 
-  SKENARIO 2 — pencabutan hak akses tidak berlaku
+    KOREKSI ATAS KLAIM SAYA SENDIRI: sebelumnya saya menulis bentuk URL IdP
+    "sama sekali di luar kendali developer". Itu terlalu absolut. Developer
+    tidak mengendalikan path IdP, TETAPI ia mengendalikan dataGroups.urls dan
+    bisa menulis pola absolut ter-anchor. Rumusan yang benar: bentuk URL pihak
+    ketiga di luar kendalinya, sementara mengungkapkan "path /api/ pada origin
+    aplikasi SENDIRI" secara aman mengharuskan origin deployment ditanam ke
+    dalam regex. Konfigurasi bergaya path yang portabel tidak mempertahankan
+    semantik same-origin saat runtime.
+
+    Istilah: token pada skenario ini BUKAN "palsu"/forged. Tanda tangannya sah
+    secara kriptografis; yang salah adalah kuncinya sudah dicabut lewat rotasi
+    darurat.
+
+  TAMBAHAN 2 — pencabutan hak akses tidak berlaku
     Tidak mengandaikan verifikasi JWT sisi klien; polanya jauh lebih umum.
       T0  pengguna admin, aplikasi ambil hak aksesnya
       T1  admin MENCABUT peran (karyawan keluar / akun disusupi)
@@ -1168,7 +1234,62 @@ F-12  Pola dataGroup service worker dicocokkan sebagai SUBSTRING terhadap URL
   Klasifikasi yang paling tepat: cross-origin unintended service worker
   caching akibat pencocokan pola URL tanpa anchor terhadap URL absolut —
   security-relevant correctness flaw / cache-scope confusion, dengan severity
-  yang bergantung aplikasi tetapi terbukti dapat mencapai kegagalan otorisasi.
+  yang bergantung aplikasi tetapi terbukti mencapai pengungkapan data
+  lintas-akun.
+
+
+==============================================================================
+F-13  ngsw meng-hardcode `ignoreVary: true` dan tidak mengeksposnya —
+      pertahanan `Vary: Authorization` sisi server dinonaktifkan tanpa syarat
+==============================================================================
+
+  BERKAS
+  ------
+  packages/service-worker/config/src/generator.ts:203-210
+      function buildCacheQueryOptions(
+        inOptions?: Pick<CacheQueryOptions, 'ignoreSearch'>,
+      ): CacheQueryOptions {
+        return {
+          ignoreVary: true,
+          ...inOptions,
+        };
+      }
+  packages/service-worker/config/src/in.ts:44,64
+      cacheQueryOptions?: Pick<CacheQueryOptions, 'ignoreSearch'>;
+  goldens/public-api/service-worker/config/index.api.md:10,54  (idem)
+  adev/src/content/ecosystem/service-workers/config.md:154
+      hanya `ignoreSearch` yang didokumentasikan; `ignoreVary` tidak disebut
+
+  KENAPA INI PENTING
+  ------------------
+  `Vary` adalah mekanisme HTTP standar bagi server untuk menyatakan "respons
+  ini tidak boleh dipakai ulang untuk permintaan dengan header berbeda".
+  `Vary: Authorization` dan `Vary: Cookie` adalah pertahanan baku terhadap
+  reuse cache lintas-prinsipal.
+
+  Angular menonaktifkannya TANPA SYARAT, dan tipe publiknya tidak mengekspos
+  `ignoreVary`, sehingga aplikasi tidak punya cara yang didukung untuk
+  menyalakannya kembali. Server yang SUDAH melakukan hal yang benar tetap
+  tidak terlindungi.
+
+  BUKTI — sebab disematkan pada ENTRI CACHE YANG SAMA
+  ---------------------------------------------------
+  Di dalam halaman, permintaan Bob dicocokkan dua kali terhadap entri yang
+  baru saja ditulis ngsw (analysis/tools/ngsw/browser/poc.mjs, arm C, IdP
+  mengirim `Vary: Authorization`):
+
+      Cache.match(permintaan Bob) pada ngsw:/:1:data:api:cache
+        {ignoreVary:true}  (yang dipakai ngsw) -> {"name":"Alice", ...}
+        default peramban   (menghormati Vary)  -> TIDAK COCOK
+
+  Peramban akan menolak kecocokan itu. ngsw memaksanya cocok.
+
+  USULAN
+  ------
+  Ekspos `ignoreVary` pada `cacheQueryOptions` publik, dan pertimbangkan
+  default `false` untuk dataGroups — di mana respons per-pengguna adalah kasus
+  lazim — sambil mempertahankan `true` untuk assetGroups yang isinya di-hash
+  dan tidak bergantung header.
 
   KENAPA BUKAN PERILAKU YANG DIRANCANG
   ------------------------------------
@@ -1183,11 +1304,37 @@ F-12  Pola dataGroup service worker dicocokkan sebagai SUBSTRING terhadap URL
   ---------
   Menambahkan `^` saja TIDAK cukup — dan ini bagian penting dari laporannya.
   `data.ts` menguji URL absolut, sehingga pola path yang di-anchor
-  (`^\/api\/.*$`) justru tidak akan pernah cocok. Perbaikan yang benar:
-  selesaikan pola relatif terhadap origin aplikasi saat pembuatan manifest
-  (menghasilkan `^https:\/\/app\.example\.com\/api\/.*$`), atau minimal pakai
-  `adapter.normalizeUrl()` di data.ts:305 seperti yang sudah dilakukan
-  assets.ts:126, lalu anchor polanya.
+  (`^\/api\/.*$`) justru tidak akan pernah cocok.
+
+  Perbaikan juga TIDAK BOLEH memaksa seluruh dataGroups menjadi same-origin:
+  Angular memang mendukung caching data lintas-origin secara sengaja
+  (dokumentasinya membahas respons opaque dan cacheOpaqueResponses). Usulan
+  yang kompatibel:
+
+    1. Pola yang diawali "/" dianggap path pada origin Service Worker.
+    2. Pola yang memuat skema/origin, mis. "https://cdn.example/**", tetap
+       diperlakukan sebagai pola lintas-origin seperti sekarang.
+    3. Pencocokan bergaya path dilakukan terhadap pathname + search yang sudah
+       dinormalkan, bukan terhadap seluruh URL absolut origin lain.
+
+  Secara konsep, di data.ts:
+
+      const parsed = new URL(req.url);
+      if (configuredPattern.startsWith('/')) {
+        if (parsed.origin !== adapter.origin) return false;
+        return pattern.test(parsed.pathname + parsed.search);
+      }
+      return pattern.test(req.url);
+
+  SEVERITY YANG REALISTIS
+  -----------------------
+    Medium         bila ada bukti pengungkapan data lintas-akun atau operasi
+                   berprivilege konkret  <- yang dibuktikan laporan ini
+    Low            bila hanya entitlement/UI sisi klien yang basi
+    Informational  bila triage menilai partial matching + staleness sudah
+                   terdokumentasi
+
+  Laporan siap kirim: analysis/reports/F-12-ngsw-crossorigin-cache.md
 
 ==============================================================================
 RINGKASAN
@@ -1223,13 +1370,20 @@ RINGKASAN
           + pencocokan rute             dinilai server BUKAN      sisi-server;
                                         /admin, dirender Angular  komposisi belum
                                         SEBAGAI /admin            diuji ujung-ke-ujung
+  F-13    service-worker/config/        ignoreVary:true di-       YA — menonaktifkan
+          generator.ts:203-210          hardcode & tidak          pertahanan Vary sisi
+                                        diekspos di tipe publik   server tanpa syarat;
+                                                                  aplikasi tidak bisa
+                                                                  menyalakannya lagi
   F-12    service-worker/config/        pola path dicocokkan     YA — PERSISTEN dan
           generator.ts:96,104           SEBAGAI SUBSTRING thd     LINTAS-ORIGIN.
           + worker/src/data.ts:305      URL absolut -> `/api/**`  Respons pihak
                                         menangkap & meng-cache    ketiga di-cache di
                                         URL LINTAS-ORIGIN, bahkan disk & disajikan
                                         bila `/api/` cuma di      basi sampai maxAge
-                                        query string              habis
+                                        query string              habis. TERBUKTI di
+                                                                  Chromium: profil+role
+                                                                  Alice disajikan ke Bob
   F-11    common/upgrade/src/           pembungkus aman ADA di   KECIL: sisi klien,
           params.ts:150,167             berkas yang sama tapi     1 pengguna, pulih
           + location_shim.ts:369,371    decodePath/decodeHash     sendiri. TAPI yang

@@ -24,7 +24,8 @@
  *   T0  Kunci k1 sah. Aplikasi mengambil JWKS.  -> masuk cache
  *   T1  k1 BOCOR. IdP merotasinya keluar; JWKS kini hanya berisi k2.
  *       Semua token yang ditandatangani k1 HARUS ditolak.
- *   T2  Penyerang menyodorkan JWT role=admin yang ditandatangani dengan k1 bocor.
+ *   T2  JWT role=admin yang ditandatangani k1 disodorkan. Tanda tangannya SAH
+ *       secara kriptografis; yang salah adalah kuncinya sudah dicabut.
  *
  * Verifikasinya memakai WebCrypto asli (ECDSA P-256 / ES256), bukan tiruan.
  * Kalau tanda tangannya tidak sah, ia benar-benar gagal.
@@ -144,7 +145,7 @@ async function bangunManifest(polaDataGroup) {
   return manifest;
 }
 
-async function jalankanSkenario({nama, urlJwks, polaDataGroup, k1, k2, tokenPenyerang}) {
+async function jalankanSkenario({nama, urlJwks, polaDataGroup, k1, k2, tokenKunciDicabut}) {
   const manifest = await bangunManifest(polaDataGroup);
 
   // Keadaan IdP: awalnya k1 sah; sesudah rotasi hanya k2.
@@ -193,8 +194,9 @@ async function jalankanSkenario({nama, urlJwks, polaDataGroup, k1, k2, tokenPeny
   jwksSekarang = {keys: [k2.jwk]};
   const hitSebelum = hitJwks;
 
-  // T2 — penyerang menyodorkan token role=admin bertanda tangan k1 bocor.
-  const putusan = await bolehMasukAdmin(tokenPenyerang, ambilJwks);
+  // T2 — token role=admin bertanda tangan k1 disodorkan. Tanda tangannya SAH;
+  // yang salah adalah k1 sudah dicabut lewat rotasi darurat.
+  const putusan = await bolehMasukAdmin(tokenKunciDicabut, ambilJwks);
   const idpDihubungi = hitJwks > hitSebelum;
 
   return {
@@ -210,8 +212,8 @@ async function jalankanSkenario({nama, urlJwks, polaDataGroup, k1, k2, tokenPeny
 // -------------------------------------------------------------------- main --
 const k1 = await buatKunci('k1-bocor');
 const k2 = await buatKunci('k2-baru');
-const tokenPenyerang = await tandatangani(k1, {
-  sub: 'penyerang',
+const tokenKunciDicabut = await tandatangani(k1, {
+  sub: 'pemegang-kunci-bocor',
   role: 'admin',
   iss: 'https://idp.example.test/',
 });
@@ -228,7 +230,7 @@ Maksud     : "cache API milik saya sendiri"
 
 Lini masa  : T0 k1 sah, aplikasi ambil JWKS
              T1 k1 BOCOR, IdP merotasinya keluar -> JWKS hanya berisi k2
-             T2 penyerang menyodorkan JWT role=admin bertanda tangan k1`);
+             T2 JWT role=admin bertanda tangan kunci-yang-sudah-dicabut disodorkan`);
 
 const hasil = [];
 hasil.push(
@@ -238,7 +240,7 @@ hasil.push(
     polaDataGroup: null,
     k1,
     k2,
-    tokenPenyerang,
+    tokenKunciDicabut,
   }),
 );
 hasil.push(
@@ -248,7 +250,7 @@ hasil.push(
     polaDataGroup: null,
     k1,
     k2,
-    tokenPenyerang,
+    tokenKunciDicabut,
   }),
 );
 hasil.push(
@@ -258,7 +260,7 @@ hasil.push(
     polaDataGroup: '^https:\\/\\/app\\.example\\.com\\/api\\/.*$',
     k1,
     k2,
-    tokenPenyerang,
+    tokenKunciDicabut,
   }),
 );
 
@@ -399,14 +401,15 @@ if (terkonfirmasi) {
   console.log('berubah adalah apakah pola dataGroup mencocokkan URL IdP.');
   console.log('');
   console.log('  A  SW menyajikan JWKS basi -> kunci yang sudah dirotasi keluar masih');
-  console.log('     dianggap sah -> token palsu role=admin DITERIMA, dan IdP bahkan');
+  console.log('     dianggap sah -> token bertanda tangan kunci-yang-dicabut DITERIMA,');
+  console.log('     dan IdP bahkan');
   console.log('     tidak pernah dihubungi lagi setelah rotasi.');
   console.log('  B  URL IdP tidak memuat "/api/" -> SW tidak ikut campur -> JWKS segar');
   console.log('     -> kid sudah tidak ada -> DITOLAK.');
   console.log('  C  Pola ter-anchor ke origin aplikasi -> SW tidak ikut campur -> DITOLAK.');
   console.log('');
   console.log('Kode aplikasi, kunci, token, dan kode verifikasi identik di ketiganya.');
-  console.log('Yang membedakan diterimanya token palsu hanyalah BENTUK URL IdP.');
+  console.log('Yang membedakan diterimanya token itu hanyalah BENTUK URL IdP.');
   console.log('');
   console.log('Skenario 2 menunjukkan hal yang sama tanpa mengandaikan verifikasi JWT');
   console.log('sisi klien: pencabutan peran tidak berlaku, panel admin tetap terbuka,');
