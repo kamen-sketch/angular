@@ -830,11 +830,12 @@ F-09  Cookie XSRF cacat menggagalkan SELURUH permintaan HTTP yang memutasi
 
 ==============================================================================
 F-10  HttpParams({fromString}) melempar URIError pada persen-encoding cacat —
-      lebih rapuh daripada URLSearchParams platform, pada pola yang DIDOKUMEN-
-      TASIKAN sendiri (window.location.search)
+      lebih rapuh daripada URLSearchParams platform
       BERKAS  : packages/common/http/src/params.ts:64-75 (decodeKey/decodeValue)
                 packages/common/http/src/params.ts:180   (parse di KONSTRUKTOR)
-      SIFAT   : ketangguhan / penolakan layanan sisi klien
+      SIFAT   : cacat KOREKTNESS/ketangguhan (divergensi dari platform)
+      DAMPAK  : KECIL. Bukan DoS layanan. Hanya SATU pengguna, pada SATU
+                page-load, dan TIDAK persisten (navigasi bersih memulihkan).
       STATUS  : DIBUKTIKAN RUNTIME (npm 22.1.0); pembanding platform diukur
       BUKTI   : analysis/evidence/f10-httpparams-uri-malformed.txt
                 analysis/tools/httpparams/
@@ -880,20 +881,28 @@ F-10  HttpParams({fromString}) melempar URIError pada persen-encoding cacat —
   Jadi HttpParams LEBIH RAPUH daripada primitif platform yang ditirunya, pada
   jalur yang dokumentasinya sendiri anjurkan.
 
-  DAMPAK — PENILAIAN JUJUR
-  ------------------------
-  Ketersediaan, bukan kerahasiaan/integritas. Terpicu bila aplikasi membangun
-  HttpParams dari string yang dipengaruhi pengguna — TERUTAMA pola
-  `fromString: location.search` yang didokumentasikan. Pemicunya bahkan tidak
-  perlu jahat: nilai `%` yang sah dan LAZIM (`100%`, `50%`, `A&W`) sudah cukup.
-  Pengguna yang mengetik atau menandai (bookmark) URL semacam itu memecahkan
-  konstruksi HttpParams, yang lazimnya menggagalkan permintaan HTTP atau
-  komponen yang memakainya.
+  DAMPAK — PENILAIAN JUJUR (dikoreksi setelah pertanyaan tajam: "web-nya down?")
+  ----------------------------------------------------------------------------
+  TIDAK. Web-nya tidak down. Koreksi ini penting dan saya sebelumnya salah
+  membingkai:
+    - Hanya pengguna yang URL-nya kebetulan memuat `%` liar yang terdampak.
+    - Hanya pada page-load itu; TIDAK persisten — navigasi/refresh dengan URL
+      bersih langsung memulihkan.
+    - Server dan pengguna lain TIDAK terpengaruh sama sekali.
+    - Praktis SELF-INFLICTED (pengguna mengetik/menandai URL aneh) atau paling
+      jauh "kirim korban satu tautan rusak" yang efeknya cuma halaman error
+      sekali, lalu hilang.
 
-  Dibanding F-09: LEBIH mudah dijangkau (pemicu langsung di query string URL,
-  tanpa cookie tossing) tetapi cakupan aplikasinya lebih sempit (hanya yang
-  memakai HttpParams fromString atas masukan tak-tepercaya). Keduanya kelas yang
-  sama: decode tak-terjaga pada masukan yang dipengaruhi luar.
+  Jadi ini BUKAN penolakan layanan dalam arti bermakna. Ini cacat KOREKTNESS:
+  HttpParams berbeda dari `URLSearchParams` platform pada masukan yang sama, ke
+  arah yang lebih rapuh. Itu tetap layak diperbaiki (menyelaraskan dengan
+  platform), tetapi bobotnya jauh di bawah F-09.
+
+  KOREKSI ISTILAH: saya sempat menulis F-10 "lebih mudah dijangkau daripada
+  F-09". Itu mencampur KETERJANGKAUAN dengan DAMPAK. Lebih gampang dipicu TIDAK
+  berarti lebih parah. Dalam hal DAMPAK, F-10 jauh di bawah F-09:
+      F-09: seluruh operasi tulis korban mati, PERSISTEN, lintas-origin
+      F-10: satu halaman satu pengguna error sekali, lalu pulih sendiri
 
   PERBAIKAN
   ---------
@@ -925,10 +934,10 @@ RINGKASAN
   F-06    i18n_parse.ts:841             gate allowlist bocor     tidak (nama yang
                                         lewat rantai prototipe   lolos semuanya
                                                                  inert)
-  F-10    common/http/src/params.ts     HttpParams fromString    YA — DoS klien
-          :64-75,180                    melempar URIError pada    via query URL;
-                                        `%` cacat; URLSearchParams lebih terjangkau
-                                        platform TIDAK melempar    dari F-09
+  F-10    common/http/src/params.ts     HttpParams fromString    KECIL: 1 pengguna,
+          :64-75,180                    melempar URIError pada    1 page-load, tidak
+                                        `%` cacat; URLSearchParams persisten. Bukan
+                                        platform TIDAK melempar    DoS layanan.
   F-09    common/src/cookie.ts:16       decodeURIComponent tanpa YA — DoS klien
           + http/src/xsrf.ts:119        guard; cookie XSRF cacat  persisten atas
                                         menggagalkan SEMUA        semua permintaan
