@@ -1,0 +1,47 @@
+[
+ {
+  "label": "normal",
+  "fromString": "a=1&b=2",
+  "hasil": "OK",
+  "keys": [
+   "a",
+   "b"
+  ]
+ },
+ {
+  "label": "malformed value %",
+  "fromString": "a=%",
+  "hasil": "THREW",
+  "tipe": "URIError",
+  "pesan": "URI malformed"
+ },
+ {
+  "label": "malformed key %",
+  "fromString": "%=1",
+  "hasil": "THREW",
+  "tipe": "URIError",
+  "pesan": "URI malformed"
+ },
+ {
+  "label": "malformed mid",
+  "fromString": "a=x%zzy",
+  "hasil": "THREW",
+  "tipe": "URIError",
+  "pesan": "URI malformed"
+ },
+ {
+  "label": "lone % in value",
+  "fromString": "q=100%off",
+  "hasil": "THREW",
+  "tipe": "URIError",
+  "pesan": "URI malformed"
+ },
+ {
+  "label": "from location.search style",
+  "fromString": "?filter=50%&sort=x",
+  "hasil": "THREW",
+  "tipe": "URIError",
+  "pesan": "URI malformed"
+ }
+]
+pageerror: (none)

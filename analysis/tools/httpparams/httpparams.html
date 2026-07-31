@@ -1,0 +1,35 @@
+<!doctype html><meta charset="utf-8"><title>HttpParams</title>
+<script type="importmap">
+{"imports":{
+ "@angular/compiler":"/router-fuzz/node_modules/@angular/compiler/fesm2022/compiler.mjs",
+ "@angular/common/http":"/router-fuzz/node_modules/@angular/common/fesm2022/http.mjs",
+ "@angular/common":"/router-fuzz/node_modules/@angular/common/fesm2022/common.mjs",
+ "@angular/core":"/router-fuzz/node_modules/@angular/core/fesm2022/core.mjs",
+ "@angular/core/primitives/signals":"/router-fuzz/node_modules/@angular/core/fesm2022/primitives-signals.mjs",
+ "@angular/core/primitives/di":"/router-fuzz/node_modules/@angular/core/fesm2022/primitives-di.mjs",
+ "@angular/core/primitives/event-dispatch":"/router-fuzz/node_modules/@angular/core/fesm2022/primitives-event-dispatch.mjs",
+ "tslib":"/npm-validate/node_modules/tslib/tslib.es6.mjs",
+ "rxjs":"/router-fuzz/node_modules/rxjs/dist/esm/index.js",
+ "rxjs/operators":"/router-fuzz/node_modules/rxjs/dist/esm/operators/index.js"}}
+</script><pre id="o">…</pre>
+<script type="module">
+import '@angular/compiler';
+import {HttpParams} from '@angular/common/http';
+const out=[];
+function t(label, fromString){
+  try{
+    const p=new HttpParams({fromString});
+    out.push({label, fromString, hasil:'OK', keys:p.keys()});
+  }catch(e){
+    out.push({label, fromString, hasil:'THREW', tipe:(e&&e.constructor&&e.constructor.name)||typeof e, pesan:String((e&&e.message)||e).slice(0,80)});
+  }
+}
+t('normal', 'a=1&b=2');
+t('malformed value %', 'a=%');
+t('malformed key %', '%=1');
+t('malformed mid', 'a=x%zzy');
+t('lone % in value', 'q=100%off');           // realistic: user searches "100%off"
+t('from location.search style', '?filter=50%&sort=x');
+window.__H__=out;
+document.getElementById('o').textContent=JSON.stringify(out,null,1);
+</script>

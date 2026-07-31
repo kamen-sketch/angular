@@ -829,6 +829,82 @@ F-09  Cookie XSRF cacat menggagalkan SELURUH permintaan HTTP yang memutasi
   pernah menggagalkan permintaan.
 
 ==============================================================================
+F-10  HttpParams({fromString}) melempar URIError pada persen-encoding cacat —
+      lebih rapuh daripada URLSearchParams platform, pada pola yang DIDOKUMEN-
+      TASIKAN sendiri (window.location.search)
+      BERKAS  : packages/common/http/src/params.ts:64-75 (decodeKey/decodeValue)
+                packages/common/http/src/params.ts:180   (parse di KONSTRUKTOR)
+      SIFAT   : ketangguhan / penolakan layanan sisi klien
+      STATUS  : DIBUKTIKAN RUNTIME (npm 22.1.0); pembanding platform diukur
+      BUKTI   : analysis/evidence/f10-httpparams-uri-malformed.txt
+                analysis/tools/httpparams/
+==============================================================================
+
+  CARA DITEMUKAN
+  --------------
+  Menriase saudara F-09 yang sempat dilewati: G-15 juga menandai params.ts:65,74.
+  F-09 mengajarkan bentuknya; ini instans yang sama pada jalur berbeda.
+
+  KODE
+  ----
+      // params.ts:64-75  — codec baku HttpUrlEncodingCodec
+      decodeKey(key: string): string   { return decodeURIComponent(key); }
+      decodeValue(value: string)       { return decodeURIComponent(value); }
+
+      // params.ts:173-180 — parse terjadi di KONSTRUKTOR, bukan lazy
+      if (options.fromString) {
+        this.map = paramParser(options.fromString, this.encoder);  // dapat melempar
+      }
+
+  Komentar di berkas yang sama (params.ts:81-83) secara EKSPLISIT menganjurkan
+  pola yang rentan:
+      "The `window.location.search` can be used while creating an instance of
+       the `HttpParams` class (e.g. `new HttpParams({ fromString:
+       window.location.search })`)."
+
+  BUKTI RUNTIME (HttpParams asli dari npm)
+  ----------------------------------------
+      new HttpParams({fromString: 'a=1&b=2'})        -> OK
+      new HttpParams({fromString: 'a=%'})            -> THROW URIError: URI malformed
+      new HttpParams({fromString: 'q=100%off'})      -> THROW URIError
+      new HttpParams({fromString: '?filter=50%&x=1'}) -> THROW URIError
+
+  PEMBANDING PLATFORM — ini yang menjadikannya CACAT, bukan sekadar perilaku JS
+  ----------------------------------------------------------------------------
+  `URLSearchParams` (standar web untuk tugas yang SAMA) TIDAK melempar pada
+  masukan yang sama; `%` liar diperlakukan sebagai `%` harfiah:
+      new URLSearchParams('q=100%off')   -> [["q","100%off"]]
+      new URLSearchParams('a=%')         -> [["a","%"]]
+      new URLSearchParams('?filter=50%') -> [["filter","50%"]]
+
+  Jadi HttpParams LEBIH RAPUH daripada primitif platform yang ditirunya, pada
+  jalur yang dokumentasinya sendiri anjurkan.
+
+  DAMPAK — PENILAIAN JUJUR
+  ------------------------
+  Ketersediaan, bukan kerahasiaan/integritas. Terpicu bila aplikasi membangun
+  HttpParams dari string yang dipengaruhi pengguna — TERUTAMA pola
+  `fromString: location.search` yang didokumentasikan. Pemicunya bahkan tidak
+  perlu jahat: nilai `%` yang sah dan LAZIM (`100%`, `50%`, `A&W`) sudah cukup.
+  Pengguna yang mengetik atau menandai (bookmark) URL semacam itu memecahkan
+  konstruksi HttpParams, yang lazimnya menggagalkan permintaan HTTP atau
+  komponen yang memakainya.
+
+  Dibanding F-09: LEBIH mudah dijangkau (pemicu langsung di query string URL,
+  tanpa cookie tossing) tetapi cakupan aplikasinya lebih sempit (hanya yang
+  memakai HttpParams fromString atas masukan tak-tepercaya). Keduanya kelas yang
+  sama: decode tak-terjaga pada masukan yang dipengaruhi luar.
+
+  PERBAIKAN
+  ---------
+  Jadikan codec baku toleran seperti URLSearchParams — decode dengan fallback:
+      decodeValue(value: string) {
+        try { return decodeURIComponent(value); } catch { return value; }
+      }
+  (idem decodeKey). Ini menyelaraskan HttpParams dengan perilaku platform dan
+  menutup F-10 tanpa mengubah kasus yang sah.
+
+==============================================================================
 RINGKASAN
 ==============================================================================
 
@@ -849,6 +925,10 @@ RINGKASAN
   F-06    i18n_parse.ts:841             gate allowlist bocor     tidak (nama yang
                                         lewat rantai prototipe   lolos semuanya
                                                                  inert)
+  F-10    common/http/src/params.ts     HttpParams fromString    YA — DoS klien
+          :64-75,180                    melempar URIError pada    via query URL;
+                                        `%` cacat; URLSearchParams lebih terjangkau
+                                        platform TIDAK melempar    dari F-09
   F-09    common/src/cookie.ts:16       decodeURIComponent tanpa YA — DoS klien
           + http/src/xsrf.ts:119        guard; cookie XSRF cacat  persisten atas
                                         menggagalkan SEMUA        semua permintaan
