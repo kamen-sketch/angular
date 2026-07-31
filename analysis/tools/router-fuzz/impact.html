@@ -1,0 +1,146 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>F-08 impact: apakah selisih pohon mengubah pencocokan rute?</title>
+<style>
+ body{font:13px/1.55 ui-monospace,Menlo,Consolas,monospace;margin:0;padding:16px;background:#0b0e14;color:#c9d1d9}
+ h1{font-size:16px;margin:0 0 6px}
+ table{border-collapse:collapse;width:100%;margin:8px 0}
+ th,td{border:1px solid #30363d;padding:5px 8px;text-align:left;vertical-align:top}
+ th{background:#161b22}
+ .ok{color:#3fb950}.bad{color:#f85149}.warn{color:#d29922}
+ code{color:#79c0ff;word-break:break-all}
+ .v{font-size:14px;font-weight:700;padding:10px 12px;border-radius:6px;margin:10px 0}
+ .v.hit{background:#26120f;border:1px solid #da3633;color:#f85149}
+ .v.clean{background:#12261a;border:1px solid #238636;color:#3fb950}
+ .box{border:1px solid #30363d;border-radius:6px;padding:8px 12px;margin:8px 0;background:#0d1117}
+</style>
+<script type="importmap">
+{"imports":{
+ "@angular/compiler":"/router-fuzz/node_modules/@angular/compiler/fesm2022/compiler.mjs",
+ "@angular/router":"/router-fuzz/node_modules/@angular/router/fesm2022/router.mjs",
+ "@angular/common/http":"/router-fuzz/node_modules/@angular/common/fesm2022/http.mjs",
+ "@angular/common":"/router-fuzz/node_modules/@angular/common/fesm2022/common.mjs",
+ "@angular/core":"/router-fuzz/node_modules/@angular/core/fesm2022/core.mjs",
+ "@angular/core/primitives/signals":"/router-fuzz/node_modules/@angular/core/fesm2022/primitives-signals.mjs",
+ "@angular/core/primitives/di":"/router-fuzz/node_modules/@angular/core/fesm2022/primitives-di.mjs",
+ "@angular/core/primitives/event-dispatch":"/router-fuzz/node_modules/@angular/core/fesm2022/primitives-event-dispatch.mjs",
+ "@angular/platform-browser":"/router-fuzz/node_modules/@angular/platform-browser/fesm2022/platform-browser.mjs",
+ "tslib":"/npm-validate/node_modules/tslib/tslib.es6.mjs",
+ "rxjs":"/router-fuzz/node_modules/rxjs/dist/esm/index.js",
+ "rxjs/operators":"/router-fuzz/node_modules/rxjs/dist/esm/operators/index.js"
+}}
+</script>
+</head>
+<body>
+<h1>F-08 — langkah <i>security impact</i>: apakah dua pohon itu dicocokkan berbeda?</h1>
+<p>F-08 menunjukkan <code>parse(")")</code> dan <code>parse("/")</code> menghasilkan UrlTree
+berbeda tetapi menserialisasi ke string yang sama. Pertanyaan yang menentukan: apakah
+PENCOCOKAN RUTE dan GUARD memperlakukan keduanya berbeda? Diuji dengan Router sungguhan.</p>
+<div id="out">membangun aplikasi…</div>
+
+<script type="module">
+import '@angular/compiler';
+import {Component, Injectable} from '@angular/core';
+import {bootstrapApplication} from '@angular/platform-browser';
+import {provideRouter, Router, RouterOutlet} from '@angular/router';
+
+const E=(s)=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const out=document.getElementById('out');
+const jejakGuard=[];
+
+function buatKomponen(nama){
+  return Component({selector:'k-'+nama, template:nama, standalone:true})(class {});
+}
+const Beranda = buatKomponen('beranda');
+const Rahasia = buatKomponen('rahasia');
+const Lain    = buatKomponen('lain');
+const Akar    = Component({selector:'app-root', template:'<router-outlet></router-outlet>',
+                           standalone:true, imports:[RouterOutlet]})(class {});
+
+// Guard mencatat PERSIS apa yang dilihatnya, supaya bisa dibandingkan struktural.
+function guardPencatat(label){
+  return (route, state) => {
+    jejakGuard.push({
+      label,
+      urlSnapshot: route.url.map(s=>({path:s.path, params:{...s.parameters}})),
+      routeConfigPath: route.routeConfig ? route.routeConfig.path : null,
+      stateUrl: state.url,
+    });
+    return true;
+  };
+}
+
+const rute = [
+  {path:'',       component:Beranda, canActivate:[guardPencatat('rute-kosong')]},
+  {path:'admin',  component:Rahasia, canActivate:[guardPencatat('rute-admin')]},
+  {path:'**',     component:Lain,    canActivate:[guardPencatat('rute-wildcard')]},
+];
+
+const host=document.createElement('app-root');
+document.body.appendChild(host);
+
+const app = await bootstrapApplication(Akar, {providers:[provideRouter(rute)]});
+const router = app.injector.get(Router);
+
+// KONFOUND YANG HARUS DIHINDARI: bila router sudah berada di URL target,
+// navigateByUrl menjadi no-op — mengembalikan false dan TIDAK menjalankan guard.
+// Tanpa reset, tes kedua akan tampak "berbeda" padahal itu artefak urutan tes.
+// Karena itu setiap pengukuran didahului navigasi ke URL netral.
+async function coba(url){
+  await router.navigateByUrl('/reset-netral-' + Math.random().toString(36).slice(2));
+  jejakGuard.length=0;
+  let err=null, ok=null;
+  try{ ok = await router.navigateByUrl(url); }catch(e){ err=e.message; }
+  const snap = router.routerState.snapshot.root;
+  // Turun ke daun untuk melihat rute yang benar-benar aktif.
+  let daun=snap; while(daun.firstChild) daun=daun.firstChild;
+  return {
+    url,
+    hasilNavigasi: ok,
+    galat: err,
+    routerUrl: router.url,
+    komponenAktif: daun.component ? (daun.component.name||String(daun.component)) : null,
+    routeConfigPath: daun.routeConfig ? daun.routeConfig.path : null,
+    urlSegmenDaun: daun.url.map(s=>({path:s.path, params:{...s.parameters}})),
+    guard: JSON.parse(JSON.stringify(jejakGuard)),
+  };
+}
+
+const a = await coba(')');
+const b = await coba('/');
+const c = await coba('/admin');
+
+// Perbandingan TERSTRUKTUR, bukan string.
+const kunci = (r)=>JSON.stringify({
+  komponen:r.komponenAktif, path:r.routeConfigPath,
+  seg:r.urlSegmenDaun, guard:r.guard.map(g=>({l:g.label,u:g.urlSnapshot,p:g.routeConfigPath})),
+});
+const samaAB = kunci(a)===kunci(b);
+
+let h='';
+h+=`<table><thead><tr><th>aspek</th><th>navigasi ke <code>")"</code></th><th>navigasi ke <code>"/"</code></th><th>kontrol: <code>"/admin"</code></th></tr></thead><tbody>`;
+const baris=(label,f)=>{
+  const va=f(a),vb=f(b),vc=f(c);
+  const beda = JSON.stringify(va)!==JSON.stringify(vb);
+  h+=`<tr><td>${label}</td><td class="${beda?'bad':''}">${E(JSON.stringify(va))}</td><td class="${beda?'bad':''}">${E(JSON.stringify(vb))}</td><td>${E(JSON.stringify(vc))}</td></tr>`;
+};
+baris('hasil navigasi', r=>r.hasilNavigasi);
+baris('router.url', r=>r.routerUrl);
+baris('komponen aktif', r=>r.komponenAktif);
+baris('routeConfig.path', r=>r.routeConfigPath);
+baris('UrlSegment daun', r=>r.urlSegmenDaun);
+baris('guard yang berjalan', r=>r.guard.map(g=>g.label));
+baris('url yang dilihat guard', r=>r.guard.map(g=>g.urlSnapshot));
+baris('state.url di guard', r=>r.guard.map(g=>g.stateUrl));
+h+=`</tbody></table>`;
+
+h+= samaAB
+ ? `<div class="v clean">TIDAK ADA DAMPAK — meski UrlTree-nya berbeda secara struktural, Router mencocokkan <code>")"</code> dan <code>"/"</code> ke rute, komponen, segmen, dan data guard yang IDENTIK. Selisih pohon F-08 tidak menyeberang ke lapisan pencocokan rute. F-08 tetap sekadar cacat normalisasi.</div>`
+ : `<div class="v hit">ADA DAMPAK — Router memperlakukan <code>")"</code> dan <code>"/"</code> BERBEDA meski keduanya menserialisasi ke string yang sama. Ini menaikkan F-08 dari cacat normalisasi menjadi kebingungan rute yang perlu ditriase lebih lanjut.</div>`;
+
+h+=`<div class="box">Setiap pengukuran didahului navigasi ke URL netral acak, supaya tidak ada yang menjadi no-op karena router kebetulan sudah berada di sana. Tanpa itu, tes kedua tampak berbeda hanya karena urutan.</div>`;
+h+=`<div class="box">Kontrol positif <code>/admin</code> mencocok ke rute berbeda (<code>${E(String(c.routeConfigPath))}</code>), membuktikan harness ini MEMANG mampu membedakan rute — jadi hasil "identik" di atas bukan karena alat yang buta.</div>`;
+
+out.innerHTML=h;
+window.__IMPACT__={samaAB, a, b, c};
+</script>
+</body></html>

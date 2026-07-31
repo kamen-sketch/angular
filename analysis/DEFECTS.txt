@@ -496,8 +496,10 @@ F-07  Salinan kedua pemetaan sanitizer tidak menangani konteks ARRAY yang
 F-08  UrlTree hasil parse tidak idempoten: dua URL berbeda menghasilkan pohon
       berbeda tetapi serialisasi yang SAMA
       BERKAS  : @angular/router DefaultUrlSerializer (parse/serialize)
-      SIFAT   : inkonsistensi normalisasi
-      STATUS  : DAMPAK BELUM DIUJI — lihat "langkah yang belum dikerjakan"
+      SIFAT   : kebingungan rute (route confusion)
+      STATUS  : DAMPAK SUDAH DIUJI dengan Router sungguhan — TERBUKTI BERBEDA
+      BUKTI   : analysis/evidence/f08-route-confusion.png
+                analysis/tools/router-fuzz/impact.html
 ==============================================================================
 
   CARA DITEMUKAN
@@ -535,22 +537,62 @@ F-08  UrlTree hasil parse tidak idempoten: dua URL berbeda menghasilkan pohon
     - masukannya URL cacat (`)` liar), bukan bentuk yang muncul dari tautan wajar
     - tidak ada bukti batas keamanan terlewati
 
-  LANGKAH YANG BELUM DIKERJAKAN (dan harus dikerjakan sebelum ini berarti)
-  ------------------------------------------------------------------------
-  Pertanyaan yang menentukan: apakah PENCOCOKAN RUTE memperlakukan
-  "anak primary dengan segmen kosong" berbeda dari "tanpa anak"? Bila ya, maka
-  guard yang dievaluasi atas pohon-1 dapat berbeda hasil dari navigasi yang
-  akhirnya berjalan atas pohon-2 (mis. setelah muat ulang halaman, karena yang
-  tersimpan di bilah alamat adalah `/`).
+  LANGKAH SECURITY IMPACT — SUDAH DIKERJAKAN, DAN HASILNYA MENGUBAH VONIS
+  -----------------------------------------------------------------------
+  Diuji dengan Router SUNGGUHAN (bootstrapApplication + provideRouter), tabel
+  rute berisi `''`, `'admin'`, dan `'**'`, masing-masing dengan guard pencatat
+  yang merekam persis apa yang dilihatnya. Perbandingan dilakukan secara
+  TERSTRUKTUR (rute yang cocok, segmen, data guard), bukan atas string.
 
-  Menjawabnya menuntut Router sungguhan dengan tabel rute dan guard, bukan
-  serializer terisolasi. Itu BELUM saya kerjakan. Sesuai rantai validasi di
-  analysis/AUDIT-METODE.txt, F-08 karena itu berhenti di:
+      aspek                 navigasi ")"              navigasi "/"
+      --------------------  ------------------------  --------------------
+      router.url            "/"                       "/"        <- SAMA
+      routeConfig.path      "**"  (wildcard)          ""  (rute kosong)
+      UrlSegment daun       [{path:""}]               []
+      guard yang berjalan   rute-wildcard             rute-kosong
+      url yang dilihat guard [{path:""}]              []
+
+  Kontrol positif: `/admin` mencocok ke rute `admin` — membuktikan harness ini
+  memang mampu membedakan rute, sehingga hasil di atas bukan artefak alat buta.
+
+  KESIMPULAN: `)` dan `/` MENCOCOK KE RUTE BERBEDA dan MENJALANKAN GUARD
+  BERBEDA, padahal bilah alamat menampilkan `/` untuk keduanya.
+
+  KONFOUND YANG SEMPAT MENYESATKAN (dicatat karena penting)
+  ---------------------------------------------------------
+  Percobaan pertama menunjukkan "perbedaan" yang TERNYATA PALSU: navigasi ke `/`
+  mengembalikan false dengan guard kosong, karena router SUDAH berada di `/`
+  akibat tes `)` sebelumnya — `navigateByUrl` menjadi no-op. Bila saya berhenti
+  di situ, saya akan melaporkan artefak urutan tes sebagai temuan.
+  Diperbaiki dengan mendahului setiap pengukuran dengan navigasi ke URL netral
+  acak. Hasil di atas adalah hasil SETELAH perbaikan itu.
+
+  PENILAIAN DAMPAK — JUJUR
+  ------------------------
+  Yang TERBUKTI: kebingungan rute. Satu URL yang tampil sebagai `/` di bilah
+  alamat mengaktifkan rute wildcard, bukan rute `''`. Guard milik rute `''`
+  TIDAK berjalan sama sekali.
+
+  Yang BELUM terbukti, dan tidak saya klaim: eskalasi hak akses. Arah dampaknya
+  bergantung konfigurasi aplikasi:
+    - Bila rute `''` yang dijaga dan `**` tidak, penyerang yang mengirim tautan
+      `)` membuat korban melewati guard rute `''` — tetapi yang dirender adalah
+      komponen wildcard (biasanya halaman 404), sehingga umumnya bukan kebocoran.
+    - Yang lebih layak dikhawatirkan: KETIDAKSESUAIAN SEBELUM/SESUDAH MUAT ULANG.
+      Sebelum muat ulang aplikasi berada di rute `**`; setelah muat ulang bilah
+      alamat berisi `/` sehingga aplikasi berada di rute `''`. Dua keadaan berbeda
+      untuk satu alamat yang sama.
+    - Menjadi serius hanya bila aplikasi menaruh logika keamanan pada rute `**`
+      atau menyimpulkan otorisasi dari `router.url` (yang berbunyi `/`)
+      alih-alih dari rute yang benar-benar aktif.
+
+  Karena itu F-08 naik dari "inkonsistensi normalisasi" menjadi "kebingungan
+  rute", tetapi TIDAK naik menjadi "kerentanan". Untuk itu masih dibutuhkan
+  aplikasi nyata yang keputusan keamanannya bergantung pada perbedaan ini.
+
+  Status rantai validasi sekarang:
       hipotesis YA | trace YA | neg-ctl YA | pos-ctl YA | runtime YA
-      | security impact TIDAK | repro independen YA (benih deterministik)
-
-  Selama langkah "security impact" belum dikerjakan, F-08 tidak boleh
-  dilaporkan sebagai kerentanan — hanya sebagai cacat normalisasi.
+      | security impact YA (terukur, terbatas) | repro independen YA
 
 ==============================================================================
 RINGKASAN
@@ -573,9 +615,10 @@ RINGKASAN
   F-06    i18n_parse.ts:841             gate allowlist bocor     tidak (nama yang
                                         lewat rantai prototipe   lolos semuanya
                                                                  inert)
-  F-08    @angular/router               parse tidak idempoten:   BELUM DIUJI
-          DefaultUrlSerializer          `)` dan `/` -> pohon      (butuh Router
-                                        beda, string sama         sungguhan)
+  F-08    @angular/router               kebingungan rute: `)`    TERUKUR: rute &
+          DefaultUrlSerializer          dan `/` -> rute & guard   guard berbeda;
+          + pencocokan rute             BERBEDA, bilah alamat     eskalasi hak
+                                        sama-sama `/`             TIDAK terbukti
   F-07    resolve_i18n_attr_            salinan pemetaan         tidak (LATEN:
           sanitizers.ts:49-70           sanitizer tak menangani  irisan i18n x
                                         konteks array; salinan   konteks-array
