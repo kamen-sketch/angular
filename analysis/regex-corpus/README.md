@@ -246,6 +246,38 @@ Keempatnya dapat difuzz dengan properti yang sama persis seperti F-08 —
 bandingkan hasil TERSTRUKTUR, bukan string, karena F-08 stabil pada string
 tetapi tidak pada pohon. Ini pekerjaan berikutnya yang paling jelas.
 
+## Perluasan lanjutan: G-12…G-18
+
+Dua gelombang pola lagi, lahir dari F-08 dan F-09. Validasi-diri naik ke **7/7**.
+
+| Pola | Kelas | Cocok | Hasil triase |
+|---|---|---:|---|
+| G-12 | regex validasi tanpa jangkar | 16 | **nihil** — semuanya deteksi fitur (`/Macintosh/.test(ua)`), bukan gerbang |
+| G-13 | pemotongan diam pada pembatas | 0 | nihil |
+| G-14 | perbandingan path berbasis string | 73 | bentuk sisi-aplikasi; bukan cacat Angular |
+| G-15 | decode tanpa penjagaan | 8 | **F-09** (cookie.ts:16) |
+| G-16 | operasi melempar tanpa guard | 67 | belum ada yang di jalur tak-boleh-gagal |
+| G-17 | `new RegExp` dari data | 41 | **nihil di paket terkirim** — satu-satunya (`format_number.ts:248`) memakai konstanta; 40 sisanya compiler-cli/tools yang berjalan saat build |
+| G-18 | catch kosong | 14 | **nihil** — `platform-server/src/url.ts:66` diperiksa dan ternyata alur kendali sengaja (jalur cepat URL absolut), dengan `isSafeOriginChange` + `throwSuspiciousUrlError` tetap berjalan sesudahnya |
+
+Empat dari tujuh kelas ini **nihil**, dan itu tetap hasil: ia mempersempit tempat
+cacat berada. Yang membuahkan hasil justru satu pola paling sederhana — G-15 —
+yang menemukan F-09 di berkas yang sudah pernah saya periksa manual dan saya
+nyatakan benar.
+
+### Pelajaran regex baru dari gelombang ini
+
+Dicatat di `CATATAN_RISET`, dan didapat dengan cara yang tidak menyenangkan:
+pola G-12 versi pertama memakai **kuantifier bersarang**
+`(?:\\.|\[...\]|[^...])+` di dalam grup, dan **membekukan pemindai** pada
+berkas nyata (catastrophic backtracking). Diganti pola linear berkuantifier
+TERBATAS `{2,80}`, dengan konsekuensi ia melewatkan regex yang memuat `/`
+ter-escape — keterbatasan yang diterima demi terminasi.
+
+Pelajaran kedua: dengan 19 pola x 3018 berkas, biaya kumulatif menjadi masalah
+tersendiri. Solusinya `prafilter` — penanda literal murah yang diuji SEKALI per
+berkas sebelum regex mahal dijalankan sama sekali.
+
 ## Yang masih kurang
 
 Korpus ini murni leksikal, jadi ada batas yang jelas:

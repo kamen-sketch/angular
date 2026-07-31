@@ -10,10 +10,10 @@
  */
 import {readFileSync, readdirSync, statSync} from 'fs';
 import {join, relative} from 'path';
-import {GUARDS, GUARDS_LANJUTAN, DESYNC} from './corpus.mjs';
+import {GUARDS, GUARDS_LANJUTAN, DESYNC, RAPUH} from './corpus.mjs';
 
 // G-01..G-07 (kelas garda) + G-08..G-11 (kelas yang lahir dari F-07/F-08).
-const SEMUA_POLA = [...GUARDS, ...GUARDS_LANJUTAN, ...DESYNC];
+const SEMUA_POLA = [...GUARDS, ...GUARDS_LANJUTAN, ...DESYNC, ...RAPUH];
 
 const AKAR = process.cwd();
 const TARGET = join(AKAR, 'packages');
@@ -212,6 +212,7 @@ const harusKetemu = [
   {kode: 'F-06', pola: 'G-02-gate-bracket', berkas: 'i18n_parse.ts', baris: 841},
   {kode: 'F-02', pola: 'G-07-sinkron-dua-salinan', berkas: 'dom_security_schema.ts', baris: 112},
   {kode: 'F-07', pola: 'G-09-switch-tanpa-default', berkas: 'resolve_i18n_attr_sanitizers.ts', baris: 49},
+  {kode: 'F-09', pola: 'G-15-decode-tanpa-penjagaan', berkas: 'cookie.ts', baris: 16},
 ];
 
 console.log('\n' + '='.repeat(78));

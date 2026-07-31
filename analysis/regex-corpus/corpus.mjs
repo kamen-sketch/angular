@@ -335,4 +335,54 @@ export const DESYNC = [
   },
 ];
 
-export const SEMUA = {CATATAN_RISET, SINKS, NATIVE, GUARDS, GUARDS_LANJUTAN, DESYNC};
+// ============================================================================
+// 6. RAPUH — kelas yang lahir dari F-09
+//    Generalisasi F-09: bukan "decodeURIComponent" secara khusus, melainkan
+//    OPERASI YANG MELEMPAR yang dipanggil di JALUR YANG TIDAK BOLEH GAGAL.
+//    Interceptor, guard, resolver, dan hook daur hidup adalah jalur seperti itu:
+//    satu galat di sana menggagalkan permintaan atau navigasi seluruhnya.
+// ============================================================================
+export const RAPUH = [
+  {
+    id: 'G-16-operasi-melempar-tanpa-guard',
+    hipotesis:
+      'Operasi yang MELEMPAR pada masukan cacat (JSON.parse, atob, new URL, ' +
+      'BigInt) dipanggil tanpa try/catch. Bila jalurnya tidak boleh gagal, satu ' +
+      'masukan cacat menggagalkan seluruh alur. Bentuk yang sama dengan F-09.',
+    prafilter: /JSON\.parse|atob\s*\(|new URL\s*\(|BigInt\s*\(/,
+    re: /(?<![\w$.])(?:JSON\s*\.\s*parse|atob|BigInt)\s*\(|new\s+URL\s*\(/,
+    tolakKonteks: /try\s*\{|catch\s*[({]/,
+    konteksBaris: 8,
+    temuan: 'kelas baru; F-09 adalah anggotanya lewat decodeURIComponent',
+    triase:
+      'Dua pertanyaan: (1) apakah masukannya dapat dipengaruhi dari luar? ' +
+      '(2) apakah jalurnya boleh gagal? Bila jawabannya "ya, tidak", itu cacat ' +
+      'ketangguhan seperti F-09.',
+  },
+  {
+    id: 'G-17-regexp-dari-data',
+    hipotesis:
+      '`new RegExp(x)` dengan x BUKAN literal. Dua risiko sekaligus: ReDoS bila ' +
+      'x dipengaruhi luar, dan galat sintaks yang melempar bila x cacat.',
+    prafilter: /new\s+RegExp/,
+    re: /new\s+RegExp\s*\(\s*(?!['"`/])/,
+    temuan: 'kelas baru — kandidat terlihat sekilas pada keluaran G-15',
+    triase:
+      'Lacak asal argumennya. Bila berasal dari URL/cookie/header/terjemahan, uji ' +
+      'dengan pola bersarang (mis. `(a+)+$`) untuk ReDoS dan dengan `[` untuk galat sintaks.',
+  },
+  {
+    id: 'G-18-catch-kosong',
+    hipotesis:
+      'Blok catch KOSONG menelan galat tanpa jejak. Kebalikan F-09: bukan gagal ' +
+      'berisik, melainkan gagal DIAM — keadaan rusak berlanjut tanpa ada yang tahu.',
+    prafilter: /catch/,
+    re: /catch\s*(?:\([^)]*\))?\s*\{\s*\}/,
+    temuan: 'kelas baru',
+    triase:
+      'Apakah yang ditelan adalah kegagalan KONTROL KEAMANAN? Menelan galat parsing ' +
+      'biasanya wajar; menelan galat verifikasi/validasi berarti gagal-terbuka.',
+  },
+];
+
+export const SEMUA = {CATATAN_RISET, SINKS, NATIVE, GUARDS, GUARDS_LANJUTAN, DESYNC, RAPUH};
