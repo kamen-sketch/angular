@@ -10,10 +10,10 @@
  */
 import {readFileSync, readdirSync, statSync} from 'fs';
 import {join, relative} from 'path';
-import {GUARDS, GUARDS_LANJUTAN} from './corpus.mjs';
+import {GUARDS, GUARDS_LANJUTAN, DESYNC} from './corpus.mjs';
 
 // G-01..G-07 (kelas garda) + G-08..G-11 (kelas yang lahir dari F-07/F-08).
-const SEMUA_POLA = [...GUARDS, ...GUARDS_LANJUTAN];
+const SEMUA_POLA = [...GUARDS, ...GUARDS_LANJUTAN, ...DESYNC];
 
 const AKAR = process.cwd();
 const TARGET = join(AKAR, 'packages');
@@ -61,6 +61,9 @@ for (const f of berkas) {
   const baris = teks.split('\n');
 
   for (const g of SEMUA_POLA) {
+    // Prafilter murah: bila penanda literalnya tidak ada di SELURUH berkas, tidak
+    // mungkin ada kecocokan. Ini memangkas biaya kumulatif 16 pola x 3018 berkas.
+    if (g.prafilter && !g.prafilter.test(teks)) continue;
     // Pola tingkat-BERKAS: kecocokan hanya berarti bila sinyal pendukung ada di
     // mana pun dalam berkas yang sama (mis. parse ada, serialize juga ada).
     if (g.berkasPenuh) {
@@ -96,11 +99,15 @@ for (const f of berkas) {
 
         // Filter konteks: pola hanya dihitung bila sinyal pendukung muncul di
         // sekitarnya. Ini yang memisahkan "kode yang dibangun" dari "prosa galat".
-        if (g.konteks) {
+        if (g.konteks || g.tolakKonteks) {
           const lebar = g.konteksBaris ?? 5;
           const sekitar = baris.slice(Math.max(0, i - lebar), i + lebar + 1).join('\n');
-          if (!g.konteks.test(sekitar)) continue;
+          if (g.konteks && !g.konteks.test(sekitar)) continue;
+          // tolakKonteks: penawarnya ada di sekitar -> bukan kandidat
+          // (mis. decodeURIComponent yang memang dibungkus try/catch).
+          if (g.tolakKonteks && g.tolakKonteks.test(sekitar)) continue;
         }
+        if (g.tolakCocokan && g.tolakCocokan.test(m[1] ?? m[0])) continue;
 
         hasil.get(g.id).push({
           berkas: rel,

@@ -712,6 +712,91 @@ F-08  UrlTree hasil parse tidak idempoten: dua URL berbeda menghasilkan pohon
       | security impact YA (terukur, terbatas) | repro independen YA
 
 ==============================================================================
+F-09  Cookie XSRF cacat menggagalkan SELURUH permintaan HTTP yang memutasi
+      (decodeURIComponent tanpa penjagaan)
+      BERKAS  : packages/common/src/cookie.ts:16          (decode tanpa guard)
+                packages/common/http/src/xsrf.ts:119      (getToken di LUAR try)
+      SIFAT   : penolakan layanan sisi klien, persisten
+      STATUS  : DIBUKTIKAN RUNTIME dengan @angular/common@22.1.0 npm
+      BUKTI   : analysis/evidence/f09-xsrf-cookie-dos.txt
+                analysis/tools/xsrf/
+==============================================================================
+
+  CARA DITEMUKAN
+  --------------
+  Oleh pola BARU G-15 ("decode tanpa penjagaan"). Menariknya, XSRF sudah pernah
+  saya periksa sebelumnya dan dinyatakan BENAR — tetapi saat itu saya hanya
+  memeriksa cek same-origin-nya, bukan parsing cookie-nya. Polanya menemukan apa
+  yang pembacaan manual saya lewatkan.
+
+  RANTAI
+  ------
+      packages/common/src/cookie.ts:9-20
+        export function parseCookieValue(cookieStr, name) {
+          ...
+          if (cookieName.trim() === name) {
+            return decodeURIComponent(cookieValue);   // <- TANPA try/catch
+          }
+        }
+
+      packages/common/http/src/xsrf.ts:104-125
+        try {
+          ... new URL(...) ...            // try HANYA membungkus parsing URL
+        } catch { return next(req); }
+
+        const token = inject(HttpXsrfTokenExtractor).getToken();  // <- DI LUAR try
+
+  `decodeURIComponent('%')` melempar `URIError: URI malformed`. Karena
+  `getToken()` berada di luar satu-satunya blok try, galat itu merambat keluar
+  dari interceptor dan menggagalkan permintaannya.
+
+  Diverifikasi ADA di bundel npm rilis:
+      @angular/common/fesm2022/_xhr-chunk.mjs    -> parseCookieValue tanpa guard
+      @angular/common/fesm2022/_module-chunk.mjs -> getToken() setelah blok catch
+
+  BUKTI RUNTIME (HttpClient asli dari npm, Chromium)
+  --------------------------------------------------
+      cookie "XSRF-TOKEN=abc123"  -> POST BERHASIL
+      cookie "XSRF-TOKEN=%"       -> POST GAGAL: URIError: URI malformed
+      cookie "XSRF-TOKEN=abc123"  -> POST BERHASIL kembali
+
+  Kontrol terakhir penting: memulihkan cookie sah membuat permintaan berhasil
+  lagi, jadi kegagalan benar-benar disebabkan cookie itu, bukan keadaan aplikasi
+  yang terlanjur rusak.
+
+  DAMPAK — PENILAIAN JUJUR
+  ------------------------
+  Ini KETERSEDIAAN, bukan kerahasiaan atau integritas. Tidak ada kebocoran data
+  dan tidak ada bypass XSRF (justru sebaliknya: permintaan tidak terkirim).
+
+  Yang membuatnya layak dilaporkan:
+    - mengenai SEMUA metode yang memutasi (POST/PUT/DELETE/PATCH) same-origin,
+      yakni hampir seluruh fungsi tulis aplikasi
+    - PERSISTEN: cookie bertahan sampai dihapus; korban tidak punya cara mudah
+      memulihkannya tanpa devtools
+    - dapat dipicu tanpa XSS lewat COOKIE TOSSING: subdomain saudara
+      (mis. evil.example.com) dapat menyetel `XSRF-TOKEN=%; Domain=example.com`
+      sehingga app.example.com lumpuh untuk operasi tulis
+    - nilai cookie dengan `%` tunggal adalah cookie yang SAH secara sintaks
+
+  Yang TIDAK saya klaim: eksekusi kode, kebocoran token, atau bypass proteksi
+  XSRF. Dan pemicunya menuntut kemampuan menyetel cookie pada domain induk —
+  bukan penyerang jarak jauh sembarangan.
+
+  PERBAIKAN
+  ---------
+  Bungkus decode-nya, dan putuskan sikap gagalnya secara sadar:
+
+      if (cookieName.trim() === name) {
+        try { return decodeURIComponent(cookieValue); }
+        catch { return cookieValue; }   // atau null — tetapi JANGAN melempar
+      }
+
+  Perbaikan setara di sisi pemanggil: pindahkan `getToken()` ke dalam blok try
+  yang sudah ada di xsrfInterceptorFn, sehingga kegagalan ekstraksi token tidak
+  pernah menggagalkan permintaan.
+
+==============================================================================
 RINGKASAN
 ==============================================================================
 
@@ -732,6 +817,10 @@ RINGKASAN
   F-06    i18n_parse.ts:841             gate allowlist bocor     tidak (nama yang
                                         lewat rantai prototipe   lolos semuanya
                                                                  inert)
+  F-09    common/src/cookie.ts:16       decodeURIComponent tanpa YA — DoS klien
+          + http/src/xsrf.ts:119        guard; cookie XSRF cacat  persisten atas
+                                        menggagalkan SEMUA        semua permintaan
+                                        permintaan yang memutasi  memutasi
   F-08    @angular/router               desinkronisasi path      YA bila SSR +
           DefaultUrlSerializer          antar-lapisan: `/admin)`  otorisasi path
           + pencocokan rute             dinilai server BUKAN      sisi-server;

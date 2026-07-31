@@ -270,4 +270,69 @@ export const GUARDS_LANJUTAN = [
   },
 ];
 
-export const SEMUA = {CATATAN_RISET, SINKS, NATIVE, GUARDS, GUARDS_LANJUTAN};
+// ============================================================================
+// 5. DESYNC — kelas yang lahir dari F-08
+//    Pelajaran F-08 bukan karakter `)`-nya, melainkan dua bentuk yang lebih umum:
+//      (a) parser MENDIAMKAN sesuatu alih-alih menolaknya
+//      (b) dua lapisan membandingkan string yang sama dengan aturan berbeda
+// ============================================================================
+export const DESYNC = [
+  {
+    id: 'G-12-validasi-regex-tanpa-jangkar',
+    prafilter: /\.\s*test\s*\(/,
+    hipotesis:
+      'Regex dipakai memvalidasi tetapi TANPA jangkar `^`/`$`, sehingga ia cocok ' +
+      'pada SUBSTRING. Nilai berbahaya lolos asal memuat bagian yang sah di mana pun.',
+    // Menangkap literal regex tepat sebelum .test(, lalu MENOLAK yang berjangkar.
+    re: /(\/(?:\\.|\[(?:\\.|[^\]])*\]|[^/\\\n])+\/[gimsuy]*)\s*\.\s*test\s*\(/,
+    tolakCocokan: /[\^$]/,
+    temuan: 'kelas baru — belum ada temuan; APP_ID validator justru CONTOH BENAR (berjangkar)',
+    triase:
+      'Apakah hasil .test dipakai sebagai KEPUTUSAN (izinkan/tolak)? Bila ya, coba ' +
+      'sisipkan bagian sah di tengah nilai jahat dan lihat apakah lolos.',
+  },
+  {
+    id: 'G-13-pemotongan-diam',
+    prafilter: /indexOf\s*\(|\.search\s*\(/,
+    hipotesis:
+      'Parser memotong masukan pada suatu pembatas lalu MELANJUTKAN tanpa galat. ' +
+      'Sisa yang dibuang membuat dua masukan berbeda menjadi satu hasil. Akar F-08.',
+    re: /\b(?:indexOf|search)\s*\([^)]*\)[^;\n]{0,60}\b(?:slice|substring|substr)\s*\(/,
+    konteks: /url|path|segment|route|parse|host|origin|token/i,
+    konteksBaris: 10,
+    temuan: 'F-08 — `)` memotong sisa URL tanpa galat',
+    triase:
+      'Bandingkan dua masukan yang berbeda HANYA pada bagian yang dipotong. Bila ' +
+      'keduanya menghasilkan keadaan yang sama, lapisan lain yang TIDAK memotong ' +
+      'akan berbeda pendapat dengan lapisan ini.',
+  },
+  {
+    id: 'G-14-perbandingan-path-string',
+    prafilter: /url|path|href|route|origin/i,
+    hipotesis:
+      'Keputusan diambil dengan membandingkan path/URL sebagai STRING. Setiap ' +
+      'lapisan yang menormalkan berbeda akan mengambil keputusan berbeda.',
+    re: /\b(?:url|path|pathname|route|href|origin)\w*\s*(?:===?|!==?)\s*['"`]|\b(?:url|path|pathname|route|href)\w*\s*\.\s*(?:startsWith|endsWith|includes)\s*\(\s*['"`]/i,
+    temuan: 'kelas baru — bentuk sisi-aplikasi yang membuat F-08 dapat dieksploitasi',
+    triase:
+      'Apakah perbandingan ini menjaga sesuatu? Bandingkan aturannya dengan cara ' +
+      'Angular memarse path yang sama (pemotongan `)`, peka huruf, `//` runtuh).',
+  },
+  {
+    id: 'G-15-decode-tanpa-penjagaan',
+    prafilter: /decodeURI/,
+    hipotesis:
+      '`decodeURIComponent` MELEMPAR pada persen-encoding cacat (mis. `%`, `%zz`). ' +
+      'Tanpa try/catch, satu URL cacat dapat menggagalkan alur — atau ditangani ' +
+      'berbeda oleh lapisan lain.',
+    re: /(?<![\w$.])decodeURI(?:Component)?\s*\(/,
+    tolakKonteks: /try\s*\{|catch\s*\(/,
+    konteksBaris: 8,
+    temuan: 'kelas baru',
+    triase:
+      'Picu dengan `%` tunggal. Apakah melempar? Bila ya, apakah galatnya tertangani ' +
+      'atau merambat sampai menggagalkan navigasi/render?',
+  },
+];
+
+export const SEMUA = {CATATAN_RISET, SINKS, NATIVE, GUARDS, GUARDS_LANJUTAN, DESYNC};
