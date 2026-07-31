@@ -1,13 +1,13 @@
 PROGRES ANALISIS FUNGSI
-Diperbarui: 2026-07-30
+Diperbarui: 2026-07-31
 ==============================================================================
-core                         472/3922   ##..................  12.0%
+core                         500/3922   ###.................  12.7%
 compiler                      65/3130   ....................   2.1%
 compiler-cli                  76/2383   #...................   3.2%
 adev                           0/1409   ....................   0.0%
 forms                         40/1053   #...................   3.8%
 devtools                       0/1051   ....................   0.0%
-common                        34/1023   #...................   3.3%
+common                        85/1023   ##..................   8.3%
 router                        58/602    ##..................   9.6%
 language-service               0/600    ....................   0.0%
 animations                     0/510    ....................   0.0%
@@ -28,9 +28,9 @@ scripts                        0/24     ....................   0.0%
 platform-browser-dynamic       0/9      ....................   0.0%
 dev-app                        0/1      ....................   0.0%
 ------------------------------------------------------------------------------
-TOTAL                        765/18072  4.23%
+TOTAL                        844/18072  4.67%
 
-Catatan subsistem: 13 berkas di analysis/subsystems/
+Catatan subsistem: 15 berkas di analysis/subsystems/
 
 Entri catatan yang tidak punya padanan di inventory otomatis
 (umumnya konstanta multi-baris yang tidak terdeteksi pemindai):

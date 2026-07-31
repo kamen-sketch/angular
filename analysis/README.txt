@@ -49,8 +49,8 @@ ANGKA CAKUPAN
                                  spec/test yang sengaja dikecualikan)
   Simbol terinventarisasi      : 18.072 (fungsi, arrow, kelas, metode, accessor)
   Area/paket terpetakan        : 26
-  Fungsi dianalisis + dijelaskan: 765
-  Catatan subsistem            : 13 berkas
+  Fungsi dianalisis + dijelaskan: 844
+  Catatan subsistem            : 15 berkas
 
 CARA MEMAKAI
 ------------

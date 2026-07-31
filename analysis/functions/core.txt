@@ -5071,57 +5071,57 @@ Format: [ ] Nama  (export|kind) :baris
       -- Retrieves a local reference from the current contextViewData. If the reference to retrieve is in a parent view, this instruction is used in conjunction with a n
 
 ## packages/core/src/render3/instructions/styling.ts
-[ ] ɵɵstyleProp  (export function) :83
+[x] ɵɵstyleProp  (export function) :83
       -- Update a style binding on an element with the provided value. If the style value is falsy then it will be removed from the element (or assigned a different valu
-[ ] ɵɵclassProp  (export function) :107
+[x] ɵɵclassProp  (export function) :107
       -- Update a class binding on an element with the provided value. This instruction is meant to handle the `[class.foo]="exp"` case and, therefore, the class binding
-[ ] ɵɵstyleMap  (export function) :134
+[x] ɵɵstyleMap  (export function) :134
       -- Update style bindings using an object literal on an element. This instruction is meant to apply styling via the `[style]="exp"` template bindings. When styles a
-[ ] styleStringParser  (export function) :149
+[x] styleStringParser  (export function) :149
       -- Parse text as style and add values to KeyValueArray. This code is pulled out to a separate function so that it can be tree shaken away if it is not needed. It i
-[ ] ɵɵclassMap  (export function) :173
+[x] ɵɵclassMap  (export function) :173
       -- Update class bindings using an object literal or class-string on an element. This instruction is meant to apply styling via the `[class]="exp"` template binding
-[ ] classStringParser  (export function) :195
+[x] classStringParser  (export function) :195
       -- Parse text as class and add values to KeyValueArray. This code is pulled out to a separate function so that it can be tree shaken away if it is not needed. It i
-[ ] checkStylingProperty  (export function) :209
+[x] checkStylingProperty  (export function) :209
       -- Common code between `ɵɵclassProp` and `ɵɵstyleProp`.
-[ ] warnInvalidStylePropValue  (function) :242
-[ ] stringifyInvalidStylePropValue  (function) :262
-[ ] checkStylingMap  (export function) :282
+[x] warnInvalidStylePropValue  (function) :242
+[x] stringifyInvalidStylePropValue  (function) :262
+[x] checkStylingMap  (export function) :282
       -- Common code between `ɵɵclassMap` and `ɵɵstyleMap`.        function so that `style` can be processed. This is done for tree shaking purposes.        have differe
-[ ] isInHostBindings  (function) :349
+[x] isInHostBindings  (function) :349
       -- Determines when the binding is in `hostBindings` section
-[ ] stylingFirstUpdatePass  (function) :363
+[x] stylingFirstUpdatePass  (function) :363
       -- Collects the necessary information to insert the binding into a linked list of style bindings using `insertTStylingBinding`.
-[ ] wrapInStaticStylingKey  (export function) :406
+[x] wrapInStaticStylingKey  (export function) :406
       -- Adds static styling information to the binding if applicable. The linked list of styles not only stores the list and keys, but also stores static styling inform
-[ ] getTemplateHeadTStylingKey  (function) :499
+[x] getTemplateHeadTStylingKey  (function) :499
       -- Retrieve the `TStylingKey` for the template styling instruction. This is needed since `hostBinding` styling instructions are inserted after the template instruc
-[ ] setTemplateHeadTStylingKey  (function) :564
+[x] setTemplateHeadTStylingKey  (function) :564
       -- Update the `TStylingKey` of the first template instruction in `TNode`. Logically `hostBindings` styling instructions are of lower priority than that of the temp
-[ ] collectResidual  (function) :590
+[x] collectResidual  (function) :590
       -- Collect all static values after the current `TNode.directiveStylingLast` index. Collect the remaining styling information which has not yet been collected by an
-[ ] collectStylingFromDirectives  (function) :624
+[x] collectStylingFromDirectives  (function) :624
       -- Collect the static styling information with lower priority than `hostDirectiveDef`. (This is opposite of residual styling.)        styling. (Or `null` if templa
-[ ] collectStylingFromTAttrs  (function) :664
+[x] collectStylingFromTAttrs  (function) :664
       -- Convert `TAttrs` into `TStylingStatic`.
-[ ] toStylingKeyValueArray  (export function) :721
+[x] toStylingKeyValueArray  (export function) :721
       -- Convert user input to `KeyValueArray`. This function takes user input which could be `string`, Object literal, or iterable and converts it into a consistent rep
-[ ] styleKeyValueArraySet  (export function) :764
+[x] styleKeyValueArraySet  (export function) :764
       -- Set a `value` for a `key`. See: `keyValueArraySet` for details
-[ ] classKeyValueArraySet  (export function) :778
+[x] classKeyValueArraySet  (export function) :778
       -- Class-binding-specific function for setting the `value` for a `key`. See: `keyValueArraySet` for details
-[ ] updateStylingMap  (function) :808
+[x] updateStylingMap  (function) :808
       -- Update map based styling. Map based styling could be anything which contains more than one binding. For example `string`, or object literal. Dealing with all of
-[ ] updateStyling  (function) :884
+[x] updateStyling  (function) :884
       -- Update a simple (property name) styling. This function takes `prop` and updates the DOM to that value. The function takes the binding value as well as binding p
-[ ] findStylingValue  (function) :946
+[x] findStylingValue  (function) :946
       -- Search for styling value with higher priority which is overwriting current value, or a value of lower priority to which we should fall back if the value is `und
-[ ] isStylingValuePresent  (function) :1012
+[x] isStylingValuePresent  (function) :1012
       -- Determines if the binding value should be used (or if the value is 'undefined' and hence priority resolution should be used.)
-[ ] normalizeSuffix  (function) :1027
+[x] normalizeSuffix  (function) :1027
       -- Normalizes and/or adds a suffix to the value. If value is `null`/`undefined` no suffix is added
-[ ] hasStylingInputShadow  (export function) :1053
+[x] hasStylingInputShadow  (export function) :1053
       -- Tests if the `TNode` has input shadow. An input shadow is when a directive steals (shadows) the input by using `@Input('style')` or `@Input('class')` as input.
 
 ## packages/core/src/render3/instructions/template.ts
@@ -5507,7 +5507,7 @@ Format: [ ] Nama  (export|kind) :baris
       -- `applyProjectionRecursive` performs operation on the projection specified by `action` (insert, detach, destroy) Inserting a projection requires us to locate the
 [ ] applyContainer  (function) :1058
       -- `applyContainer` performs an operation on the container and its views as specified by `action` (insert, detach, destroy) Inserting a Container is complicated by
-[ ] applyStyling  (export function) :1110
+[x] applyStyling  (export function) :1110
       -- Writes class/style to element.        otherwise).
 
 ## packages/core/src/render3/node_manipulation_i18n.ts

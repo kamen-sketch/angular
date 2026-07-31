@@ -1,0 +1,170 @@
+SUBSISTEM 15 :: NgOptimizedImage (@angular/common)
+Lokasi   : packages/common/src/directives/ng_optimized_image/**
+Status   : SELESAI DIANALISIS (alur utama + seluruh asersi)
+Alasan   : dianalisis menyusul triase sink (SINK-TRIAGE.txt T-11) yang menemukan
+           pemanggil `unwrapSafeValue` di berkas ini yang belum dibaca
+==============================================================================
+
+APA YANG DILAKUKAN DIRECTIVE INI
+--------------------------------
+`NgOptimizedImage` mengikat `<img ngSrc="...">` dan mengubahnya menjadi elemen
+gambar yang "benar" menurut praktik performa web:
+  - menulis `src`/`srcset` hasil rewrite melalui IMAGE LOADER,
+  - memilih `loading`, `fetchpriority`, dan `decoding` secara otomatis,
+  - menghasilkan `srcset` otomatis dari daftar breakpoint,
+  - memaksa `width`/`height` ada agar tidak terjadi layout shift (CLS),
+  - memberi peringatan dev ketika gambar terdistorsi, terlalu besar, atau
+    gambar LCP tidak diberi `priority`.
+
+Sebagian besar berkasnya (sekitar dua pertiga) adalah FUNGSI ASERSI yang hanya
+hidup di `ngDevMode`. Ini contoh nyata pola "diagnostik tebal di dev, nol di
+produksi" yang dipakai di seluruh repo.
+
+ALUR UTAMA
+----------
+  ngOnInit
+    -> (dev) rentetan asersi input
+    -> registrasi ke LCPImageObserver, cek preconnect bila priority
+    -> pasang placeholder bila diminta
+    -> setHostAttributes -> updateSrcAndSrcset
+
+  updateSrcAndSrcset (:676)
+    -> getRewrittenSrc     -> callImageLoader({src: ngSrc})  -> setHostAttribute('src')
+    -> getRewrittenSrcset  (bila ngSrcset diberikan)         -> setHostAttribute('srcset')
+       atau getAutomaticSrcset (responsif via `sizes`, atau fixed density)
+
+  setHostAttribute (:779) -> renderer.setAttribute(imgElement, name, value)
+
+IMAGE LOADER: TITIK EKSTENSI SEKALIGUS TITIK KEPERCAYAAN
+---------------------------------------------------------
+`callImageLoader` (:587) memanggil fungsi loader yang diinjeksi
+(`IMAGE_LOADER`), dengan konfigurasi {src, width, loaderParams}. Loader bawaan
+tersedia untuk Cloudinary, imgix, ImageKit, Netlify, dan Cloudflare; aplikasi
+juga bisa memasang loader sendiri.
+
+Konsekuensi arsitektural: URL akhir DIBENTUK OLEH LOADER, bukan oleh directive.
+Directive hanya menyerahkan `ngSrc` apa adanya. Jadi kualitas escaping URL
+sepenuhnya menjadi tanggung jawab implementasi loader.
+
+`getRewrittenSrcset` (:639) mem-parse `ngSrcset` yang ditulis pengembang,
+memisahnya dengan koma, dan memanggil loader per deskriptor. `assertValidNgSrcset`
+memvalidasi formatnya (`100w, 200w` atau `1x, 2x`) dan `assertUnderDensityCap`
+membatasi pengali kepadatan agar tidak meledak jumlah kandidatnya.
+
+ASERSI (semuanya dev-only)
+--------------------------
+Kelompok input/format:
+  assertNonEmptyInput, assertValidNgSrcset, assertUnderDensityCap,
+  assertNoComplexSizes, assertValidLoadingInput, assertValidDecodingInput
+Kelompok konflik atribut:
+  assertNoConflictingSrc (melarang `src` bersamaan dengan `ngSrc`),
+  assertNoConflictingSrcset
+Kelompok bentuk URL yang tidak didukung:
+  assertNotBase64Image (menolak `data:`), assertNotBlobUrl (menolak `blob:`),
+  assertNoOversizedDataUrl (placeholder data URL yang kelewat besar)
+Kelompok tata letak:
+  assertNonEmptyWidthAndHeight, assertEmptyWidthAndHeight (mode `fill`),
+  assertGreaterThanZero, assertNoImageDistortion (membandingkan rasio aspek
+  atribut dengan rasio natural gambar setelah dimuat),
+  assertNonZeroRenderedHeight
+Kelompok loader:
+  assertNotMissingBuiltInLoader, assertNoNgSrcsetWithoutLoader,
+  assertNoLoaderParamsWithoutLoader, assertNoRelativePlaceholderWithoutLoader
+Kelompok siklus hidup:
+  assertNoPostInitInputChange (input NgOptimizedImage tidak boleh berubah
+  setelah init - lihat di bawah), assetPriorityCountBelowThreshold
+
+Beberapa asersi dijalankan lewat `ngZone.runOutsideAngular` karena bergantung
+pada event `load` gambar; menjalankannya di dalam zone akan memicu putaran
+change detection yang tidak perlu.
+
+INPUT TIDAK BOLEH BERUBAH SETELAH INIT
+---------------------------------------
+`ngOnChanges` menolak perubahan pada sebagian besar input setelah inisialisasi
+(`assertNoPostInitInputChange`, pesan dari `postInitInputChangeError`).
+Alasannya: nilai-nilai itu sudah dipakai untuk menghitung `src`/`srcset` dan
+observasi LCP; mengubahnya di tengah jalan akan menghasilkan keadaan tidak
+konsisten. Pengecualiannya adalah input yang memang dirancang dinamis
+(mis. `ngSrc` dengan perhitungan ulang paksa lewat `updateSrcAndSrcset(true)`).
+
+CATATAN KEAMANAN (verifikasi lanjutan atas SINK-TRIAGE T-11)
+-------------------------------------------------------------
+`unwrapSafeUrl` (:1461) melepas pembungkus SafeValue tanpa memeriksa tipenya.
+Komentar di kode menyatakan alasannya secara langsung:
+
+    "This doesn't do any sanitization, as that is not needed for img.src and
+     img.srcset. This transform is purely for compatibility."
+
+Verifikasi saya atas klaim itu:
+  1. Fungsi ini adalah TRANSFORM INPUT untuk `ngSrc`, sehingga aplikasi yang
+     terlanjur menyimpan URL gambar sebagai `SafeUrl`/`SafeResourceUrl` (pola
+     lama sebelum NgOptimizedImage) tetap bisa memakainya. Untuk string biasa
+     ia mengembalikan nilai apa adanya.
+  2. Argumen keamanannya benar: memuat gambar TIDAK mengeksekusi kode. `img[src]`
+     memang bukan konteks RESOURCE_URL di skema keamanan Angular - yang terdaftar
+     sebagai RESOURCE_URL adalah script/iframe/object/embed/base/link.
+     (Catatan: `img[src]` justru terdaftar di konteks URL pada skema, dengan
+     komentar di skema bahwa entri itu "safe and should be removed" namun
+     dipertahankan demi kompatibilitas g3.)
+  3. Nilai akhir tidak ditulis lewat binding properti biasa, melainkan lewat
+     `renderer.setAttribute(imgElement, 'src'|'srcset', ...)` di
+     `setHostAttribute`, sehingga memang tidak melewati sanitizer binding.
+  4. Sisa risiko yang jujur: `ngSrc` yang berasal dari data pengguna dapat
+     menyebabkan permintaan jaringan ke host arbitrer (kebocoran referer,
+     pelacakan, atau SSRF pada sisi loader bila loader meneruskan URL ke server).
+     Ini bukan XSS. Directive sudah menolak `data:` dan `blob:`, tetapi tidak
+     membatasi host.
+
+DAFTAR FUNGSI YANG SUDAH DIPAHAMI
+---------------------------------
+[x] NgOptimizedImage.ngOnInit | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:422 | Menjalankan seluruh asersi dev, mendaftarkan gambar ke LCPImageObserver, memeriksa preconnect untuk gambar priority, lalu memasang atribut host.
+[x] NgOptimizedImage.ngOnChanges | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:537 | Menolak perubahan input pasca-init dan menghitung ulang src/srcset bila ngSrc berubah.
+[x] NgOptimizedImage.setHostAttributes | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:486 | Menetapkan width/height/loading/fetchpriority/decoding dan memanggil updateSrcAndSrcset.
+[x] NgOptimizedImage.callImageLoader | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:587 | Memanggil IMAGE_LOADER dengan {src,width,loaderParams}; menghitung height dari rasio aspek bila memungkinkan.
+[x] NgOptimizedImage.getAspectRatio | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:580 | Rasio width/height bila keduanya ada.
+[x] NgOptimizedImage.getRewrittenSrc | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:627 | URL src hasil loader, di-cache di _renderedSrc agar tidak dihitung ulang.
+[x] NgOptimizedImage.getRewrittenSrcset | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:639 | Mem-parse ngSrcset per deskriptor (w atau x) dan memanggil loader untuk tiap lebar.
+[x] NgOptimizedImage.getAutomaticSrcset | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:652 | Memilih srcset responsif (bila ada `sizes`) atau srcset kepadatan tetap.
+[x] NgOptimizedImage.getResponsiveSrcset | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:660 | Menghasilkan kandidat dari daftar breakpoint; menyaring breakpoint kecil bila sizes=100vw.
+[x] NgOptimizedImage.getFixedSrcset | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:699 | Menghasilkan kandidat 1x/2x dari pengali kepadatan.
+[x] NgOptimizedImage.updateSrcAndSrcset | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:676 | Menulis atribut src dan srcset; dapat memaksa perhitungan ulang dengan mereset cache.
+[x] NgOptimizedImage.shouldGenerateAutomaticSrcset | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:710 | Memutuskan apakah srcset otomatis layak dibuat (mempertimbangkan fill, sizes, dan loader).
+[x] NgOptimizedImage.getLoadingBehavior | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:602 | priority -> eager, selain itu lazy atau nilai eksplisit.
+[x] NgOptimizedImage.getFetchPriority | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:609 | priority -> high, selain itu auto.
+[x] NgOptimizedImage.getDecoding | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:613 | priority -> sync agar dekode lebih awal; selain itu mengikuti input atau auto.
+[x] NgOptimizedImage.generatePlaceholder | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:729 | Menyusun CSS background placeholder (data URL atau hasil loader beresolusi rendah).
+[x] NgOptimizedImage.shouldBlurPlaceholder | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:749 | Menentukan efek blur pada placeholder sesuai konfigurasi.
+[x] NgOptimizedImage.removePlaceholderOnLoad | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:756 | Melepas placeholder setelah event load/error, dengan pembersihan lewat DestroyRef.
+[x] NgOptimizedImage.setHostAttribute | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:779 | Penulisan atribut melalui Renderer (titik tulis DOM tunggal directive ini).
+[x] unwrapSafeUrl | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1461 | Transform input yang melepas SafeValue tanpa sanitasi; sah karena img.src/srcset bukan konteks eksekusi kode.
+[x] booleanOrUrlAttribute | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1470 | Transform input placeholder yang menerima boolean maupun string URL.
+[x] processConfig | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:789 | Menggabungkan IMAGE_CONFIG dengan default dan mengurutkan breakpoint.
+[x] resetImagePriorityCount | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:156 | Mereset penghitung gambar priority (dipakai pengujian).
+[x] assertNoConflictingSrc | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:802 | Melarang `src` dipakai bersamaan dengan `ngSrc`.
+[x] assertNoConflictingSrcset | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:817 | Melarang `srcset` dipakai bersamaan dengan `ngSrcset`.
+[x] assertNotBase64Image | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:832 | Menolak ngSrc berupa data URL, dengan pemotongan pesan agar error tetap terbaca.
+[x] assertNotBlobUrl | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:941 | Menolak ngSrc berupa blob URL.
+[x] assertNoComplexSizes | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:851 | Menolak `sizes` bernilai piksel karena srcset otomatis butuh nilai responsif.
+[x] assertValidPlaceholder | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:864 | Validasi gabungan untuk konfigurasi placeholder.
+[x] assertNoPlaceholderConfigWithoutPlaceholder | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:873 | Melarang placeholderConfig tanpa placeholder.
+[x] assertNoRelativePlaceholderWithoutLoader | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:890 | Placeholder relatif memerlukan loader untuk bisa di-rewrite.
+[x] assertNoOversizedDataUrl | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:905 | Membatasi ukuran data URL placeholder agar tidak membengkakkan HTML.
+[x] assertNonEmptyInput | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:957 | Input string wajib tidak kosong.
+[x] assertValidNgSrcset | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:972 | Validasi format ngSrcset (deskriptor w atau x) sebelum di-parse.
+[x] assertUnderDensityCap | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:994 | Membatasi pengali kepadatan maksimum pada srcset.
+[x] postInitInputChangeError | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1016 | Menyusun pesan error untuk perubahan input pasca-init.
+[x] assertNoPostInitInputChange | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1039 | Menegakkan bahwa input yang memengaruhi src/LCP tidak berubah setelah init.
+[x] assertGreaterThanZero | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1062 | width/height harus positif.
+[x] assertNoImageDistortion | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1080 | Membandingkan rasio aspek atribut dengan rasio natural gambar setelah dimuat; berjalan di luar zone.
+[x] assertNonEmptyWidthAndHeight | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1206 | Mode non-fill wajib punya width dan height (pencegahan CLS).
+[x] assertEmptyWidthAndHeight | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1226 | Mode fill justru melarang width/height.
+[x] assertNonZeroRenderedHeight | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1241 | Mode fill memerlukan induk dengan tinggi bukan nol.
+[x] assertValidLoadingInput | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1288 | Nilai `loading` harus lazy/eager/auto dan tidak boleh dipakai bersama priority.
+[x] assertValidDecodingInput | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1313 | Nilai `decoding` harus sync/async/auto.
+[x] assertNotMissingBuiltInLoader | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1334 | Memberi saran bila URL terlihat memakai CDN yang sudah punya loader bawaan.
+[x] assertNoNgSrcsetWithoutLoader | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1363 | ngSrcset tidak berguna tanpa loader.
+[x] assertNoLoaderParamsWithoutLoader | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1381 | loaderParams tidak berguna tanpa loader.
+[x] assetPriorityCountBelowThreshold | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1398 | Memperingatkan bila terlalu banyak gambar ditandai priority.
+[x] assertPlaceholderDimensions | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1422 | Memperingatkan placeholder yang dimensinya tidak masuk akal.
+[x] callOnLoadIfImageIsLoaded | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1439 | Menangani gambar yang sudah selesai dimuat sebelum listener terpasang (kasus cache).
+[x] round | packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1455 | Pembulatan dua desimal untuk perbandingan rasio aspek.

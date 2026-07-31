@@ -48,7 +48,7 @@ C. CORE - LANJUTAN
 [ ] C6  Queries klasik (@ViewChild/@ContentChild) & QueryList
 [ ] C7  Lifecycle hooks: pendaftaran & eksekusi (render3/hooks.ts)
 [x] C8  Sanitasi & Trusted Types (subsistem 13 + TAINT-TO-SINK.txt)
-[ ] C9  Styling: algoritma class/style binding (render3/styling/)
+[x] C9  Styling: algoritma class/style binding (subsistem 14)
 [ ] C10 node_manipulation.ts: penyisipan/penghapusan DOM & proyeksi
 [ ] C11 resource() / httpResource() dan rxjs-interop (toSignal/toObservable)
 [ ] C12 Animasi CSS baru (src/animation/) + paket @angular/animations lama
@@ -85,8 +85,9 @@ E. COMPILER-CLI
 
 F. PAKET LAIN
 -------------
-[~] F1  common: NgIf/NgForOf, AsyncPipe, HttpClient (subsistem 08)
-        Belum: NgOptimizedImage, pipe tanggal/angka, Location, i18n data
+[~] F1  common: NgIf/NgForOf, AsyncPipe, HttpClient (subsistem 08),
+        NgOptimizedImage (subsistem 15)
+        Belum: pipe tanggal/angka, Location, i18n data
 [~] F2  router: pipeline navigasi, recognizer, guard, resolver (subsistem 09)
         Belum: RouterOutlet, RouterLink, statemanager, preloader, scroller
 [~] F3  forms: model kontrol & siklus validasi (subsistem 10)
@@ -112,13 +113,13 @@ G. LUAR packages/
 RINGKASAN ANGKA (lihat analysis/PROGRESS.txt untuk data terkini)
 ----------------------------------------------------------------
   Total simbol terinventarisasi : 18.072
-  Sudah dianalisis & tercentang :    765 fungsi dengan penjelasan per fungsi
-  Subsistem dengan catatan penuh :   13 berkas di analysis/subsystems/
+  Sudah dianalisis & tercentang :    844 fungsi dengan penjelasan per fungsi
+  Subsistem dengan catatan penuh :   15 berkas di analysis/subsystems/
 
 CATATAN JUJUR TENTANG CAKUPAN
 -----------------------------
 Repositori ini berisi ~18 ribu simbol fungsi. Yang sudah dibaca baris demi baris
-dan dijelaskan satu per satu adalah 765 fungsi - dipilih karena merupakan JALUR
+dan dijelaskan satu per satu adalah 844 fungsi - dipilih karena merupakan JALUR
 EKSEKUSI UTAMA framework (DI, change detection, render3, signal, kompilasi,
 routing, forms, hidrasi, zone). Sisanya sudah TERPETAKAN (nama, berkas, baris,
 jenis, ringkasan JSDoc) di analysis/functions/, tetapi belum dianalisis.

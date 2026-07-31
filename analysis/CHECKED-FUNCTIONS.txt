@@ -1,7 +1,7 @@
 DAFTAR FUNGSI YANG SUDAH DIANALISIS
 Dihasilkan otomatis oleh analysis/tools/sync-checklist.mjs -- jangan diedit manual.
 Sumber: analysis/subsystems/*.txt
-Total fungsi tercentang: 766
+Total fungsi tercentang: 845
 ==============================================================================
 
 ### 01-core-signals-primitives
@@ -1561,3 +1561,165 @@ Total fungsi tercentang: 766
       API publik bypass URL.
 [x] DomSanitizerImpl.bypassSecurityTrustResourceUrl  --  packages/platform-browser/src/security/dom_sanitization_service.ts:228
       API publik bypass RESOURCE_URL.
+
+### 14-core-styling
+[x] ɵɵstyleProp  --  packages/core/src/render3/instructions/styling.ts:83
+      Instruksi [style.prop]; meneruskan ke checkStylingProperty dengan sufiks opsional (mis. 'px').
+[x] ɵɵclassProp  --  packages/core/src/render3/instructions/styling.ts:107
+      Instruksi [class.name]; nilai boolean menentukan tambah/hapus kelas.
+[x] ɵɵstyleMap  --  packages/core/src/render3/instructions/styling.ts:134
+      Instruksi [style] untuk objek/string; memakai parser style yang bisa di-tree-shake.
+[x] styleStringParser  --  packages/core/src/render3/instructions/styling.ts:149
+      Mem-parse string style menjadi KeyValueArray; dipisah agar tree-shakable.
+[x] ɵɵclassMap  --  packages/core/src/render3/instructions/styling.ts:173
+      Instruksi [class] untuk objek/string/array/Set.
+[x] classStringParser  --  packages/core/src/render3/instructions/styling.ts:195
+      Mem-parse string kelas menjadi KeyValueArray.
+[x] checkStylingProperty  --  packages/core/src/render3/instructions/styling.ts:209
+      Alokasi 2 slot binding, bangun rantai prioritas pada firstUpdatePass, lalu updateStyling bila nilai berubah.
+[x] warnInvalidStylePropValue  --  packages/core/src/render3/instructions/styling.ts:242
+      Peringatan dev untuk nilai style bertipe aneh; secara eksplisit menerima SafeStyle sebagai nilai sah.
+[x] stringifyInvalidStylePropValue  --  packages/core/src/render3/instructions/styling.ts:262
+      Stringify defensif untuk pesan peringatan (nilai bisa punya getter yang melempar).
+[x] checkStylingMap  --  packages/core/src/render3/instructions/styling.ts:282
+      Versi map; mendeteksi input shadowing dan menggabungkan bagian statis sebelum menyerahkan nilai ke directive.
+[x] isInHostBindings  --  packages/core/src/render3/instructions/styling.ts:349
+      Membedakan binding host dari binding template lewat expandoStartIndex.
+[x] stylingFirstUpdatePass  --  packages/core/src/render3/instructions/styling.ts:363
+      Membangun linked list prioritas TStylingRange sekali per template.
+[x] wrapInStaticStylingKey  --  packages/core/src/render3/instructions/styling.ts:406
+      Menyisipkan bagian statis ke dalam TStylingKey agar bisa menjadi nilai fallback.
+[x] getTemplateHeadTStylingKey  --  packages/core/src/render3/instructions/styling.ts:499
+      Mengambil kunci kepala rantai milik template.
+[x] setTemplateHeadTStylingKey  --  packages/core/src/render3/instructions/styling.ts:564
+      Memperbarui kunci kepala saat host binding menyisip di depan.
+[x] collectResidual  --  packages/core/src/render3/instructions/styling.ts:590
+      Mengumpulkan nilai statis yang tidak ikut rantai menjadi residualStyles/residualClasses.
+[x] collectStylingFromDirectives  --  packages/core/src/render3/instructions/styling.ts:624
+      Menyapu host binding seluruh directive pada node untuk nilai statis.
+[x] collectStylingFromTAttrs  --  packages/core/src/render3/instructions/styling.ts:664
+      Membaca atribut statis template (class/style) dari TAttributes.
+[x] toStylingKeyValueArray  --  packages/core/src/render3/instructions/styling.ts:721
+      Menormalkan nilai map (string/array/Set/objek) menjadi KeyValueArray terurut; melepas pembungkus SafeValue.
+[x] styleKeyValueArraySet  --  packages/core/src/render3/instructions/styling.ts:764
+      Menyisipkan satu pasangan style ke KeyValueArray, melepas SafeValue.
+[x] classKeyValueArraySet  --  packages/core/src/render3/instructions/styling.ts:778
+      Menyisipkan satu kelas ke KeyValueArray.
+[x] updateStylingMap  --  packages/core/src/render3/instructions/styling.ts:808
+      Membandingkan KeyValueArray lama dan baru lalu menerapkan hanya selisihnya.
+[x] updateStyling  --  packages/core/src/render3/instructions/styling.ts:884
+      Resolusi prioritas satu properti: cek penimpa berprioritas lebih tinggi, cari fallback bila nilai hilang, lalu tulis ke DOM.
+[x] findStylingValue  --  packages/core/src/render3/instructions/styling.ts:946
+      Penelusuran rantai dua arah (next = cari penimpa, prev = cari fallback) termasuk konsultasi nilai residual.
+[x] isStylingValuePresent  --  packages/core/src/render3/instructions/styling.ts:1012
+      Satu tempat yang mendefinisikan bahwa hanya `undefined` yang berarti "tidak berpendapat".
+[x] normalizeSuffix  --  packages/core/src/render3/instructions/styling.ts:1027
+      Menambahkan satuan (px/em) dan melepas SafeValue; sengaja tidak menambah sufiks pada nilai kosong agar CSS tetap valid.
+[x] hasStylingInputShadow  --  packages/core/src/render3/instructions/styling.ts:1053
+      Cek flag TNode: apakah ada directive yang mengambil alih input class/style.
+[x] applyStyling  --  packages/core/src/render3/node_manipulation.ts:1110
+      Titik tulis DOM tunggal: addClass/removeClass atau setStyle/removeStyle, dengan penanganan !important dan DashCase.
+
+### 15-common-ng-optimized-image
+[x] resetImagePriorityCount  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:156
+      Mereset penghitung gambar priority (dipakai pengujian).
+[x] NgOptimizedImage.ngOnInit  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:422
+      Menjalankan seluruh asersi dev, mendaftarkan gambar ke LCPImageObserver, memeriksa preconnect untuk gambar priority, lalu memasang atribut host.
+[x] NgOptimizedImage.setHostAttributes  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:486
+      Menetapkan width/height/loading/fetchpriority/decoding dan memanggil updateSrcAndSrcset.
+[x] NgOptimizedImage.ngOnChanges  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:537
+      Menolak perubahan input pasca-init dan menghitung ulang src/srcset bila ngSrc berubah.
+[x] NgOptimizedImage.getAspectRatio  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:580
+      Rasio width/height bila keduanya ada.
+[x] NgOptimizedImage.callImageLoader  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:587
+      Memanggil IMAGE_LOADER dengan {src,width,loaderParams}; menghitung height dari rasio aspek bila memungkinkan.
+[x] NgOptimizedImage.getLoadingBehavior  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:602
+      priority -> eager, selain itu lazy atau nilai eksplisit.
+[x] NgOptimizedImage.getFetchPriority  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:609
+      priority -> high, selain itu auto.
+[x] NgOptimizedImage.getDecoding  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:613
+      priority -> sync agar dekode lebih awal; selain itu mengikuti input atau auto.
+[x] NgOptimizedImage.getRewrittenSrc  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:627
+      URL src hasil loader, di-cache di _renderedSrc agar tidak dihitung ulang.
+[x] NgOptimizedImage.getRewrittenSrcset  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:639
+      Mem-parse ngSrcset per deskriptor (w atau x) dan memanggil loader untuk tiap lebar.
+[x] NgOptimizedImage.getAutomaticSrcset  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:652
+      Memilih srcset responsif (bila ada `sizes`) atau srcset kepadatan tetap.
+[x] NgOptimizedImage.getResponsiveSrcset  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:660
+      Menghasilkan kandidat dari daftar breakpoint; menyaring breakpoint kecil bila sizes=100vw.
+[x] NgOptimizedImage.updateSrcAndSrcset  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:676
+      Menulis atribut src dan srcset; dapat memaksa perhitungan ulang dengan mereset cache.
+[x] NgOptimizedImage.getFixedSrcset  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:699
+      Menghasilkan kandidat 1x/2x dari pengali kepadatan.
+[x] NgOptimizedImage.shouldGenerateAutomaticSrcset  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:710
+      Memutuskan apakah srcset otomatis layak dibuat (mempertimbangkan fill, sizes, dan loader).
+[x] NgOptimizedImage.generatePlaceholder  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:729
+      Menyusun CSS background placeholder (data URL atau hasil loader beresolusi rendah).
+[x] NgOptimizedImage.shouldBlurPlaceholder  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:749
+      Menentukan efek blur pada placeholder sesuai konfigurasi.
+[x] NgOptimizedImage.removePlaceholderOnLoad  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:756
+      Melepas placeholder setelah event load/error, dengan pembersihan lewat DestroyRef.
+[x] NgOptimizedImage.setHostAttribute  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:779
+      Penulisan atribut melalui Renderer (titik tulis DOM tunggal directive ini).
+[x] processConfig  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:789
+      Menggabungkan IMAGE_CONFIG dengan default dan mengurutkan breakpoint.
+[x] assertNoConflictingSrc  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:802
+      Melarang `src` dipakai bersamaan dengan `ngSrc`.
+[x] assertNoConflictingSrcset  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:817
+      Melarang `srcset` dipakai bersamaan dengan `ngSrcset`.
+[x] assertNotBase64Image  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:832
+      Menolak ngSrc berupa data URL, dengan pemotongan pesan agar error tetap terbaca.
+[x] assertNoComplexSizes  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:851
+      Menolak `sizes` bernilai piksel karena srcset otomatis butuh nilai responsif.
+[x] assertValidPlaceholder  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:864
+      Validasi gabungan untuk konfigurasi placeholder.
+[x] assertNoPlaceholderConfigWithoutPlaceholder  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:873
+      Melarang placeholderConfig tanpa placeholder.
+[x] assertNoRelativePlaceholderWithoutLoader  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:890
+      Placeholder relatif memerlukan loader untuk bisa di-rewrite.
+[x] assertNoOversizedDataUrl  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:905
+      Membatasi ukuran data URL placeholder agar tidak membengkakkan HTML.
+[x] assertNotBlobUrl  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:941
+      Menolak ngSrc berupa blob URL.
+[x] assertNonEmptyInput  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:957
+      Input string wajib tidak kosong.
+[x] assertValidNgSrcset  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:972
+      Validasi format ngSrcset (deskriptor w atau x) sebelum di-parse.
+[x] assertUnderDensityCap  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:994
+      Membatasi pengali kepadatan maksimum pada srcset.
+[x] postInitInputChangeError  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1016
+      Menyusun pesan error untuk perubahan input pasca-init.
+[x] assertNoPostInitInputChange  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1039
+      Menegakkan bahwa input yang memengaruhi src/LCP tidak berubah setelah init.
+[x] assertGreaterThanZero  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1062
+      width/height harus positif.
+[x] assertNoImageDistortion  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1080
+      Membandingkan rasio aspek atribut dengan rasio natural gambar setelah dimuat; berjalan di luar zone.
+[x] assertNonEmptyWidthAndHeight  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1206
+      Mode non-fill wajib punya width dan height (pencegahan CLS).
+[x] assertEmptyWidthAndHeight  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1226
+      Mode fill justru melarang width/height.
+[x] assertNonZeroRenderedHeight  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1241
+      Mode fill memerlukan induk dengan tinggi bukan nol.
+[x] assertValidLoadingInput  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1288
+      Nilai `loading` harus lazy/eager/auto dan tidak boleh dipakai bersama priority.
+[x] assertValidDecodingInput  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1313
+      Nilai `decoding` harus sync/async/auto.
+[x] assertNotMissingBuiltInLoader  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1334
+      Memberi saran bila URL terlihat memakai CDN yang sudah punya loader bawaan.
+[x] assertNoNgSrcsetWithoutLoader  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1363
+      ngSrcset tidak berguna tanpa loader.
+[x] assertNoLoaderParamsWithoutLoader  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1381
+      loaderParams tidak berguna tanpa loader.
+[x] assetPriorityCountBelowThreshold  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1398
+      Memperingatkan bila terlalu banyak gambar ditandai priority.
+[x] assertPlaceholderDimensions  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1422
+      Memperingatkan placeholder yang dimensinya tidak masuk akal.
+[x] callOnLoadIfImageIsLoaded  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1439
+      Menangani gambar yang sudah selesai dimuat sebelum listener terpasang (kasus cache).
+[x] round  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1455
+      Pembulatan dua desimal untuk perbandingan rasio aspek.
+[x] unwrapSafeUrl  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1461
+      Transform input yang melepas SafeValue tanpa sanitasi; sah karena img.src/srcset bukan konteks eksekusi kode.
+[x] booleanOrUrlAttribute  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1470
+      Transform input placeholder yang menerima boolean maupun string URL.

@@ -758,91 +758,91 @@ Format: [ ] Nama  (export|kind) :baris
 [ ] logModifiedWarning  (function) :191
 
 ## packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts
-[ ] resetImagePriorityCount  (export function) :156
+[x] resetImagePriorityCount  (export function) :156
       -- This function is for testing purpose.
 [ ] NgOptimizedImage  (export class) :272
 [ ] NgOptimizedImage.constructor  (ctor) :400
-[ ] NgOptimizedImage.ngOnInit  (method) :422
+[x] NgOptimizedImage.ngOnInit  (method) :422
       -- @docs-private
-[ ] NgOptimizedImage.setHostAttributes  (method) :486
-[ ] NgOptimizedImage.ngOnChanges  (method) :537
+[x] NgOptimizedImage.setHostAttributes  (method) :486
+[x] NgOptimizedImage.ngOnChanges  (method) :537
       -- @docs-private
-[ ] NgOptimizedImage.getAspectRatio  (method) :580
+[x] NgOptimizedImage.getAspectRatio  (method) :580
       -- Calculates the aspect ratio of the image based on width and height. Returns null if the aspect ratio cannot be calculated (missing dimensions or height is 0).
-[ ] NgOptimizedImage.callImageLoader  (method) :587
-[ ] NgOptimizedImage.getLoadingBehavior  (method) :602
-[ ] NgOptimizedImage.getFetchPriority  (method) :609
-[ ] NgOptimizedImage.getDecoding  (method) :613
-[ ] NgOptimizedImage.getRewrittenSrc  (method) :627
-[ ] NgOptimizedImage.getRewrittenSrcset  (method) :639
-[ ] NgOptimizedImage.getAutomaticSrcset  (method) :652
-[ ] NgOptimizedImage.getResponsiveSrcset  (method) :660
-[ ] NgOptimizedImage.updateSrcAndSrcset  (method) :676
-[ ] NgOptimizedImage.getFixedSrcset  (method) :699
-[ ] NgOptimizedImage.shouldGenerateAutomaticSrcset  (method) :710
-[ ] NgOptimizedImage.generatePlaceholder  (method) :729
+[x] NgOptimizedImage.callImageLoader  (method) :587
+[x] NgOptimizedImage.getLoadingBehavior  (method) :602
+[x] NgOptimizedImage.getFetchPriority  (method) :609
+[x] NgOptimizedImage.getDecoding  (method) :613
+[x] NgOptimizedImage.getRewrittenSrc  (method) :627
+[x] NgOptimizedImage.getRewrittenSrcset  (method) :639
+[x] NgOptimizedImage.getAutomaticSrcset  (method) :652
+[x] NgOptimizedImage.getResponsiveSrcset  (method) :660
+[x] NgOptimizedImage.updateSrcAndSrcset  (method) :676
+[x] NgOptimizedImage.getFixedSrcset  (method) :699
+[x] NgOptimizedImage.shouldGenerateAutomaticSrcset  (method) :710
+[x] NgOptimizedImage.generatePlaceholder  (method) :729
       -- Returns an image url formatted for use with the CSS background-image property. Expects one of: * A base64 encoded image, which is wrapped and passed through. * 
-[ ] NgOptimizedImage.shouldBlurPlaceholder  (method) :749
+[x] NgOptimizedImage.shouldBlurPlaceholder  (method) :749
       -- Determines if blur should be applied, based on an optional boolean property `blur` within the optional configuration object `placeholderConfig`.
-[ ] NgOptimizedImage.removePlaceholderOnLoad  (method) :756
-[ ] NgOptimizedImage.setHostAttribute  (method) :779
-[ ] processConfig  (function) :789
+[x] NgOptimizedImage.removePlaceholderOnLoad  (method) :756
+[x] NgOptimizedImage.setHostAttribute  (method) :779
+[x] processConfig  (function) :789
       -- Sorts provided config breakpoints and uses defaults.
-[ ] assertNoConflictingSrc  (function) :802
+[x] assertNoConflictingSrc  (function) :802
       -- Verifies that there is no `src` set on a host element.
-[ ] assertNoConflictingSrcset  (function) :817
+[x] assertNoConflictingSrcset  (function) :817
       -- Verifies that there is no `srcset` set on a host element.
-[ ] assertNotBase64Image  (function) :832
+[x] assertNotBase64Image  (function) :832
       -- Verifies that the `ngSrc` is not a Base64-encoded image.
-[ ] assertNoComplexSizes  (function) :851
+[x] assertNoComplexSizes  (function) :851
       -- Verifies that the 'sizes' only includes responsive values.
-[ ] assertValidPlaceholder  (function) :864
-[ ] assertNoPlaceholderConfigWithoutPlaceholder  (function) :873
+[x] assertValidPlaceholder  (function) :864
+[x] assertNoPlaceholderConfigWithoutPlaceholder  (function) :873
       -- Verifies that placeholderConfig isn't being used without placeholder
-[ ] assertNoRelativePlaceholderWithoutLoader  (function) :890
+[x] assertNoRelativePlaceholderWithoutLoader  (function) :890
       -- Warns if a relative URL placeholder is specified, but no loader is present to provide the small image.
-[ ] assertNoOversizedDataUrl  (function) :905
+[x] assertNoOversizedDataUrl  (function) :905
       -- Warns or throws an error if an oversized dataURL placeholder is provided.
-[ ] assertNotBlobUrl  (function) :941
+[x] assertNotBlobUrl  (function) :941
       -- Verifies that the `ngSrc` is not a Blob URL.
-[ ] assertNonEmptyInput  (function) :957
+[x] assertNonEmptyInput  (function) :957
       -- Verifies that the input is set to a non-empty string.
-[ ] assertValidNgSrcset  (export function) :972
+[x] assertValidNgSrcset  (export function) :972
       -- Verifies that the `ngSrcset` is in a valid format, e.g. "100w, 200w" or "1x, 2x".
-[ ] assertUnderDensityCap  (function) :994
-[ ] postInitInputChangeError  (function) :1016
+[x] assertUnderDensityCap  (function) :994
+[x] postInitInputChangeError  (function) :1016
       -- Creates a `RuntimeError` instance to represent a situation when an input is set after the directive has initialized.
-[ ] assertNoPostInitInputChange  (function) :1039
+[x] assertNoPostInitInputChange  (function) :1039
       -- Verify that none of the listed inputs has changed.
-[ ] assertGreaterThanZero  (function) :1062
+[x] assertGreaterThanZero  (function) :1062
       -- Verifies that a specified input is a number greater than 0.
-[ ] assertNoImageDistortion  (function) :1080
+[x] assertNoImageDistortion  (function) :1080
       -- Verifies that the rendered image is not visually distorted. Effectively this is checking: - Whether the "width" and "height" attributes reflect the actual dimen
-[ ] assertNonEmptyWidthAndHeight  (function) :1206
+[x] assertNonEmptyWidthAndHeight  (function) :1206
       -- Verifies that a specified input is set.
-[ ] assertEmptyWidthAndHeight  (function) :1226
+[x] assertEmptyWidthAndHeight  (function) :1226
       -- Verifies that width and height are not set. Used in fill mode, where those attributes don't make sense.
-[ ] assertNonZeroRenderedHeight  (function) :1241
+[x] assertNonZeroRenderedHeight  (function) :1241
       -- Verifies that the rendered image has a nonzero height. If the image is in fill mode, provides guidance that this can be caused by the containing element's CSS p
-[ ] assertValidLoadingInput  (function) :1288
+[x] assertValidLoadingInput  (function) :1288
       -- Verifies that the `loading` attribute is set to a valid input & is not used on priority images.
-[ ] assertValidDecodingInput  (function) :1313
+[x] assertValidDecodingInput  (function) :1313
       -- Verifies that the `decoding` attribute is set to a valid input.
-[ ] assertNotMissingBuiltInLoader  (function) :1334
+[x] assertNotMissingBuiltInLoader  (function) :1334
       -- Warns if NOT using a loader (falling back to the generic loader) and the image appears to be hosted on one of the image CDNs for which we do have a built-in ima
-[ ] assertNoNgSrcsetWithoutLoader  (function) :1363
+[x] assertNoNgSrcsetWithoutLoader  (function) :1363
       -- Warns if ngSrcset is present and no loader is configured (i.e. the default one is being used).
-[ ] assertNoLoaderParamsWithoutLoader  (function) :1381
+[x] assertNoLoaderParamsWithoutLoader  (function) :1381
       -- Warns if loaderParams is present and no loader is configured (i.e. the default one is being used).
-[ ] assetPriorityCountBelowThreshold  (function) :1398
+[x] assetPriorityCountBelowThreshold  (function) :1398
       -- Warns if the priority attribute is used too often on page load
-[ ] assertPlaceholderDimensions  (function) :1422
+[x] assertPlaceholderDimensions  (function) :1422
       -- Warns if placeholder's dimension are over a threshold. This assert function is meant to only run on the browser.
-[ ] callOnLoadIfImageIsLoaded  (function) :1439
-[ ] round  (function) :1455
-[ ] unwrapSafeUrl  (function) :1461
+[x] callOnLoadIfImageIsLoaded  (function) :1439
+[x] round  (function) :1455
+[x] unwrapSafeUrl  (function) :1461
       -- as that is not needed for img.src and img.srcset. This transform is purely for compatibility.
-[ ] booleanOrUrlAttribute  (export function) :1470
+[x] booleanOrUrlAttribute  (export function) :1470
       -- of boolean values. Used for the placeholder attribute.
 
 ## packages/common/src/directives/ng_optimized_image/preconnect_link_checker.ts
