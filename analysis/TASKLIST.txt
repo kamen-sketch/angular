@@ -23,6 +23,8 @@ A. INFRASTRUKTUR ANALISIS
         -> analysis/tools/scan-sinks.mjs + analysis/SINK-INVENTORY.txt
 [x] A10 Triase seluruh temuan pemindaian (FP vs sink nyata)
         -> analysis/SINK-TRIAGE.txt
+[x] A11 Uji keterjangkauan taint per sink (bundle/execution/source gate)
+        -> analysis/SINK-REACHABILITY.txt
 
 B. CORE - FONDASI
 -----------------

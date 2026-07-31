@@ -22,6 +22,9 @@ ISI DIREKTORI
                           menemukannya (dihasilkan otomatis)
   SINK-TRIAGE.txt         VONIS per kelompok temuan: false positive, kode yang
                           tidak terkirim, sink beguard, atau sink berkontrak
+  SINK-REACHABILITY.txt   UJI KETERJANGKAUAN tiap sink nyata terhadap tiga
+                          gerbang (bundle / execution / source) untuk menyaring
+                          sisa false positive
 
   functions/<area>.txt    INVENTORY LENGKAP seluruh simbol per area.
                           Satu baris per fungsi/kelas/metode:
