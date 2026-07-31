@@ -1020,6 +1020,118 @@ F-11  AngularJSUrlCodec: pembungkus aman ADA di berkas yang sama, tapi
   tidak menebak niat penulis, ia mengadu kode dengan pernyataan penulis
   sendiri.
 
+
+==============================================================================
+F-12  Pola dataGroup service worker dicocokkan sebagai SUBSTRING terhadap URL
+      absolut — pola `/api/**` menangkap dan meng-cache respons LINTAS-ORIGIN
+==============================================================================
+
+  BERKAS
+  ------
+  packages/service-worker/config/src/generator.ts
+      :126  processNavigationUrls  -> `^${urlToRegex(url, baseHref)}$`   ANCHOR
+      :153  globListToMatcher neg  -> '^' + globToRegex(...) + '$'       ANCHOR
+      :158  globListToMatcher pos  -> '^' + globToRegex(...) + '$'       ANCHOR
+      :96   assetGroups.patterns   -> urlToRegex(url, baseHref, true)    TANPA
+      :104  dataGroups.patterns    -> urlToRegex(url, baseHref, true)    TANPA
+  packages/service-worker/worker/src/data.ts
+      :305  this.patterns.some((p) => p.test(req.url))     <- req.url MENTAH
+  packages/service-worker/worker/src/assets.ts
+      :126  ... p.test(url)  dengan url = adapter.normalizeUrl(req.url)
+  packages/service-worker/worker/src/adapter.ts
+      :84-88 normalizeUrl MEMBANDINGKAN origin — tapi data.ts tidak memakainya
+
+  DUA INKONSISTENSI-DIRI YANG BERGABUNG
+  -------------------------------------
+  (a) Di satu berkas generator, tiga dari lima tempat meng-anchor regexnya;
+      dua yang tidak justru yang dikirim ke manifest dan dipakai saat runtime.
+  (b) Di sisi runtime, `assets.ts` menormalkan URL lebih dulu (yang memeriksa
+      origin), `data.ts` menguji `req.url` absolut apa adanya.
+
+  Hasil gabungannya: pola path `/api/**` menjadi regex `\/api\/.*` tanpa anchor,
+  diuji terhadap `https://origin-lain/...`. Ia cocok di mana pun — termasuk
+  ketika `/api/` hanya muncul di QUERY STRING.
+
+  RANTAI VALIDASI
+  ---------------
+  1. HIPOTESIS   Pola tanpa anchor yang diuji terhadap URL absolut akan cocok
+                 untuk URL lintas-origin.
+  2. CODE TRACE  generator.ts:104 -> manifest.dataGroups[].patterns ->
+                 data.ts:257 new RegExp(pattern) -> data.ts:305 test(req.url).
+                 Tidak ada pemeriksaan origin di sepanjang jalur itu.
+  3. KONTROL POSITIF  navigationUrls dari KONFIGURASI YANG SAMA di-anchor dan
+                 TIDAK cocok untuk URL lintas-origin yang sama.
+  4. KONTROL NEGATIF  URL lintas-origin tanpa `/api/` lewat ke jaringan pada
+                 kedua pengambilan — jadi pemicunya memang pencocokan substring.
+  5. RUNTIME PROOF  `ngsw-worker.js` @angular/service-worker@22.1.0 yang
+                 SEBENARNYA dikirim npm, dimuat di ServiceWorkerGlobalScope
+                 tiruan; event install/activate/message/fetch nyata.
+                   analysis/tools/ngsw/pattern-anchor.mjs
+                   analysis/tools/ngsw/crossorigin-cache.mjs
+                   analysis/tools/ngsw/mock-sw.mjs
+  6. REPRODUKSI INDEPENDEN  Cukup `npm i @angular/service-worker@22.1.0`.
+                 Tidak ada kode Angular yang ditranskripsi ulang; Generator dan
+                 worker keduanya dimuat dari artefak npm.
+
+  HASIL RUNTIME (setiap panggilan jaringan mengembalikan body berbeda)
+  --------------------------------------------------------------------
+    https://app.example.com/api/orders                 #1 jaringan, #2 CACHE
+    https://payments.other-company.test/v1/api/charge  #1 jaringan, #2 CACHE
+    https://analytics.other.test/t?u=/api/x            #1 jaringan, #2 CACHE
+    https://payments.other-company.test/v1/charge      #1 jaringan, #2 jaringan
+
+    Cache Storage aplikasi sesudahnya:
+      ngsw:/:1:data:api:cache
+        https://payments.other-company.test/v1/api/charge
+        https://analytics.other.test/t?u=/api/x
+
+  DAMPAK
+  ------
+  Siapa yang rugi?  Pengguna aplikasi yang punya dataGroup dengan fragmen path
+                    yang juga muncul pada URL pihak ketiga yang diambil aplikasi.
+  Berapa lama?      Sampai maxAge habis atau versi SW berganti. TIDAK pulih
+                    sendiri per muat-halaman; entri ada di disk.
+  Layanan down?     Tidak.
+  Menembus SOP?     TIDAK. Halaman sendiri yang memulai permintaannya; SW tidak
+                    memperoleh akses baca baru. Jangan dilebih-lebihkan.
+
+  Yang benar-benar didapat:
+    1. Respons pihak ketiga disajikan BASI dan permintaan berikutnya tidak
+       pernah mencapai server itu. Untuk pemeriksaan yang bergantung kesegaran
+       (token dicabut, saldo, feature flag) ini masalah kebenaran yang bisa
+       berkonsekuensi keamanan.
+    2. Body respons lintas-origin dipersistenkan ke disk di Cache Storage
+       aplikasi — retensi data yang tidak diminta developer.
+    3. Tekanan eviksi LRU: maxSize dibagi bersama, trafik lintas-origin
+       menggusur data API aplikasi yang sebenarnya.
+
+  Ketelitian soal opaque: strategi 'performance' default cacheOpaqueResponses
+  = false (data.ts:353), jadi dampaknya terbatas pada endpoint pihak ketiga
+  yang mengirim header CORS. Strategi 'freshness' defaultnya true
+  (data.ts:399), sehingga respons opaque pun ikut tersimpan.
+
+  Ini cacat pertama dalam seri ini yang dampaknya PERSISTEN dan LINTAS-ORIGIN.
+  F-09/F-10/F-11 semuanya sementara dan sebatas satu pengguna satu halaman.
+
+  KENAPA BUKAN PERILAKU YANG DIRANCANG
+  ------------------------------------
+  Dokumentasi (adev/.../service-workers/config.md, bagian dataGroups.urls)
+  hanya menyatakan "A list of URL patterns. URLs that match these patterns are
+  cached according to this data group's policy." Tidak ada penyebutan bahwa
+  pencocokannya substring, tidak ada bahwa pola path berlaku lintas-origin.
+  Caching lintas-origin memang didukung — dengan menulis URL absolut (dokumen
+  menyebut CDN seperti Google Fonts), bukan sebagai efek samping `/api/**`.
+
+  PERBAIKAN
+  ---------
+  Menambahkan `^` saja TIDAK cukup — dan ini bagian penting dari laporannya.
+  `data.ts` menguji URL absolut, sehingga pola path yang di-anchor
+  (`^\/api\/.*$`) justru tidak akan pernah cocok. Perbaikan yang benar:
+  selesaikan pola relatif terhadap origin aplikasi saat pembuatan manifest
+  (menghasilkan `^https:\/\/app\.example\.com\/api\/.*$`), atau minimal pakai
+  `adapter.normalizeUrl()` di data.ts:305 seperti yang sudah dilakukan
+  assets.ts:126, lalu anchor polanya.
+
 ==============================================================================
 RINGKASAN
 ==============================================================================
@@ -1054,6 +1166,13 @@ RINGKASAN
           + pencocokan rute             dinilai server BUKAN      sisi-server;
                                         /admin, dirender Angular  komposisi belum
                                         SEBAGAI /admin            diuji ujung-ke-ujung
+  F-12    service-worker/config/        pola path dicocokkan     YA — PERSISTEN dan
+          generator.ts:96,104           SEBAGAI SUBSTRING thd     LINTAS-ORIGIN.
+          + worker/src/data.ts:305      URL absolut -> `/api/**`  Respons pihak
+                                        menangkap & meng-cache    ketiga di-cache di
+                                        URL LINTAS-ORIGIN, bahkan disk & disajikan
+                                        bila `/api/` cuma di      basi sampai maxAge
+                                        query string              habis
   F-11    common/upgrade/src/           pembungkus aman ADA di   KECIL: sisi klien,
           params.ts:150,167             berkas yang sama tapi     1 pengguna, pulih
           + location_shim.ts:369,371    decodePath/decodeHash     sendiri. TAPI yang
