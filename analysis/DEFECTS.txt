@@ -493,6 +493,66 @@ F-07  Salinan kedua pemetaan sanitizer tidak menangani konteks ARRAY yang
   terduga, sehingga kegagalannya tidak diam.
 
 ==============================================================================
+F-08  UrlTree hasil parse tidak idempoten: dua URL berbeda menghasilkan pohon
+      berbeda tetapi serialisasi yang SAMA
+      BERKAS  : @angular/router DefaultUrlSerializer (parse/serialize)
+      SIFAT   : inkonsistensi normalisasi
+      STATUS  : DAMPAK BELUM DIUJI — lihat "langkah yang belum dikerjakan"
+==============================================================================
+
+  CARA DITEMUKAN
+  --------------
+  Fuzzer properti round-trip (analysis/tools/router-fuzz/fuzz-url.html),
+  20.000 kasus, benih 20260731. Hasil: 16.769 stabil, 40 tidak stabil,
+  0 gagal diparse ulang. Minimisasi otomatis mengerucutkan KEEMPAT PULUH
+  ketidakstabilan ke satu bentuk: karakter tunggal `)`.
+
+  PERILAKU TERUKUR
+  ----------------
+      parse(")")            -> root.children.primary.segments = [{path:"", ...}]
+      serialize(itu)        -> "/"
+      parse("/")            -> root.children = {}            <- TIDAK ADA anak
+      serialize(itu)        -> "/"
+
+  Jadi:
+    - round-trip STRING stabil  : "/" -> "/" (konvergen langsung)
+    - round-trip POHON TIDAK stabil: pohon-1 punya anak primary bersegmen kosong,
+      pohon-2 tidak punya anak sama sekali.
+
+  Cara lain menyatakan hal yang sama, dan ini bentuk yang lebih tajam:
+      `)` dan `/` adalah dua URL BERBEDA yang menghasilkan UrlTree BERBEDA,
+      tetapi keduanya menserialisasi ke string yang SAMA (`/`).
+
+  Penyebabnya: `)` adalah pembatas penutup outlet. Sebuah `)` liar tanpa `(`
+  pembuka menyisakan segmen kosong pada outlet primary, dan segmen kosong itu
+  hilang saat diserialisasi — sehingga informasinya tidak dapat dipulihkan.
+
+  PENILAIAN JUJUR
+  ---------------
+  Ini inkonsistensi normalisasi yang NYATA dan dapat direproduksi, tetapi saya
+  TIDAK mengklaimnya sebagai kerentanan. Yang melemahkannya:
+    - stringnya langsung konvergen ke `/`, jadi bilah alamat segera ternormalisasi
+    - masukannya URL cacat (`)` liar), bukan bentuk yang muncul dari tautan wajar
+    - tidak ada bukti batas keamanan terlewati
+
+  LANGKAH YANG BELUM DIKERJAKAN (dan harus dikerjakan sebelum ini berarti)
+  ------------------------------------------------------------------------
+  Pertanyaan yang menentukan: apakah PENCOCOKAN RUTE memperlakukan
+  "anak primary dengan segmen kosong" berbeda dari "tanpa anak"? Bila ya, maka
+  guard yang dievaluasi atas pohon-1 dapat berbeda hasil dari navigasi yang
+  akhirnya berjalan atas pohon-2 (mis. setelah muat ulang halaman, karena yang
+  tersimpan di bilah alamat adalah `/`).
+
+  Menjawabnya menuntut Router sungguhan dengan tabel rute dan guard, bukan
+  serializer terisolasi. Itu BELUM saya kerjakan. Sesuai rantai validasi di
+  analysis/AUDIT-METODE.txt, F-08 karena itu berhenti di:
+      hipotesis YA | trace YA | neg-ctl YA | pos-ctl YA | runtime YA
+      | security impact TIDAK | repro independen YA (benih deterministik)
+
+  Selama langkah "security impact" belum dikerjakan, F-08 tidak boleh
+  dilaporkan sebagai kerentanan — hanya sebagai cacat normalisasi.
+
+==============================================================================
 RINGKASAN
 ==============================================================================
 
@@ -513,6 +573,9 @@ RINGKASAN
   F-06    i18n_parse.ts:841             gate allowlist bocor     tidak (nama yang
                                         lewat rantai prototipe   lolos semuanya
                                                                  inert)
+  F-08    @angular/router               parse tidak idempoten:   BELUM DIUJI
+          DefaultUrlSerializer          `)` dan `/` -> pohon      (butuh Router
+                                        beda, string sama         sungguhan)
   F-07    resolve_i18n_attr_            salinan pemetaan         tidak (LATEN:
           sanitizers.ts:49-70           sanitizer tak menangani  irisan i18n x
                                         konteks array; salinan   konteks-array

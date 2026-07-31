@@ -1,0 +1,37 @@
+<!doctype html><html><head><meta charset="utf-8"><title>inspect</title>
+<script type="importmap">
+{"imports":{
+ "@angular/compiler":"/router-fuzz/node_modules/@angular/compiler/fesm2022/compiler.mjs",
+ "@angular/router":"/router-fuzz/node_modules/@angular/router/fesm2022/router.mjs",
+ "@angular/common/http":"/router-fuzz/node_modules/@angular/common/fesm2022/http.mjs",
+ "@angular/common":"/router-fuzz/node_modules/@angular/common/fesm2022/common.mjs",
+ "@angular/core":"/router-fuzz/node_modules/@angular/core/fesm2022/core.mjs",
+ "@angular/core/primitives/signals":"/router-fuzz/node_modules/@angular/core/fesm2022/primitives-signals.mjs",
+ "@angular/core/primitives/di":"/router-fuzz/node_modules/@angular/core/fesm2022/primitives-di.mjs",
+ "@angular/core/primitives/event-dispatch":"/router-fuzz/node_modules/@angular/core/fesm2022/primitives-event-dispatch.mjs",
+ "@angular/platform-browser":"/router-fuzz/node_modules/@angular/platform-browser/fesm2022/platform-browser.mjs",
+ "tslib":"/npm-validate/node_modules/tslib/tslib.es6.mjs",
+ "rxjs":"/router-fuzz/node_modules/rxjs/dist/esm/index.js",
+ "rxjs/operators":"/router-fuzz/node_modules/rxjs/dist/esm/operators/index.js"}}
+</script></head><body><pre id="o"></pre>
+<script type="module">
+import '@angular/compiler';
+import {DefaultUrlSerializer} from '@angular/router';
+const S=new DefaultUrlSerializer();
+const bentuk=(t)=>{const seg=(g)=>({s:g.segments.map(x=>({p:x.path,m:{...x.parameters}})),c:Object.fromEntries(Object.entries(g.children).map(([k,v])=>[k,seg(v)]))});return JSON.stringify({root:seg(t.root),q:t.queryParams,f:t.fragment});};
+const kasus=[')','a)','/a)','(',')(','/a/b)','a)b','%29','/a;x=)','/a?q=)','/a#)'];
+const res=[];
+for(const u of kasus){
+  const r={u};
+  try{
+    const t1=S.parse(u); r.s1=S.serialize(t1); r.b1=bentuk(t1);
+    const t2=S.parse(r.s1); r.s2=S.serialize(t2); r.b2=bentuk(t2);
+    r.stabilStr=r.s1===r.s2; r.stabilPohon=r.b1===r.b2;
+    const t3=S.parse(r.s2); r.s3=S.serialize(t3);
+    r.konvergen=r.s2===r.s3;
+  }catch(e){ r.err=e.message; }
+  res.push(r);
+}
+document.getElementById('o').textContent=JSON.stringify(res,null,1);
+window.__I__=res;
+</script></body></html>
