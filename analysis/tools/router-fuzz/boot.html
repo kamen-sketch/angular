@@ -1,0 +1,46 @@
+<!doctype html><html><head><meta charset="utf-8"><title>boot</title>
+<script type="importmap">
+{"imports":{
+ "@angular/compiler":"/router-fuzz/node_modules/@angular/compiler/fesm2022/compiler.mjs",
+ "@angular/router":"/router-fuzz/node_modules/@angular/router/fesm2022/router.mjs",
+ "@angular/common/http":"/router-fuzz/node_modules/@angular/common/fesm2022/http.mjs",
+ "@angular/common":"/router-fuzz/node_modules/@angular/common/fesm2022/common.mjs",
+ "@angular/core":"/router-fuzz/node_modules/@angular/core/fesm2022/core.mjs",
+ "@angular/core/primitives/signals":"/router-fuzz/node_modules/@angular/core/fesm2022/primitives-signals.mjs",
+ "@angular/core/primitives/di":"/router-fuzz/node_modules/@angular/core/fesm2022/primitives-di.mjs",
+ "@angular/core/primitives/event-dispatch":"/router-fuzz/node_modules/@angular/core/fesm2022/primitives-event-dispatch.mjs",
+ "@angular/platform-browser":"/router-fuzz/node_modules/@angular/platform-browser/fesm2022/platform-browser.mjs",
+ "tslib":"/npm-validate/node_modules/tslib/tslib.es6.mjs",
+ "rxjs":"/router-fuzz/node_modules/rxjs/dist/esm/index.js",
+ "rxjs/operators":"/router-fuzz/node_modules/rxjs/dist/esm/operators/index.js"}}
+</script></head><body><pre id="o">boot…</pre>
+<script type="module">
+import '@angular/compiler';
+import {Component} from '@angular/core';
+import {bootstrapApplication} from '@angular/platform-browser';
+import {provideRouter, Router, RouterOutlet} from '@angular/router';
+// Direkam SEBELUM Angular menyentuh apa pun.
+const sebelum = {pathname:location.pathname, search:location.search, hash:location.hash};
+const guardLihat=[];
+const K=(n)=>Component({selector:'k-'+n,template:n,standalone:true})(class{});
+const Akar=Component({selector:'app-root',template:'<router-outlet></router-outlet>',standalone:true,imports:[RouterOutlet]})(class{});
+const rute=[
+ {path:'',component:K('beranda'),canActivate:[(r,s)=>{guardLihat.push({l:'kosong',stateUrl:s.url});return true;}]},
+ {path:'admin',component:K('admin'),canActivate:[(r,s)=>{guardLihat.push({l:'admin',stateUrl:s.url});return true;}]},
+ {path:'**',component:K('lain'),canActivate:[(r,s)=>{guardLihat.push({l:'wildcard',stateUrl:s.url});return true;}]},
+];
+document.body.appendChild(document.createElement('app-root'));
+const app=await bootstrapApplication(Akar,{providers:[provideRouter(rute)]});
+const router=app.injector.get(Router);
+await new Promise(r=>setTimeout(r,300));
+let daun=router.routerState.snapshot.root; while(daun.firstChild) daun=daun.firstChild;
+window.__BOOT__={
+ sebelum,
+ sesudah:{pathname:location.pathname,search:location.search,hash:location.hash},
+ routerUrl:router.url,
+ rute:daun.routeConfig?daun.routeConfig.path:null,
+ guard:guardLihat,
+ domTeks:document.body.innerText.trim().slice(0,80),
+};
+document.getElementById('o').textContent=JSON.stringify(window.__BOOT__,null,1);
+</script></body></html>

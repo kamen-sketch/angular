@@ -661,6 +661,52 @@ F-08  UrlTree hasil parse tidak idempoten: dua URL berbeda menghasilkan pohon
   path antar-lapisan" — dengan jalur eksploitasi yang masuk akal dan komponennya
   terukur, tetapi komposisi ujung-ke-ujungnya belum didemonstrasikan.
 
+  HIPOTESIS XSS — DIUJI DAN DIBANTAH
+  ----------------------------------
+  Pertanyaan wajar berikutnya: bila `)` memotong URL, bisakah sisa yang dipotong
+  dipakai menyelundupkan muatan XSS? Diuji, dan jawabannya TIDAK. Tiga pengukuran
+  menutup jalur itu (analysis/evidence/f08-xss-hypothesis-refuted.txt):
+
+  (a) Peramban meng-encode metakarakter HTML pada path. Memuat
+          /admin)"><img src=x onerror=alert(1)>
+      membuat server menerima
+          /admin)%22%3E%3Cimg%20src=x%20onerror=alert(1)%3E
+      `"`, `<`, `>` menjadi %22/%3C/%3E. Jadi `<script>` mentah TIDAK dapat
+      dikirim lewat path. (Bandingkan: `)` sendiri TIDAK di-encode — itulah
+      sebabnya desinkronisasi path tetap berlaku, tetapi XSS tidak.)
+
+  (b) Angular MENORMALKAN bilah alamat, termasuk pada MUAT LANGSUNG — bukan hanya
+      navigasi klien. Terukur sebelum dan sesudah bootstrap:
+          sebelum boot : location.pathname = "/admin)EVIL"
+          sesudah boot : location.pathname = "/admin"
+      Muatan lenyap dari `location`. Query dan fragment sesudah `)` ikut dibuang.
+
+  (c) Tidak ada residu yang tersisa untuk dibaca aplikasi:
+          location.search           -> ""
+          location.hash             -> ""
+          snapshot.queryParams      -> {}
+          snapshot.fragment         -> null
+          segmen                    -> ["admin"]
+      Kontrol: `/admin?q=BERSIH#f` MEMPERTAHANKAN query dan fragment dengan benar,
+      membuktikan pengukuran ini memang mampu melihat keduanya bila ada.
+
+  Jadi bagian yang dipotong DIBUANG, bukan disimpan diam-diam di suatu tempat.
+  Tidak ada bahan untuk XSS, dan tidak ada desinkronisasi `router.url` vs
+  `location` di sisi klien — keduanya sepakat setelah bootstrap.
+
+  CATATAN ZERO-TRUST YANG TETAP BERLAKU
+  -------------------------------------
+  Yang tersisa setelah XSS dibantah tetap satu hal, dan justru itu intinya:
+  LAPISAN SERVER DAN LAPISAN ANGULAR MELIHAT PATH YANG BERBEDA untuk satu
+  permintaan yang sama. Konsekuensi yang masuk akal tanpa perlu XSS:
+    - otorisasi berbasis path di server/proxy/CDN dilewati (bagian sebelumnya)
+    - log akses server mencatat `/admin)EVIL` sementara telemetri klien mencatat
+      `/admin`; korelasi saat penyelidikan insiden menjadi tidak cocok
+    - aturan WAF/rate-limit per-path dinilai atas string yang kemudian ditafsirkan
+      ulang oleh Angular
+
+  Ini kelas "otorisasi dilakukan di layer berbeda" — bukan kelas injeksi.
+
   Status rantai validasi sekarang:
       hipotesis YA | trace YA | neg-ctl YA | pos-ctl YA | runtime YA
       | security impact YA (terukur, terbatas) | repro independen YA
