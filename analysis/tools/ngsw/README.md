@@ -139,6 +139,88 @@ memang mengirim header CORS (persis kasus payments/analytics di atas). Pada
 strategi `freshness` defaultnya **true** (`data.ts:399`), sehingga respons
 opaque pun ikut tersimpan.
 
+## Langkah 3 — respons basi membuat KEPUTUSAN KEAMANAN salah
+
+```bash
+node analysis/tools/ngsw/stale-authz.mjs <path-node_modules>
+```
+
+Langkah 2 hanya membuktikan respons pihak ketiga bisa di-cache. Itu belum
+menaikkan severity. Langkah 3 menunjukkan konsekuensi yang tidak ambigu.
+
+Premis yang sama di kedua skenario: `dataGroups: [{urls: ['/api/**'], strategy:
+'performance', maxAge: '1d'}]` — developer bermaksud "cache API SAYA" — dan
+endpoint IdP pihak ketiga kebetulan memuat `/api/` di path-nya.
+
+### Skenario 1 — kunci yang sudah dirotasi keluar tetap diterima
+
+Verifikasi memakai **WebCrypto asli (ECDSA P-256 / ES256)**, bukan tiruan.
+Kode aplikasinya jujur: ia memeriksa `kid`, memverifikasi tanda tangan secara
+kriptografis, dan menolak `kid` yang tidak ada di JWKS.
+
+| | T0 | T1 | T2 |
+|---|---|---|---|
+| | k1 sah, aplikasi ambil JWKS | k1 **BOCOR**, IdP merotasinya keluar → JWKS hanya k2 | penyerang menyodorkan JWT `role=admin` bertanda tangan k1 |
+
+Tiga jalan, hanya **satu** variabel berubah:
+
+```
+A  RENTAN     JWKS di /v1/api/keys, pola apa adanya  \/api\/.*
+   IdP dihubungi setelah rotasi  false
+   KEPUTUSAN  >>> AKSES ADMIN DIBERIKAN
+   alasan     tanda tangan sah dengan kid "k1-bocor", role="admin"
+
+B  KONTROL    JWKS di /v1/keys (tanpa "/api/"), pola sama
+   IdP dihubungi setelah rotasi  true
+   KEPUTUSAN  akses ditolak — kid "k1-bocor" tidak ada di JWKS
+
+C  PERBAIKAN  JWKS di /v1/api/keys, pola ^https:\/\/app\.example\.com\/api\/.*$
+   IdP dihubungi setelah rotasi  true
+   KEPUTUSAN  akses ditolak — kid "k1-bocor" tidak ada di JWKS
+```
+
+Kode aplikasi, pasangan kunci, token, dan kode verifikasi **identik** di
+ketiganya. Yang membedakan diterimanya token palsu hanyalah bentuk URL IdP —
+sesuatu yang sama sekali di luar kendali developer aplikasi.
+
+Perhatikan `IdP dihubungi setelah rotasi = false` pada A: rotasi kunci darurat
+tidak sampai ke peramban itu sama sekali, sampai `maxAge` habis.
+
+### Skenario 2 — pencabutan hak akses tidak berlaku
+
+Skenario 1 mengandaikan verifikasi JWT di sisi klien — nyata, tetapi tidak
+universal. Skenario 2 tidak mengandaikan itu sama sekali, dan polanya jauh
+lebih umum: aplikasi menanyakan hak pengguna ke endpoint pihak ketiga lalu
+memakai jawabannya untuk memutuskan akses.
+
+```
+T0  pengguna adalah admin, aplikasi mengambil hak aksesnya
+T1  admin MENCABUT peran itu (karyawan keluar / akun disusupi / langganan turun)
+T2  pengguna membuka panel admin lagi
+
+A  RENTAN   hak di /v2/api/entitlements
+   IdP dihubungi setelah cabut  false
+   hak yang DILIHAT aplikasi    {"role":"admin","active":true}
+   KEPUTUSAN                    >>> PANEL ADMIN TETAP TERBUKA
+
+B  KONTROL  hak di /v2/entitlements (tanpa "/api/")
+   IdP dihubungi setelah cabut  true
+   hak yang DILIHAT aplikasi    {"role":"viewer","active":false}
+   KEPUTUSAN                    akses dicabut dengan benar
+```
+
+### Batas yang harus dinyatakan jujur
+
+- Penegakan yang otoritatif seharusnya di sisi server. Cacat ini membuat
+  pemeriksaan **sisi klien** menjadi salah. Untuk aplikasi yang pemeriksaan
+  sisi kliennya satu-satunya — gating UI admin, feature gating, dan setiap
+  aplikasi yang memverifikasi token pihak ketiga di klien — kegagalannya
+  langsung.
+- Penyerang tidak perlu melakukan apa pun untuk meracuni cache: peracunan
+  terjadi lewat pemakaian normal di T0. Yang "diserang" adalah waktu.
+- `maxAge` dipilih developer. Nilai lazim berkisar jam hingga hari; selama
+  itu pula rotasi kunci dan pencabutan hak tidak sampai.
+
 ## Kenapa ini cacat, bukan perilaku yang dirancang
 
 Dokumentasinya (`adev/src/content/ecosystem/service-workers/config.md`, bagian

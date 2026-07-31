@@ -1113,6 +1113,63 @@ F-12  Pola dataGroup service worker dicocokkan sebagai SUBSTRING terhadap URL
   Ini cacat pertama dalam seri ini yang dampaknya PERSISTEN dan LINTAS-ORIGIN.
   F-09/F-10/F-11 semuanya sementara dan sebatas satu pengguna satu halaman.
 
+  ESKALASI SEVERITY — respons basi -> KEPUTUSAN KEAMANAN SALAH
+  ------------------------------------------------------------
+  "Respons pihak ketiga bisa di-cache" saja belum menaikkan severity. Yang
+  menaikkannya adalah menunjukkan keputusan keamanan yang benar-benar berbeda.
+  Dua skenario dijalankan lewat ngsw-worker.js npm yang sama:
+    analysis/tools/ngsw/stale-authz.mjs
+
+  SKENARIO 1 — kunci yang sudah dirotasi keluar tetap diterima
+    Premis: dataGroup `/api/**`; JWKS IdP ada di /v1/api/keys.
+    Verifikasi memakai WebCrypto ASLI (ECDSA P-256 / ES256), bukan tiruan.
+    Kode aplikasinya jujur: cek kid, verifikasi tanda tangan, tolak kid yang
+    tidak ada di JWKS.
+      T0  k1 sah, aplikasi ambil JWKS               -> masuk cache
+      T1  k1 BOCOR, IdP merotasinya keluar (JWKS = k2 saja)
+      T2  penyerang menyodorkan JWT role=admin bertanda tangan k1
+
+      A RENTAN    pola \/api\/.*, JWKS /v1/api/keys
+                  IdP dihubungi setelah rotasi = false
+                  >>> AKSES ADMIN DIBERIKAN
+      B KONTROL   pola sama, JWKS /v1/keys (tanpa "/api/")
+                  IdP dihubungi = true  -> DITOLAK (kid sudah tidak ada)
+      C PERBAIKAN pola ^https:\/\/app\.example\.com\/api\/.*$
+                  IdP dihubungi = true  -> DITOLAK
+
+    Kode aplikasi, pasangan kunci, token, dan kode verifikasi IDENTIK di
+    ketiganya. Pembeda diterimanya token palsu hanyalah BENTUK URL IdP —
+    di luar kendali developer aplikasi.
+
+  SKENARIO 2 — pencabutan hak akses tidak berlaku
+    Tidak mengandaikan verifikasi JWT sisi klien; polanya jauh lebih umum.
+      T0  pengguna admin, aplikasi ambil hak aksesnya
+      T1  admin MENCABUT peran (karyawan keluar / akun disusupi)
+      T2  pengguna membuka panel admin lagi
+
+      A RENTAN   hak di /v2/api/entitlements
+                 IdP dihubungi setelah cabut = false
+                 aplikasi melihat {"role":"admin","active":true}
+                 >>> PANEL ADMIN TETAP TERBUKA
+      B KONTROL  hak di /v2/entitlements
+                 IdP dihubungi = true -> {"role":"viewer","active":false}
+                 -> akses dicabut dengan benar
+
+  BATAS YANG DINYATAKAN JUJUR
+    - Penegakan otoritatif seharusnya di server. Cacat ini membuat pemeriksaan
+      SISI KLIEN salah. Untuk aplikasi yang pemeriksaan sisi kliennya
+      satu-satunya (gating UI admin, feature gating, verifikasi token pihak
+      ketiga di klien), kegagalannya langsung.
+    - Penyerang tidak perlu berbuat apa pun untuk meracuni cache; peracunan
+      terjadi lewat pemakaian normal di T0. Yang "diserang" adalah waktu.
+    - maxAge dipilih developer; nilai lazim jam hingga hari, dan selama itu
+      rotasi kunci darurat serta pencabutan hak TIDAK SAMPAI ke peramban.
+
+  Klasifikasi yang paling tepat: cross-origin unintended service worker
+  caching akibat pencocokan pola URL tanpa anchor terhadap URL absolut —
+  security-relevant correctness flaw / cache-scope confusion, dengan severity
+  yang bergantung aplikasi tetapi terbukti dapat mencapai kegagalan otorisasi.
+
   KENAPA BUKAN PERILAKU YANG DIRANCANG
   ------------------------------------
   Dokumentasi (adev/.../service-workers/config.md, bagian dataGroups.urls)
