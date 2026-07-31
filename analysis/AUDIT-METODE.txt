@@ -24,9 +24,19 @@ Legenda: YA = dikerjakan & terdokumentasi | SEB = sebagian | TIDAK = tidak diker
   F-05    YA    YA     SEB      YA       TIDAK    SEB      TIDAK
   F-06    YA    YA     YA       YA       SEB      YA(nol)  TIDAK
   F-07    YA    YA     YA       TIDAK    TIDAK    YA(nol)  TIDAK
+  F-08    YA    YA     YA       YA       YA       YA(tbts) YA (benih)
+  F-09    YA    YA     YA       YA       YA       SEB      YA
 
-Hanya F-01 yang menempuh rantai penuh. Enam sisanya BELUM, dan itu harus
-dinyatakan terang-terangan ketika temuan dilaporkan.
+Hanya F-01 dan F-08 yang menempuh rantai penuh.
+
+F-09 berhenti di kolom IMPACT: terbukti bahwa cookie cacat MELUMPUHKAN
+permintaan, TIDAK terbukti bahwa penyerang dapat MENANAM cookie itu. Selama
+langkah tanam-cookie belum didemonstrasikan, F-09 dilaporkan sebagai cacat
+ketangguhan, bukan kerentanan.
+
+F-08 kolom IMPACT "tbts" = terbatas: pencocokan rute terbukti berbeda dan
+desinkronisasi lapisan terukur, tetapi komposisi ujung-ke-ujung pada aplikasi
+SSR berautentikasi belum dijalankan.
 
 ==============================================================================
 2. CELAH PALING SERIUS YANG SUDAH DITUTUP: repro independen F-01

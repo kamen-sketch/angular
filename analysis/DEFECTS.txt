@@ -717,7 +717,8 @@ F-09  Cookie XSRF cacat menggagalkan SELURUH permintaan HTTP yang memutasi
       BERKAS  : packages/common/src/cookie.ts:16          (decode tanpa guard)
                 packages/common/http/src/xsrf.ts:119      (getToken di LUAR try)
       SIFAT   : penolakan layanan sisi klien, persisten
-      STATUS  : DIBUKTIKAN RUNTIME dengan @angular/common@22.1.0 npm
+      STATUS  : cacat DIBUKTIKAN RUNTIME (npm 22.1.0); TETAPI kemampuan penyerang
+                MENANAM cookie itu BELUM didemonstrasikan -> belum ada dampak nyata
       BUKTI   : analysis/evidence/f09-xsrf-cookie-dos.txt
                 analysis/tools/xsrf/
 ==============================================================================
@@ -780,8 +781,19 @@ F-09  Cookie XSRF cacat menggagalkan SELURUH permintaan HTTP yang memutasi
     - nilai cookie dengan `%` tunggal adalah cookie yang SAH secara sintaks
 
   Yang TIDAK saya klaim: eksekusi kode, kebocoran token, atau bypass proteksi
-  XSRF. Dan pemicunya menuntut kemampuan menyetel cookie pada domain induk —
-  bukan penyerang jarak jauh sembarangan.
+  XSRF.
+
+  YANG BELUM DIBUKTIKAN — dan ini yang menahan F-09 dari status "dampak nyata":
+  saya membuktikan bahwa BILA cookie cacat ada, permintaan gagal. Saya TIDAK
+  membuktikan bahwa penyerang dapat MENANAM cookie itu. Cookie tossing dari
+  subdomain saudara adalah ASUMSI yang masuk akal, bukan hasil pengukuran; ia
+  menuntut penyerang menguasai subdomain pada domain induk yang sama. Tanpa
+  demonstrasi itu, F-09 adalah CACAT KETANGGUHAN yang terbukti, bukan kerentanan
+  yang dapat dieksploitasi.
+
+  Langkah yang menutupnya: siapkan dua host (app.contoh.test dan evil.contoh.test),
+  setel cookie ber-Domain dari yang kedua, lalu ukur apakah aplikasi pada yang
+  pertama benar-benar lumpuh. Belum dikerjakan.
 
   PERBAIKAN
   ---------
