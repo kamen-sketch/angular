@@ -1,0 +1,187 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Fuzzer diferensial loop mXSS</title>
+<style>
+ body{font:13px/1.55 ui-monospace,Menlo,Consolas,monospace;margin:0;padding:16px;background:#0b0e14;color:#c9d1d9}
+ h1{font-size:16px;margin:0 0 6px}
+ table{border-collapse:collapse;width:100%;margin:8px 0}
+ th,td{border:1px solid #30363d;padding:4px 8px;text-align:left;vertical-align:top}
+ th{background:#161b22}
+ .ok{color:#3fb950}.bad{color:#f85149}.warn{color:#d29922}
+ code{color:#79c0ff;word-break:break-all}
+ .v{font-size:14px;font-weight:700;padding:10px 12px;border-radius:6px;margin:10px 0}
+ .v.hit{background:#26120f;border:1px solid #da3633;color:#f85149}
+ .v.clean{background:#12261a;border:1px solid #238636;color:#3fb950}
+ .box{border:1px solid #30363d;border-radius:6px;padding:8px 12px;margin:8px 0;background:#0d1117}
+</style>
+<script type="importmap">
+{"imports":{
+ "@angular/core":"/npm-validate/node_modules/@angular/core/fesm2022/core.mjs",
+ "@angular/core/primitives/signals":"/npm-validate/node_modules/@angular/core/fesm2022/primitives-signals.mjs",
+ "@angular/core/primitives/di":"/npm-validate/node_modules/@angular/core/fesm2022/primitives-di.mjs",
+ "@angular/core/primitives/event-dispatch":"/npm-validate/node_modules/@angular/core/fesm2022/primitives-event-dispatch.mjs",
+ "tslib":"/npm-validate/node_modules/tslib/tslib.es6.mjs",
+ "rxjs":"/npm-validate/node_modules/rxjs/dist/esm/index.js",
+ "rxjs/operators":"/npm-validate/node_modules/rxjs/dist/esm/operators/index.js"
+}}
+</script>
+</head>
+<body>
+<h1>Fuzzer diferensial — loop mXSS <code>html_sanitizer.ts:314-326</code></h1>
+<div id="out">menjalankan…</div>
+
+<script src="sanitizer.js"></script>
+<script type="module">
+import {ɵ_sanitizeHtml as realSanitizeHtml} from '@angular/core';
+
+const E=(s)=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// ---------------------------------------------------------------------------
+// PRNG berbenih supaya setiap temuan dapat direproduksi persis.
+// ---------------------------------------------------------------------------
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+// ---------------------------------------------------------------------------
+// Tata bahasa: dicondongkan ke konstruksi yang MEMICU MUTASI parser, bukan HTML
+// wajar. Inilah bagian yang menentukan apakah fuzzer ini berguna.
+// ---------------------------------------------------------------------------
+const ASING     = ['svg','math','foreignObject','annotation-xml','mtext','mglyph','desc','title','ms','mi','mo'];
+const TEKS_MENTAH = ['style','xmp','plaintext','textarea','title','noscript','noembed','noframes','iframe','script'];
+const TABEL     = ['table','tbody','thead','tr','td','th','caption','colgroup','col','select','option','optgroup'];
+const FORMAT    = ['b','i','a','form','nobr','font','p','div','span','li','ul','ruby','rt','rp'];
+const SEMUA_TAG = [...ASING,...TEKS_MENTAH,...TABEL,...FORMAT];
+const ATRIB     = ['src=x','onerror=alert(1)','href="javascript:alert(1)"','title="q"','style="color:red"',
+                   'encoding="text/html"','href="&#x3000;javascript:alert(1)"','class=a','id=b'];
+const TEKS      = ['x','<b>y</b>','&lt;img src=x&gt;','&#x3000;','&amp;','"',"'",'<!--c-->','<![CDATA[z]]>',''];
+
+function buatHtml(rnd,dalam=0){
+  const n=1+Math.floor(rnd()*3);
+  let s='';
+  for(let i=0;i<n;i++){
+    const r=rnd();
+    if(r<0.15||dalam>4){ s+=TEKS[Math.floor(rnd()*TEKS.length)]; continue; }
+    const tag=SEMUA_TAG[Math.floor(rnd()*SEMUA_TAG.length)];
+    const atr= rnd()<0.45 ? ' '+ATRIB[Math.floor(rnd()*ATRIB.length)] : '';
+    const isi= rnd()<0.7 ? buatHtml(rnd,dalam+1) : '';
+    // Tag sengaja SERING dibiarkan terbuka: penutupan otomatis peramban itulah
+    // sumber mutasi yang dicari.
+    const tutup= rnd()<0.45 ? `</${tag}>` : '';
+    s+=`<${tag}${atr}>${isi}${tutup}`;
+  }
+  return s;
+}
+
+// ---------------------------------------------------------------------------
+// Orakel
+// ---------------------------------------------------------------------------
+function bahaya(html){
+  const d=document.createElement('div');
+  d.innerHTML=html;
+  return d.querySelectorAll('script,[onerror],[onload],[onclick],iframe,object,embed').length;
+}
+function jalankan(fn,inp){
+  try{ return {out:fn(inp), lempar:false}; }
+  catch(e){ return {out:null, lempar:true, pesan:e.message}; }
+}
+
+const N = 20000;
+const BENIH = 20260731;
+const rnd = mulberry32(BENIH);
+
+let cocokPort=0, bedaPort=0;
+const hitBeda=[], hitInstabil=[], hitBahaya=[], hitPort=[];
+
+for(let i=0;i<N;i++){
+  const inp = buatHtml(rnd);
+
+  // (1) Validasi port berkelanjutan: kode npm ASLI vs port BUGGY, tiap input.
+  const asli = jalankan((s)=>String(realSanitizeHtml(document,s)), inp);
+  const bug  = jalankan((s)=>window.sanitizeHtml_BUGGY(s).out, inp);
+  if(!asli.lempar && !bug.lempar){
+    if(asli.out===bug.out) cocokPort++;
+    else { bedaPort++; if(hitPort.length<5) hitPort.push({inp,asli:asli.out,port:bug.out}); }
+  }
+
+  // (2) Orakel utama: BUGGY vs FIXED, serializer sama -> murni efek loop.
+  const fix = jalankan((s)=>window.sanitizeHtml_FIXED(s).out, inp);
+  if(fix.lempar && !bug.lempar){
+    if(hitInstabil.length<5) hitInstabil.push({inp,bug:bug.out});
+  } else if(!fix.lempar && !bug.lempar && fix.out!==bug.out){
+    if(hitBeda.length<10) hitBeda.push({inp,bug:bug.out,fix:fix.out});
+  }
+
+  // (3) Orakel dampak: keluaran versi rilis, saat diparse ulang, berbahaya?
+  if(!asli.lempar && asli.out && bahaya(asli.out)>0){
+    if(hitBahaya.length<10) hitBahaya.push({inp,out:asli.out});
+  }
+}
+
+// Minimisasi sederhana: buang potongan selama orakel masih terpenuhi.
+function kecilkan(inp,orakel){
+  let cur=inp;
+  for(let putaran=0;putaran<6;putaran++){
+    let berubah=false;
+    for(let len=Math.floor(cur.length/2);len>=1;len=Math.floor(len/2)){
+      for(let p=0;p+len<=cur.length;p++){
+        const kand=cur.slice(0,p)+cur.slice(p+len);
+        if(kand && orakel(kand)){ cur=kand; berubah=true; break; }
+      }
+      if(berubah) break;
+    }
+    if(!berubah) break;
+  }
+  return cur;
+}
+const orakelInstabil=(s)=>{
+  const f=jalankan((x)=>window.sanitizeHtml_FIXED(x).out,s);
+  const b=jalankan((x)=>window.sanitizeHtml_BUGGY(x).out,s);
+  return f.lempar && !b.lempar;
+};
+for(const h of hitInstabil) h.min=kecilkan(h.inp,orakelInstabil);
+
+// ---------------------------------------------------------------------------
+// Laporan
+// ---------------------------------------------------------------------------
+let h='';
+h+=`<div class="box">Kasus: <b>${N}</b> &nbsp; benih: <b>${BENIH}</b> (deterministik, dapat diulang) &nbsp; Angular npm <b>22.1.0</b></div>`;
+
+h+=`<h3>Orakel 1 — validasi port berkelanjutan (npm asli vs port tangan)</h3>`;
+h+=`<div class="box">cocok: <b class="ok">${cocokPort}</b> &nbsp; berbeda: <b class="${bedaPort?'bad':'ok'}">${bedaPort}</b><br>`;
+h+= bedaPort===0
+ ? `Port tangan sepadan dengan kode rilis pada <b>${cocokPort}</b> masukan acak — jauh melampaui 12 vektor buatan tangan.`
+ : `<span class="bad">Port MENYIMPANG. Bukti yang bersandar padanya harus ditinjau ulang.</span>`;
+h+=`</div>`;
+if(hitPort.length){
+  h+=`<div class="box">`;
+  for(const x of hitPort) h+=`<div><small>in:</small> <code>${E(x.inp)}</code><br><small>npm:</small> <code>${E(x.asli)}</code><br><small>port:</small> <code class="bad">${E(x.port)}</code></div><hr>`;
+  h+=`</div>`;
+}
+
+h+=`<h3>Orakel 2 — keluaran BUGGY vs FIXED berbeda (efek murni loop)</h3>`;
+h+=`<div class="box">temuan: <b class="${hitBeda.length?'bad':'ok'}">${hitBeda.length}</b></div>`;
+for(const x of hitBeda.slice(0,6)){
+  h+=`<div class="box"><small>in:</small> <code>${E(x.inp)}</code><br><small>BUGGY:</small> <code class="bad">${E(x.bug)}</code><br><small>FIXED:</small> <code class="ok">${E(x.fix)}</code></div>`;
+}
+
+h+=`<h3>Orakel 3 — FIXED menolak (unstable) tetapi BUGGY diam-diam menerima</h3>`;
+h+=`<div class="box">temuan: <b class="${hitInstabil.length?'warn':'ok'}">${hitInstabil.length}</b>${hitInstabil.length?' — divergensi alur kendali: fail-closed vs fail-open':''}</div>`;
+for(const x of hitInstabil.slice(0,5)){
+  h+=`<div class="box"><small>in:</small> <code>${E(x.inp)}</code><br><small>minimal:</small> <code class="warn">${E(x.min)}</code><br><small>keluaran BUGGY:</small> <code>${E(x.bug)}</code></div>`;
+}
+
+h+=`<h3>Orakel 4 — keluaran versi RILIS berbahaya saat diparse ulang (XSS nyata)</h3>`;
+h+=`<div class="box">temuan: <b class="${hitBahaya.length?'bad':'ok'}">${hitBahaya.length}</b></div>`;
+for(const x of hitBahaya.slice(0,6)){
+  h+=`<div class="box"><small>in:</small> <code>${E(x.inp)}</code><br><small>out:</small> <code class="bad">${E(x.out)}</code></div>`;
+}
+
+const adaDampak = hitBeda.length>0 || hitBahaya.length>0;
+h+= adaDampak
+ ? `<div class="v hit">FUZZER MENEMUKAN DAMPAK — orakel keluaran terpicu. F-01 lebih dari sekadar regresi defense-in-depth.</div>`
+ : `<div class="v clean">TIDAK ADA DAMPAK KELUARAN pada ${N} kasus acak. Loop cacat dan loop benar menghasilkan keluaran yang SAMA setiap kali, dan tidak satu pun keluaran rilis berbahaya saat diparse ulang. Yang tersisa hanyalah divergensi alur kendali (orakel 3): garda fail-closed berperilaku fail-open. Ini menguatkan penilaian "bukan XSS" jauh lebih kuat daripada vektor buatan tangan.</div>`;
+
+document.getElementById('out').innerHTML=h;
+window.__FUZZ__={N,BENIH,cocokPort,bedaPort,
+  beda:hitBeda.length,instabil:hitInstabil.length,bahaya:hitBahaya.length,
+  contohInstabil:hitInstabil.map(x=>x.min).slice(0,5)};
+</script>
+</body></html>

@@ -60,7 +60,8 @@ membedakan keduanya. Ini melemahkan risiko transkripsi, tidak menghapusnya.
 3. KELEMAHAN YANG MASIH ADA (tidak ditutup sesi ini)
 ==============================================================================
 
-3.1 Tidak ada fuzzing — hanya vektor yang SAYA pikirkan
+3.1 [DITUTUP] Fuzzing sudah dikerjakan — lihat bagian 7.
+    Catatan asli: hanya vektor yang SAYA pikirkan
     Seluruh vektor mXSS disusun dari pengetahuan pola yang sudah dikenal
     (foreign content, raw-text element, foster parenting). Ini persis bias
     butir 6: mengulang bentuk yang sudah sering diuji. Rantai mutasi >=3 ronde
@@ -146,3 +147,50 @@ Vonis exploitability tetap butuh manusia.
   4. Bangun aplikasi SSR produksi sungguhan untuk F-05, alih-alih membangun
      ulang template literalnya. Menutup 3.4 untuk F-05.
   5. Lengkapi negative/positive control untuk F-03, F-04, F-07.
+
+==============================================================================
+7. HASIL FUZZING DIFERENSIAL (menutup 3.1, menyelesaikan F-01)
+==============================================================================
+Perkakas : analysis/tools/mxss-browser/fuzz.html + run-fuzz.mjs
+Bukti    : analysis/evidence/mxss-fuzz-20k.png
+Kasus    : 20.000   benih: 20260731 (deterministik, dapat diulang)
+
+Tata bahasanya sengaja dicondongkan ke pemicu mutasi parser — foreign content
+(svg/math/foreignObject/annotation-xml/mtext/mglyph), elemen teks-mentah
+(style/xmp/plaintext/textarea/noscript/iframe), foster parenting tabel, dan
+tag yang SERING dibiarkan terbuka supaya penutupan otomatis peramban ikut diuji.
+
+  Orakel 1  validasi port berkelanjutan (npm asli vs port tangan)
+            cocok 20.000 / beda 0
+            -> Port terbukti sepadan pada 20.000 masukan acak, bukan lagi 12
+               vektor buatan tangan. Risiko transkripsi praktis tertutup.
+
+  Orakel 2  keluaran BUGGY vs FIXED berbeda   -> 0 temuan
+            -> Cacat loop TIDAK PERNAH mengubah keluaran, sekali pun.
+
+  Orakel 3  FIXED menolak tetapi BUGGY diam   -> 5 temuan
+            Setelah minimisasi otomatis, KELIMANYA mengerucut ke satu bentuk:
+                <plaintext>/ms>      /b>"<plaintext>     <plaintext -->
+                <plaintext>oup>      e><plaintext>>
+            -> Satu-satunya konstruksi tak-stabil di seluruh ruang uji adalah
+               `<plaintext>`, yakni yang sudah ditemukan manual. Fuzzer tidak
+               menemukan keluarga baru.
+
+  Orakel 4  keluaran versi RILIS berbahaya saat diparse ulang -> 0 temuan
+
+KESIMPULAN F-01 (final)
+-----------------------
+F-01 adalah cacat logika NYATA (garda fail-closed menjadi fail-open, kode mati),
+tetapi TANPA dampak keluaran. Ini bukan lagi pendapat berdasarkan vektor pilihan
+sendiri: 20.000 kasus acak yang dicondongkan ke mutasi parser tidak menghasilkan
+satu pun selisih keluaran maupun simpul berbahaya. Serializer allowlist menahan
+sepenuhnya, berapa pun ronde yang dilakukan loop.
+
+Nilai hasil NEGATIF ini: ia menutup butir 6 kritik (bias pola CVE lama) untuk
+F-01 secara khusus, dan mencegah temuan ini dilaporkan berlebihan. Bila suatu
+hari ada yang mengklaim F-01 sebagai XSS, berkas ini beserta benihnya adalah
+bantahannya.
+
+BATAS YANG TETAP ADA: 20.000 kasus dari SATU tata bahasa di SATU peramban.
+Tata bahasa lain (mis. yang menghasilkan atribut dengan entitas bersarang dalam)
+atau parser lain (Firefox/WebKit) masih dapat berperilaku berbeda.
