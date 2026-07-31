@@ -364,6 +364,64 @@ F-05  Validator APP_ID hanya ada di ngDevMode, sedangkan nilainya
   terhadap `<` di konteks raw-text yang sama.
 
 ==============================================================================
+F-06  Gate allowlist i18n dapat ditembus lewat rantai prototipe
+      (akses bracket, bukan hasOwnProperty)
+      BERKAS  : packages/core/src/render3/i18n/i18n_parse.ts:841
+      SIFAT   : gate allowlist tidak sepenuhnya menutup; inkonsisten dengan
+                baris 824 pada objek yang SAMA, berjarak 17 baris
+==============================================================================
+
+  KONTEKS
+  -------
+  i18n punya implementasi sanitasi HTML KEDUA yang terpisah dari
+  `html_sanitizer.ts`: `parseIcuCase` (i18n_parse.ts:741) memarse isi pesan ICU
+  memakai inert body, lalu `walkIcuTree` (:789) menyaringnya memakai
+  `VALID_ELEMENTS`/`VALID_ATTRS` yang diimpor dari html_sanitizer.
+
+  DUA GATE, DUA PERLAKUAN BERBEDA
+  -------------------------------
+      :824   if (VALID_ATTRS.hasOwnProperty(lowerAttrName)) {     // cabang binding — AMAN
+      :841   } else if (VALID_ATTRS[lowerAttrName]) {             // cabang statis  — BOCOR
+
+  `VALID_ATTRS` dibangun `tagSet`/`merge` (html_sanitizer.ts:18-32) memakai
+  objek literal `{}`, BUKAN `Object.create(null)`. Rantai prototipe karena itu
+  hidup, sehingga akses bracket mengembalikan nilai truthy untuk properti
+  `Object.prototype`.
+
+  BUKTI (analysis/tools/proto-bypass.mjs)
+  ---------------------------------------
+  Sepuluh nama menembus gate baris 841 sementara baris 824 menolaknya:
+      constructor, toString, valueOf, hasOwnProperty, isPrototypeOf,
+      propertyIsEnumerable, toLocaleString, __proto__,
+      __defineGetter__, __lookupGetter__
+
+  Untuk nama-nama itu `i18nResolveSanitizer` mengembalikan NONE (tidak ada di
+  security schema), sehingga alur jatuh ke:
+      addCreateAttribute(create, newIndex, attr.name, val);   // nilai MENTAH
+
+  PENILAIAN JUJUR — mengapa dampaknya kecil
+  -----------------------------------------
+  Saya uji secara eksplisit apakah ada nama BERBAHAYA di rantai prototipe:
+      onerror, onload, href, src, srcdoc, formaction, action, data, style
+      -> tidak satu pun ada di Object.prototype
+  Jadi yang lolos hanyalah nama atribut inert. `setAttribute('constructor', x)`
+  tidak mengeksekusi apa pun. Ditambah lagi, pesan terjemahan pada mayoritas
+  aplikasi adalah aset BUILD-TIME (berkas .xlf) yang tepercaya, bukan masukan
+  pengguna runtime.
+
+  Jadi ini BUKAN kerentanan. Yang membuatnya tetap layak dicatat: sebuah gate
+  allowlist keamanan yang tidak menutup rapat, pada berkas yang sama dan objek
+  yang sama dengan gate yang menutup rapat 17 baris di atasnya. Cukup ubah
+  `VALID_ATTRS[lowerAttrName]` menjadi `VALID_ATTRS.hasOwnProperty(lowerAttrName)`
+  — atau bangun set-set itu dengan `Object.create(null)` sehingga SELURUH pola
+  akses bracket di basis kode ini menjadi aman sekaligus.
+
+  CATATAN: pola akses bracket serupa ada di html_sanitizer.ts:199
+  (`if (URI_ATTRS[lower])`), tetapi di sana AMAN karena sudah dijaga lebih dulu
+  oleh `VALID_ATTRS.hasOwnProperty(lower)` pada baris 193, dan tidak ada nama
+  `Object.prototype` yang menjadi anggota sah `VALID_ATTRS`.
+
+==============================================================================
 RINGKASAN
 ==============================================================================
 
@@ -381,13 +439,18 @@ RINGKASAN
                                         di SSR produksi          tak-tepercaya
                                                                  (SSR multi-tenant)
 
+  F-06    i18n_parse.ts:841             gate allowlist bocor     tidak (nama yang
+                                        lewat rantai prototipe   lolos semuanya
+                                                                 inert)
+
   Yang layak dilaporkan ke tim Angular: F-01 dan F-05 (lewat jalur keamanan)
-  dan F-02 (lewat isu/PR biasa — murni pemeliharaan). F-03 dan F-04 bersifat
-  kerapian kode.
+  dan F-02 (lewat isu/PR biasa — murni pemeliharaan). F-03, F-04 dan F-06
+  bersifat kerapian/pengerasan kode — F-06 punya perbaikan satu baris yang
+  sekaligus menutup seluruh kelas (bangun set dengan `Object.create(null)`).
 
   AREA YANG SUDAH DIPERIKSA DAN TERNYATA BENAR (perluasan cakupan)
   ----------------------------------------------------------------
-  Setelah cakupan diperlebar melampaui html_sanitizer.ts, empat permukaan
+  Setelah cakupan diperlebar melampaui html_sanitizer.ts, sembilan permukaan
   keamanan lain diperiksa dan TIDAK ditemukan cacat:
     - TransferState.toJson()      escape `<` dan `/` dengan benar; `<script>`
                                   raw-text tidak bisa ditembus
@@ -399,6 +462,21 @@ RINGKASAN
                                   memicu pembacaan tag asli dari DOM
     - SVG_ANIMATION_SENSITIVE_*   entri yang hilang jatuh ke throw -> LEBIH
                                   ketat, bukan lebih lemah
+    - Router (RouterLink)         selector '[routerLink]' generik -> konteks
+                                  komposit -> ɵɵsanitizeUrlOrResourceUrl yang
+                                  meresolusi tag saat runtime; pada <a> menjadi
+                                  ɵɵsanitizeUrl sehingga `javascript:` diblokir
+    - @angular/elements           attributeChangedCallback memakai akses bracket
+                                  (`attributeToPropertyInputs[attrName]!`) TETAPI
+                                  ter-gate: observedAttributes = Object.keys(...)
+                                  hanya memuat properti own, jadi peramban tidak
+                                  pernah memanggilnya dengan nama prototipe
+    - Hidrasi (ngh)               nilai atribut ngh hanya di-split '|' lalu
+                                  dipakai sebagai indeks ke TransferState; tidak
+                                  ada sink HTML/eval/querySelector
+    - i18n: elemen tak valid      DIBUANG total beserta seluruh anaknya (rekursi
+                                  berada di dalam if-block) -> lebih ketat
+                                  daripada html_sanitizer yang mempertahankan isi
 
   Catatan kejujuran: dari seluruh pemindaian yang dilakukan pada fase-fase
   sebelumnya (~360 kandidat), hanya F-01 yang merupakan cacat logika sejati
