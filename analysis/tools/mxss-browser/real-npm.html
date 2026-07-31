@@ -1,0 +1,82 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Verifikasi independen: kode npm asli vs port tangan</title>
+<style>
+ body{font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;margin:0;padding:16px;background:#0b0e14;color:#c9d1d9}
+ h1{font-size:16px;margin:0 0 4px}
+ table{border-collapse:collapse;width:100%;margin:8px 0}
+ th,td{border:1px solid #30363d;padding:4px 8px;text-align:left;vertical-align:top}
+ th{background:#161b22;color:#e6edf3}
+ .ok{color:#3fb950}.bad{color:#f85149}
+ code{color:#79c0ff;word-break:break-all}
+ .v{font-size:14px;font-weight:700;padding:10px 12px;border-radius:6px;margin:10px 0}
+ .v.ok{background:#12261a;border:1px solid #238636;color:#3fb950}
+ .v.bad{background:#26120f;border:1px solid #da3633;color:#f85149}
+</style>
+<script type="importmap">
+{"imports":{
+ "@angular/core":"/npm-validate/node_modules/@angular/core/fesm2022/core.mjs",
+ "@angular/core/primitives/signals":"/npm-validate/node_modules/@angular/core/fesm2022/primitives-signals.mjs",
+ "@angular/core/primitives/di":"/npm-validate/node_modules/@angular/core/fesm2022/primitives-di.mjs",
+ "@angular/core/primitives/event-dispatch":"/npm-validate/node_modules/@angular/core/fesm2022/primitives-event-dispatch.mjs",
+ "tslib":"/npm-validate/node_modules/tslib/tslib.es6.mjs",
+ "rxjs":"/npm-validate/node_modules/rxjs/dist/esm/index.js",
+ "rxjs/operators":"/npm-validate/node_modules/rxjs/dist/esm/operators/index.js"
+}}
+</script>
+</head>
+<body>
+<h1>Verifikasi independen — <code>ɵ_sanitizeHtml</code> dari @angular/core@22.1.0 (npm) vs port tangan</h1>
+<p>Menjawab kelemahan: bukti F-01 sebelumnya memakai <b>port tangan</b>. Bila transkripsi itu meleset, seluruh buktinya batal. Di sini fungsi <b>yang benar-benar dikirim npm</b> dipanggil langsung dan hasilnya dibandingkan.</p>
+<div id="out">memuat modul npm…</div>
+
+<!-- port tangan (BUGGY/FIXED) -->
+<script src="sanitizer.js"></script>
+
+<script type="module">
+import {ɵ_sanitizeHtml as realSanitizeHtml} from '@angular/core';
+
+const E=(s)=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const out=document.getElementById('out');
+
+const vektor=[
+  '<p>hello</p>',
+  '<plaintext><img src=x onerror=alert(1)>',
+  '<math><mtext><table><mglyph><style><img src=x onerror=alert(1)>',
+  '<ul><li><table><li>',
+  '<svg><style><img src=x onerror=alert(1)></style></svg>',
+  '<noscript><p title="</noscript><img src=x onerror=alert(1)>">',
+  '<table><td><svg><style><img src=x onerror=alert(1)></style>',
+  '<form><math><mtext></form><mglyph><style><img src=x onerror=alert(1)>',
+  '<a href="&#x3000;javascript:alert(1)">x</a>',
+  '<xmp><img src=x onerror=alert(1)>',
+  '<div><svg><p><style><img src=x onerror=alert(1)>',
+  '<math><annotation-xml encoding="text/html"><style><img src=x onerror=alert(1)></style></annotation-xml></math>',
+];
+
+let rows='', cocok=0, beda=0, gagal=0;
+for(const v of vektor){
+  let asli, port, errA='', errP='';
+  try{ asli=String(realSanitizeHtml(document, v)); }catch(e){ errA='THREW: '+e.message; }
+  try{ port=window.sanitizeHtml_BUGGY(v).out; }catch(e){ errP='THREW: '+e.message; }
+  const a=errA||asli, p=errP||port;
+  const sama=a===p;
+  if(errA||errP) gagal++; else if(sama) cocok++; else beda++;
+  rows+=`<tr>
+    <td><code>${E(v)}</code></td>
+    <td><code>${E(a)}</code></td>
+    <td><code>${E(p)}</code></td>
+    <td class="${sama?'ok':'bad'}">${sama?'SAMA':'BEDA'}</td></tr>`;
+}
+
+let html=`<div class="box">Angular npm: <b>@angular/core@22.1.0</b> — fungsi <code>ɵ_sanitizeHtml</code> diimpor langsung dari bundel FESM2022 yang dipasang npm.</div>`;
+html+=`<table><thead><tr><th>masukan</th><th>keluaran KODE NPM ASLI</th><th>keluaran PORT TANGAN (BUGGY)</th><th>?</th></tr></thead><tbody>${rows}</tbody></table>`;
+
+if(beda===0 && gagal===0){
+  html+=`<div class="v ok">PORT TERVERIFIKASI — ${cocok}/${vektor.length} keluaran identik dengan kode npm rilis. Port tangan yang dipakai sebagai bukti F-01 berperilaku sama persis dengan yang dikirim ke pengguna, jadi kesimpulan F-01 tidak bergantung pada ketepatan transkripsi saya.</div>`;
+} else {
+  html+=`<div class="v bad">PORT TIDAK SEPADAN — ${beda} berbeda, ${gagal} gagal. Bukti F-01 yang bersandar pada port tangan HARUS dianggap batal sampai selisihnya dijelaskan.</div>`;
+}
+out.innerHTML=html;
+window.__REAL__={cocok,beda,gagal,total:vektor.length};
+</script>
+</body></html>
