@@ -1,0 +1,7 @@
+# Verifikasi reproduksi laporan F-09
+# app.html + poc.mjs diekstrak VERBATIM dari analysis/reports/F-09-xsrf-cookie-dos.md
+# ke direktori bersih, lalu dijalankan. Penyesuaian tunggal: executablePath Chromium.
+# Tanpa mengedit /etc/hosts (memakai --host-resolver-rules).
+
+1. before attack        : {"post":"SUCCESS","cookie":""}
+2. after cookie planted : {"post":"FAILED","error":"URI malformed","cookie":"XSRF-TOKEN=%"}

@@ -1,0 +1,36 @@
+<!doctype html><meta charset="utf-8"><title>victim app</title>
+<script type="importmap">
+{"imports":{
+ "@angular/compiler":"/node_modules/@angular/compiler/fesm2022/compiler.mjs",
+ "@angular/common/http":"/node_modules/@angular/common/fesm2022/http.mjs",
+ "@angular/common":"/node_modules/@angular/common/fesm2022/common.mjs",
+ "@angular/core":"/node_modules/@angular/core/fesm2022/core.mjs",
+ "@angular/core/primitives/signals":"/node_modules/@angular/core/fesm2022/primitives-signals.mjs",
+ "@angular/core/primitives/di":"/node_modules/@angular/core/fesm2022/primitives-di.mjs",
+ "@angular/core/primitives/event-dispatch":"/node_modules/@angular/core/fesm2022/primitives-event-dispatch.mjs",
+ "@angular/platform-browser":"/node_modules/@angular/platform-browser/fesm2022/platform-browser.mjs",
+ "tslib":"/node_modules/tslib/tslib.es6.mjs",
+ "rxjs":"/node_modules/rxjs/dist/esm/index.js",
+ "rxjs/operators":"/node_modules/rxjs/dist/esm/operators/index.js"}}
+</script>
+<pre id="o">booting…</pre>
+<script type="module">
+import '@angular/compiler';
+import {Component} from '@angular/core';
+import {bootstrapApplication} from '@angular/platform-browser';
+import {provideHttpClient, HttpClient} from '@angular/common/http';
+const App = Component({selector:'app-root', template:'x', standalone:true})(class{});
+document.body.appendChild(document.createElement('app-root'));
+const app = await bootstrapApplication(App, {providers:[provideHttpClient()]});
+const http = app.injector.get(HttpClient);
+let result;
+try {
+  await new Promise((res,rej)=>http.post('/echo',{a:1}).subscribe({next:res,error:rej}));
+  result = {post:'SUCCESS'};
+} catch (e) {
+  result = {post:'FAILED', error:String((e&&e.message)||e)};
+}
+result.cookie = document.cookie;
+document.getElementById('o').textContent = JSON.stringify(result, null, 2);
+window.__R__ = result;
+</script>
