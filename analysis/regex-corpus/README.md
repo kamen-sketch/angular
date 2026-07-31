@@ -127,6 +127,77 @@ node analysis/regex-corpus/scan-guard-defects.mjs --all    # seluruh kecocokan
 node analysis/tools/scan-sinks.mjs
 ```
 
+## Kelas (b): logika keamanan yang diduplikasi
+
+Dua berkas tambahan menutup celah yang dulu dicatat sebagai "belum ada polanya".
+
+### `scan-duplicated-security.mjs` — logika yang dibangun ulang
+
+Aturannya satu kalimat: **bedakan impor PERILAKU dari impor DATA.**
+
+| Yang diimpor | Artinya | Nilai |
+|---|---|---|
+| `ɵɵsanitizeHtml`, `_sanitizeUrl` | mendelegasikan | aman — satu implementasi |
+| `VALID_ATTRS`, `getInertBodyHelper` | membangun ulang | konstanta allowlist & helper parsing hanya dibutuhkan bila penyaringan ditulis sendiri |
+
+Hasil: **2 berkas ditandai dari 3018.**
+
+```
+[skor 17] packages/core/src/render3/i18n/i18n_parse.ts
+  bahan mentah: checkSecurityContext, getTemplateContent, VALID_ATTRS,
+                VALID_ELEMENTS, getInertBodyHelper
+  bukti menyaring sendiri: gate hasOwnProperty; gate akses bracket;
+                penelusuran DOM sendiri; iterasi atribut sendiri
+
+[skor 2]  packages/compiler/src/schema/dom_element_schema_registry.ts
+  bahan mentah: checkSecurityContext
+  bukti menyaring sendiri: (tidak ada)      <- delegasi sah, peringkat rendah
+```
+
+`i18n_parse.ts` — sumber F-06 — berada di peringkat 1 dengan skor 17, jauh di
+atas satu-satunya kandidat lain. Temuan F-06 semula didapat lewat **membaca
+daftar impor secara manual**; berkas ini mengubahnya jadi pemeriksaan otomatis.
+
+### `scan-twin-drift.mjs` — data yang disalin lalu menyimpang
+
+Melengkapi G-07, yang hanya memeriksa **keberadaan** simbol, bukan **isi**
+salinan.
+
+Dua jebakan yang harus dilewati, keduanya tercatat di kode:
+
+1. **Pengelompokan berdasarkan nama dasar terlalu naif.** `schema.ts` muncul
+   5 kali dan `sanitization.ts` 4 kali di paket yang tidak berhubungan — semuanya
+   kebetulan senama. Diatasi dengan gerbang kemiripan.
+2. **Jaccard atas literal saja tidak cukup.** `trusted_types.ts` (core vs
+   upgrade) hanya mencetak **0.143** karena sidik jarinya kecil (5 vs 3 elemen),
+   sehingga beberapa perbedaan sah langsung menenggelamkan skornya — padahal
+   keduanya jelas kembar. Diatasi dengan sinyal kedua: **nama fungsi bersama**
+   (keduanya mendefinisikan `getPolicy`).
+
+Uji kembar akhirnya menggabungkan keduanya: kemiripan ≥ 0.3 **atau** ≥ 2 nama
+fungsi bersama. Kuat untuk berkas padat data *dan* padat logika.
+
+Hasil akhir — 2 kembar sungguhan, nol kebetulan:
+
+```
+dom_security_schema.ts  (compiler + core)
+  IDENTIK: 44 literal, 21 konstanta — sinkron.
+
+trusted_types.ts  (core + upgrade)
+  MENYIMPANG (kemiripan 0.14, fungsi bersama 2):
+    hanya di core   : "angular", konstanta HTML
+    hanya di upgrade: "angular#unsafe-upgrade"
+```
+
+Keduanya sudah ditriase:
+
+- **`dom_security_schema`** terkonfirmasi sinkron — lewat metode berbeda dari
+  pemeriksa lama (`../tools/check-security-schema-sync.mjs`), jadi ini
+  konfirmasi independen, bukan pengulangan.
+- **`trusted_types`** memang menyimpang, tetapi **disengaja**: salinan upgrade
+  memakai `createHTML: (s) => s` (identitas, tanpa sanitasi) dan nama policy-nya
+  sendiri mengumumkannya — `angular#unsafe-upgrade`. Bukan cacat.
+
 ## Yang masih kurang
 
 Korpus ini murni leksikal, jadi ada batas yang jelas:
@@ -140,9 +211,17 @@ Korpus ini murni leksikal, jadi ada batas yang jelas:
   (`../tools/mxss-browser/`).
 - **G-06 masih 35 kecocokan** — perlu penyempitan lanjutan, mungkin dengan
   menuntut nilai yang ditolak berasal dari input publik (`@Input`, parameter).
-- **Belum ada pola untuk dua kelas yang terbukti produktif secara manual**:
-  (a) dua salinan data yang harus identik tetapi menyimpang isinya — G-07 baru
-  memeriksa keberadaan simbol, belum membandingkan isi; (b) sanitizer/gate kedua
-  yang menduplikasi logika keamanan di tempat lain (seperti `walkIcuTree` yang
-  menduplikasi `SanitizingHtmlSerializer`) — ini yang menuntun ke F-06 dan
-  ditemukan lewat pembacaan impor, bukan regex.
+- ~~Belum ada pola untuk kelas (a) dan (b)~~ — **sudah ditutup** oleh
+  `scan-twin-drift.mjs` (kelas a: membandingkan ISI dua salinan, bukan sekadar
+  keberadaan simbol) dan `scan-duplicated-security.mjs` (kelas b: aturan impor
+  data vs impor perilaku). Keduanya bervalidasi-diri.
+- **Batas kelas (b) yang tersisa**: detektornya hanya mengenali rumah keamanan
+  yang sudah didaftarkan di `RUMAH_KEAMANAN`. Duplikasi logika di luar domain
+  keamanan (mis. dua parser URL, dua penyandi entitas) tidak akan tertangkap.
+  Generalisasinya menuntut ukuran "berkas B mengimpor primitif A lalu memakai
+  ulang pola pemakaian A" — itu analisis graf, bukan leksikal.
+- **`scan-twin-drift.mjs` hanya mengelompokkan berdasarkan NAMA DASAR.** Salinan
+  yang di-rename saat disalin (mis. `html_sanitizer.ts` -> `icu_sanitizer.ts`)
+  akan lolos. Menutupnya butuh perbandingan seluruh-pasangan berbasis sidik jari,
+  bukan pengelompokan nama — O(n²) tetapi masih layak untuk 3018 berkas bila
+  disaring dulu dengan MinHash.
