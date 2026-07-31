@@ -276,9 +276,20 @@ untuk dua baris lainnya.
 
 ---
 
-# F-13 — `ignoreVary: true` di-hardcode dan tidak dapat dimatikan
+# Catatan: F-13 dilaporkan TERPISAH
 
-Terkait erat, tetapi berdiri sendiri.
+`ignoreVary: true` yang di-hardcode kini menjadi laporan keamanan mandiri
+dengan PoC same-origin yang tidak bergantung sama sekali pada F-12:
+
+    analysis/reports/F-13-ngsw-ignorevary.md
+    analysis/reports/PENGIRIMAN-F13.md
+
+Alasan dipisah: dokumentasi Angular mengakui pencocokan glob bersifat parsial,
+sehingga F-12 lebih mungkin diperlakukan sebagai bug correctness. Menggabungkan
+keduanya berisiko membuat diskusi tersedot ke perdebatan glob matching dan
+menyeret turun F-13 yang jauh lebih kuat.
+
+Ringkasan F-13 untuk konteks:
 
 **`packages/service-worker/config/src/generator.ts:203-210`**
 

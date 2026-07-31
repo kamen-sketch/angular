@@ -1284,12 +1284,86 @@ F-13  ngsw meng-hardcode `ignoreVary: true` dan tidak mengeksposnya —
 
   Peramban akan menolak kecocokan itu. ngsw memaksanya cocok.
 
+  PoC MANDIRI, SAME-ORIGIN
+  ------------------------
+  F-13 TIDAK bergantung pada F-12. PoC-nya same-origin sepenuhnya, endpointnya
+  SENGAJA dicakup dataGroups, sehingga tidak ada ruang untuk mengatakan
+  "endpoint itu masuk cache karena pola lintas-origin yang keliru".
+    analysis/tools/ngsw/browser/poc-f13.mjs
+    analysis/tools/ngsw/browser/index-f13.html
+    analysis/evidence/F-13-ignorevary.png
+
+    Alice Authorization : Bearer ALICE
+    Bob   Authorization : Bearer BOB
+    URL                 : IDENTIK, http://localhost:PORT/api/profile
+    Header respons      : Vary: Authorization
+
+    A SEPERTI DIKIRIM (ignoreVary: true dari Generator)
+      permintaan sampai ke server                 1
+      cache.match(bobRequest)                     -> undefined
+      cache.match(bobRequest,{ignoreVary:true})   -> respons ALICE
+      Bob menerima nama+surel+role Alice
+    B DITAMBAL (ignoreVary: false)
+      permintaan sampai ke server                 2
+      Bob menerima datanya sendiri
+
+  PRASYARAT, DINYATAKAN APA ADANYA
+  --------------------------------
+  KOREKSI ATAS KLAIM SAYA SENDIRI: saya sempat menulis "F-13 mengangkat
+  severity terlepas dari kebutuhan peramban bersama". Itu terlalu jauh. F-13
+  memang menghapus prasyarat lintas-origin yang tidak disengaja, TETAPI
+  eksploitasinya tetap memerlukan DUA KONTEKS OTORISASI yang dapat dibedakan
+  meminta URL yang sama dalam masa hidup cache Service Worker.
+
+  Itu tidak harus dua orang berbagi komputer. Bentuk realistisnya:
+    - logout Alice lalu login Bob
+    - pergantian tenant atau organisasi
+    - account switcher bawaan produk SaaS
+    - admin melakukan impersonation lalu kembali ke akunnya
+    - token berubah setelah role atau identitas diganti
+    - satu pengguna dengan akun personal dan bisnis
+    - kiosk atau workstation bersama
+
+  ISTILAH YANG BENAR
+  ------------------
+  `Vary` BUKAN berarti "jangan cache". Artinya representasi ini dipilih
+  berdasarkan nilai header permintaan tersebut, sehingga cache HARUS
+  mempertimbangkan header itu saat mencari kecocokan. Default Cache API adalah
+  `ignoreVary: false`. Rumusan yang dipakai di laporan: server menyatakan
+  dengan benar bahwa representasi bervariasi menurut header Authorization;
+  pencocokan baku peramban karena itu menolak respons Alice untuk permintaan
+  Bob; Angular menimpa keputusan itu dengan ignoreVary: true.
+
+  SEVERITY
+  --------
+  Medium adalah klaim paling defensif: kerahasiaannya konkret, tetapi dibatasi
+  perlunya transisi identitas pada profil peramban yang sama. Bisa lebih tinggi
+  bila account/tenant switching adalah alur normal produk, respons memuat data
+  finansial/medis/token/PII sensitif, endpoint dipakai banyak tenant, penyerang
+  dapat mengarahkan korban berganti akun, atau cache bertahan sesudah logout
+  yang dianggap membersihkan sesi. Tidak diklaim tanpa bukti tambahan.
+
   USULAN
   ------
-  Ekspos `ignoreVary` pada `cacheQueryOptions` publik, dan pertimbangkan
-  default `false` untuk dataGroups — di mana respons per-pengguna adalah kasus
-  lazim — sambil mempertahankan `true` untuk assetGroups yang isinya di-hash
-  dan tidak bergantung header.
+  Minimal:
+      function buildCacheQueryOptions(
+        inOptions?: Pick<CacheQueryOptions, 'ignoreSearch' | 'ignoreVary'>,
+      ): CacheQueryOptions {
+        return {ignoreVary: false, ...inOptions};
+      }
+  Bila `true` perlu dipertahankan demi kompatibilitas aset statis, pisahkan
+  defaultnya: assetGroups boleh mempertahankan perilaku lama (isinya di-hash,
+  tidak bergantung header), dataGroups default `false`.
+
+  DILAPORKAN TERPISAH DARI F-12
+  -----------------------------
+  F-13 dikirim sebagai laporan keamanan MANDIRI, bukan subbagian F-12.
+  Dokumentasi Angular mengakui pencocokan glob bersifat parsial, sehingga F-12
+  lebih mungkin diperlakukan sebagai bug correctness; menggabungkannya berisiko
+  menyeret turun F-13 yang jauh lebih kuat. Di laporan F-13, F-12 hanya disebut
+  satu kalimat di bagian akhir.
+    Laporan  : analysis/reports/F-13-ngsw-ignorevary.md
+    Prosedur : analysis/reports/PENGIRIMAN-F13.md
 
   KENAPA BUKAN PERILAKU YANG DIRANCANG
   ------------------------------------
