@@ -446,6 +446,42 @@ export const STRUKTUR = [
   },
 ];
 
+// ============================================================================
+// 8. INKONSISTENSI-DIRI — kelas paling produktif sejauh ini
+//    Semua kelas di atas menebak apa yang SEHARUSNYA dilakukan kode. Kelas ini
+//    tidak menebak apa pun: ia mengadu kode dengan pernyataan penulisnya
+//    sendiri. Kalau sebuah berkas repot-repot mendefinisikan pembungkus aman,
+//    berkas itu sudah menyatakan primitifnya butuh dibungkus — dan setiap
+//    pemanggilan mentah yang tersisa di berkas yang sama adalah kontradiksi
+//    yang bisa dibuktikan, bukan selera.
+//    Hasil: G-22 menghasilkan F-11 dengan 1 temuan dari 2037 berkas (0 palsu).
+// ============================================================================
+export const INKONSISTENSI_DIRI = [
+  {
+    id: 'G-22-penjaga-menganggur',
+    hipotesis:
+      'Sebuah modul MENDEFINISIKAN pembungkus aman untuk primitif yang bisa ' +
+      'melempar (mis. `tryDecodeURIComponent` membungkus `decodeURIComponent` ' +
+      'dengan try/catch) TAPI masih memanggil primitif mentahnya di tempat lain ' +
+      'dalam modul yang sama.',
+    berkasPenuh: true,
+    prafilter: /try\s*\{/,
+    // Dipakai berpasangan: `re` menemukan pembungkusnya, `reMentah` menemukan
+    // pemanggilan mentah; temuan = keduanya ada di berkas yang sama dan
+    // pemanggilan mentah berada DI LUAR badan pembungkus.
+    re: /function\s+(\w+)\s*\([^)]*\)[^{]*\{\s*try\s*\{[^}]*(decodeURIComponent|decodeURI\s*\(|JSON\s*\.\s*parse)/,
+    reMentah: /(?<![.\w])(?:decodeURIComponent|decodeURI)\s*\(|(?<!\w)JSON\s*\.\s*parse\s*\(/,
+    implementasi: 'analysis/regex-corpus/scan-unused-guard.mjs',
+    temuan: 'F-11 (common/upgrade/src/params.ts:150,167)',
+    triase:
+      'Apakah pemanggilan mentah itu memproses masukan runtime (location, cookie, ' +
+      'header, respons) atau nilai build-time? Hanya yang pertama yang berdampak. ' +
+      'Lalu telusuri ke atas: adakah try/catch di rantai pemanggilnya? Bila tidak, ' +
+      'ukur apa yang runtuh — satu fitur, atau seluruh konstruktor.',
+  },
+];
+
 export const SEMUA = {
   CATATAN_RISET, SINKS, NATIVE, GUARDS, GUARDS_LANJUTAN, DESYNC, RAPUH, STRUKTUR,
+  INKONSISTENSI_DIRI,
 };

@@ -913,6 +913,113 @@ F-10  HttpParams({fromString}) melempar URIError pada persen-encoding cacat —
   (idem decodeKey). Ini menyelaraskan HttpParams dengan perilaku platform dan
   menutup F-10 tanpa mengubah kasus yang sah.
 
+
+==============================================================================
+F-11  AngularJSUrlCodec: pembungkus aman ADA di berkas yang sama, tapi
+      decodePath()/decodeHash() tetap memanggil decodeURIComponent MENTAH
+      — $locationShim gagal konstruksi pada URL dengan persen cacat
+==============================================================================
+
+  BERKAS
+  ------
+  packages/common/upgrade/src/params.ts
+      :247-254  tryDecodeURIComponent()  <- pembungkus aman, try/catch
+      :150      decodePath()   -> decodeURIComponent MENTAH
+      :167      decodeHash()   -> decodeURIComponent MENTAH
+      :271-273  parseKeyValue() -> MEMAKAI tryDecodeURIComponent
+  packages/common/upgrade/src/location_shim.ts
+      :369      this.$$path   = urlCodec.decodePath(path)     <- tanpa penjaga
+      :370      this.$$search = urlCodec.decodeSearch(...)    <- ADA penjaga
+      :371      this.$$hash   = urlCodec.decodeHash(...)      <- tanpa penjaga
+      :81       konstruktor memanggil $$parseLinkUrl(initialUrl, initialUrl)
+
+  KENAPA INI CACAT, BUKAN SELERA
+  ------------------------------
+  Kelas cacatnya adalah "penjaga menganggur": penulis berkas ini SUDAH
+  menyatakan — lewat kodenya sendiri — bahwa decodeURIComponent perlu
+  dibungkus, dan pembungkus itu memang dipakai untuk query string. Tiga
+  baris berurutan di parseAppUrl (369/370/371) menguraikan path, search dan
+  hash dari URL yang sama; hanya satu dari ketiganya yang dijaga. Tidak ada
+  komentar, tanda, atau uji yang menyatakan bahwa path dan hash sengaja
+  dibiarkan melempar. Ini inkonsistensi yang bisa dibuktikan, bukan pilihan
+  desain yang dinyatakan.
+
+  RANTAI VALIDASI
+  ---------------
+  1. HIPOTESIS   Escape persen yang tidak sah pada path/hash membuat
+                 decodeURIComponent melempar URIError yang tidak tertangkap.
+  2. CODE TRACE  konstruktor $locationShim -> $$parseLinkUrl -> $$parse ->
+                 parseAppUrl -> decodePath/decodeHash. Tidak ada try/catch di
+                 sepanjang rantai (satu-satunya try/catch di location_shim.ts
+                 ada di $$notifyChangeListeners:407 dan
+                 setBrowserUrlWithFallback:467 — keduanya di HILIR).
+  3. KETERJANGKAUAN  Parser URL WHATWG MEMPERTAHANKAN "%zz" apa adanya:
+                 new URL('https://app.test/a%zz').pathname === '/a%zz'.
+                 Diverifikasi lagi di Chromium: location.pathname === '/a%zz'.
+  4. KONTROL POSITIF  decodeSearch('a=%zz') dan decodeSearch('%zz=1') SELAMAT
+                 pada harness yang sama. Membuktikan harness memanggil kode
+                 nyata dan pembeda satu-satunya adalah ada/tidaknya try/catch.
+  5. KONTROL NEGATIF  decodePath('/a%20b'), '/a%2Fb', '/<script>', '/ '
+                 semuanya OK. Pemicunya spesifik pada escape persen cacat,
+                 bukan "masukan aneh apa pun melempar".
+  6. RUNTIME PROOF  Terhadap ARTEFAK npm ASLI @angular/common@22.1.0
+                 (fesm2022/upgrade.mjs), bukan port tangan:
+                   analysis/tools/upgrade-decode/probe.mjs      6/6 melempar
+                   analysis/tools/upgrade-decode/shim-e2e.mjs   3/6 URL bikin
+                       konstruktor $locationShim GAGAL
+                   analysis/tools/upgrade-decode/browser-proof.mjs
+                       Chromium, masukan dari navigasi sungguhan: 2/3 melempar
+                   analysis/evidence/F-11-chromium.png
+  7. REPRODUKSI INDEPENDEN  Ketiga harness memuat bundel npm publik; tidak ada
+                 kode Angular yang ditranskripsi ulang. Pihak lain cukup
+                 `npm i @angular/common@22.1.0` lalu menjalankan probe.mjs.
+
+  HASIL shim-e2e (dependensi identik, HANYA URL awal yang berubah)
+  ----------------------------------------------------------------
+    bootstrap OK      https://app.test/dashboard          path="/dashboard"
+    bootstrap OK      https://app.test/a%20b              path="/a b"
+    bootstrap OK      https://app.test/dashboard?q=%zz    path="/dashboard"
+    BOOTSTRAP GAGAL   https://app.test/dashboard#%zz      URIError: URI malformed
+    BOOTSTRAP GAGAL   https://app.test/a%zz               URIError: URI malformed
+    BOOTSTRAP GAGAL   https://app.test/a%                 URIError: URI malformed
+
+  DAMPAK — dengan disiplin yang sama seperti koreksi F-10
+  -------------------------------------------------------
+  Siapa yang rugi?   Hanya pengguna yang membuka tautan itu.
+  Berapa lama?       Selama ia berada di URL tersebut.
+  Pulih sendiri?     Ya, begitu bernavigasi ke URL yang bersih.
+  Layanannya down?   TIDAK. Ini murni sisi klien; server tidak terpengaruh.
+
+  Jadi F-11 BUKAN kerentanan DoS layanan. Ia adalah cacat kebenaran/ketahanan
+  dengan tingkat keparahan setara F-10 — dengan satu perbedaan yang membuatnya
+  lebih buruk dari F-10 dalam hal luasnya kegagalan: yang gagal bukan satu
+  pemanggilan API, melainkan KONSTRUKTOR $locationShim, sehingga seluruh
+  aplikasi hibrida (ngUpgrade) gagal bootstrap, bukan hanya satu fitur.
+  Tautan penyerang -> halaman korban kosong. Tidak ada kebocoran data, tidak
+  ada eksekusi kode, tidak ada bypass otorisasi.
+
+  Kenapa tetap layak dilaporkan: perbaikannya satu baris, tidak ada trade-off,
+  dan konsistensi dengan decodeSearch justru mengurangi kejutan.
+
+  PERBAIKAN
+  ---------
+  Pakai pembungkus yang sudah ada di berkas yang sama:
+      segments[i] = tryDecodeURIComponent(segments[i]) ?? segments[i];
+      ...
+      hash = tryDecodeURIComponent(hash) ?? hash;
+  Ini menyelaraskan decodePath/decodeHash dengan decodeSearch dan mengembalikan
+  segmen mentah bila tidak dapat diuraikan — persis yang dilakukan platform
+  (URLSearchParams) dan persis yang sudah dilakukan parseKeyValue.
+
+  BAGAIMANA CACAT INI DITEMUKAN
+  -----------------------------
+  Pemindai G-22 "penjaga menganggur" (analysis/regex-corpus/scan-unused-guard.mjs):
+  cari modul yang MENDEFINISIKAN pembungkus aman untuk sebuah primitif lalu
+  tetap memanggil primitif mentahnya di tempat lain. Di seluruh 2037 berkas
+  packages/, hanya SATU modul yang cocok — berkas ini. Nilai kelas ini: ia
+  tidak menebak niat penulis, ia mengadu kode dengan pernyataan penulis
+  sendiri.
+
 ==============================================================================
 RINGKASAN
 ==============================================================================
@@ -947,6 +1054,13 @@ RINGKASAN
           + pencocokan rute             dinilai server BUKAN      sisi-server;
                                         /admin, dirender Angular  komposisi belum
                                         SEBAGAI /admin            diuji ujung-ke-ujung
+  F-11    common/upgrade/src/           pembungkus aman ADA di   KECIL: sisi klien,
+          params.ts:150,167             berkas yang sama tapi     1 pengguna, pulih
+          + location_shim.ts:369,371    decodePath/decodeHash     sendiri. TAPI yang
+                                        tetap mentah -> $location  gagal adalah
+                                        shim GAGAL KONSTRUKSI      KONSTRUKTOR, jadi
+                                        pada `%` cacat di          seluruh app hibrida
+                                        path/hash                  gagal bootstrap
   F-07    resolve_i18n_attr_            salinan pemetaan         tidak (LATEN:
           sanitizers.ts:49-70           sanitizer tak menangani  irisan i18n x
                                         konteks array; salinan   konteks-array
