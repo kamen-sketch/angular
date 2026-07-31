@@ -1,0 +1,256 @@
+CACAT FRAMEWORK YANG SEBENARNYA (bukan intended behavior)
+Lanjutan dari : analysis/SINK-REACHABILITY.txt, analysis/NPM-VALIDATION.txt
+Perbedaan     : berkas-berkas sebelumnya menilai "apakah sink terjangkau".
+                Berkas ini menanyakan hal lain: "di mana Angular MELANGGAR
+                kontraknya sendiri?" — yaitu tempat perilaku kode berbeda dari
+                yang jelas-jelas diniatkan penulisnya.
+==============================================================================
+
+KRITERIA YANG DIPAKAI
+---------------------
+Sesuatu disebut CACAT (bukan desain) bila ada bukti internal bahwa penulis
+kode berniat lain daripada yang terjadi. Bukti internal yang saya terima:
+  - jatah/anggaran yang tidak pernah bisa terpakai
+  - pesan galat yang tidak dapat dicapai
+  - komentar yang menjanjikan perilaku yang tidak diimplementasikan
+  - referensi ke simbol yang tidak ada
+  - dua jalur setara yang diperlakukan berbeda tanpa alasan
+
+Temuan "tidak disanitasi tapi memang dirancang begitu" (R-06 [style.x],
+R-07 ngSrc) TIDAK masuk daftar ini — sudah dikeluarkan sesuai arahan.
+
+==============================================================================
+F-01  Loop proteksi mXSS berhenti prematur, tidak pernah mencapai fixed point
+      BERKAS  : packages/core/src/sanitization/html_sanitizer.ts:314-326
+      SIFAT   : cacat logika (off-by-one pada pipelining)
+      DAMPAK  : melemahkan lapisan defense-in-depth; dua mekanisme jadi mati
+==============================================================================
+
+  KODE APA ADANYA
+  ---------------
+      let mXSSAttempts = 5;
+      let parsedHtml = unsafeHtml;
+
+      do {
+        if (mXSSAttempts === 0) {
+          throw new Error('Failed to sanitize html because the input is unstable');
+        }
+        mXSSAttempts--;
+
+        unsafeHtml = parsedHtml;
+        parsedHtml = inertBodyElement!.innerHTML;              // (A)
+        inertBodyElement = inertBodyHelper.getInertBodyElement(unsafeHtml);  // (B)
+      } while (unsafeHtml !== parsedHtml);
+
+  NIAT YANG DINYATAKAN (komentar baris 312-313)
+  ---------------------------------------------
+      "mXSS protection. Repeatedly parse the document to make sure it
+       stabilizes, so that a browser trying to auto-correct incorrect HTML
+       cannot cause formerly inert HTML to become dangerous."
+
+  APA YANG SEBENARNYA TERJADI
+  ---------------------------
+  Urutan (A) lalu (B) membuat `parsedHtml` selalu dibaca dari elemen yang
+  diparse dari `unsafeHtml` iterasi SEBELUMNYA, sedangkan `unsafeHtml` sudah
+  dimajukan ke nilai berikutnya. Tulis P = parse, S = serialize:
+
+      sebelum loop : inert = P(H0),  parsedHtml = H0
+      iterasi 1    : unsafeHtml = H0
+                     parsedHtml = S(inert) = S(P(H0)) = H1
+                     inert      = P(H0)                    <- diparse ulang dari H0
+                     uji: H0 != H1  -> lanjut
+      iterasi 2    : unsafeHtml = H1
+                     parsedHtml = S(inert) = S(P(H0)) = H1 <- SAMA dengan unsafeHtml
+                     inert      = P(H1)
+                     uji: H1 != H1  -> BERHENTI
+
+  Pada iterasi ke-2, `parsedHtml` dan `unsafeHtml` dijamin identik SECARA
+  KONSTRUKSI, karena keduanya sama-sama bernilai S(P(H0)). Kondisi keluar
+  karena itu selalu terpenuhi di iterasi ke-2, apa pun masukannya.
+
+  BUKTI EMPIRIS
+  -------------
+  Simulasi yang mereplikasi loop persis (scratchpad/mxss-loop-proof.mjs),
+  dijalankan dengan transform yang SENGAJA tidak pernah stabil (s => s + 'x'):
+
+      Jumlah iterasi loop Angular : 2
+      Sisa jatah mXSSAttempts     : 3  (mulai dari 5)
+      Keluar tanpa melempar error : ya
+        iter 1: unsafeHtml="a"  parsedHtml="ax" -> lanjut=true
+        iter 2: unsafeHtml="ax" parsedHtml="ax" -> lanjut=false
+
+  Dengan masukan yang baru stabil pada ronde ke-3 (H0->H1->H2->H2):
+
+      Jumlah iterasi loop Angular : 2
+      Serializer bekerja pada     : parse(H1)
+      Titik stabil sesungguhnya   : H2      <- tidak pernah dicapai
+
+  TIGA AKIBAT YANG BISA DIVERIFIKASI
+  ----------------------------------
+  1. Jatah `mXSSAttempts = 5` tidak pernah terpakai habis (selalu tersisa 3).
+  2. `throw new Error('...the input is unstable')` adalah KODE MATI —
+     tidak ada masukan apa pun yang dapat mencapainya.
+  3. Normalisasi berhenti setelah 2 parse, bukan pada titik stabil. Untuk
+     rantai mutasi yang butuh >=3 ronde, serializer bekerja pada dokumen yang
+     belum stabil.
+
+  MENGAPA INI CACAT, BUKAN DESAIN
+  -------------------------------
+  Ketiga elemen ini hanya masuk akal bila penulis mengira loop dapat berputar
+  lebih dari dua kali:
+    - anggaran 5 percobaan (untuk apa, bila maksimum 2?)
+    - pesan galat "input is unstable" (kapan bisa terjadi, bila selalu stabil?)
+    - komentar "repeatedly parse ... to make sure it stabilizes"
+  Jadi perilaku kode bertentangan dengan niat yang tertulis di kode itu sendiri.
+  Ini definisi cacat, bukan trade-off yang dipilih.
+
+  PERBAIKAN
+  ---------
+  Cukup MENUKAR dua pernyataan terakhir — parse dulu, baru baca hasilnya:
+
+        unsafeHtml = parsedHtml;
+        inertBodyElement = inertBodyHelper.getInertBodyElement(unsafeHtml);  // (B)
+        parsedHtml = inertBodyElement.innerHTML;                             // (A)
+
+  Diverifikasi pada simulasi yang sama (scratchpad/fix-check.mjs):
+      tak pernah stabil : MELEMPAR -> 'input is unstable'   (benar)
+      stabil ronde 3    : 3 iterasi, mencapai H2            (benar)
+      sudah stabil      : 1 iterasi                         (benar, tidak berubah)
+
+  DAMPAK KEAMANAN — PENILAIAN JUJUR
+  ---------------------------------
+  Ini BUKAN XSS siap pakai, dan saya tidak mengklaim demikian. Alasannya:
+  langkah terakhir `_sanitizeHtml` bukan meneruskan string mentah, melainkan
+  `SanitizingHtmlSerializer.sanitizeChildren()` yang MEMBANGUN ULANG keluaran
+  dari nol memakai allowlist elemen (`VALID_ELEMENTS`) dan atribut
+  (`VALID_ATTRS`), dengan semua nilai melewati `encodeEntities`. Allowlist itu
+  tetap utuh dan tetap menjadi benteng utama.
+
+  Yang rusak adalah LAPISAN KEDUA. Loop mXSS ada supaya HTML yang "diperbaiki
+  otomatis" peramban tidak berubah sifat setelah sanitasi. Lapisan itu kini
+  hanya bekerja untuk rantai mutasi 1 ronde, padahal dirancang untuk 5.
+  Untuk mengeksploitasi, penyerang butuh rantai mXSS >=3 ronde yang juga lolos
+  serializer allowlist — jauh lebih sukar, tetapi ruang yang seharusnya
+  tertutup kini terbuka.
+
+  CAKUPAN TES
+  -----------
+  Satu-satunya tes bernama mXSS (html_sanitizer_spec.ts:292) sebenarnya menguji
+  jalur `_sanitizeUrl`:
+      sanitizeHtml(doc, '<a href="&#x3000;javascript:alert(1)">CLICKME</a>')
+  Tes itu lolos tanpa menyentuh perilaku multi-ronde loop. Tidak ada satu pun
+  tes yang menegaskan berapa kali loop berputar atau bahwa galat "unstable"
+  dapat terjadi. Inilah sebabnya cacat ini tidak tertangkap.
+
+  CATATAN PELAPORAN
+  -----------------
+  Karena ini menyangkut komponen keamanan pada framework yang dipakai luas,
+  jalur yang tepat adalah proses keamanan Angular (security@angular.io /
+  https://angular.dev/best-practices/security), BUKAN isu publik. Saya tidak
+  menyusun rantai mXSS yang dapat dieksekusi; temuan ini berdiri sendiri
+  sebagai cacat logika yang dapat diverifikasi dari kode.
+
+==============================================================================
+F-02  Referensi menggantung `SECURITY_SENSITIVE_ELEMENTS` di KEDUA salinan schema
+      BERKAS  : packages/compiler/src/schema/dom_security_schema.ts:112
+                packages/core/src/sanitization/dom_security_schema.ts:112
+      SIFAT   : cacat dokumentasi / bahaya pemeliharaan
+==============================================================================
+
+  Kedua berkas memuat instruksi identik:
+
+      // Keep this in sync with SECURITY_SENSITIVE_ELEMENTS in
+      // packages/core/src/sanitization/sanitization.ts
+
+  Simbol `SECURITY_SENSITIVE_ELEMENTS` TIDAK ADA di seluruh repositori.
+  Pencarian menyeluruh hanya menemukan dua komentar ini sendiri.
+
+  Yang benar-benar ada di sanitization.ts:
+      :317  SECURITY_SENSITIVE_ATTRIBUTE_NAMES  = new Set(['href','xlink:href'])
+      :323  SVG_ANIMATION_SENSITIVE_STATIC_VALUES
+
+  MENGAPA INI PENTING, BUKAN SEKADAR SALAH KETIK
+  ----------------------------------------------
+  Berkas ini dibuka dengan enam baris blok "STOP — DO NOT EDIT THIS LIST
+  WITHOUT A SECURITY REVIEW". Dalam berkas berlabel demikian, instruksi
+  "keep in sync with X" adalah kontrol pemeliharaan. Bila X tidak dapat
+  ditemukan, peninjau berikutnya tidak punya cara mengetahui apa yang harus
+  disinkronkan — kontrolnya tidak bisa dijalankan. Dan karena instruksi ini
+  digandakan di dua berkas, keduanya sama-sama menyesatkan.
+
+  PERBAIKAN: ganti nama simbol menjadi yang benar
+  (`SECURITY_SENSITIVE_ATTRIBUTE_NAMES` dan `SVG_ANIMATION_SENSITIVE_STATIC_VALUES`).
+
+==============================================================================
+F-03  `srcset` diizinkan sanitizer HTML tetapi tidak diperlakukan sebagai URL
+      BERKAS  : packages/core/src/sanitization/html_sanitizer.ts:79-89
+      SIFAT   : inkonsistensi; dampak keamanan dapat diabaikan
+==============================================================================
+
+      URI_ATTRS  = 'background,cite,href,itemtype,longdesc,poster,src,xlink:href'
+      HTML_ATTRS = '...,sizes,span,srclang,srcset,start,...'
+
+  `src` ada di URI_ATTRS sehingga nilainya melewati `_sanitizeUrl`.
+  `srcset` ada di HTML_ATTRS saja, sehingga LOLOS tanpa sanitasi URL —
+  padahal isinya persis daftar URL, pada elemen yang sama.
+
+  DAMPAK: dapat diabaikan. `srcset` hanya dipakai memuat gambar; skema seperti
+  `javascript:` tidak dieksekusi di sana. Saya mencantumkannya bukan sebagai
+  kerentanan melainkan sebagai inkonsistensi nyata: dua atribut dengan isi
+  sejenis pada elemen sama diperlakukan berbeda tanpa alasan yang tertulis.
+
+  Berdekatan, TODO lama yang belum dikerjakan di baris 198:
+      // TODO(martinprobst): Special case image URIs for data:image/...
+  Ini sejalan dengan pengamatan pada berkas tes `url_sanitizer_spec.ts`, yang
+  hanya mendaftarkan `data:image/...`, `data:video/...`, `data:audio/...`
+  sebagai URL sah — padahal implementasinya meloloskan SEMUA `data:`,
+  termasuk `data:text/html`. Niat (tipe media aman saja) dan implementasi
+  (semua tipe) tidak sama. Peramban modern memblokir navigasi tingkat atas ke
+  `data:`, sehingga dampak praktisnya kecil.
+
+==============================================================================
+F-04  Pembacaan `firstChild` pertama melewati pemeriksaan DOM clobbering
+      BERKAS  : packages/core/src/sanitization/html_sanitizer.ts:133
+      SIFAT   : inkonsistensi defensif; tidak dapat dieksploitasi
+==============================================================================
+
+  Baris 133 (masuk ke traversal):
+      let current: Node = el.firstChild!;            // langsung, tanpa cek
+
+  Baris 148 (menuruni anak berikutnya):
+      current = getFirstChild(current)!;             // lewat cek clobbering
+
+  `getFirstChild` sengaja dibuat untuk memvalidasi bahwa `.firstChild` tidak
+  di-clobber (`isClobberedElement` memakai `compareDocumentPosition`). Semua
+  penurunan lain memakainya; hanya pembacaan pertama yang tidak.
+
+  TIDAK DAPAT DIEKSPLOITASI: `el` di sini adalah inert body element atau
+  `<template>.content` (DocumentFragment). DOM clobbering bekerja lewat akses
+  properti bernama pada `document` dan `HTMLFormElement`; keduanya tidak
+  berlaku untuk kedua jenis simpul tersebut. Saya mencantumkannya hanya sebagai
+  inkonsistensi yang sebaiknya dirapikan agar niat defensifnya seragam.
+
+==============================================================================
+RINGKASAN
+==============================================================================
+
+  Kode    Berkas                        Sifat                    Dapat dieksploitasi
+  ------  ----------------------------  -----------------------  -------------------
+  F-01    html_sanitizer.ts:314-326     cacat logika             tidak langsung;
+                                        (loop berhenti dini)     melemahkan lapisan
+                                                                 kedua mXSS
+  F-02    dom_security_schema.ts:112    referensi menggantung    tidak
+          (dua salinan)                 (kontrol pemeliharaan)
+  F-03    html_sanitizer.ts:79-89       inkonsistensi srcset     tidak
+  F-04    html_sanitizer.ts:133         inkonsistensi defensif   tidak
+
+  Yang layak dilaporkan ke tim Angular: F-01 (lewat jalur keamanan) dan
+  F-02 (lewat isu/PR biasa — murni pemeliharaan). F-03 dan F-04 bersifat
+  kerapian kode.
+
+  Catatan kejujuran: dari seluruh pemindaian yang dilakukan pada fase-fase
+  sebelumnya (~360 kandidat), hanya F-01 yang merupakan cacat logika sejati
+  pada jalur keamanan. Itu bukan kegagalan pemindaian melainkan cerminan bahwa
+  model keamanan Angular — compiler menentukan SecurityContext, runtime hanya
+  menjalankan — memang rapat. Cacat yang tersisa muncul justru di tempat yang
+  tidak dijangkau pemindai pola: pada URUTAN pernyataan di dalam satu loop.
