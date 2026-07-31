@@ -385,4 +385,67 @@ export const RAPUH = [
   },
 ];
 
-export const SEMUA = {CATATAN_RISET, SINKS, NATIVE, GUARDS, GUARDS_LANJUTAN, DESYNC, RAPUH};
+// ============================================================================
+// 7. STRUKTUR — kelas yang belum pernah disasar sama sekali
+//    G-02 menutup sisi BACA rantai prototipe. Sisi TULIS belum. Ditambah dua
+//    kelas yang tidak terlihat sebagai "kode berbahaya" tetapi merusak asumsi:
+//    pelipatan huruf bergantung locale, dan langganan tanpa pembongkaran.
+// ============================================================================
+export const STRUKTUR = [
+  {
+    id: 'G-19-tulis-kunci-dinamis',
+    hipotesis:
+      'Penulisan `obj[k] = v` dengan k dinamis. Bila k dapat bernilai `__proto__` ' +
+      'atau `constructor`, penulisan itu mencemari prototipe — bukan sekadar ' +
+      'mengisi objek. Ini sisi TULIS dari kelas yang sama dengan F-06.',
+    prafilter: /\]\s*=/,
+    re: /\b\w+\s*\[\s*(?!['"`\d\]])[A-Za-z_$][\w$.]*\s*\]\s*=(?!=)/,
+    // Hanya menarik bila kuncinya benar-benar berasal dari iterasi/masukan,
+    // bukan indeks lokal seperti `arr[i] = x`.
+    konteks: /Object\.(?:keys|entries|assign)|for\s*\(\s*const\s+\w+\s+(?:of|in)\b|JSON\.parse|merge|copy|\bparams?\b|\battrs?\b/i,
+    konteksBaris: 8,
+    temuan: 'kelas baru — melengkapi F-06 pada arah tulis',
+    triase:
+      'Bisakah kuncinya bernilai `__proto__`/`constructor`/`prototype`? Bila objek ' +
+      'tujuannya `{}` (bukan `Object.create(null)`/`Map`), coba tulis kunci itu dan ' +
+      'periksa apakah `({}).tercemar` menjadi terdefinisi.',
+  },
+  {
+    id: 'G-20-lipat-huruf-locale',
+    hipotesis:
+      '`toLocaleLowerCase`/`toLocaleUpperCase` BERGANTUNG LOCALE. Pada locale ' +
+      'Turki, `"I".toLocaleLowerCase()` menghasilkan `"ı"`, bukan `"i"`. Bila ' +
+      'dipakai untuk perbandingan keamanan, hasilnya berbeda per pengguna. ' +
+      '(`toLowerCase` biasa AMAN — ia tidak bergantung locale.)',
+    prafilter: /toLocale(?:Lower|Upper)Case/,
+    re: /\.\s*toLocale(?:Lower|Upper)Case\s*\(/,
+    temuan: 'kelas baru',
+    triase:
+      'Apakah hasilnya dipakai untuk MEMBANDINGKAN (nama tag, atribut, skema, ' +
+      'header), bukan untuk menampilkan? Bila ya, ganti ke toLowerCase biasa.',
+  },
+  {
+    id: 'G-21-langganan-tanpa-pembongkaran',
+    hipotesis:
+      'Berkas berlangganan Observable tanpa satu pun mekanisme pembongkaran. ' +
+      'Langganan bertahan setelah komponen hancur: kebocoran memori, dan callback ' +
+      'tetap berjalan atas keadaan yang sudah usang.',
+    berkasPenuh: true,
+    prafilter: /\.subscribe\s*\(/,
+    re: /\.\s*subscribe\s*\(/,
+    // Penolak diperluas setelah triase: `directive_outputs.ts` sempat lolos karena
+    // pembongkarannya bernama `storeListenerCleanup` dan variabelnya huruf kecil,
+    // sehingga tidak tertangkap daftar awal. Pelajarannya: mekanisme teardown
+    // punya banyak nama; daftar penolak harus mengejar MAKNA, bukan satu idiom.
+    tolakKonteks:
+      /takeUntilDestroyed|takeUntil\s*\(|\.unsubscribe\s*\(|DestroyRef|[Ss]ubscription|ngOnDestroy|\btake\s*\(\s*1\s*\)|\bfirst\s*\(\s*\)|toSignal|\basync\b|[Cc]leanup|teardown|[Dd]estroy|\.complete\s*\(|onDestroy/,
+    temuan: 'kelas baru',
+    triase:
+      'Apakah langganan ini berumur sama dengan aplikasi (mis. layanan root) atau ' +
+      'lebih pendek (komponen/directive)? Hanya yang kedua yang bermasalah.',
+  },
+];
+
+export const SEMUA = {
+  CATATAN_RISET, SINKS, NATIVE, GUARDS, GUARDS_LANJUTAN, DESYNC, RAPUH, STRUKTUR,
+};

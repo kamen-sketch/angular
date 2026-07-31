@@ -1,0 +1,60 @@
+<!doctype html><html><head><meta charset="utf-8"><title>proto pollution via URL</title>
+<script type="importmap">
+{"imports":{
+ "@angular/compiler":"/router-fuzz/node_modules/@angular/compiler/fesm2022/compiler.mjs",
+ "@angular/router":"/router-fuzz/node_modules/@angular/router/fesm2022/router.mjs",
+ "@angular/common/http":"/router-fuzz/node_modules/@angular/common/fesm2022/http.mjs",
+ "@angular/common":"/router-fuzz/node_modules/@angular/common/fesm2022/common.mjs",
+ "@angular/core":"/router-fuzz/node_modules/@angular/core/fesm2022/core.mjs",
+ "@angular/core/primitives/signals":"/router-fuzz/node_modules/@angular/core/fesm2022/primitives-signals.mjs",
+ "@angular/core/primitives/di":"/router-fuzz/node_modules/@angular/core/fesm2022/primitives-di.mjs",
+ "@angular/core/primitives/event-dispatch":"/router-fuzz/node_modules/@angular/core/fesm2022/primitives-event-dispatch.mjs",
+ "@angular/platform-browser":"/router-fuzz/node_modules/@angular/platform-browser/fesm2022/platform-browser.mjs",
+ "tslib":"/npm-validate/node_modules/tslib/tslib.es6.mjs",
+ "rxjs":"/router-fuzz/node_modules/rxjs/dist/esm/index.js",
+ "rxjs/operators":"/router-fuzz/node_modules/rxjs/dist/esm/operators/index.js"}}
+</script></head><body><pre id="o">…</pre>
+<script type="module">
+import '@angular/compiler';
+import {DefaultUrlSerializer} from '@angular/router';
+import {HttpParams} from '@angular/common/http';
+
+const hasil=[];
+function cek(label, jalankan, sondir){
+  // Sondir dipilih unik supaya tidak bentrok antar-kasus.
+  let keluaran=null, galat=null;
+  try { keluaran = jalankan(); } catch(e){ galat = String(e.message||e); }
+  const tercemar = ({})[sondir];
+  hasil.push({
+    label,
+    galat,
+    keluaran: keluaran===null?null:JSON.stringify(keluaran).slice(0,160),
+    sondir,
+    prototipeTercemar: tercemar !== undefined ? String(tercemar) : 'TIDAK',
+  });
+}
+
+const S=new DefaultUrlSerializer();
+
+cek('router query  ?__proto__[p1]=x',
+    ()=>{const t=S.parse('/a?__proto__[p1]=x'); return t.queryParams;}, 'p1');
+cek('router query  ?__proto__=x',
+    ()=>{const t=S.parse('/a?__proto__=x'); return t.queryParams;}, 'p2');
+cek('router matrix /a;__proto__=x',
+    ()=>{const t=S.parse('/a;__proto__=x'); let g=t.root.children['primary']; return g.segments.map(s=>s.parameters);}, 'p3');
+cek('router matrix /a;constructor=x',
+    ()=>{const t=S.parse('/a;constructor=x'); let g=t.root.children['primary']; return g.segments.map(s=>s.parameters);}, 'p4');
+cek('HttpParams fromString __proto__[p5]=x',
+    ()=>{const p=new HttpParams({fromString:'__proto__[p5]=x'}); return p.toString();}, 'p5');
+cek('HttpParams fromString __proto__=x',
+    ()=>{const p=new HttpParams({fromString:'__proto__=x'}); return {v:p.get('__proto__')};}, 'p6');
+
+// Kontrol positif: pastikan sondir MEMANG dapat mendeteksi pencemaran.
+cek('KONTROL POSITIF (sengaja mencemari)',
+    ()=>{ const o={}; o['__proto__']=undefined; Object.setPrototypeOf({}, Object.prototype);
+          // pencemaran nyata lewat literal:
+          ({}).__proto__['pZZ']='TERCEMAR'; return 'dicemari'; }, 'pZZ');
+
+window.__PROTO__=hasil;
+document.getElementById('o').textContent=JSON.stringify(hasil,null,1);
+</script></body></html>

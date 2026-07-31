@@ -10,10 +10,10 @@
  */
 import {readFileSync, readdirSync, statSync} from 'fs';
 import {join, relative} from 'path';
-import {GUARDS, GUARDS_LANJUTAN, DESYNC, RAPUH} from './corpus.mjs';
+import {GUARDS, GUARDS_LANJUTAN, DESYNC, RAPUH, STRUKTUR} from './corpus.mjs';
 
 // G-01..G-07 (kelas garda) + G-08..G-11 (kelas yang lahir dari F-07/F-08).
-const SEMUA_POLA = [...GUARDS, ...GUARDS_LANJUTAN, ...DESYNC, ...RAPUH];
+const SEMUA_POLA = [...GUARDS, ...GUARDS_LANJUTAN, ...DESYNC, ...RAPUH, ...STRUKTUR];
 
 const AKAR = process.cwd();
 const TARGET = join(AKAR, 'packages');
@@ -68,6 +68,9 @@ for (const f of berkas) {
     // mana pun dalam berkas yang sama (mis. parse ada, serialize juga ada).
     if (g.berkasPenuh) {
       if (g.konteks && !g.konteks.test(teks)) continue;
+      // Pada pola tingkat-berkas, tolakKonteks dinilai atas SELURUH berkas:
+      // satu mekanisme pembongkaran di mana pun sudah cukup menggugurkan.
+      if (g.tolakKonteks && g.tolakKonteks.test(teks)) continue;
       const m = teks.match(g.re);
       if (m) {
         const nomor = teks.slice(0, teks.indexOf(m[0])).split('\n').length;

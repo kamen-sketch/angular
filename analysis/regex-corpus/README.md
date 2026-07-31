@@ -278,6 +278,57 @@ Pelajaran kedua: dengan 19 pola x 3018 berkas, biaya kumulatif menjadi masalah
 tersendiri. Solusinya `prafilter` — penanda literal murah yang diuji SEKALI per
 berkas sebelum regex mahal dijalankan sama sekali.
 
+## Gelombang ketiga: G-19…G-21 (struktur)
+
+Tiga kelas yang belum pernah disasar sama sekali. G-02 menutup sisi **baca**
+rantai prototipe; sisi **tulis** belum. Ditambah dua kelas yang tidak terlihat
+sebagai "kode berbahaya" tetapi merusak asumsi.
+
+| Pola | Cocok | Hasil |
+|---|---:|---|
+| G-19 tulis kunci dinamis (`obj[k]=v`) | 199 | terlalu luas; diarahkan ke instans bernilai tertinggi lalu **diuji empiris** — bersih |
+| G-20 `toLocale{Lower,Upper}Case` | **0** | invarian bersih terverifikasi |
+| G-21 langganan tanpa pembongkaran | 13 → **10** | seluruh sisa adalah test/example/build-time |
+
+### G-19 tidak ditriase satu per satu — diuji langsung
+
+199 kecocokan terlalu banyak untuk dibaca. Alih-alih itu, polanya dipakai untuk
+menunjuk KELAS, lalu instans bernilai tertingginya diuji empiris: kunci yang
+berasal dari URL. Diuji dengan @angular/router dan @angular/common/http asli
+(`analysis/tools/proto/`, bukti di `analysis/evidence/g19-proto-pollution-clean.txt`):
+
+```
+router  /a?__proto__[p1]=x   -> prototipe TIDAK tercemar
+router  /a?__proto__=x       -> prototipe TIDAK tercemar
+router  /a;__proto__=x       -> parameter menjadi {} (kunci terserap, tidak mencemari)
+router  /a;constructor=x     -> {"constructor":"x"} (properti own, tidak berbahaya)
+HttpParams __proto__[p5]=x   -> prototipe TIDAK tercemar
+HttpParams __proto__=x       -> disimpan sebagai NILAI (get() mengembalikan "x")
+KONTROL POSITIF              -> TERCEMAR
+```
+
+Kontrol positif itu yang membuat hasilnya berarti: sondirnya terbukti MAMPU
+mendeteksi pencemaran, sehingga "tidak tercemar" bukan karena alat yang buta.
+
+### G-20 nol — dan itu justru informasi
+
+`toLocaleLowerCase` bergantung locale: pada locale Turki `"I"` menjadi `"ı"`,
+bukan `"i"`. Bila dipakai membandingkan nama tag/atribut, hasilnya berbeda
+per pengguna. Angular **tidak pernah memakainya** — nol kecocokan di 3018 berkas.
+Basis kode ini disiplin memakai `toLowerCase` yang tidak bergantung locale.
+Dicatat sebagai invarian yang sudah diverifikasi, bukan sekadar "tidak ketemu".
+
+### G-21 dan pelajaran tentang daftar penolak
+
+Triase pertama menemukan `directive_outputs.ts` lolos — padahal pembongkarannya
+ADA, bernama `storeListenerCleanup`, dengan variabel huruf kecil `subscription`.
+Daftar penolak awal mengejar satu idiom (`takeUntil`, `Subscription`, `ngOnDestroy`)
+dan meleset dari mekanisme bernama lain.
+
+Pelajarannya: **daftar penolak harus mengejar MAKNA, bukan satu idiom.** Setelah
+diperluas (`[Cc]leanup`, `teardown`, `[Dd]estroy`, `.complete(`), sisa turun ke 10
+dan seluruhnya test/example/build-time.
+
 ## Yang masih kurang
 
 Korpus ini murni leksikal, jadi ada batas yang jelas:
