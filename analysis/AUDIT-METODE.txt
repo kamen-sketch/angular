@@ -25,14 +25,15 @@ Legenda: YA = dikerjakan & terdokumentasi | SEB = sebagian | TIDAK = tidak diker
   F-06    YA    YA     YA       YA       SEB      YA(nol)  TIDAK
   F-07    YA    YA     YA       TIDAK    TIDAK    YA(nol)  TIDAK
   F-08    YA    YA     YA       YA       YA       YA(tbts) YA (benih)
-  F-09    YA    YA     YA       YA       YA       SEB      YA
+  F-09    YA    YA     YA       YA       YA       YA       YA
 
 Hanya F-01 dan F-08 yang menempuh rantai penuh.
 
-F-09 berhenti di kolom IMPACT: terbukti bahwa cookie cacat MELUMPUHKAN
-permintaan, TIDAK terbukti bahwa penyerang dapat MENANAM cookie itu. Selama
-langkah tanam-cookie belum didemonstrasikan, F-09 dilaporkan sebagai cacat
-ketangguhan, bukan kerentanan.
+F-09 kini menempuh rantai PENUH. Kolom IMPACT sempat berstatus SEB karena
+penanaman cookie hanya diasumsikan; setelah didemonstrasikan dengan dua host
+nyata (penyerang di origin berbeda, tanpa XSS di origin korban), F-09 menjadi
+satu-satunya temuan sesi ini dengan rantai lengkap DARI kemampuan penyerang
+SAMPAI dampak.
 
 F-08 kolom IMPACT "tbts" = terbatas: pencocokan rute terbukti berbeda dan
 desinkronisasi lapisan terukur, tetapi komposisi ujung-ke-ujung pada aplikasi

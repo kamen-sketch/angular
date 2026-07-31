@@ -717,8 +717,8 @@ F-09  Cookie XSRF cacat menggagalkan SELURUH permintaan HTTP yang memutasi
       BERKAS  : packages/common/src/cookie.ts:16          (decode tanpa guard)
                 packages/common/http/src/xsrf.ts:119      (getToken di LUAR try)
       SIFAT   : penolakan layanan sisi klien, persisten
-      STATUS  : cacat DIBUKTIKAN RUNTIME (npm 22.1.0); TETAPI kemampuan penyerang
-                MENANAM cookie itu BELUM didemonstrasikan -> belum ada dampak nyata
+      STATUS  : RANTAI LENGKAP — penanaman cookie lintas-origin kini
+                DIDEMONSTRASIKAN dengan dua host sungguhan
       BUKTI   : analysis/evidence/f09-xsrf-cookie-dos.txt
                 analysis/tools/xsrf/
 ==============================================================================
@@ -783,17 +783,37 @@ F-09  Cookie XSRF cacat menggagalkan SELURUH permintaan HTTP yang memutasi
   Yang TIDAK saya klaim: eksekusi kode, kebocoran token, atau bypass proteksi
   XSRF.
 
-  YANG BELUM DIBUKTIKAN — dan ini yang menahan F-09 dari status "dampak nyata":
-  saya membuktikan bahwa BILA cookie cacat ada, permintaan gagal. Saya TIDAK
-  membuktikan bahwa penyerang dapat MENANAM cookie itu. Cookie tossing dari
-  subdomain saudara adalah ASUMSI yang masuk akal, bukan hasil pengukuran; ia
-  menuntut penyerang menguasai subdomain pada domain induk yang sama. Tanpa
-  demonstrasi itu, F-09 adalah CACAT KETANGGUHAN yang terbukti, bukan kerentanan
-  yang dapat dieksploitasi.
+  PENANAMAN COOKIE — SUDAH DIDEMONSTRASIKAN (menutup celah terakhir)
+  -------------------------------------------------------------------
+  Sebelumnya cookie tossing hanyalah ASUMSI. Kini diukur dengan dua host nyata
+  (/etc/hosts -> 127.0.0.1), satu jar cookie peramban, dan aplikasi Angular asli:
+  analysis/evidence/f09-cookie-tossing-demo.txt, tools/xsrf/cookie-toss.mjs
 
-  Langkah yang menutupnya: siapkan dua host (app.contoh.test dan evil.contoh.test),
-  setel cookie ber-Domain dari yang kedua, lalu ukur apakah aplikasi pada yang
-  pertama benar-benar lumpuh. Belum dikerjakan.
+      tahap                                    cookie dilihat app   POST
+      ---------------------------------------  -------------------  ---------
+      1. sebelum serangan                      ""                   BERHASIL
+      2. evil.contoh.test menyetel
+         `XSRF-TOKEN=%; Domain=contoh.test`    -                    -
+      3. korban membuka app.contoh.test        "XSRF-TOKEN=%"       GAGAL
+                                                                    URIError
+
+  Yang penting pada demonstrasi ini:
+    - Penyerang berada di ORIGIN BERBEDA (evil.contoh.test), bukan di origin
+      korban. Tidak dibutuhkan XSS pada app.contoh.test.
+    - Satu-satunya kemampuan yang dipakai adalah menyetel cookie ber-`Domain`
+      pada domain INDUK — perilaku cookie yang normal dan tidak diblokir peramban
+      (hanya prefiks `__Host-` yang mencegahnya, dan Angular tidak memakainya).
+    - Langkah 1 adalah kontrol: tanpa cookie, POST BERHASIL. Jadi kegagalan pada
+      langkah 3 benar-benar disebabkan cookie yang ditanam.
+
+  MODEL ANCAMAN: "related-domain attacker" — penyerang menguasai SATU subdomain
+  saudara. Ini model yang diakui dan nyata pada organisasi dengan subdomain
+  konten pengguna, hosting bersama, subdomain pemasaran yang dikelola pihak
+  ketiga, atau subdomain lama yang terbengkalai.
+
+  Dampak akhir: penolakan layanan LINTAS-ORIGIN dan PERSISTEN atas seluruh
+  operasi tulis aplikasi, tanpa XSS. Korban tidak dapat memulihkannya tanpa
+  menghapus cookie secara manual.
 
   PERBAIKAN
   ---------
