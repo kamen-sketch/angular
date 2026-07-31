@@ -422,6 +422,77 @@ F-06  Gate allowlist i18n dapat ditembus lewat rantai prototipe
   `Object.prototype` yang menjadi anggota sah `VALID_ATTRS`.
 
 ==============================================================================
+F-07  Salinan kedua pemetaan sanitizer tidak menangani konteks ARRAY yang
+      tipenya sendiri izinkan  (LATEN — belum terjangkau)
+      BERKAS  : packages/compiler/src/template/pipeline/src/phases/
+                  resolve_i18n_attr_sanitizers.ts:49-70   (salinan i18n)
+                  resolve_sanitizers.ts:60-74             (salinan utama)
+      SIFAT   : logika duplikat yang menyimpang; cabang hilang = fail-open diam
+==============================================================================
+
+  CARA DITEMUKAN
+  --------------
+  Bukan lewat pembacaan manual, melainkan oleh detektor salinan-di-rename
+  (analysis/regex-corpus/scan-renamed-copies.mjs) yang memasangkan keduanya pada
+  jaccard 0.60. Pengelompokan berdasarkan nama dasar TIDAK akan menemukannya —
+  namanya berbeda. Inilah alasan detektor semua-pasangan itu dibuat.
+
+  DUA SALINAN PEMETAAN YANG SAMA
+  ------------------------------
+  resolve_sanitizers.ts memetakan SecurityContext -> fungsi sanitizer lewat Map,
+  resolve_i18n_attr_sanitizers.ts lewat switch. Keenam pemetaannya COCOK:
+      HTML->sanitizeHtml  STYLE->sanitizeStyle  SCRIPT->sanitizeScript
+      URL->sanitizeUrl    RESOURCE_URL->sanitizeResourceUrl
+      ATTRIBUTE_NO_BINDING->validateAttribute
+
+  SELISIH YANG PENTING
+  --------------------
+  Tipe `ExtractedAttributeOp.securityContext` adalah
+      SecurityContext | SecurityContext[]        (ir/src/ops/create.ts:833)
+
+  Salinan UTAMA menangani kedua bentuk:
+      if (Array.isArray(op.securityContext) && hasCompositeUrlSecurityContext(...))
+        sanitizerFn = Identifiers.sanitizeUrlOrResourceUrl;
+      else
+        sanitizerFn = sanitizerFns.get(getOnlySecurityContext(op.securityContext));
+
+  Salinan I18N hanya menangani bentuk skalar:
+      switch (op.securityContext) { case SecurityContext.HTML: ... }
+
+  Sebuah array tidak pernah `===` nilai enum numerik, sehingga bila
+  `op.securityContext` berupa array TIDAK ADA case yang cocok, `expr` dikembalikan
+  apa adanya, dan atributnya lolos TANPA sanitizer — diam-diam, tanpa galat.
+
+  MENGAPA SAAT INI BELUM TERJANGKAU (diverifikasi)
+  ------------------------------------------------
+  Ditelusuri dari mana array berasal:
+    - Array HANYA dihasilkan `calcHostBindingSecurityContexts`, dipakai di
+      ingest.ts:128,137 — keduanya jalur HOST BINDING.
+    - Atribut TEMPLATE memakai `domSchema.securityContext(...)`
+      (ingest.ts:540,1461) yang mengembalikan SATU nilai, bukan array.
+    - `resolveI18nAttrSanitizers` hanya memproses op dengan `i18nContext !== null`,
+      dan i18n tidak berlaku pada host binding.
+  Irisan "punya i18nContext" x "securityContext berupa array" karena itu KOSONG
+  pada kompilasi hari ini. Jadi ini cacat LATEN, bukan kerentanan.
+
+  MENGAPA TETAP LAYAK DIPERBAIKI
+  ------------------------------
+  Yang menahan bukan kode, melainkan kebetulan: i18n kebetulan hanya ada di
+  template, dan template kebetulan hanya menghasilkan konteks tunggal. Tipe
+  datanya sendiri sudah menyatakan array itu sah. Begitu salah satu asumsi
+  berubah — i18n pada host binding, atau konteks komposit pada template —
+  sanitasi hilang tanpa satu pun galat.
+
+  Bandingkan dengan salinan utama yang justru MELEMPAR bila konteksnya ambigu
+  (`AssertionError: Ambiguous security context`, resolve_sanitizers.ts:131):
+  salinan utama fail-closed, salinan i18n fail-open. Dua salinan logika yang
+  sama dengan sikap kegagalan berlawanan.
+
+  PERBAIKAN: samakan penanganannya — pakai `getOnlySecurityContext()` yang sudah
+  ada di salinan utama, atau minimal `default:` yang melempar bila bentuknya tak
+  terduga, sehingga kegagalannya tidak diam.
+
+==============================================================================
 RINGKASAN
 ==============================================================================
 
@@ -442,6 +513,11 @@ RINGKASAN
   F-06    i18n_parse.ts:841             gate allowlist bocor     tidak (nama yang
                                         lewat rantai prototipe   lolos semuanya
                                                                  inert)
+  F-07    resolve_i18n_attr_            salinan pemetaan         tidak (LATEN:
+          sanitizers.ts:49-70           sanitizer tak menangani  irisan i18n x
+                                        konteks array; salinan   konteks-array
+                                        utama fail-closed,       masih kosong)
+                                        salinan ini fail-open
 
   Yang layak dilaporkan ke tim Angular: F-01 dan F-05 (lewat jalur keamanan)
   dan F-02 (lewat isu/PR biasa — murni pemeliharaan). F-03, F-04 dan F-06
