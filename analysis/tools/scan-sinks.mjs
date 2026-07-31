@@ -165,6 +165,15 @@ const PATTERNS = [
     re: /(?:location\s*\.\s*(?:href|protocol)\s*\+?=(?!=)|location\s*\.\s*(?:assign|replace)\s*\(|(?:window|self|globalThis|top|parent)\s*\.\s*open\s*\()/,
   },
 
+  {
+    id: 'sw-navigasi', kind: 'sink', risk: 'sedang',
+    desc: 'clients.openWindow() / client.navigate() / scope.fetch() di Service Worker',
+    // Ditambahkan setelah triase: pola `lokasi-navigasi` hanya mengenal
+    // window.open dan location.*, sehingga MELEWATKAN seluruh keluarga navigasi
+    // Service Worker. Padahal di driver.ts URL-nya berasal dari payload push.
+    re: /\.\s*(?:openWindow|navigate)\s*\(|scope\s*\.\s*fetch\s*\(/,
+  },
+
   // === TRUSTED TYPES ===
   {
     id: 'trusted-types-policy', kind: 'guard', risk: 'info',

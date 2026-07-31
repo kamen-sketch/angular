@@ -1,0 +1,291 @@
+TRIASE TEMUAN PEMINDAIAN SINK
+Sumber data : analysis/SINK-INVENTORY.txt (hasil analysis/tools/scan-sinks.mjs)
+Metode      : setiap kelompok temuan dibaca konteksnya, lalu diberi vonis
+==============================================================================
+
+VONIS YANG DIPAKAI
+------------------
+  FP-POLA      Positif palsu karena regex, bukan sink sama sekali
+  FP-KONTEKS   Cocok secara sintaksis, tetapi konteksnya membuatnya bukan sink
+               (mis. elemen terlepas, DOM inert, nilai konstan)
+  BUKAN-KIRIM  Sink nyata, tetapi kodenya TIDAK ikut terkirim ke pengguna
+               (skrip rilis, build tooling, benchmark, ekstensi devtools)
+  SINK-AMAN    Sink nyata di kode terkirim, dengan guard yang memadai
+  SINK-KONTRAK Sink nyata di kode terkirim, aman HANYA bila kontrak
+               pemakaiannya dipenuhi (didokumentasikan di kode)
+  PERLU-TINJAU Belum bisa disimpulkan tanpa keputusan pemilik kode
+
+Prinsip pemilahan terpenting: BEDAKAN SALURAN DISTRIBUSI. Sebuah `exec()` di
+skrip rilis dan sebuah `exec()` di paket npm adalah dua hal yang sama sekali
+berbeda, walau regexnya sama.
+
+==============================================================================
+RINGKASAN VONIS
+==============================================================================
+  FP-POLA        :  5 kelompok
+  FP-KONTEKS     :  6 kelompok
+  BUKAN-KIRIM    :  6 kelompok (mayoritas volume: ~190 dari ~360 kecocokan)
+  SINK-AMAN      :  6 kelompok
+  SINK-KONTRAK   :  6 kelompok
+  PERLU-TINJAU   :  0 kelompok
+
+Tidak ditemukan kerentanan di dalam framework. Dua hal berguna justru muncul
+dari proses triasenya sendiri:
+  1. SATU CELAH CAKUPAN pemindai (T-19: navigasi Service Worker) - sudah ditutup.
+  2. SATU KOREKSI atas penilaian saya sendiri (T-11: lima pemanggil
+     `unwrapSafeValue` yang tidak berpagar, di berkas yang belum pernah saya
+     baca) - vonisnya tetap aman, tetapi alasannya berbeda dari yang saya duga.
+
+==============================================================================
+TRIASE PER KELOMPOK
+==============================================================================
+
+--- RISIKO TINGGI ---------------------------------------------------------
+
+T-01  eval-taklangsung (1)  ->  BUKAN-KIRIM / SINK-KONTRAK
+      packages/compiler/src/output/output_jit_trusted_types.ts:125
+        const fn = global['eval'](trustedScriptFromString(body));
+      Sink eksekusi kode sungguhan, tetapi hanya dijalankan JIT compiler.
+      Aplikasi produksi memakai AOT sehingga modul ini tidak ter-bundle.
+      Kontraknya tertulis di JSDoc: "must be assured that it is only called
+      from the JIT compiler". Indireksi `global['eval']` dipakai agar modul
+      tetap bisa di-tree-shake.
+      Catatan pola: lookbehind `(?<![\w$.])eval\(` TIDAK menangkap baris ini;
+      dibutuhkan pola bracket terpisah. Tanpa itu, sink ini luput.
+
+T-02  function-constructor (4)  ->  2 BUKAN-KIRIM, 2 SINK-KONTRAK
+      packages/compiler/src/output/output_jit_trusted_types.ts:109,131
+        -> jalur JIT yang sama dengan T-01.                    SINK-KONTRAK
+      packages/core/schematics/utils/load_esm.ts:25
+        await new Function('modulePath', `return import(modulePath);`)(...)
+        -> Solusi baku memuat ESM dari konteks CommonJS. Berjalan di Node saat
+           `ng update`, bukan di browser. Argumennya jalur modul dari perkakas.
+                                                               BUKAN-KIRIM
+      modules/utilities/perf_util.ts:129  -> benchmark.        BUKAN-KIRIM
+
+T-03  innerhtml-tulis (8)  ->  1 FP-KONTEKS, 6 BUKAN-KIRIM, 1 SINK-KONTRAK
+      packages/core/src/sanitization/inert_body.ts:75          FP-KONTEKS
+        templateEl.innerHTML = trustedHTMLFromString(html)
+        Ditulis ke <template>/dokumen INERT. Skrip tidak dieksekusi dan tidak
+        ada resource yang dimuat; ini justru MESIN sanitasi itu sendiri.
+      packages/upgrade/.../upgrade_helper.ts:254               SINK-KONTRAK
+        this.element.innerHTML = html;   <-- lihat T-15, satu-satunya sink
+        innerHTML di kode yang benar-benar terkirim ke browser.
+      adev (5) + modules/ssr-benchmarks (1)                    BUKAN-KIRIM
+        Situs dokumentasi & benchmark, bukan paket npm. Isinya HTML hasil build
+        dari markdown di repo. Tetap layak dicatat sebagai aset yang integritas
+        build-nya harus dijaga, tapi bukan permukaan serangan pengguna Angular.
+
+T-04  srcdoc-tulis (1)  ->  FP-KONTEKS
+      packages/core/src/sanitization/iframe_attrs_validation.ts:32
+        iframe.srcdoc = trustedHTMLFromString('')
+      Justru KEBALIKAN dari sink: menulis string KOSONG untuk menetralkan
+      iframe sebelum menghapusnya dari DOM.
+
+T-05  bypass-sanitasi (20)  ->  SINK-AMAN (semuanya definisi, bukan pemakaian)
+      packages/platform-browser (15) + packages/core (5)
+      Seluruh kecocokan berada di berkas yang MENDEFINISIKAN API bypass
+      (DomSanitizerImpl dan bypass.ts) beserta tipe-tipenya. Tidak satu pun
+      merupakan PEMAKAIAN bypass di dalam framework.
+      Ini temuan penting yang menenangkan: framework sendiri tidak pernah
+      mem-bypass sanitizer-nya sendiri.
+      Untuk audit APLIKASI, pola ini justru yang paling berguna dijalankan.
+
+T-06  child-process (70)  ->  BUKAN-KIRIM (seluruhnya)
+      scripts (32), devtools (17), packages/zone.js (16), tools (3), adev (2)
+      Contoh: packages/zone.js/tools/release.mts:115 `exec('git checkout -b ...')`.
+      Semuanya perkakas rilis/build dengan perintah harcoded. Tidak ada yang
+      berada di dalam berkas yang dipublikasikan ke npm sebagai kode runtime.
+      Volume besar ini adalah alasan utama mengapa pemilahan saluran distribusi
+      harus dilakukan SEBELUM menilai risiko.
+
+--- RISIKO SEDANG ---------------------------------------------------------
+
+T-07  domparser (3)  ->  2 FP-KONTEKS, 1 BUKAN-KIRIM
+      packages/core/src/sanitization/inert_body.ts:44,89        FP-KONTEKS
+        DOMParser dipakai untuk MEMBUAT dokumen inert; itu mekanisme pertahanan.
+      devtools/.../highlights.ts:225                            BUKAN-KIRIM
+        Mem-parse ikon SVG konstan di ekstensi devtools.
+
+T-08  setattribute-berbahaya (5)  ->  2 FP-KONTEKS, 1 SINK-KONTRAK, 2 BUKAN-KIRIM
+      packages/router/upgrade/src/upgrade.ts:147,148            FP-KONTEKS
+        anchor.setAttribute('href', url); anchor.setAttribute('href', anchor.href);
+        Anchor ini DIBUAT LEPAS (`document.createElement('a')`) dan TIDAK PERNAH
+        dimasukkan ke dokumen; ia dipakai murni sebagai parser URL (trik warisan
+        AngularJS untuk menormalkan pathname/search/hash). Tidak ada sink.
+        Pola tekstual mustahil membedakan ini - hanya pembacaan konteks yang bisa.
+      packages/platform-browser/src/dom/shared_styles_host.ts:103  SINK-KONTRAK
+        createLinkElement(url) -> <link rel=stylesheet href=url>
+        Memuat stylesheet eksternal. URL berasal dari metadata komponen hasil
+        kompilasi, BUKAN dari binding runtime - sehingga jalur ini tidak melewati
+        sanitizer RESOURCE_URL sama sekali. Aman selama metadata komponen tidak
+        dibangun dari data runtime. Lihat T-18.
+      adev (2)                                                  BUKAN-KIRIM
+
+T-09  setattribute-dinamis (30)  ->  mayoritas FP-POLA / SINK-AMAN
+      Setelah penyaring konstanta ditambahkan (35 -> 30), sisanya terbagi:
+        (a) Pembungkus renderer yang meneruskan nama atribut dari pemanggil,
+            mis. render3/instructions/attach_source_locations.ts:44. Nama
+            atributnya berasal dari COMPILER, bukan dari data runtime.  SINK-AMAN
+        (b) dom_node_manipulation.ts:117,136 menulis 'style'/'class' dengan nama
+            literal yang tertangkap karena argumennya variabel.          FP-POLA
+        (c) Sisanya di common/forms/animations: nama atribut dari konstanta
+            modul atau properti directive yang sudah divalidasi compiler.
+      Tidak ada kasus di mana NAMA atribut berasal dari data pengguna.
+
+T-10  src-href-tulis (16)  ->  1 SINK-AMAN, 15 BUKAN-KIRIM
+      packages/core (1): jalur JSONP/elemen internal yang sudah ditinjau.
+      packages/common (2): JSONP `node.src = url` - lihat T-16.
+      packages/platform-server (2), adev (7), devtools (4)       BUKAN-KIRIM/SSR
+
+T-11  unwrap-safevalue (16)  ->  11 SINK-AMAN, 5 SINK-KONTRAK
+      KOREKSI: penilaian awal saya menyatakan "seluruh pemanggil memeriksa tipe
+      lebih dulu". Itu KELIRU - klaim tersebut hanya benar untuk pemanggil di
+      berkas sanitasi. Triase ini menemukan LIMA pemanggil di luar berkas itu
+      yang melepas nilai TANPA `allowSanitizationBypassAndThrow`:
+
+      (a) BERPAGAR (11 kecocokan)                               SINK-AMAN
+          sanitization.ts:69,91,118,142,170 dan
+          dom_sanitization_service.ts:176,181,186,195,200 serta bypass.ts:100.
+          Semuanya memanggil `allowSanitizationBypassAndThrow` lebih dulu, yang
+          MELEMPAR bila tipe pembungkus tidak cocok dengan konteks pemakaian.
+
+      (b) TANPA PAGAR, DISENGAJA (5 kecocokan)                  SINK-KONTRAK
+          packages/core/src/render3/instructions/styling.ts:728,766,1037,1039
+            toStylingKeyValueArray / styleKeyValueArraySet / nilai bersufiks.
+            Konteksnya CSS. Alasan tidak diperiksa: nilai CSS dianggap tidak
+            eksekutif di peramban modern (tidak ada `expression()`), sehingga
+            `ɵɵsanitizeStyle` pun sebenarnya hanya melakukan stringify bila
+            tidak ada Sanitizer kustom. Risiko sisanya adalah INJEKSI CSS
+            (mis. `background:url(...)` untuk eksfiltrasi), bukan eksekusi skrip.
+          packages/common/.../ng_optimized_image.ts:1465
+            `unwrapSafeUrl()` dengan komentar eksplisit di kode: "This doesn't
+            do any sanitization, as that is not needed for img.src and
+            img.srcset. This transform is purely for compatibility."
+            Memuat gambar tidak mengeksekusi kode, jadi img[src] memang bukan
+            konteks RESOURCE_URL.
+
+      FAKTA YANG MENENANGKAN KEDUANYA: `unwrapSafeValue` bersifat IDENTITAS
+      untuk nilai biasa (bypass.ts:102). Kelima jalur tanpa pagar itu hanya
+      berbeda perilakunya bila aplikasi SUDAH memanggil `bypassSecurityTrust*`
+      sendiri - yaitu setelah pengembang aplikasi secara sadar keluar dari
+      sistem sanitasi. Tidak ada jalur di mana data pengguna biasa menjadi
+      berbahaya karena kelima pemanggil ini.
+
+      PELAJARAN PROSES: klaim "seluruhnya aman" tadi lahir karena saya hanya
+      membaca pemanggil di berkas yang sudah saya analisis. Pemindaian pola
+      justru menunjuk lima pemanggil di berkas yang BELUM pernah saya baca
+      (styling.ts dan ng_optimized_image.ts - keduanya masih bertanda [ ] di
+      TASKLIST). Inilah nilai konkret memadukan pemindaian dengan triase.
+
+T-12  import-dinamis (2)  ->  BUKAN-KIRIM
+      adev/src/app/routing/routes.ts:58 (lazy route, literal) dan
+      core/schematics/utils/load_esm.ts:25 (lihat T-02).
+
+T-13  worker-importscripts (1)  ->  BUKAN-KIRIM
+      adev/.../factory-provider.ts:18  `new Worker(new URL('./x.worker.ts', import.meta.url))`
+      URL modul statis yang di-resolve saat build.
+
+T-14  lokasi-navigasi (2)  ->  BUKAN-KIRIM
+      adev (1), devtools (1). Setelah pola diperketat (lihat FP-POLA di bawah),
+      tidak ada lagi kecocokan di paket npm.
+
+T-15  src-postmessage (39)  ->  SINK-AMAN + FP-POLA
+      devtools (24)                                             BUKAN-KIRIM
+      packages/service-worker (12)                              SINK-AMAN
+        Seluruh kecocokan adalah pengiriman KELUAR (`postMessage({...})`),
+        bukan penerimaan. Sisi penerima ada di driver.ts:210 `onMessage`, dan
+        jalurnya berpagar rapat:
+          1. pesan tanpa `data.action` diabaikan (driver.ts:305-308);
+          2. hanya `event.source` yang lolos `adapter.isClient()` diterima
+             (:319-322) - jadi hanya halaman same-origin;
+          3. `handleMessage` (:400) hanya mengenal DUA aksi: CHECK_FOR_UPDATES
+             dan ACTIVATE_UPDATE. Tidak ada dispatch dinamis, tidak ada eval.
+        Pola `src-postmessage` sebaiknya dibaca sebagai penanda "ada IPC di
+        sini", bukan sebagai temuan.
+      packages/zone.js (1)                                      FP-POLA (patch API)
+
+T-16  JSONP `node.src = url`  ->  SINK-KONTRAK (sudah dibahas di TAINT-TO-SINK
+      bagian 7.1). Berbahaya secara desain; nama callback dihasilkan internal
+      sehingga tidak bisa disuntik.
+
+--- INFORMASIONAL ----------------------------------------------------------
+
+T-17  sanitizer-runtime (13), trust-konstan (8), trusted-types-policy (11)
+      Ini pola GUARD, bukan sink. Kegunaannya sebagai kontrol silang: setiap
+      sink HTML/URL di kode terkirim harus punya guard yang berpasangan.
+      Sebaran policy Trusted Types: core (7), compiler (2), upgrade (2) -
+      cocok dengan tiga policy terpisah yang memang dirancang: `angular`,
+      policy JIT, dan `angular#unsafe-upgrade`.
+
+T-18  src-lokasi (21), src-storage (4)  ->  SOURCE, bukan sink
+      Titik masuk data. Berguna untuk menentukan mana yang perlu ditelusuri ke
+      hilir, tetapi tidak berarti apa-apa sendirian.
+
+==============================================================================
+T-19  CELAH CAKUPAN PEMINDAI YANG DITEMUKAN OLEH TRIASE  [SUDAH DITUTUP]
+==============================================================================
+Saat menelusuri kelompok postMessage (T-15), pembacaan driver.ts mengungkap
+keluarga sink yang TIDAK PUNYA POLA sama sekali di katalog awal:
+
+    packages/service-worker/worker/src/driver.ts:444,451,461
+        await this.scope.clients.openWindow(urlToOpen);
+    packages/service-worker/worker/src/driver.ts:458
+        matchingClient = await matchingClient.navigate(urlToOpen);
+    packages/service-worker/worker/src/driver.ts:466
+        await this.scope.fetch(urlToOpen);
+
+Pola `lokasi-navigasi` hanya mengenal `window.open` dan `location.*`, sehingga
+seluruh navigasi Service Worker luput. Pola baru `sw-navigasi` ditambahkan;
+hasilnya 10 kecocokan di packages/service-worker.
+
+VONIS UNTUK JALUR ITU SENDIRI: SINK-KONTRAK.
+  Rantainya nyata:
+    payload push  ->  onPush (driver.ts:331)
+                  ->  handlePush -> showNotification(desc.title, options)
+                  ->  pengguna mengklik notifikasi
+                  ->  onClick (:341) membaca
+                      notification.data.onActionClick[action].url
+                  ->  urlToOpen = new URL(url ?? '', registration.scope).href
+                  ->  clients.openWindow / client.navigate / scope.fetch
+
+  Mitigasi yang ada: URL di-resolve relatif terhadap `registration.scope`,
+  sehingga URL RELATIF dijamin tetap same-origin.
+  Batas mitigasi: `new URL('https://lain.example', scope)` menghasilkan URL
+  absolut ke origin lain - resolusi relatif tidak membatasi origin.
+  Mengapa tetap dinilai SINK-KONTRAK dan bukan kerentanan: payload push hanya
+  bisa dikirim pihak yang memegang kunci VAPID aplikasi, yaitu backend aplikasi
+  itu sendiri. Fitur `onActionClick` memang dirancang agar aplikasi menentukan
+  tujuan klik notifikasi.
+  Yang perlu diketahui pemakai: backend push yang disusupi dapat mengarahkan
+  klik notifikasi ke origin mana pun, dan `sendRequest` akan melakukan fetch
+  ke URL itu dari dalam Service Worker.
+
+==============================================================================
+KELAS POSITIF PALSU YANG SUDAH DIPERBAIKI DI POLA
+==============================================================================
+  FP-A  `\b` pecah pada `$` dan `.`     -> lookbehind `(?<![\w$.])`
+  FP-B  `Function` sebagai tipe TS      -> pola tolak `: Function` dll
+  FP-C  metode bernama `open`           -> penerima dibatasi objek global
+  FP-D  nama atribut berupa konstanta   -> pola tolak SCREAMING_CASE / Enum.X
+  FP-E  komentar menyebut nama sink     -> komentar dikosongkan sebelum cocok
+  FP-F  elemen terlepas (anchor parser) -> TIDAK BISA diperbaiki dengan regex;
+        hanya pembacaan konteks yang bisa memutuskan. Didokumentasikan agar
+        peninjau berikutnya tidak mengulang penelusuran yang sama.
+
+==============================================================================
+KESIMPULAN
+==============================================================================
+Dari ~350 kecocokan mentah, tidak ada yang merupakan kerentanan di dalam
+framework. Sebarannya:
+  - sekitar setengah adalah kode yang tidak terkirim ke pengguna akhir
+    (skrip rilis, build tooling, situs dokumentasi, ekstensi devtools);
+  - sisanya terbagi antara mekanisme pertahanan itu sendiri (sanitizer, inert
+    body, netralisasi iframe) dan sink berkontrak yang terdokumentasi
+    (JIT eval, upgrade innerHTML, JSONP, navigasi Service Worker).
+
+Nilai terbesar dari triase ini bukan daftar vonisnya, melainkan T-19: proses
+membaca konteks temuan justru mengungkap satu keluarga sink yang katalog pola
+belum punya polanya. Itu argumen agar pemindaian dan triase selalu berjalan
+berpasangan - pemindaian saja akan melewatkannya, dan triase tanpa pemindaian
+tidak akan pernah sampai ke berkas itu.

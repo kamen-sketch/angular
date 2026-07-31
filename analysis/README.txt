@@ -20,6 +20,8 @@ ISI DIREKTORI
   SINK-INVENTORY.txt      HASIL PEMINDAIAN POLA seluruh repositori: setiap
                           kandidat sink/source beserta file:line dan regex yang
                           menemukannya (dihasilkan otomatis)
+  SINK-TRIAGE.txt         VONIS per kelompok temuan: false positive, kode yang
+                          tidak terkirim, sink beguard, atau sink berkontrak
 
   functions/<area>.txt    INVENTORY LENGKAP seluruh simbol per area.
                           Satu baris per fungsi/kelas/metode:

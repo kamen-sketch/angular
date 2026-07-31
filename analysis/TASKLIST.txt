@@ -19,8 +19,10 @@ A. INFRASTRUKTUR ANALISIS
 [x] A7  Analisis taint-to-sink (keamanan)         -> analysis/TAINT-TO-SINK.txt
 [x] A8  Verifikator sinkronisasi skema keamanan
         -> analysis/tools/check-security-schema-sync.mjs
-[x] A9  Pemindai sink/source seluruh repo (28 pola, 3.373 berkas)
+[x] A9  Pemindai sink/source seluruh repo (29 pola, 3.373 berkas)
         -> analysis/tools/scan-sinks.mjs + analysis/SINK-INVENTORY.txt
+[x] A10 Triase seluruh temuan pemindaian (FP vs sink nyata)
+        -> analysis/SINK-TRIAGE.txt
 
 B. CORE - FONDASI
 -----------------

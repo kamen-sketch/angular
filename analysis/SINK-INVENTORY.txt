@@ -1,7 +1,7 @@
 INVENTARIS SINK & SOURCE KEAMANAN (hasil pemindaian pola)
 Dihasilkan otomatis oleh analysis/tools/scan-sinks.mjs -- jangan diedit manual.
 Berkas dipindai: 3373 (test dikecualikan)
-Pola dipakai   : 28
+Pola dipakai   : 29
 
 Catatan: hasil ini adalah KANDIDAT, bukan kerentanan. Setiap baris perlu
 ditinjau manual; lihat analysis/TAINT-TO-SINK.txt untuk rantai yang sudah
@@ -29,6 +29,7 @@ sedang  sink    lokasi-navigasi                2 kecocokan  2 area
 sedang  sink    setattribute-berbahaya         5 kecocokan  3 area
 sedang  sink    setattribute-dinamis          30 kecocokan  7 area
 sedang  sink    src-href-tulis                16 kecocokan  5 area
+sedang  sink    sw-navigasi                   19 kecocokan  4 area
 sedang  sink    unwrap-safevalue              16 kecocokan  3 area
 sedang  sink    worker-importscripts           1 kecocokan  1 area
 sedang  source  src-postmessage               39 kecocokan  4 area
@@ -402,6 +403,35 @@ RINCIAN PER POLA
      packages/platform-server/src/location.ts:104  writableThis.href = href;
    [packages/core] 1
      packages/core/src/sanitization/iframe_attrs_validation.ts:31  iframe.src = '';
+
+------------------------------------------------------------------------------
+## sw-navigasi  [sedang/sink]  -- 19 kecocokan
+   clients.openWindow() / client.navigate() / scope.fetch() di Service Worker
+   regex: /\.\s*(?:openWindow|navigate)\s*\(|scope\s*\.\s*fetch\s*\(/
+
+   [packages/service-worker] 10
+     packages/service-worker/worker/src/app-version.ts:196  return await this.scope.fetch(req);
+     packages/service-worker/worker/src/assets.ts:560  return await this.scope.fetch(req);
+     packages/service-worker/worker/src/data.ts:440  const networkFetch = this.scope.fetch(req);
+     packages/service-worker/worker/src/data.ts:617  return this.scope.fetch(req);
+     packages/service-worker/worker/src/driver.ts:444  await this.scope.clients.openWindow(urlToOpen);
+     packages/service-worker/worker/src/driver.ts:451  await this.scope.clients.openWindow(urlToOpen);
+     packages/service-worker/worker/src/driver.ts:458  matchingClient = await matchingClient.navigate(urlToOpen);
+     packages/service-worker/worker/src/driver.ts:461  await this.scope.clients.openWindow(urlToOpen);
+     packages/service-worker/worker/src/driver.ts:466  await this.scope.fetch(urlToOpen);
+     packages/service-worker/worker/src/driver.ts:1377  return await this.scope.fetch(req);
+   [adev] 4
+     adev/src/app/features/playground/playground.component.ts:97  this.router.navigate([], {
+     adev/src/app/features/references/api-reference-list/api-reference-list.component.ts:162  this.router.navigate([], {
+     adev/src/app/features/references/services/reference-scroll-handler.service.ts:49  this.router.navigate([], {fragment: memberId, replaceUrl: true});
+     adev/src/app/features/update/update.component.ts:216  this.router.navigate([], {
+   [packages/router] 3
+     packages/router/src/statemanager/navigation_state_manager.ts:252  this.navigate(path, transition);
+     packages/router/src/statemanager/navigation_state_manager.ts:294  this.navigation.navigate(path, {
+     packages/router/src/statemanager/navigation_state_manager.ts:363  this.navigation.navigate(pathOrUrl, {
+   [packages/common] 2
+     packages/common/src/location/navigation_adapter_for_location.ts:59  this.navigation.navigate(url, {state, history: 'replace'});
+     packages/common/src/location/navigation_adapter_for_location.ts:66  this.navigation.navigate(url, {state, history: 'push'});
 
 ------------------------------------------------------------------------------
 ## unwrap-safevalue  [sedang/sink]  -- 16 kecocokan
