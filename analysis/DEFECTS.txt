@@ -2460,6 +2460,88 @@ F-23  Kewajiban sinkronisasi menunjuk enum yang tidak ada lagi di tempat itu
   JALUR   : isu publik, bukan security@angular.io.
 
 ==============================================================================
+AUDIT LANJUTAN — validasi holdout dan peringkat ancaman
+==============================================================================
+
+  Kritik yang diterima: korpus dioptimalkan untuk cacat LOKAL yang bentuknya
+  sudah dikenal, sedangkan temuan besar lahir dari INTERAKSI lintas-komponen,
+  lintas-request, lintas-pengguna, lintas-origin. Dua bagiannya diuji langsung,
+  dan keduanya TERBUKTI.
+
+  (1) VALIDASI-DIRI SAYA MEMANG DIUJI DENGAN DATA LATIHNYA SENDIRI
+  ----------------------------------------------------------------
+  analysis/regex-corpus/holdout/validate-mutants.mjs
+
+  Dibuat lima MUTAN: cacat yang SEMANTIKNYA IDENTIK dengan kelas prototipe
+  (F-06/F-17/F-20) tetapi DITULIS BERBEDA, plus dua kontrol negatif yang
+  benar-benar aman. G-27 dijalankan atas mutan itu, bukan atas kode Angular.
+
+      m1  simbol diganti (`rules` alih-alih VALID_ATTRS)  TERTANGKAP
+      m2  peta dibangun helper: `const t = buildLookup()` LOLOS
+      m3  `Reflect.get(policy, attackerKey)`               LOLOS
+      m4  alias dulu: `const t = registry; t[k]`           LOLOS
+      m5  optional chaining: `cache?.[k]`                  LOLOS
+      n1  Map sungguhan                                    benar didiamkan
+      n2  dijaga Object.hasOwn                             benar didiamkan
+
+      DAYA TEMU  1/5 (20%)      KETEPATAN  2/2 (100%)
+
+  Angkanya sekarang tercatat sebagai garis dasar yang berperilaku RATCHET:
+  turun = gagal, naik = juga gagal sampai garis dasarnya dinaikkan dengan
+  sengaja. Dibiarkan rendah dan terlihat, bukan diperbaiki diam-diam.
+
+  ARTINYA UNTUK SELURUH CATATAN INI: setiap kalimat "area X sudah dipindai
+  dan bersih" dalam berkas ini harus dibaca sebagai "bersih MENURUT SATU
+  BENTUK", bukan bersih terhadap kelasnya. Satu-satunya mutan yang tertangkap
+  hanyalah yang berganti nama; begitu sintaksisnya berubah, pemindai buta.
+
+  (2) PERINGKAT ANCAMAN MENGONFIRMASI DIAGNOSISNYA
+  -------------------------------------------------
+  analysis/regex-corpus/triage-rank.mjs — skor dari atribut ANCAMAN
+  (lintas-principal, kredensial, state lintas-request, server tidak ditanya,
+  masukan penyerang, invarian platform, tanpa salah-pakai, jangkauan paket),
+  bukan dari bentuk sintaksis. Tiap atribut dieja supaya bisa dibantah
+  satu per satu.
+
+      TIER A (>=12) — hanya DUA dari 21 temuan:
+          17  F-13  ngsw ignoreVary:true tidak diekspos
+          17  F-12  pola dataGroup dicocokkan sbg substring URL absolut
+      TIER B (>=6) : F-08, F-01, F-03, F-04, F-22
+      TIER C (>=2) : F-06, F-05, F-21
+      TIER D (<2)  : sisanya (11 temuan)
+
+  KEDUA penghuni tier A lahir dari PENELUSURAN ngsw, bukan dari pemindai mana
+  pun. Keduanya berbentuk sama: ada Alice dan Bob, ada state bersama, dan
+  server tidak pernah ditanya untuk permintaan Bob.
+
+  Tidak satu pun pola G-xx dirancang mencari bentuk itu. Ini penjelasan paling
+  sederhana mengapa pemindai hanya melahirkan tiga kelas baru dari 21 temuan,
+  dan mengapa menambah G-31..G-100 bergaya lama akan terus mengisi tier C dan
+  D saja.
+
+  (3) YANG BELUM DIKERJAKAN — dinyatakan supaya tidak terbaca selesai
+  -------------------------------------------------------------------
+  Belum dikerjakan sama sekali:
+    - G-31 cache-key yang kehilangan informasi (property test lintas dimensi:
+      method, query ganda, header, Authorization, cookie, body, responseType,
+      credentials, Vary)
+    - G-32 metadata identitas yang hilang saat clone/retry/redirect
+    - G-33 propagasi header sensitif saat origin berubah
+    - G-34 pencarian global yang bisa ditebak (getElementById(KONSTAN))
+    - G-35 ketidaksepakatan parser/serializer dengan orakel KEAMANAN
+      (bukan sekadar round-trip string)
+    - G-36 state mutable pada SSR diuji dengan dua request paralel
+    - harness lintas-principal sebagai infrastruktur bersama
+    - model source/sink sisi server: Host, X-Forwarded-*, respons fetch,
+      redirect, cache key, Vary, credential mode, state SSR
+    - holdout untuk pemindai selain G-27 (baru satu yang punya mutan)
+
+  Dan yang paling bernilai berikutnya, sesuai kritik: MEMPERKUAT F-13 dengan
+  pembuktian bahwa perilakunya muncul pada KONFIGURASI NORMAL dan endpoint
+  realistis — bukan konsekuensi opt-in yang sudah dinyatakan tidak aman.
+  Itu bukan soal regex pencarinya, melainkan soal bukti dampaknya.
+
+==============================================================================
 RINGKASAN
 ==============================================================================
 

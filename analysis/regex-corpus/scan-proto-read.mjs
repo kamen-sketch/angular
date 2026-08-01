@@ -21,7 +21,7 @@
 import {readFileSync, readdirSync, statSync} from 'fs';
 import {join, relative} from 'path';
 
-const ROOT = process.cwd();
+const ROOT = process.env.CORPUS_ROOT || process.cwd();
 const SKIP = /[._]spec\.ts$|\.d\.ts$|\/test\/|\/testing\/|node_modules/;
 
 function collect(dir, out = []) {
@@ -384,4 +384,5 @@ if (!f06 || !f17 || !f20 || !kontrolOk) {
   console.log('Pemindai buta terhadap kasus yang sudah diketahui — jangan percayai keluarannya.');
 }
 console.log('='.repeat(78));
+if (process.env.CORPUS_NO_SELFVALIDATE) process.exit(0);
 process.exit(f06 && f17 && f20 && kontrolOk ? 0 : 1);
