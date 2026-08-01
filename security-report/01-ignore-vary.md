@@ -195,6 +195,44 @@ themselves. **The server deployed both standard defences — `Cache-Control:
 no-store` and `Vary: Authorization` — and neither prevented the cross-principal
 replay.**
 
+### Amplifier: combined with the documented `ignoreSearch` option
+
+`cacheQueryOptions.ignoreSearch` **is** documented and developer-configurable
+(`config.md:154`, "Ignore query parameters. Defaults to `false`."). It is a
+normal thing to enable, typically to normalise cache-busting parameters.
+
+Each option is defensible alone. Together they erase **every** distinguishing
+signal between two requests — the query string *and* the request headers.
+
+`analysis/tools/ngsw/ignoresearch-combo.mjs`, same shipped worker, real browser:
+
+```
+Alice: GET /api/orders?user=alice   Authorization: Bearer ALICE
+Bob  : GET /api/orders?user=bob     Authorization: Bearer BOB
+Server sends Vary: Authorization AND Cache-Control: no-store
+
+  default (no ignoreSearch)
+    cacheQueryOptions          {"ignoreVary":true}
+    Bob received               {"name":"Bob", ...}
+    requests reaching server   2
+    Bob saw Alice's data?      no
+
+  with ignoreSearch: true
+    cacheQueryOptions          {"ignoreVary":true,"ignoreSearch":true}
+    Bob received               {"name":"Alice","orders":["..."]}
+    requests reaching server   1
+    Bob saw Alice's data?      YES
+```
+
+The control arm is safe, so what is isolated is the combination, not either
+option alone.
+
+The asymmetry is the point. A developer who writes `ignoreSearch: true` **knows**
+they are dropping the query string from the cache key — that is their choice.
+They have no way to know they also dropped the request headers, because
+`ignoreVary` is hardcoded and absent from both the public type and the
+documentation.
+
 ### Why several common rebuttals do not apply
 
 | rebuttal | why it does not apply |
@@ -207,6 +245,7 @@ replay.**
 | "this is default browser behaviour" | the Cache API default is `ignoreVary: false` |
 | "the developer chose cache-first" | true, but they were given no option to preserve `Vary` semantics |
 | "the server should have sent `no-store`" | it did; `data.ts` never reads `Cache-Control` |
+| "the developer opted into loose matching" | only for `ignoreSearch`, which is documented; `ignoreVary` is neither documented nor selectable |
 
 ### Severity
 
