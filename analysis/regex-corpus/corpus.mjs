@@ -512,6 +512,34 @@ INKONSISTENSI_DIRI.push(
       '"tidak ada NAMA OUTLET BARU" — itu memisahkan cacat dari normalisasi.',
   },
   {
+    id: 'G-29-penjaga-satu-arah',
+    hipotesis:
+      'Sebuah bahaya dijaga di sisi MASUK sebuah sistem tetapi tidak di sisi ' +
+      'KELUARnya. Petunjuk terkuatnya adalah komentar penjaga itu sendiri: bila ' +
+      'ia menjelaskan MENGAPA sesuatu berbahaya, penjelasan itu berlaku juga ' +
+      'bagi setiap tempat lain yang bisa menghasilkan bentuk yang sama.',
+    berkasPenuh: true,
+    prafilter: /protocol-relative|SecurityError|different origin/i,
+    implementasi: 'analysis/tools/protocol-relative/probe.mjs',
+    temuan:
+      'F-22. router/src/url_tree.ts parseRootSegment membuang garis miring awal ' +
+      'dan komentarnya menyebut "protocol-relative ... different origin ... ' +
+      'SecurityError". Sisi keluarnya — common/src/location/util.ts joinWithSlash, ' +
+      'yang merupakan SELURUH isi prepareExternalUrl — meloloskan "//" saat ' +
+      'baseHref "" atau "/". Diukur di Chromium: href jadi lintas origin, ' +
+      'pushState melempar SecurityError.',
+    triase:
+      'Hitung ADA BERAPA TEMPAT bahaya itu bisa muncul, lalu berapa yang dijaga. ' +
+      'Satu dari dua masih bisa disengaja. F-22 ternyata dua dari tiga dijaga ' +
+      '(parse DAN jalur commands), dan justru itu yang membuat tempat ketiga ' +
+      'layak dicatat — pertahanan yang timpang, bukan keputusan desain.',
+    pelajaran:
+      'Kontrol positif kadang lebih menentukan daripada kontrol negatif. Di sini ' +
+      'yang membuat catatannya bermakna bukan "sisi keluar bocor", melainkan ' +
+      '"dua sisi lain menutupnya". Dan pengukuran jalur normal (commands) yang ' +
+      'ternyata AMAN adalah yang menahan saya menuliskannya sebagai kerentanan.',
+  },
+  {
     id: 'G-23-default-bertentangan',
     hipotesis:
       'SATU opsi diberi default BOOLEAN yang berbeda di dua tempat. Satu cabang ' +

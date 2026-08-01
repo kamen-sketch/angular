@@ -2170,6 +2170,96 @@ F-21  encodeUriSegment melepas escape pada ':' — karakter yang dipakai
 
 
 ==============================================================================
+F-22  URL protokol-relatif ("//host") dijaga di DUA dari TIGA tempat;
+      sisi serialisasi + joinWithSlash tidak
+==============================================================================
+
+  CATATAN PENGERASAN, BUKAN KERENTANAN YANG DITUNJUKKAN. Dinyatakan di
+  depan supaya tidak terbaca lebih besar dari yang dibuktikan.
+
+  ASAL PERTANYAANNYA
+  ------------------
+  Ini pertanyaan F-21 yang dibawa ke paket lain: apakah penjaga yang ada di
+  satu sisi juga ada di sisi seberangnya? Router menuliskan bahayanya sendiri,
+  lengkap dengan alasannya, di sisi PARSE:
+
+      packages/router/src/url_tree.ts  parseRootSegment()
+        // ... would otherwise produce a `//path`-style serialized URL, which
+        // browsers interpret as protocol-relative (resolving to a different
+        // origin) and reject with a SecurityError when passed to
+        // `history.pushState`/`replaceState`.
+        while (this.consumeOptional('/')) {}
+
+  Jalur KELUARnya — yang mengisi atribut href RouterLink dan memberi makan
+  pushState — seluruhnya adalah satu fungsi di paket lain:
+
+      packages/common/src/location/location_strategy.ts:152
+        override prepareExternalUrl(internal) {
+          return joinWithSlash(this._baseHref, internal);
+        }
+
+      packages/common/src/location/util.ts  joinWithSlash()
+        if (!start) return end;                          <- lolos apa adanya
+        if (start.endsWith('/'))
+          return end.startsWith('/') ? start + end.slice(1) : start + end;
+
+  RUNTIME PROOF — @angular/common@22.1.0 + @angular/router@22.1.0 + Chromium
+  --------------------------------------------------------------------------
+  analysis/tools/protocol-relative/probe.mjs   (exit 0)
+
+  [1] joinWithSlash — API PUBLIK (`Location.joinWithSlash`), 4/12 meloloskan:
+        baseHref ""  + "//evil.test/x"  -> "//evil.test/x"   PROTOKOL-RELATIF
+        baseHref "/" + "//evil.test/x"  -> "//evil.test/x"   PROTOKOL-RELATIF
+        baseHref "/app" + "//evil.test/x" -> "/app//evil.test/x"   AMAN
+      Justru baseHref DEFAULT yang berbahaya; baseHref tidak kosong
+      menetralkan "//" karena hasilnya berawalan satu garis miring.
+
+  [2] DUA KONTROL POSITIF — bahaya yang SAMA, sudah dijaga di tempat lain:
+        (a) parse:    "//evil.test/x" -> "/evil.test/x"
+        (b) commands: createUrlTree(["//evil.test"]) -> "/evil.test"
+                      createUrlTree(["","x"])        -> "/x"
+      Inilah yang membuat catatan ini layak ada. Kalau hanya satu tempat yang
+      menjaga, "memang disengaja" masih masuk akal. Dua dari tiga dijaga
+      membuat yang ketiga lebih mirip kelalaian.
+
+  [3] Sisi SERIALISASI — tidak ada penjaga setara:
+        UrlTree dgn segmen ["", "x"] -> serialize "//x"     PROTOKOL-RELATIF
+      UrlTree/UrlSegment/UrlSegmentGroup adalah API publik, dan RouterLink
+      serta navigateByUrl menerima UrlTree secara langsung.
+
+  [4] Perilaku peramban yang DIUKUR, bukan diasumsikan (Chromium):
+        <a href="//evil.test/x">   -> http://evil.test/x    LINTAS ORIGIN
+        <a href="///evil.test/x">  -> http://evil.test/x    LINTAS ORIGIN
+        <a href="/app//evil.test"> -> tetap origin sendiri  (kontrol)
+        history.pushState("//evil.test/x") -> SecurityError
+      Dua sink, dua akibat berbeda: href berpindah origin, pushState melempar.
+      Komentar penjaga di sisi parse ternyata akurat pada keduanya.
+
+  YANG TIDAK SAYA KLAIM
+  ---------------------
+  Jalur normal TIDAK terpengaruh, dan itu diukur, bukan diperkirakan:
+  `router.navigate([...])` dengan commands string terbukti aman di [2b],
+  termasuk `["//evil.test"]`. `computeNavigation` membuang bagian kosong
+  pada indeks 0, sehingga segmen pertama tidak pernah kosong lewat jalur itu.
+
+  Untuk mencapainya, aplikasi harus:
+    (a) membangun UrlTree sendiri dengan segmen pertama kosong lalu
+        menyerahkannya ke RouterLink/navigateByUrl, ATAU
+    (b) memanggil Location.go/prepareExternalUrl dengan path berawalan "//".
+  Keduanya jalur yang jarang, dan keduanya berawal dari kode aplikasi.
+  Karena itu: celah pertahanan-berlapis, bukan kerentanan yang ditunjukkan.
+
+  PERBAIKAN
+  ---------
+  Runtuhkan garis miring awal yang beruntun di `joinWithSlash` — satu-satunya
+  tempat baseHref dan path bertemu, dan satu-satunya tempat hasil akhir yang
+  akan menjadi href atau argumen pushState benar-benar terlihat.
+
+  Jalur pelaporan: isu publik. Bukan security@angular.io — tidak ada
+  kerentanan yang bisa ditunjukkan tanpa kerja sama kode aplikasi.
+
+
+==============================================================================
 AREA DIPERIKSA, NEGATIF: skema keamanan DOM & sanitizer URL
 ==============================================================================
 
@@ -2253,6 +2343,13 @@ RINGKASAN
           + pencocokan rute             dinilai server BUKAN      sisi-server;
                                         /admin, dirender Angular  komposisi belum
                                         SEBAGAI /admin            diuji ujung-ke-ujung
+  F-22    common/src/location/util.ts   "//host" dijaga di sisi  PENGERASAN, bukan
+          joinWithSlash                 parse & jalur commands   kerentanan yg
+          + router serializeUrl         (2 kontrol positif),     ditunjukkan: jalur
+                                        TIDAK di sisi keluar.    normal (commands)
+                                        href jadi LINTAS ORIGIN  terbukti aman
+                                        di peramban; pushState   di [2b]
+                                        melempar SecurityError
   F-21    router/src/url_tree.ts        encodeUriSegment melepas RENDAH sbg kerentanan,
           :513 encodeUriString          escape ':' yang dipakai  jelas sbg cacat
           + parseParens                 parsernya sendiri sbg    kebenaran: segmen
