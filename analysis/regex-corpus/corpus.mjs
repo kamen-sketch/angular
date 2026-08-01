@@ -575,6 +575,14 @@ INKONSISTENSI_DIRI.push({
     'menangkapnya. Dua celah: peta yang dibangun fungsi (`merge(...)`) bukan ' +
     'literal, dan peta yang dideklarasikan di berkas LAIN lalu diimpor. ' +
     'Pemindai satu-berkas akan selalu melewatkan kelas kedua itu.',
+  celahYangMasihAda:
+    'F-20 (TransferState.store) TIDAK ditemukan pemindai ini, dan itu ditemukan ' +
+    'lewat penelusuran fitur. Sebabnya: `store` adalah PROPERTI KELAS ' +
+    '(`store: Record<string, unknown> = {}`), bukan `const NAME = {`. Bentuk ' +
+    'ketiga yang belum tercakup. Pelajaran yang lebih besar: pemindai menutup ' +
+    'BENTUK yang sudah dikenal; penelusuran fitur menemukan bentuk yang belum. ' +
+    'Keduanya diperlukan, dan yang kedua yang menghasilkan bentuk baru untuk ' +
+    'diberikan kembali ke pemindai.',
 });
 
 export const SEMUA = {

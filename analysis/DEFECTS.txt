@@ -1882,6 +1882,87 @@ AREA DIPERIKSA, NEGATIF: @angular/upgrade (jembatan ngUpgrade)
   Tidak ditemukan: pembacaan rantai prototipe yang tak dijaga, perangkaian
   anchor regex, maupun asimetri antar-pemanggil.
 
+
+==============================================================================
+F-20  TransferState.get() membaca lewat rantai prototipe, sementara hasKey()
+      dua puluh baris di bawahnya memakai hasOwnProperty
+==============================================================================
+
+  BERKAS
+  ------
+  packages/core/src/transfer_state.ts
+
+      :82   store: Record<string, unknown | undefined> = {};        <- objek literal
+      :90   get<T>(key, defaultValue): T {
+              return this.store[key] !== undefined ? this.store[key] : defaultValue;
+            }                                                        <- TANPA penjaga
+      :111  hasKey<T>(key): boolean {
+              return this.store.hasOwnProperty(key);                 <- DENGAN penjaga
+            }
+
+  Satu kelas, dua perlakuan. `get()` mengembalikan anggota Object.prototype
+  alih-alih `defaultValue` yang diminta pemanggil.
+
+  BAGAIMANA DITEMUKAN
+  -------------------
+  Menelusuri core/src/resource seperti diminta. `resource({id})` meneruskan
+  string pilihan developer LANGSUNG sebagai StateKey:
+      core/src/resource/resource.ts:83   options.id as StateKey<T>
+  Tanpa hashing, tanpa namespacing. Itu mengarahkan pemeriksaan ke penyimpanan
+  TransferState-nya, dan asimetrinya ada di sana.
+
+  Bandingkan dengan `httpResource`, yang untuk keperluan yang sama memakai
+  `retrieveStateFromCache` -> `makeCacheKey(req, url)` -> SHA-256 dari
+  [method, responseType, url, body, params]. Dua jalur transfer-state di satu
+  fitur, dua tingkat kehati-hatian yang berbeda.
+
+  RUNTIME PROOF — artefak npm @angular/core@22.1.0, store KOSONG
+  --------------------------------------------------------------
+  analysis/tools/transferstate-get/probe.mjs   (exit 0 = terkonfirmasi)
+
+      kunci             hasKey()   get(kunci, DEFAULT) mengembalikan
+      profil            false      DEFAULT (benar)
+      user-42           false      DEFAULT (benar)
+      toString          false      function toString() { [native code] }
+      constructor       false      function Object() { [native code] }
+      valueOf           false      function valueOf() { [native code] }
+      hasOwnProperty    false      function hasOwnProperty() { [native code] }
+
+  Tiga hal sekaligus, dan ketiganya diperlukan:
+    1. `hasKey()` menjawab false dengan BENAR untuk semua kunci warisan —
+       jadi penjaganya memang ada di kelas ini, hanya tidak di `get()`.
+    2. `get()` pada store yang SAMA mengembalikan fungsi bawaan.
+    3. Kunci biasa berperilaku benar — KONTROL NEGATIF: pemicunya spesifik
+       anggota Object.prototype, bukan "semua kunci aneh rusak".
+
+  DAMPAK — RENDAH, dan saya tidak mengklaim lebih
+  -----------------------------------------------
+  Jalur `resource()` sendiri KEBETULAN aman: resource.ts:290 memanggil
+  `hasKey()` lebih dulu, sehingga cabang `get()` tidak pernah tercapai untuk
+  kunci warisan. Yang tidak aman adalah API PUBLIKNYA: aplikasi yang memanggil
+  `transferState.get(makeStateKey('toString'), fallback)` menerima fungsi,
+  bukan fallback-nya.
+
+  Kuncinya dipilih developer, bukan penyerang. Tidak ada pengungkapan data,
+  tidak ada eskalasi. Yang salah adalah kontrak: `get(key, defaultValue)`
+  menjanjikan defaultValue ketika kunci tidak ada, dan `hasKey()` sendiri
+  menyatakan kunci itu TIDAK ADA.
+
+  PERBAIKAN
+  ---------
+      get<T>(key: StateKey<T>, defaultValue: T): T {
+        return this.store.hasOwnProperty(key) ? (this.store[key] as T) : defaultValue;
+      }
+  atau jadikan `store = Object.create(null)`, yang sekaligus menutup
+  `remove()` dan `toJson()`.
+
+  CATATAN: ini instans KETIGA dari kelas yang sama dalam sesi ini
+  (F-06 VALID_ATTRS, F-17 META_KEYS_MAP, F-20 TransferState.store) dan
+  instans PERTAMA yang ditemukan lewat penelusuran fitur, bukan lewat G-27.
+  Pemindai G-27 melewatkannya karena `store` adalah PROPERTI KELAS
+  (`store: Record<...> = {}`), bukan deklarasi `const NAME = {`. Celah itu
+  dicatat di korpus.
+
 ==============================================================================
 RINGKASAN
 ==============================================================================
@@ -1916,6 +1997,12 @@ RINGKASAN
           + pencocokan rute             dinilai server BUKAN      sisi-server;
                                         /admin, dirender Angular  komposisi belum
                                         SEBAGAI /admin            diuji ujung-ke-ujung
+  F-20    core/src/transfer_state.ts    get() baca rantai        RENDAH: kunci dipilih
+          :90 vs :111                   prototipe; hasKey() 20    developer. Kontrak
+                                        baris di bawahnya pakai   yang dilanggar:
+                                        hasOwnProperty            get() mengabaikan
+                                                                  defaultValue padahal
+                                                                  hasKey() bilang tidak ada
   F-19    platform-browser/src/dom/     APP_ID mentah ke        RENDAH sbg kerentanan
           shared_styles_host.ts:71-73   selektor CSS; menarik    (APP_ID dipilih
           + akar masalah F-05           4 elemen ASING (title,   developer). SINK KEDUA
