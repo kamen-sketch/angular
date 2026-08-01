@@ -1524,6 +1524,91 @@ F-14  Validators.pattern(string) membungkus pola dengan `^` dan `$` TANPA grup
   yang sudah terbukti membayar di F-12: PERANGKAIAN ANCHOR. Pelajarannya: yang
   berpindah antar-area bukan regexnya, melainkan KELAS cacatnya.
 
+
+==============================================================================
+F-17  Meta service: `META_KEYS_MAP[prop] || prop` membaca lewat rantai
+      prototipe pada objek literal biasa
+==============================================================================
+
+  BERKAS
+  ------
+  packages/platform-browser/src/browser/meta.ts
+      :209  const META_KEYS_MAP: {[prop: string]: string} = {httpEquiv: 'http-equiv'};
+      :198  function getMetaKeyMap(prop: string): string {
+      :199    return META_KEYS_MAP[prop] || prop;
+      :180  setMetaElementAttributes -> el.setAttribute(getMetaKeyMap(prop), tag[prop])
+      :195  containsAttributes       -> elem.getAttribute(getMetaKeyMap(key))
+
+  `META_KEYS_MAP` adalah objek literal biasa dan MEWARISI seluruh anggota
+  `Object.prototype`. Untuk prop seperti `toString`, `constructor`, `valueOf`,
+  atau `__proto__`, pembacaan itu mengembalikan FUNGSI/OBJEK bawaan — truthy —
+  sehingga fallback `|| prop` tidak pernah tercapai dan nilai itu diteruskan
+  sebagai NAMA ATRIBUT ke `setAttribute`.
+
+  Kelas yang sama dengan F-06 (i18n_parse.ts:841), di lokasi baru dan pada API
+  publik (`Meta.addTag` / `addTags` / `updateTag`).
+
+  YANG MEMBUATNYA LAYAK DICATAT
+  -----------------------------
+  Berkas yang SAMA sudah menunjukkan penulisnya memikirkan masukan bermusuhan:
+  `escapeSelectorValue` (:188-192) ditambahkan khusus untuk mencegah injeksi
+  selektor CSS, lengkap dengan komentarnya. Kesadaran itu tidak sampai ke
+  `getMetaKeyMap` sepuluh baris di atasnya. Ini pola G-22 lagi.
+
+  RANTAI VALIDASI
+  ---------------
+  1. HIPOTESIS   Akses bracket pada objek literal membaca Object.prototype.
+  2. CODE TRACE  meta.ts:199 -> :180 setAttribute. Tidak ada hasOwn di jalur.
+  3. RUNTIME PROOF  Chromium, artefak npm @angular/platform-browser@22.1.0:
+                    analysis/tools/meta-proto/probe.mjs
+                    analysis/evidence/F-17-meta-proto.png
+
+       kunci          getMetaKeyMap ->   meta.addTag(...)
+       name           "name"             ok
+       httpEquiv      "http-equiv"       ok
+       property       "property"         ok
+       sesuatuAsing   "sesuatuAsing"     ok          <- KONTROL NEGATIF
+       toString       function           InvalidCharacterError
+       constructor    function           InvalidCharacterError
+       valueOf        function           InvalidCharacterError
+       __proto__      object             InvalidCharacterError
+
+  4. KONTROL NEGATIF  `sesuatuAsing` — kunci tak dikenal yang BUKAN warisan —
+                 tetap jatuh ke fallback dan bekerja normal. Jadi pemicunya
+                 spesifik pada anggota Object.prototype, bukan pada "kunci
+                 aneh" apa pun. 4/4 warisan gagal, 0/4 normal gagal.
+
+  DAMPAK — RENDAH, dan saya tidak mengklaim lebih
+  -----------------------------------------------
+  Akibatnya `InvalidCharacterError` dilempar; panggilan addTag gagal. Bukan
+  pengungkapan data, bukan eskalasi hak, bukan XSS — nama atribut yang
+  dihasilkan selalu TIDAK SAH sehingga peramban menolaknya, bukan menerima
+  atribut yang salah.
+
+  Keterjangkauan bergantung aplikasi: pemakaian lazim memakai kunci literal
+  (`{name: 'description', content: ...}`) dan tidak terpengaruh. Yang terpapar
+  adalah aplikasi yang meneruskan objek dari sumber data ke `addTag`/`addTags`
+  — pola yang nyata untuk metadata SEO yang digerakkan CMS.
+
+  PERBAIKAN
+  ---------
+      const META_KEYS_MAP = Object.assign(Object.create(null), {httpEquiv: 'http-equiv'});
+  atau
+      return Object.hasOwn(META_KEYS_MAP, prop) ? META_KEYS_MAP[prop] : prop;
+
+  CATATAN HARNESS — dua kegagalan alat yang menyamar sebagai temuan
+  -----------------------------------------------------------------
+  1. Jalan pertama melaporkan SEMUA 8 baris melempar. Sebabnya bukan cacat:
+     `getDOM()` mengembalikan null karena adapter DOM belum dipasang (normalnya
+     terjadi saat bootstrap platform). Diperbaiki dengan memanggil
+     `ɵBrowserDomAdapter.makeCurrent()`. Tanpa kontrol negatif, ini akan
+     tercatat sebagai temuan yang jauh lebih besar daripada yang sebenarnya.
+  2. Komentar di dalam halaman memuat backtick, yang mengakhiri template
+     literal induknya -> SyntaxError.
+
+  Keduanya dicatat karena keduanya adalah mode kegagalan yang sama: alat yang
+  rusak menghasilkan keluaran yang terlihat seperti hasil.
+
 ==============================================================================
 RINGKASAN
 ==============================================================================
@@ -1558,6 +1643,12 @@ RINGKASAN
           + pencocokan rute             dinilai server BUKAN      sisi-server;
                                         /admin, dirender Angular  komposisi belum
                                         SEBAGAI /admin            diuji ujung-ke-ujung
+  F-17    platform-browser/src/         META_KEYS_MAP[prop] ||   RENDAH: melempar
+          browser/meta.ts:199           prop membaca rantai       InvalidCharacterError;
+                                        prototipe -> nama         nama atribut selalu
+                                        atribut tidak sah         TIDAK SAH, jadi tidak
+                                                                  ada atribut salah yang
+                                                                  diterima peramban
   F-14    forms/src/validators.ts       `^`+pola+`$` dirangkai   RENDAH sbg kerentanan
           :569-596                      tanpa grup -> alternasi   (validasi sisi klien),
           + directives/validators.ts    lolos anchor; peramban    JELAS sbg cacat
