@@ -481,7 +481,77 @@ export const INKONSISTENSI_DIRI = [
   },
 ];
 
+INKONSISTENSI_DIRI.push(
+  {
+    id: 'G-23-default-bertentangan',
+    hipotesis:
+      'SATU opsi diberi default BOOLEAN yang berbeda di dua tempat. Satu cabang ' +
+      'fail-open, cabang lain fail-closed, untuk opsi yang sama. Paling banyak ' +
+      'satu di antaranya benar.',
+    berkasPenuh: true,
+    prafilter: /\?\?\s*(?:true|false)|\|\|\s*(?:true|false)/,
+    re: /([\w$]+)\s*(?:\?\?|\|\|)\s*(true|false)\b/,
+    implementasi: 'analysis/regex-corpus/scan-conflicting-defaults.mjs',
+    temuan:
+      '1 kandidat (cacheOpaqueResponses di service-worker/worker/src/data.ts:353 vs :399) ' +
+      '-> TERNYATA DISENGAJA dan terdokumentasi eksplisit dalam tabel di config.md:304-309. ' +
+      'Negatif bersih.',
+    triase:
+      'Batasi ke default BOOLEAN saja — default string seperti "OK" vs "Unknown Error" ' +
+      'adalah pesan, bukan kebijakan. Buang baris komentar; tanpa itu keluarannya ' +
+      "didominasi `region='...'` di JSDoc. Lalu: apakah dokumentasi menyebut kedua " +
+      'default itu? Kalau ya, itu desain, bukan cacat.',
+  },
+  {
+    id: 'G-24-konfigurasi-lebih-sempit-dari-perilaku',
+    hipotesis:
+      'Tipe konfigurasi PUBLIK menyempitkan tipe internal dengan `Pick<T, ...>`, ' +
+      'tetapi implementasinya membangun `T` penuh dan mengisi properti DI LUAR ' +
+      'daftar itu. Framework menentukan perilaku yang aplikasi tidak punya cara ' +
+      'sah untuk mengubahnya.',
+    berkasPenuh: true,
+    prafilter: /Pick</,
+    re: /Pick<\s*([A-Za-z_$][\w$]*)\s*,\s*([^>]+)>/,
+    // Dipakai berpasangan dengan pencarian pembangunan `): T {` / `: T = {`
+    // lalu membandingkan kunci literalnya dengan daftar Pick.
+    implementasi: 'analysis/regex-corpus/scan-narrow-config.mjs',
+    temuan: 'F-13 (ignoreVary di service-worker/config/src/generator.ts:205)',
+    triase:
+      'Apakah properti yang tidak dapat dipilih itu MENONAKTIFKAN mekanisme yang ' +
+      'dinyatakan pihak lain — server, peramban, atau spesifikasi? Kalau ya, ' +
+      'aplikasi tidak punya jalan keluar yang sah dan itu jauh lebih berat ' +
+      'daripada sekadar default yang kurang tepat. Sisanya (ProgramInfo di ' +
+      'schematics) build-time, tidak menarik.',
+  },
+);
+
+// ============================================================================
+// 9. PELAJARAN LINTAS-AREA
+//    Setelah G-22..G-24 habis, area baru dibuka BUKAN dengan regex baru,
+//    melainkan dengan memindahkan KELAS cacat yang sudah terbukti membayar.
+//    F-12 lahir dari "perangkaian anchor regex"; kelas yang sama, dipindahkan
+//    ke @angular/forms, langsung menghasilkan F-14 (`^`+pola+`$` tanpa grup
+//    non-capturing -> alternasi lolos anchor).
+//    Yang berpindah antar-paket bukan polanya, melainkan pertanyaannya.
+// ============================================================================
+export const KELAS_BERPINDAH = [
+  {
+    id: 'K-01-perangkaian-anchor',
+    pertanyaan:
+      'Di mana lagi kode merangkai `^` dan `$` (atau pembatas lain) ke sebuah ' +
+      'pola yang dipasok pengguna, dengan perangkaian string biasa?',
+    prafilter: /['"`]\^['"`]|\+\s*['"`]\$['"`]|\^\$\{/,
+    re: /(['"`]\^['"`]\s*\+|\+\s*['"`]\$['"`]|`\^\$\{[^}]+\}\$`)/,
+    temuan: 'F-12 (ngsw, anchor HILANG di 2 dari 5 tempat), F-14 (forms, anchor ADA tapi tidak mengikat)',
+    triase:
+      'Dua kegagalan yang berlawanan dari satu kelas: anchor bisa HILANG, atau ' +
+      'ADA tetapi tidak mengikat karena presedensi `|`. Selalu tanyakan keduanya. ' +
+      'Lalu cari ACUAN eksternal — spesifikasi atau perilaku platform — supaya ' +
+      '"seharusnya" tidak bergantung pada selera.',
+  },
+];
+
 export const SEMUA = {
   CATATAN_RISET, SINKS, NATIVE, GUARDS, GUARDS_LANJUTAN, DESYNC, RAPUH, STRUKTUR,
-  INKONSISTENSI_DIRI,
+  INKONSISTENSI_DIRI, KELAS_BERPINDAH,
 };
