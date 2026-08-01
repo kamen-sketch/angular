@@ -1760,6 +1760,128 @@ G-27  Pemindai pembacaan rantai prototipe — kandidat baru, SEMUA gugur di
   Nilai negatif ini: kelas "pembacaan rantai prototipe" kini berstatus
   DIPERIKSA MENYELURUH, bukan sekadar "dua kasus yang kebetulan saya lihat".
 
+
+==============================================================================
+F-19  APP_ID diinterpolasi MENTAH ke selektor CSS — sink KEDUA untuk akar
+      masalah yang sama dengan F-05
+==============================================================================
+
+  BERKAS
+  ------
+  packages/platform-browser/src/dom/shared_styles_host.ts:71-73
+
+      const elements = doc.head?.querySelectorAll(
+        `style[${APP_ID_ATTRIBUTE_NAME}="${appId}"],link[${APP_ID_ATTRIBUTE_NAME}="${appId}"]`,
+      );
+
+  Dipanggil dari konstruktor `SharedStylesHost` (:135), jadi berjalan pada
+  SETIAP bootstrap aplikasi yang memakai platform-browser.
+
+  AKAR MASALAH SAMA DENGAN F-05
+  -----------------------------
+  `APP_ID` divalidasi `validAppIdInitializer` (/^[a-zA-Z0-9\-_]+$/,
+  application_tokens.ts:55-70), tetapi initializer itu HANYA didaftarkan di
+  bawah ngDevMode:
+      core/src/platform/platform_ref.ts:55        ...(ngDevMode ? [validAppIdInitializer] : [])
+      core/src/application/create_application.ts:69  idem
+  Di build produksi validasi itu TIDAK BERJALAN.
+
+  F-05 menemukan sink pertama: APP_ID mentah masuk ke `<script>` replay SSR
+  (platform-server/src/utils.ts:171). F-19 adalah sink KEDUA dengan jenis
+  berbeda: injeksi selektor CSS, di paket dan jalur eksekusi yang berbeda.
+
+  POLA G-22 LAGI, LINTAS BERKAS DALAM SATU PAKET
+  ----------------------------------------------
+  `platform-browser` SUDAH punya penjaga untuk persis masalah ini:
+      browser/meta.ts:188-192
+      function escapeSelectorValue(value: string): string {
+        // Escape backslashes and double quotes to prevent CSS selector injection.
+        // This securely confines the value inside an attribute selector.
+        return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+      }
+  Penjaga itu ditulis dengan komentar yang menyebut masalahnya secara harfiah,
+  dan tidak dipakai di shared_styles_host.ts.
+
+  RANTAI VALIDASI
+  ---------------
+  1. HIPOTESIS   Kutip ganda pada APP_ID keluar dari selektor atribut.
+  2. CODE TRACE  shared_styles_host.ts:71-73 -> konstruktor :135. Tidak ada
+                 escaping di jalur itu. Bentuknya diverifikasi ADA di bundel
+                 npm (_dom_renderer-chunk.mjs) sebelum uji dijalankan.
+  3. RUNTIME PROOF  Chromium, <head> berisi 2 elemen milik Angular
+                 (ng-app-id="ng") + <title>, <meta name="csrf">, link pihak
+                 ketiga, dan style milik orang lain:
+                   analysis/tools/appid-selector/probe.mjs
+                   analysis/evidence/F-19-appid-selector.png
+
+      APP_ID                saat ini                dengan escapeSelectorValue
+      "ng"                  2 elemen, 0 asing       2 elemen, 0 asing
+      "my-app_2"            0 elemen, 0 asing       0 elemen, 0 asing
+      'x" ], * , [z="'      6 elemen, 4 ASING       0 elemen, 0 asing
+      'a"b'                 DITOLAK SyntaxError     0 elemen, 0 asing
+      'a\b'                0 elemen, 0 asing       0 elemen, 0 asing
+
+  4. KONTROL NEGATIF  SETIAP APP_ID yang LOLOS validator dev berperilaku benar.
+                 Pemicunya persis karakter yang validator itu tolak — dan
+                 validator itu tidak berjalan di produksi.
+
+  APA YANG TERJADI PADA ELEMEN ASING
+  ----------------------------------
+  Elemen yang ikut terpilih diproses seperti milik Angular:
+    :78  styleElement.removeAttribute(APP_ID_ATTRIBUTE_NAME)
+    :82  external.set(...)  atau  :87  inline.set(...)
+  Sesudah itu mereka masuk catatan penggunaan style dan dapat DIHAPUS dari DOM
+  lewat `removeElements` pada removeUsage()/ngOnDestroy(). Pada uji ini yang
+  ikut tertarik adalah <title>, <meta name="csrf">, dan <link> pihak ketiga.
+
+  DAMPAK — dinyatakan hati-hati
+  -----------------------------
+  Ini BUKAN jalur masukan pengguna. `APP_ID` disediakan developer lewat DI.
+  Yang membuatnya layak dilaporkan bukan "penyerang mengendalikan APP_ID",
+  melainkan:
+    1. Angular MENYEDIAKAN validator untuk nilai ini, jadi ia sendiri
+       menganggap nilai itu perlu dibatasi — tetapi hanya menegakkannya di dev.
+       Aplikasi yang lolos di dev bisa berperilaku berbeda di produksi.
+    2. Sink-nya kini terbukti lebih dari satu (F-05 + F-19), sehingga
+       memperbaiki satu sink saja tidak menutup kelasnya.
+    3. Perbaikannya sudah ada di paket yang sama dan tidak dipakai.
+
+  Severity sebagai kerentanan: RENDAH (butuh APP_ID yang dipilih developer).
+  Sebagai cacat: jelas, dengan dua perbaikan yang sama-sama sepele.
+
+  PERBAIKAN
+  ---------
+  Pakai `escapeSelectorValue` yang sudah ada di browser/meta.ts:188-192, DAN
+  daftarkan `validAppIdInitializer` di luar ngDevMode. Keduanya, bukan salah
+  satu: escaping menutup sink ini, validasi menutup kelasnya.
+
+==============================================================================
+AREA DIPERIKSA, NEGATIF: @angular/upgrade (jembatan ngUpgrade)
+==============================================================================
+
+  Diperiksa untuk seluruh kelas yang sudah membayar sesi ini. Tidak ada temuan.
+
+  Satu-satunya sink HTML adalah upgrade_helper.ts:254
+      private compileHtml(html: string | TrustedHTML): ILinkFn {
+        this.element.innerHTML = html;
+  Ia diberi makan lewat `trustedHTMLFromLegacyTemplate` (security/trusted_types.ts),
+  yang membuat kebijakan Trusted Types bernama `angular#unsafe-upgrade` dengan
+  `createHTML: (s) => s` — pass-through.
+
+  Itu TERLIHAT seperti temuan, tetapi bukan: berkasnya menyatakan sendiri apa
+  adanya, dengan @fileoverview "@security All use of this module is
+  security-sensitive and should go through security review" dan pada fungsinya
+  "the template string should always be under full control of the application
+  author, as untrusted input can cause an XSS vulnerability."
+
+  Nama kebijakannya pun memuat kata "unsafe". Ini jembatan legasi yang sengaja
+  tidak menyanitasi template AngularJS, dinyatakan terbuka. Melaporkannya
+  sebagai kerentanan berarti mengabaikan dokumentasi yang ada di berkas itu
+  sendiri.
+
+  Tidak ditemukan: pembacaan rantai prototipe yang tak dijaga, perangkaian
+  anchor regex, maupun asimetri antar-pemanggil.
+
 ==============================================================================
 RINGKASAN
 ==============================================================================
@@ -1794,6 +1916,12 @@ RINGKASAN
           + pencocokan rute             dinilai server BUKAN      sisi-server;
                                         /admin, dirender Angular  komposisi belum
                                         SEBAGAI /admin            diuji ujung-ke-ujung
+  F-19    platform-browser/src/dom/     APP_ID mentah ke        RENDAH sbg kerentanan
+          shared_styles_host.ts:71-73   selektor CSS; menarik    (APP_ID dipilih
+          + akar masalah F-05           4 elemen ASING (title,   developer). SINK KEDUA
+          (validator ngDevMode-only)    meta csrf, link pihak    untuk akar masalah
+                                        ketiga) ke catatan       F-05 -> memperbaiki
+                                        style Angular            satu sink tidak cukup
   F-18    animations/browser/src/dsl/   `s*` bukan `\s*` di      RENDAH, tanpa dimensi
           animation_ast_builder.ts:81   SELF_TOKEN_REGEX ->       keamanan: selektor
                                         selektor cacat; 4/8       query() ditulis
