@@ -1,0 +1,32 @@
+=== MUAT LANGSUNG: "/admin"
+  server menerima : "/admin"
+  location SEBELUM boot: {"pathname":"/admin","search":"","hash":""}
+  location SESUDAH boot: {"pathname":"/admin","search":"","hash":""}
+  router.url: /admin | rute: admin
+  guard: [{"l":"admin","stateUrl":"/admin"}]
+  DOM: "boot…\nadmin"
+
+=== MUAT LANGSUNG: "/admin)EVIL"
+  server menerima : "/admin)EVIL"
+  location SEBELUM boot: {"pathname":"/admin)EVIL","search":"","hash":""}
+  location SESUDAH boot: {"pathname":"/admin","search":"","hash":""}
+  router.url: /admin | rute: admin
+  guard: [{"l":"admin","stateUrl":"/admin"}]
+  DOM: "boot…\nadmin"
+
+=== MUAT LANGSUNG: "/admin)\"><img src=x onerror=alert(1)>"
+  server menerima : "/admin)%22%3E%3Cimg%20src=x%20onerror=alert(1)%3E"
+  location SEBELUM boot: {"pathname":"/admin)%22%3E%3Cimg%20src=x%20onerror=alert(1)%3E","search":"","hash":""}
+  location SESUDAH boot: {"pathname":"/admin","search":"","hash":""}
+  router.url: /admin | rute: admin
+  guard: [{"l":"admin","stateUrl":"/admin"}]
+  DOM: "boot…\nadmin"
+
+=== MUAT LANGSUNG: "/admin)?q=EVIL#frag"
+  server menerima : "/admin)?q=EVIL"
+  location SEBELUM boot: {"pathname":"/admin)","search":"?q=EVIL","hash":"#frag"}
+  location SESUDAH boot: {"pathname":"/admin","search":"","hash":""}
+  router.url: /admin | rute: admin
+  guard: [{"l":"admin","stateUrl":"/admin"}]
+  DOM: "boot…\nadmin"
+

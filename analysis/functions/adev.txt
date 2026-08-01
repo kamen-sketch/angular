@@ -1,0 +1,2682 @@
+INVENTORY FUNGSI :: adev
+Total simbol: 1409 | file: 556
+Rincian: function=123, arrow=16, class=526, method=633, accessor=19, ctor=92
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## adev/src/app/app-scroller.ts
+[ ] AppScroller  (export class) :23
+[ ] AppScroller.lastScrollEvent  (accessor) :34
+[ ] AppScroller.constructor  (ctor) :38
+[ ] AppScroller.setupScrollRestoration  (method) :44
+[ ] AppScroller.scroll  (method) :97
+
+## adev/src/app/app.component.ts
+[ ] AppComponent  (export class) :45
+[ ] AppComponent.constructor  (ctor) :56
+[ ] AppComponent.focusFirstHeading  (method) :76
+[ ] AppComponent.setSearchDialogVisibilityOnKeyPress  (method) :89
+[ ] AppComponent.updateCanonicalLink  (method) :108
+[ ] AppComponent.closeSearchDialogOnNavigationSkipped  (method) :112
+
+## adev/src/app/core/layout/footer/footer.component.ts
+[ ] Footer  (export class) :20
+
+## adev/src/app/core/layout/navigation/navigation.component.ts
+[ ] Navigation  (export class) :40
+[ ] Navigation.constructor  (ctor) :103
+[ ] Navigation.setTheme  (method) :109
+[ ] Navigation.openVersionMenu  (method) :113
+[ ] Navigation.openMenu  (method) :120
+[ ] Navigation.closeMenu  (method) :124
+[ ] Navigation.openMobileNav  (method) :128
+[ ] Navigation.closeMobileNav  (method) :133
+[ ] Navigation.toggleSearchDialog  (method) :137
+[ ] Navigation.closeMobileNavOnPrimaryRouteChange  (method) :142
+[ ] Navigation.listenToRouteChange  (method) :148
+[ ] Navigation.setActivePrimaryRoute  (method) :170
+      -- (*) Reference navigation tree contains items which are not start with prefix like /migrations or /errors.
+[ ] Navigation.preventToScrollContentWhenSecondaryNavIsOpened  (method) :197
+
+## adev/src/app/core/layout/progress-bar/progress-bar.component.ts
+[ ] ProgressBarComponent  (export class) :30
+[ ] ProgressBarComponent.constructor  (ctor) :37
+[ ] ProgressBarComponent.setupPageNavigationDimming  (method) :44
+      -- Dims the main router-outlet content when navigating to a new page.
+
+## adev/src/app/core/layout/secondary-navigation/secondary-navigation.component.ts
+[ ] SecondaryNavigation  (export class) :37
+[ ] SecondaryNavigation.distinctUntilChanged  (method) :71
+[ ] SecondaryNavigation.takeUntilDestroyed  (method) :72
+[ ] SecondaryNavigation.filter  (method) :76
+[ ] SecondaryNavigation.map  (method) :77
+[ ] SecondaryNavigation.filter  (method) :78
+[ ] SecondaryNavigation.startWith  (method) :79
+[ ] SecondaryNavigation.takeUntilDestroyed  (method) :80
+[ ] SecondaryNavigation.constructor  (ctor) :83
+[ ] SecondaryNavigation.close  (method) :93
+[ ] SecondaryNavigation.setActiveRouteOnNavigationEnd  (method) :97
+[ ] SecondaryNavigation.getActiveNavigationItem  (method) :140
+[ ] SecondaryNavigation.initSlideAnimation  (method) :157
+[ ] SecondaryNavigation.setVisibleNavigationItems  (method) :166
+[ ] SecondaryNavigation.listenToPrimaryRouteChange  (method) :175
+[ ] SecondaryNavigation.getInitialPath  (method) :182
+
+## adev/src/app/core/services/a-dev-title-strategy.ts
+[ ] ADevTitleStrategy  (export class) :26
+[ ] ADevTitleStrategy.constructor  (ctor) :30
+[ ] ADevTitleStrategy.updateTitle  (method) :34
+[ ] ADevTitleStrategy.buildTitle  (method) :43
+
+## adev/src/app/core/services/analytics/analytics-format-error.ts
+[ ] formatErrorEventForAnalytics  (export function) :13
+      -- Formats an `ErrorEvent` to a human-readable string that can be sent to Google Analytics.
+[ ] formatErrorForAnalytics  (export function) :27
+      -- Formats an `Error` to a human-readable string that can be sent to Google Analytics.
+[ ] stripErrorMessagePrefix  (function) :48
+      -- Strips the error message prefix from a message or stack trace.
+
+## adev/src/app/core/services/analytics/analytics.service.ts
+[ ] AnalyticsService  (export class) :29
+      -- Google Analytics Service - captures app behaviors and sends them to Google Analytics. Associates data wi`th properties determined from the environment configura
+[ ] AnalyticsService.constructor  (ctor) :35
+[ ] AnalyticsService.reportError  (method) :42
+[ ] AnalyticsService.sendEvent  (method) :50
+[ ] AnalyticsService._gtag  (method) :54
+[ ] AnalyticsService._installGlobalSiteTag  (method) :60
+[ ] AnalyticsService._installWindowErrorHandler  (method) :104
+
+## adev/src/app/core/services/content-loader.service.ts
+[ ] ContentLoader  (export class) :16
+[ ] ContentLoader.getContent  (method) :20
+
+## adev/src/app/core/services/errors-handling/error-handler.ts
+[ ] CustomErrorHandler  (export class) :15
+[ ] CustomErrorHandler.isOnline  (accessor) :21
+[ ] CustomErrorHandler.handleError  (method) :28
+[ ] CustomErrorHandler.openErrorSnackBar  (method) :45
+
+## adev/src/app/core/services/errors-handling/error-snack-bar.ts
+[ ] ErrorSnackBar  (export class) :62
+[ ] ErrorSnackBar.constructor  (ctor) :69
+
+## adev/src/app/core/services/example-content-loader.service.ts
+[ ] ExampleContentLoader  (export class) :13
+[ ] ExampleContentLoader.loadPreview  (method) :16
+
+## adev/src/app/core/services/header.service.ts
+[ ] HeaderService  (export class) :18
+      -- Information about the deployment of this application.
+[ ] HeaderService.setCanonical  (method) :28
+      -- Sets the canonical link in the header. It supposes the header link is already present in the index.html The function behave invariably and will always point to 
+[ ] HeaderService.normalizePath  (method) :34
+
+## adev/src/app/core/services/routing/adev-url-serializer.ts
+[ ] AdevUrlSerializer  (export class) :15
+      -- Custom URL serializer extending the default behavior with Adev-specific behavior.
+[ ] AdevUrlSerializer.parse  (method) :16
+
+## adev/src/app/core/services/theme-manager.service.ts
+[ ] ThemeManager  (export class) :23
+[ ] ThemeManager.constructor  (ctor) :30
+[ ] ThemeManager.setTheme  (method) :39
+[ ] ThemeManager.loadThemePreference  (method) :47
+      -- 2. In case when there are no stored user preferences, then read them from device preferences.
+[ ] ThemeManager.setThemeBodyClasses  (method) :56
+      -- Set theme classes on the body element
+[ ] ThemeManager.getThemeFromLocalStorageValue  (method) :67
+[ ] ThemeManager.setThemeInLocalStorage  (method) :72
+[ ] ThemeManager.watchPreferredColorScheme  (method) :78
+[ ] preferredScheme  (function) :86
+
+## adev/src/app/core/services/version-manager.service.ts
+[ ] VersionManager  (export class) :34
+      -- This service will rely on 2 sources of data for the list of versions. To have an up-to-date list of versions, it will fetch a json from the deployed website. As
+
+## adev/src/app/editor/alert-manager.service.ts
+[ ] AlertManager  (export class) :27
+[ ] AlertManager.init  (method) :32
+[ ] AlertManager.listenToLocalStorageValuesChange  (method) :42
+[ ] AlertManager.increaseInstancesCounter  (method) :51
+      -- Increase count of the running instances of the webcontainers when user will boot the webcontainer
+[ ] AlertManager.decreaseInstancesCounterOnPageClose  (method) :59
+      -- Decrease count of running instances of the webcontainers when user close the app.
+[ ] AlertManager.getStoredCountOfWebcontainerInstances  (method) :68
+[ ] AlertManager.validateRunningInstances  (method) :78
+[ ] AlertManager.checkDevice  (method) :84
+[ ] AlertManager.openSnackBar  (method) :90
+
+## adev/src/app/editor/code-editor/code-editor.component.ts
+[ ] CodeEditor  (export class) :64
+[ ] CodeEditor.debounceTime  (method) :87
+      -- Display errors one second after code update
+[ ] CodeEditor.map  (method) :88
+[ ] CodeEditor.takeUntilDestroyed  (method) :97
+[ ] CodeEditor.constructor  (ctor) :108
+[ ] CodeEditor.listenToFileOpenRequests  (method) :135
+[ ] CodeEditor.openCurrentCodeInStackBlitz  (method) :190
+[ ] CodeEditor.downloadCurrentCodeEditorState  (method) :200
+[ ] CodeEditor.closeErrorsBox  (method) :206
+[ ] CodeEditor.openFileAtLocation  (method) :210
+[ ] CodeEditor.closeRenameFile  (method) :225
+[ ] CodeEditor.canDeleteFile  (method) :231
+[ ] CodeEditor.deleteFile  (method) :237
+[ ] CodeEditor.onAddButtonClick  (method) :242
+[ ] CodeEditor.onRenameButtonClick  (method) :247
+[ ] CodeEditor.renameFile  (method) :251
+[ ] CodeEditor.createFile  (method) :274
+[ ] CodeEditor.validateFileName  (method) :297
+[ ] CodeEditor.listenToDiagnosticsChange  (method) :312
+[ ] CodeEditor.setSelectedTabOnTutorialChange  (method) :322
+[ ] CodeEditor.listenToTabChange  (method) :337
+
+## adev/src/app/editor/code-editor/code-mirror-editor.service.ts
+[ ] CodeMirrorEditor  (export class) :68
+[ ] CodeMirrorEditor.init  (method) :102
+[ ] CodeMirrorEditor.disable  (method) :155
+[ ] CodeMirrorEditor.changeCurrentFile  (method) :175
+[ ] CodeMirrorEditor.scrollToLine  (method) :188
+[ ] CodeMirrorEditor.initTypescriptVfsWorker  (method) :210
+[ ] CodeMirrorEditor.saveLibrariesTypes  (method) :221
+[ ] CodeMirrorEditor.getVfsEnvFileSystemMap  (method) :260
+[ ] CodeMirrorEditor.createVfsEnv  (method) :273
+      -- Create virtual environment for TypeScript files
+[ ] CodeMirrorEditor.updateVfsEnv  (method) :283
+      -- Update virtual TypeScript file system with current code editor files
+[ ] CodeMirrorEditor.listenToProjectChanges  (method) :290
+[ ] CodeMirrorEditor.changeProject  (method) :302
+[ ] CodeMirrorEditor.setProjectFiles  (method) :312
+[ ] CodeMirrorEditor.addCreatedFileToCodeEditor  (method) :334
+      -- Update the code editor files when files are created
+[ ] CodeMirrorEditor.createFile  (method) :351
+[ ] CodeMirrorEditor.renameFile  (method) :377
+[ ] CodeMirrorEditor.deleteFile  (method) :405
+[ ] CodeMirrorEditor.createEditorState  (method) :424
+[ ] CodeMirrorEditor.getLanguageExtensions  (method) :443
+[ ] CodeMirrorEditor.changeFileContentsScheduled  (method) :468
+      -- Write the new file contents to the sandbox filesystem
+[ ] CodeMirrorEditor.changeFileContentsOnRealTime  (method) :481
+      -- Change file contents on files signals and update the editor state
+[ ] CodeMirrorEditor.getTutorialFiles  (method) :504
+
+## adev/src/app/editor/code-editor/extensions/autocomplete.ts
+[ ] getAutocompleteExtension  (export arrow) :30
+      -- Factory method for autocomplete extension.
+[ ] applyWithCodeAction  (arrow) :92
+
+## adev/src/app/editor/code-editor/extensions/diagnostics.ts
+[ ] getDiagnosticsExtension  (export arrow) :19
+      -- Factory method for diagnostics extension.
+
+## adev/src/app/editor/code-editor/extensions/tooltip.ts
+[ ] getTooltipExtension  (export arrow) :24
+[ ] forceTooltipScrollTop  (function) :88
+[ ] getMarkedHtmlFromString  (export function) :97
+[ ] getHtmlFromDisplayParts  (function) :108
+[ ] getTagsHtml  (export function) :133
+[ ] renderAndSanitizeMarkdownToHtml  (function) :154
+
+## adev/src/app/editor/code-editor/services/diagnostics-state.service.ts
+[ ] DiagnosticsState  (export class) :19
+[ ] DiagnosticsState.setDiagnostics  (method) :25
+
+## adev/src/app/editor/code-editor/utils/component-ts-syntax.ts
+[ ] angularComponent  (export function) :16
+[ ] getAngularComponentMixedParser  (function) :28
+      -- Use the Angular template parser for inline templates in Angular components
+[ ] isComponentTemplate  (function) :39
+[ ] isComponentStyles  (function) :65
+[ ] nodeHasExpectedParents  (function) :99
+      -- Utility function to verify if the given SyntaxNode has the expected parents
+
+## adev/src/app/editor/code-editor/workers/factory-provider.ts
+[ ] createTypescriptVfsWorker  (export function) :17
+
+## adev/src/app/editor/code-editor/workers/typescript-vfs.worker.ts
+[ ] createVfsEnv  (function) :57
+      -- Create virtual environment for code editor files.
+[ ] updateVfsEnv  (function) :84
+[ ] codeChanged  (function) :93
+      -- Update content of the file in virtual environment.
+[ ] getAutocompleteProposals  (function) :108
+      -- Get autocomplete proposal for given position of the file.
+[ ] runDiagnostics  (function) :157
+      -- Run diagnostics after file update.
+[ ] defineTypes  (function) :195
+[ ] displayTooltip  (function) :205
+[ ] bootstrapWorker  (arrow) :254
+
+## adev/src/app/editor/code-editor/workers/utils/environment.ts
+[ ] updateOrCreateFile  (export function) :15
+[ ] updateFile  (export function) :27
+[ ] createFile  (export function) :31
+[ ] fileExists  (export function) :35
+[ ] normalizeFileContent  (export function) :39
+[ ] normalizeFileName  (export function) :43
+
+## adev/src/app/editor/download-manager.service.ts
+[ ] DownloadManager  (export class) :16
+[ ] DownloadManager.downloadCurrentStateOfTheSolution  (method) :24
+      -- Generate ZIP with the current state of the solution in the EmbeddedEditor
+[ ] DownloadManager.saveFile  (method) :33
+
+## adev/src/app/editor/editor-ui-state.service.ts
+[ ] EditorUiState  (export class) :18
+[ ] EditorUiState.from  (method) :22
+[ ] EditorUiState.switchMap  (method) :23
+[ ] EditorUiState.filter  (method) :26
+
+## adev/src/app/editor/embedded-editor.component.ts
+[ ] EmbeddedEditor  (export class) :61
+[ ] EmbeddedEditor.map  (method) :97
+[ ] EmbeddedEditor.constructor  (ctor) :101
+[ ] EmbeddedEditor.reset  (method) :118
+[ ] EmbeddedEditor.setResizeObserver  (method) :123
+      -- Listen to resizing of Embedded Editor and set proper list of the tabs for the current resolution.
+[ ] EmbeddedEditor.isLargeEmbeddedEditor  (method) :136
+
+## adev/src/app/editor/embedded-tutorial-manager.service.ts
+[ ] EmbeddedTutorialManager  (export class) :21
+      -- A service responsible for the current tutorial, retrieving and providing its source code and metadata.
+[ ] EmbeddedTutorialManager.fetchAndSetTutorialFiles  (method) :48
+[ ] EmbeddedTutorialManager.revealAnswer  (method) :90
+[ ] EmbeddedTutorialManager.resetRevealAnswer  (method) :116
+[ ] EmbeddedTutorialManager.fetchCommonFiles  (method) :129
+[ ] EmbeddedTutorialManager.fetchTutorialSourceCode  (method) :139
+[ ] EmbeddedTutorialManager.fetchTutorialMetadata  (method) :149
+[ ] EmbeddedTutorialManager.checkIfDependenciesChanged  (method) :162
+      -- Compare previous and new dependencies to determine if the dependencies changed.
+[ ] EmbeddedTutorialManager.computeFilesToRemove  (method) :176
+
+## adev/src/app/editor/error-filename-handler.ts
+[ ] errorFilenameHandler  (function) :11
+[ ] setupErrorFilenameHandler  (export function) :36
+
+## adev/src/app/editor/inject-embedded-tutorial-manager.ts
+[ ] injectEmbeddedTutorialManager  (export function) :11
+
+## adev/src/app/editor/inject-node-runtime-sandbox.ts
+[ ] injectNodeRuntimeSandbox  (export function) :11
+
+## adev/src/app/editor/node-runtime-sandbox.service.ts
+[ ] NodeRuntimeSandbox  (export class) :42
+      -- This service is responsible for handling the WebContainer instance, which allows running a Node.js environment in the browser. It is used by the embedded editor
+[ ] NodeRuntimeSandbox.constructor  (ctor) :68
+[ ] NodeRuntimeSandbox.previewUrl$  (accessor) :82
+[ ] NodeRuntimeSandbox.init  (method) :86
+[ ] NodeRuntimeSandbox.reset  (method) :125
+[ ] NodeRuntimeSandbox.restartDevServer  (method) :148
+[ ] NodeRuntimeSandbox.getSolutionFiles  (method) :153
+[ ] NodeRuntimeSandbox.initProject  (method) :175
+      -- Initialize the WebContainer for an Angular project
+[ ] NodeRuntimeSandbox.handleProjectChanges  (method) :204
+[ ] NodeRuntimeSandbox.handleFilesToDeleteOnProjectChange  (method) :226
+[ ] NodeRuntimeSandbox.handleInstallDependenciesOnProjectChange  (method) :242
+[ ] NodeRuntimeSandbox.writeFile  (method) :251
+[ ] NodeRuntimeSandbox.renameFile  (method) :271
+[ ] NodeRuntimeSandbox.readFile  (method) :291
+[ ] NodeRuntimeSandbox.deleteFile  (method) :297
+[ ] NodeRuntimeSandbox.startInteractiveTerminal  (method) :307
+      -- Implemented based on: https://webcontainers.io/tutorial/7-add-interactivity#_2-start-the-shell
+[ ] NodeRuntimeSandbox.mountProjectFiles  (method) :344
+[ ] NodeRuntimeSandbox.setLoading  (method) :367
+[ ] NodeRuntimeSandbox.mountFiles  (method) :371
+[ ] NodeRuntimeSandbox.boot  (method) :377
+[ ] NodeRuntimeSandbox.terminate  (method) :388
+[ ] NodeRuntimeSandbox.handleWebcontainerErrors  (method) :393
+[ ] NodeRuntimeSandbox.checkForOutOfMemoryError  (method) :405
+[ ] NodeRuntimeSandbox.setErrorState  (method) :414
+[ ] NodeRuntimeSandbox.installDependencies  (method) :420
+[ ] NodeRuntimeSandbox.loadTypes  (method) :441
+[ ] NodeRuntimeSandbox.startDevServer  (method) :446
+[ ] NodeRuntimeSandbox.spawn  (method) :492
+      -- Spawn a process in the WebContainer and store the process in the service. Later on the stored process can be used to kill the process on `cleanup`
+[ ] NodeRuntimeSandbox.cleanup  (method) :515
+      -- Kill existing processes and remove files from the WebContainer when switching tutorials that have different requirements
+[ ] NodeRuntimeSandbox.killExistingProcesses  (method) :522
+[ ] NodeRuntimeSandbox.removeFiles  (method) :527
+
+## adev/src/app/editor/node-runtime-state.service.ts
+[ ] NodeRuntimeState  (export class) :31
+[ ] NodeRuntimeState.constructor  (ctor) :41
+[ ] NodeRuntimeState.setLoadingStep  (method) :45
+[ ] NodeRuntimeState.setIsResetting  (method) :49
+[ ] NodeRuntimeState.setError  (method) :53
+[ ] NodeRuntimeState.getErrorType  (method) :59
+[ ] NodeRuntimeState.checkUnsupportedEnvironment  (method) :79
+      -- This method defines whether the current environment is compatible with the NodeRuntimeSandbox. The embedded editor requires significant CPU and memory resources
+
+## adev/src/app/editor/preview/preview-error.component.ts
+[ ] PreviewError  (export class) :19
+
+## adev/src/app/editor/preview/preview.component.ts
+[ ] Preview  (export class) :30
+
+## adev/src/app/editor/stackblitz-opener.service.ts
+[ ] StackBlitzOpener  (export class) :15
+[ ] StackBlitzOpener.openCurrentSolutionInStackBlitz  (method) :21
+      -- Generate a StackBlitz project from the current state of the solution in the EmbeddedEditor
+
+## adev/src/app/editor/terminal/command-validator.service.ts
+[ ] CommandValidator  (export class) :29
+[ ] CommandValidator.validate  (method) :31
+      -- Method return true when the provided command is allowed to execute, otherwise return false.
+
+## adev/src/app/editor/terminal/interactive-terminal.ts
+[ ] InteractiveTerminal  (export class) :34
+[ ] InteractiveTerminal.constructor  (ctor) :40
+[ ] InteractiveTerminal.breakCurrentProcess  (method) :53
+[ ] InteractiveTerminal.dispose  (method) :57
+[ ] InteractiveTerminal.handleCommandExecution  (method) :64
+      -- If so, then command is executed, otherwise error message is displayed in the terminal.
+
+## adev/src/app/editor/terminal/terminal-handler.service.ts
+[ ] TerminalHandler  (export class) :22
+[ ] TerminalHandler.constructor  (ctor) :47
+[ ] TerminalHandler.readonlyTerminalInstance  (accessor) :55
+[ ] TerminalHandler.interactiveTerminalInstance  (accessor) :59
+[ ] TerminalHandler.registerTerminal  (method) :63
+[ ] TerminalHandler.resizeToFitParent  (method) :85
+[ ] TerminalHandler.clearTerminals  (method) :89
+[ ] TerminalHandler.mapTerminalToElement  (method) :96
+
+## adev/src/app/editor/terminal/terminal.component.ts
+[ ] Terminal  (export class) :33
+[ ] Terminal.constructor  (ctor) :41
+[ ] Terminal.setResizeObserver  (method) :50
+
+## adev/src/app/editor/typings-loader.service.ts
+[ ] TypingsLoader  (export class) :19
+      -- This service is responsible for retrieving the types definitions for the predefined dependencies.
+[ ] TypingsLoader.retrieveTypeDefinitions  (method) :40
+      -- Retrieve types from the predefined libraries and set the types files and contents in the `typings` signal
+[ ] TypingsLoader.getFilesToRead  (method) :72
+      -- Get the list of files to read the types definitions from the predefined libraries
+[ ] TypingsLoader.getTypeDefinitionFilesFromDirectory  (method) :149
+[ ] TypingsLoader.getTypeDefinitionFilesRecursively  (method) :156
+[ ] TypingsLoader.isTypeDefinitionFile  (method) :209
+[ ] TypingsLoader.isProbablyAFile  (method) :213
+[ ] TypingsLoader.normalizePath  (method) :219
+
+## adev/src/app/features/docs/docs.component.ts
+[ ] DocsComponent  (export class) :21
+
+## adev/src/app/features/home/animation/animation-creator.service.ts
+[ ] AnimationCreatorService  (export class) :15
+[ ] AnimationCreatorService.createAnimation  (method) :25
+      -- Create an `Animation` object
+
+## adev/src/app/features/home/animation/animation-layer.directive.ts
+[ ] AnimationLayerDirective  (export class) :17
+
+## adev/src/app/features/home/animation/animation.ts
+[ ] getStartTime  (arrow) :34
+[ ] getEndTime  (arrow) :37
+[ ] getEndStyles  (arrow) :40
+[ ] Animation  (export class) :46
+      -- CSS animation player/processor.
+[ ] Animation.constructor  (ctor) :68
+[ ] Animation.duration  (accessor) :81
+      -- Animation duration. In milliseconds
+[ ] Animation.timestep  (accessor) :86
+      -- Animation timestep (config). In milliseconds
+[ ] Animation.define  (method) :96
+      -- Define the animation.
+[ ] Animation.play  (method) :140
+      -- Play the animation.
+[ ] Animation.pause  (method) :160
+      -- Pause the animation.
+[ ] Animation.seek  (method) :174
+      -- Fast-forward or go back at a specific time.
+[ ] Animation.forward  (method) :195
+      -- Go forward in time.
+[ ] Animation.back  (method) :219
+      -- Go back in time.
+[ ] Animation.reset  (method) :239
+      -- Reset the animation.
+[ ] Animation.stop  (method) :253
+      -- Alias for `reset`.
+[ ] Animation.addPlugin  (method) :263
+      -- Add and initialize `AnimationPlugin` to the animation.
+[ ] Animation.dispose  (method) :274
+      -- Cleans all of the resources that might cause memory leaks (e.g. plugins). Resets the animation and cleans the definition.
+[ ] Animation.updateFrame  (method) :289
+      -- Update the frame/animation by a given time.
+[ ] Animation.setStyle  (method) :374
+      -- Set active style.
+[ ] Animation.removeStyle  (method) :393
+      -- Remove active style.
+[ ] Animation.animate  (method) :409
+      -- Animate function.
+[ ] Animation.extractObjectsAndValidateRules  (method) :442
+      -- Extract the objects from the selectors and validate their rules.
+[ ] Animation.validateRules  (method) :450
+      -- Check whether the start and end styles match and the time frame is correct.
+[ ] Animation.extractObjects  (method) :486
+      -- Extracts all objects (layer elements and layer child elements) by their provided selectors.
+
+## adev/src/app/features/home/animation/calculations/calc-css-value.ts
+[ ] calculateNextCssValue  (export function) :25
+      -- Calculate the next `CssPropertyValue` based on the source and a target one.
+[ ] calculateNextNumericValue  (function) :43
+[ ] calculateNextTransformValue  (function) :67
+[ ] calculateNextColorValue  (function) :98
+[ ] calculateValueDelta  (function) :119
+
+## adev/src/app/features/home/animation/parser/css-value-lexer.ts
+[ ] cssValueLexer  (export function) :33
+      -- Extract tokens from a CSS property value string.
+[ ] getCharType  (function) :73
+      -- Get the `CharType` of a character.
+[ ] getBufferType  (function) :108
+      -- Get the lexer buffer type of a `CharType`.
+
+## adev/src/app/features/home/animation/parser/css-value-parser.ts
+[ ] colorValuesHandler  (arrow) :36
+[ ] numericValueHandler  (arrow) :82
+[ ] transformValueHandler  (arrow) :119
+[ ] cssValueParser  (export function) :201
+      -- Parse a string to a `CssPropertyValue`.
+
+## adev/src/app/features/home/animation/parser/utils.ts
+[ ] stringifyParsedValue  (export function) :17
+      -- Convert a parsed CSS property value to its string representation.
+[ ] copyParsedValue  (export function) :46
+      -- Creates a deep copy of a parsed CSS property value.
+
+## adev/src/app/features/home/animation/plugins/animation-player.component.ts
+[ ] AnimationPlayerComponent  (export class) :100
+[ ] AnimationPlayerComponent.playPause  (method) :107
+[ ] AnimationPlayerComponent.seek  (method) :117
+
+## adev/src/app/features/home/animation/plugins/animation-player.ts
+[ ] AnimationPlayer  (export class) :14
+[ ] AnimationPlayer.constructor  (ctor) :26
+[ ] AnimationPlayer.init  (method) :31
+[ ] AnimationPlayer.destroy  (method) :37
+
+## adev/src/app/features/home/animation/plugins/animation-scroll-handler.ts
+[ ] AnimationScrollHandler  (export class) :16
+[ ] AnimationScrollHandler.constructor  (ctor) :31
+[ ] AnimationScrollHandler.init  (method) :40
+[ ] AnimationScrollHandler.destroy  (method) :68
+[ ] AnimationScrollHandler.createSpacer  (method) :75
+      -- Creates and stores a spacer that occupies/creates the scrollable space needed for the animation.
+[ ] AnimationScrollHandler.updateSpacerHeight  (method) :84
+      -- Update stored spacer's height.
+
+## adev/src/app/features/home/code-highlighting/code-highlighter.ts
+[ ] CodeHighlighter  (export class) :18
+[ ] CodeHighlighter.codeToHtml  (method) :21
+[ ] CodeHighlighter.ngOnDestroy  (method) :26
+[ ] CodeHighlighter.getHighlighter  (method) :30
+
+## adev/src/app/features/home/components/code-block/code-block.ts
+[ ] CodeBlock  (export class) :25
+
+## adev/src/app/features/home/components/control-flow/control-flow-example.ts
+[ ] ControlFlowExample  (export class) :19
+
+## adev/src/app/features/home/components/deferrable-views-example/deferrable-views-example.ts
+[ ] DeferrableViewsExample  (export class) :19
+[ ] DataVisualizationPage  (export class) :29
+
+## adev/src/app/features/home/components/home-animation/animation-definition.ts
+[ ] timeframe  (arrow) :71
+[ ] hideLetter  (function) :77
+      -- Duration: 1 second
+[ ] showMeteor  (function) :91
+      -- Duration: 1 to 2 seconds
+[ ] meteorShower  (function) :108
+      -- Duration: 1 to 2 seconds
+[ ] generateHomeAnimationDefinition  (export function) :138
+      -- Generate the animation definition for the home page animation.
+
+## adev/src/app/features/home/components/home-animation/home-animation.component.ts
+[ ] HomeAnimationComponent  (export class) :61
+[ ] HomeAnimationComponent.constructor  (ctor) :79
+[ ] HomeAnimationComponent.initAnimation  (method) :87
+[ ] HomeAnimationComponent.calculateMeteorDimensions  (method) :111
+      -- Calculate the dimensions and sizes of a meteor – width, height, tail, tilt angle, etc.
+[ ] HomeAnimationComponent.calculateMeteorFieldData  (method) :137
+      -- Calculate the number of meteors and size of the field.
+[ ] HomeAnimationComponent.setCssVariables  (method) :162
+
+## adev/src/app/features/home/components/hydration-example/hydration-example.ts
+[ ] HydrationExample  (export class) :31
+[ ] HydrationExample.constructor  (ctor) :82
+[ ] HydrationExample.startLifecycle  (method) :86
+[ ] HydrationExample.triggerTimerHydration  (method) :149
+[ ] HydrationExample.handleCardClick  (method) :167
+[ ] HydrationExample.updateLatency  (method) :195
+[ ] HydrationExample.resetSimulation  (method) :199
+[ ] HydrationExample.queueClick  (method) :203
+[ ] HydrationExample.processAction  (method) :208
+[ ] HydrationExample.processPendingEvents  (method) :212
+[ ] HydrationExample.logEvent  (method) :220
+[ ] HydrationExample.wait  (method) :224
+[ ] HydrationExample.getCardSignal  (method) :228
+
+## adev/src/app/features/home/components/signals-demo/signals-demo.ts
+[ ] SignalsDemo  (export class) :19
+[ ] SignalsDemo.onSearch  (method) :42
+
+## adev/src/app/features/home/home.component.ts
+[ ] Home  (export class) :46
+[ ] Home.constructor  (ctor) :56
+[ ] Home.openSearch  (method) :70
+
+## adev/src/app/features/not-found/not-found.ts
+[ ] NotFound  (export class) :18
+[ ] NotFound.constructor  (ctor) :22
+[ ] NotFound.extractSearchTerm  (method) :33
+
+## adev/src/app/features/playground/playground.component.ts
+[ ] PlaygroundComponent  (export class) :39
+[ ] PlaygroundComponent.constructor  (ctor) :61
+[ ] PlaygroundComponent.newProject  (method) :92
+[ ] PlaygroundComponent.changeTemplate  (method) :96
+[ ] PlaygroundComponent.loadTemplate  (method) :109
+
+## adev/src/app/features/references/api-item-label/api-item-label.component.ts
+[ ] ApiItemLabel  (export class) :20
+
+## adev/src/app/features/references/api-items-section/api-items-section.component.ts
+[ ] ApiItemsSection  (export class) :21
+
+## adev/src/app/features/references/api-reference-details-page/api-reference-details-page.component.ts
+[ ] ApiReferenceDetailsPage  (export class) :26
+[ ] ApiReferenceDetailsPage.constructor  (ctor) :38
+[ ] ApiReferenceDetailsPage.onContentLoaded  (method) :42
+[ ] ApiReferenceDetailsPage.scrollToSectionLegacy  (method) :51
+      -- Handle legacy URLs with a `tab` query param from the old tab layout
+[ ] ApiReferenceDetailsPage.highlightCard  (method) :70
+      -- Highlight the member card that corresponds to the URL fragment.
+
+## adev/src/app/features/references/api-reference-list/api-reference-list.component.ts
+[ ] ApiReferenceList  (export class) :59
+[ ] ApiReferenceList.linkedSignal  (method) :74
+[ ] ApiReferenceList.constructor  (ctor) :135
+[ ] ApiReferenceList.setItemType  (method) :173
+[ ] ApiReferenceList.setStatus  (method) :177
+[ ] ApiReferenceList.isStatusSelected  (method) :187
+[ ] scheduleOnIdle  (function) :197
+      -- Schedules a function to be run in a new macrotask. This is needed because the `requestIdleCallback` API is not available in all browsers.
+
+## adev/src/app/features/references/api-reference-list/api-reference-manager.service.ts
+[ ] ApiReferenceManager  (export class) :20
+[ ] ApiReferenceManager.mapManifestToApiGroups  (method) :23
+
+## adev/src/app/features/references/cli-reference-details-page/cli-reference-details-page.component.ts
+[ ] CliReferenceDetailsPage  (export class) :18
+
+## adev/src/app/features/references/helpers/manifest.helper.ts
+[ ] mapApiManifestToRoutes  (export function) :17
+[ ] getApiNavigationItems  (export function) :40
+[ ] getApiUrl  (export function) :59
+[ ] getNormalizedFilename  (function) :68
+
+## adev/src/app/features/references/pipes/api-label.pipe.ts
+[ ] ApiLabel  (export class) :16
+[ ] ApiLabel.transform  (method) :17
+
+## adev/src/app/features/references/services/reference-scroll-handler.service.ts
+[ ] ReferenceScrollHandler  (export class) :17
+[ ] ReferenceScrollHandler.setupListeners  (method) :22
+[ ] ReferenceScrollHandler.setupCodeToCListeners  (method) :26
+[ ] ReferenceScrollHandler.getMemberId  (method) :54
+[ ] ReferenceScrollHandler.findButtonElement  (method) :61
+
+## adev/src/app/features/tutorial/split-resizer-handler.service.ts
+[ ] SplitResizerHandler  (export class) :32
+[ ] SplitResizerHandler.init  (method) :49
+[ ] SplitResizerHandler.listenToResizeStart  (method) :69
+[ ] SplitResizerHandler.listenToResize  (method) :95
+[ ] SplitResizerHandler.listenToResizeEnd  (method) :121
+[ ] SplitResizerHandler.resizeContainersUsingKeyArrows  (method) :140
+      -- When resizer bar is focused, resize containers when user presses key arrows.
+[ ] SplitResizerHandler.setWidthOfTheContainers  (method) :162
+[ ] SplitResizerHandler.getCurrentContainerWidth  (method) :179
+[ ] SplitResizerHandler.getParentContainerWidth  (method) :186
+
+## adev/src/app/features/tutorial/tutorial-navigation-list.ts
+[ ] TutorialNavigationList  (export class) :47
+
+## adev/src/app/features/tutorial/tutorial.component.ts
+[ ] Tutorial  (export class) :67
+[ ] Tutorial.constructor  (ctor) :103
+[ ] Tutorial.toggleNavigationDropdown  (method) :134
+[ ] Tutorial.hideNavigationDropdown  (method) :141
+[ ] Tutorial.handleRevealAnswer  (method) :145
+[ ] Tutorial.handleResetAnswer  (method) :164
+[ ] Tutorial.setTutorialData  (method) :186
+      -- Set tutorial data based on current tutorial
+[ ] Tutorial.setRouteData  (method) :214
+      -- Set tutorial data from route data
+[ ] Tutorial.setLocalTutorialData  (method) :243
+      -- Set values for tutorials that do not use the embedded editor
+[ ] Tutorial.setEditorTutorialData  (method) :253
+      -- Set values for tutorials that use the embedded editor
+[ ] Tutorial.loadEmbeddedEditor  (method) :266
+[ ] Tutorial.loadEmbeddedEditorComponent  (method) :274
+
+## adev/src/app/features/tutorial/tutorials-route-reuse-strategy.ts
+[ ] ReuseTutorialsRouteStrategy  (export class) :14
+[ ] ReuseTutorialsRouteStrategy.shouldReuseRoute  (method) :16
+      -- reuse route when not navigating to a new one or when navigating between tutorial pages
+[ ] ReuseTutorialsRouteStrategy.isTutorialPage  (method) :24
+[ ] ReuseTutorialsRouteStrategy.getPathFromActivatedRouteSnapshot  (method) :32
+
+## adev/src/app/features/update/update.component.ts
+[ ] UpdateComponent  (export class) :59
+[ ] UpdateComponent.constructor  (ctor) :133
+[ ] UpdateComponent.copyCode  (method) :148
+[ ] UpdateComponent.showUpdatePath  (method) :157
+[ ] UpdateComponent.getAdditionalDependencies  (method) :226
+[ ] UpdateComponent.getAngularVersion  (method) :236
+[ ] UpdateComponent.renderPreV6Instructions  (method) :246
+[ ] UpdateComponent.getComplexityLevelName  (method) :308
+[ ] UpdateComponent.replaceVariables  (method) :318
+
+## adev/src/app/main.component.ts
+[ ] MainComponent  (export class) :18
+[ ] MainComponent.constructor  (ctor) :23
+
+## adev/src/app/routing/navigation-entries/index.ts
+[ ] getApiNavigationItems  (function) :1795
+[ ] getApiUrl  (function) :1816
+
+## adev/src/app/routing/router_providers.ts
+[ ] initializeNavigationAdapter  (arrow) :95
+      -- This function creates an adapter for the Router which creates a browser navigation event for any Router navigations (indicated by NavigationStart). This navigat
+
+## adev/src/content/examples/accessibility/src/app/app.component.ts
+[ ] AppComponent  (export class) :10
+[ ] AppComponent.setProgress  (method) :13
+
+## adev/src/content/examples/accessibility/src/app/progress-bar.component.ts
+[ ] ExampleProgressbarComponent  (export class) :24
+
+## adev/src/content/examples/angular-compiler-options/src/app/app.component.ts
+[ ] AppComponent  (export class) :8
+
+## adev/src/content/examples/animations/e2e/src/auto.po.ts
+[ ] getPage  (export function) :4
+[ ] getComponent  (export function) :8
+[ ] getComponentContainer  (export function) :12
+[ ] getHeroesList  (export function) :17
+
+## adev/src/content/examples/animations/e2e/src/enter-leave.po.ts
+[ ] getPage  (export function) :4
+[ ] getComponent  (export function) :8
+[ ] getComponentContainer  (export function) :12
+[ ] getHeroesList  (export function) :17
+
+## adev/src/content/examples/animations/e2e/src/filter-stagger.po.ts
+[ ] getPage  (export function) :4
+[ ] getComponentContainer  (export function) :8
+[ ] getHeroesList  (export function) :13
+[ ] getInput  (export function) :17
+
+## adev/src/content/examples/animations/e2e/src/hero-groups.ts
+[ ] getPage  (export function) :4
+[ ] getComponent  (export function) :8
+[ ] getComponentContainer  (export function) :12
+[ ] getHeroesList  (export function) :17
+
+## adev/src/content/examples/animations/e2e/src/open-close.po.ts
+[ ] getPage  (export function) :4
+[ ] getComponent  (export function) :8
+[ ] getToggleButton  (export function) :12
+[ ] getLoggingCheckbox  (export function) :17
+[ ] getComponentContainer  (export function) :22
+
+## adev/src/content/examples/animations/e2e/src/querying.po.ts
+[ ] getComponent  (export function) :4
+[ ] getToggleButton  (export function) :8
+[ ] getComponentSection  (export function) :13
+
+## adev/src/content/examples/animations/e2e/src/status-slider.po.ts
+[ ] getPage  (export function) :4
+[ ] getComponent  (export function) :8
+[ ] getToggleButton  (export function) :12
+[ ] getComponentContainer  (export function) :17
+
+## adev/src/content/examples/animations/e2e/src/toggle.po.ts
+[ ] getPage  (export function) :4
+[ ] getComponent  (export function) :8
+[ ] getToggleButton  (export function) :12
+[ ] getToggleAnimationsButton  (export function) :17
+[ ] getComponentContainer  (export function) :22
+
+## adev/src/content/examples/animations/e2e/src/util.ts
+[ ] locate  (export function) :7
+      -- locate(finder1, finder2) => element(finder1).element(finder2).element(finderN);
+[ ] sleepFor  (export function) :14
+[ ] getLinkById  (export function) :18
+
+## adev/src/content/examples/animations/src/app/about.ts
+[ ] About  (export class) :8
+
+## adev/src/content/examples/animations/src/app/animations-package/auto-height.ts
+[ ] AutoHeight  (export class) :16
+[ ] AutoHeight.toggle  (method) :19
+
+## adev/src/content/examples/animations/src/app/animations-package/increment-decrement.ts
+[ ] IncrementDecrement  (export class) :21
+[ ] IncrementDecrement.modify  (method) :24
+
+## adev/src/content/examples/animations/src/app/animations-package/insert-remove.ts
+[ ] InsertRemove  (export class) :16
+[ ] InsertRemove.toggle  (method) :19
+
+## adev/src/content/examples/animations/src/app/animations-package/open-close.ts
+[ ] OpenClose  (export class) :41
+[ ] OpenClose.toggle  (method) :44
+
+## adev/src/content/examples/animations/src/app/animations-package/reorder.ts
+[ ] Reorder  (export class) :22
+[ ] Reorder.randomize  (method) :26
+
+## adev/src/content/examples/animations/src/app/animations-package/stagger.ts
+[ ] Stagger  (export class) :21
+
+## adev/src/content/examples/animations/src/app/app.module.1.ts
+[ ] AppModule  (export class) :10
+
+## adev/src/content/examples/animations/src/app/app.ts
+[ ] AppComponent  (export class) :33
+      -- #enddocregion decorator, define
+[ ] AppComponent.getRouteAnimationData  (method) :41
+[ ] AppComponent.toggleAnimations  (method) :46
+
+## adev/src/content/examples/animations/src/app/enter-and-leave/enter-binding.ts
+[ ] EnterBinding  (export class) :9
+[ ] EnterBinding.toggle  (method) :12
+
+## adev/src/content/examples/animations/src/app/enter-and-leave/enter.ts
+[ ] Enter  (export class) :9
+[ ] Enter.toggle  (method) :12
+
+## adev/src/content/examples/animations/src/app/enter-and-leave/leave-binding.ts
+[ ] LeaveBinding  (export class) :9
+[ ] LeaveBinding.toggle  (method) :12
+
+## adev/src/content/examples/animations/src/app/enter-and-leave/leave-event.ts
+[ ] LeaveEvent  (export class) :9
+[ ] LeaveEvent.toggle  (method) :12
+[ ] LeaveEvent.leavingFn  (method) :16
+
+## adev/src/content/examples/animations/src/app/enter-and-leave/leave-parent.ts
+[ ] LeaveParent  (export class) :9
+[ ] LeaveParent.toggle  (method) :12
+
+## adev/src/content/examples/animations/src/app/enter-and-leave/leave.ts
+[ ] Leave  (export class) :9
+[ ] Leave.toggle  (method) :12
+
+## adev/src/content/examples/animations/src/app/hero-list-auto-page.ts
+[ ] HeroListAutoCalcPage  (export class) :16
+[ ] HeroListAutoCalcPage.onRemove  (method) :19
+
+## adev/src/content/examples/animations/src/app/hero-list-auto.ts
+[ ] HeroListAuto  (export class) :19
+[ ] HeroListAuto.removeHero  (method) :24
+
+## adev/src/content/examples/animations/src/app/hero-list-enter-leave-page.ts
+[ ] HeroListEnterLeavePage  (export class) :19
+[ ] HeroListEnterLeavePage.onRemove  (method) :22
+
+## adev/src/content/examples/animations/src/app/hero-list-enter-leave.ts
+[ ] HeroListEnterLeave  (export class) :31
+[ ] HeroListEnterLeave.removeHero  (method) :36
+
+## adev/src/content/examples/animations/src/app/hero-list-group-page.ts
+[ ] HeroListGroupPage  (export class) :16
+[ ] HeroListGroupPage.onRemove  (method) :19
+
+## adev/src/content/examples/animations/src/app/hero-list-groups.ts
+[ ] HeroListGroups  (export class) :71
+[ ] HeroListGroups.removeHero  (method) :76
+
+## adev/src/content/examples/animations/src/app/hero-list-page.ts
+[ ] HeroListPage  (export class) :49
+[ ] HeroListPage.heroes  (accessor) :57
+[ ] HeroListPage.ngOnInit  (method) :62
+[ ] HeroListPage.updateCriteria  (method) :66
+
+## adev/src/content/examples/animations/src/app/home.ts
+[ ] Home  (export class) :8
+
+## adev/src/content/examples/animations/src/app/insert-remove.ts
+[ ] InsertRemove  (export class) :18
+[ ] InsertRemove.toggle  (method) :21
+
+## adev/src/content/examples/animations/src/app/native-css/auto-height.ts
+[ ] AutoHeight  (export class) :9
+[ ] AutoHeight.toggle  (method) :11
+
+## adev/src/content/examples/animations/src/app/native-css/increment-decrement.ts
+[ ] IncrementDecrement  (export class) :10
+[ ] IncrementDecrement.ngOnInit  (method) :14
+[ ] IncrementDecrement.modify  (method) :22
+[ ] IncrementDecrement.animationFinished  (method) :28
+[ ] IncrementDecrement.ngOnDestroy  (method) :32
+
+## adev/src/content/examples/animations/src/app/native-css/insert.ts
+[ ] Insert  (export class) :9
+[ ] Insert.toggle  (method) :12
+
+## adev/src/content/examples/animations/src/app/native-css/open-close.ts
+[ ] OpenClose  (export class) :9
+[ ] OpenClose.toggle  (method) :11
+
+## adev/src/content/examples/animations/src/app/native-css/remove.ts
+[ ] Remove  (export class) :9
+[ ] Remove.toggle  (method) :12
+
+## adev/src/content/examples/animations/src/app/native-css/reorder.ts
+[ ] Reorder  (export class) :9
+[ ] Reorder.randomize  (method) :13
+
+## adev/src/content/examples/animations/src/app/native-css/stagger.ts
+[ ] Stagger  (export class) :9
+[ ] Stagger.refresh  (method) :13
+
+## adev/src/content/examples/animations/src/app/open-close-page.ts
+[ ] OpenClosePage  (export class) :17
+[ ] OpenClosePage.toggleLogging  (method) :20
+
+## adev/src/content/examples/animations/src/app/open-close.1.ts
+[ ] OpenCloseKeyframeComponent  (export class) :51
+[ ] OpenCloseKeyframeComponent.toggle  (method) :54
+[ ] OpenCloseKeyframeComponent.onAnimationEvent  (method) :59
+
+## adev/src/content/examples/animations/src/app/open-close.2.ts
+[ ] OpenCloseBooleanComponent  (export class) :18
+[ ] OpenCloseBooleanComponent.toggle  (method) :21
+
+## adev/src/content/examples/animations/src/app/open-close.3.ts
+[ ] OpenCloseBooleanComponent  (export class) :27
+      -- #enddocregion reusable
+[ ] OpenCloseBooleanComponent.toggle  (method) :30
+[ ] OpenCloseBooleanComponent.onAnimationEvent  (method) :35
+
+## adev/src/content/examples/animations/src/app/open-close.4.ts
+[ ] OpenCloseChild  (export class) :38
+[ ] OpenCloseChild.toggleAnimations  (method) :42
+      -- #enddocregion toggle-animation
+[ ] OpenCloseChild.toggle  (method) :46
+
+## adev/src/content/examples/animations/src/app/open-close.ts
+[ ] OpenClose  (export class) :59
+      -- #docregion events
+[ ] OpenClose.toggle  (method) :65
+[ ] OpenClose.onAnimationEvent  (method) :71
+      -- #docregion events1, events
+
+## adev/src/content/examples/animations/src/app/querying.ts
+[ ] Querying  (export class) :86
+
+## adev/src/content/examples/animations/src/app/status-slider-page.ts
+[ ] StatusSliderPage  (export class) :14
+
+## adev/src/content/examples/animations/src/app/status-slider.ts
+[ ] StatusSlider  (export class) :51
+[ ] StatusSlider.toggle  (method) :54
+
+## adev/src/content/examples/animations/src/app/toggle-animations-page.ts
+[ ] ToggleAnimationsPage  (export class) :15
+
+## adev/src/content/examples/aria/accordion/src/disabled-focusable/basic/app/app.ts
+[ ] App  (export class) :15
+
+## adev/src/content/examples/aria/accordion/src/disabled-focusable/material/app/app.ts
+[ ] App  (export class) :15
+
+## adev/src/content/examples/aria/accordion/src/disabled-focusable/retro/app/app.ts
+[ ] App  (export class) :15
+
+## adev/src/content/examples/aria/accordion/src/multi-expansion/basic/app/app.ts
+[ ] App  (export class) :15
+
+## adev/src/content/examples/aria/accordion/src/multi-expansion/material/app/app.ts
+[ ] App  (export class) :15
+
+## adev/src/content/examples/aria/accordion/src/multi-expansion/retro/app/app.ts
+[ ] App  (export class) :15
+
+## adev/src/content/examples/aria/accordion/src/single-expansion/basic/app/app.ts
+[ ] App  (export class) :15
+
+## adev/src/content/examples/aria/accordion/src/single-expansion/material/app/app.ts
+[ ] App  (export class) :15
+
+## adev/src/content/examples/aria/accordion/src/single-expansion/retro/app/app.ts
+[ ] App  (export class) :15
+
+## adev/src/content/examples/aria/autocomplete/src/basic/app/app.ts
+[ ] App  (export class) :13
+[ ] App.clear  (method) :14
+[ ] App.constructor  (ctor) :31
+[ ] App.onBlur  (method) :39
+[ ] App.onCommit  (method) :43
+[ ] App.commitSelection  (method) :49
+
+## adev/src/content/examples/aria/autocomplete/src/basic/material/app/app.ts
+[ ] App  (export class) :13
+[ ] App.clear  (method) :14
+[ ] App.constructor  (ctor) :31
+[ ] App.onBlur  (method) :39
+[ ] App.onCommit  (method) :43
+[ ] App.commitSelection  (method) :49
+
+## adev/src/content/examples/aria/autocomplete/src/basic/retro/app/app.ts
+[ ] App  (export class) :13
+[ ] App.clear  (method) :14
+[ ] App.constructor  (ctor) :31
+[ ] App.onBlur  (method) :39
+[ ] App.onCommit  (method) :43
+[ ] App.commitSelection  (method) :49
+
+## adev/src/content/examples/aria/autocomplete/src/highlight/app/app.ts
+[ ] App  (export class) :13
+[ ] App.clear  (method) :14
+[ ] App.constructor  (ctor) :33
+[ ] App.onCommit  (method) :47
+
+## adev/src/content/examples/aria/autocomplete/src/highlight/material/app/app.ts
+[ ] App  (export class) :13
+[ ] App.clear  (method) :14
+[ ] App.constructor  (ctor) :33
+[ ] App.onCommit  (method) :47
+
+## adev/src/content/examples/aria/autocomplete/src/highlight/retro/app/app.ts
+[ ] App  (export class) :13
+[ ] App.clear  (method) :14
+[ ] App.constructor  (ctor) :33
+[ ] App.onCommit  (method) :47
+
+## adev/src/content/examples/aria/autocomplete/src/manual/app/app.ts
+[ ] App  (export class) :13
+[ ] App.clear  (method) :14
+[ ] App.constructor  (ctor) :31
+[ ] App.onCommit  (method) :39
+
+## adev/src/content/examples/aria/autocomplete/src/manual/material/app/app.ts
+[ ] App  (export class) :13
+[ ] App.clear  (method) :14
+[ ] App.constructor  (ctor) :31
+[ ] App.onCommit  (method) :39
+
+## adev/src/content/examples/aria/autocomplete/src/manual/retro/app/app.ts
+[ ] App  (export class) :13
+[ ] App.clear  (method) :14
+[ ] App.constructor  (ctor) :31
+[ ] App.onCommit  (method) :39
+
+## adev/src/content/examples/aria/autocomplete/src/signal-forms/app/app.ts
+[ ] App  (export class) :11
+
+## adev/src/content/examples/aria/autocomplete/src/signal-forms/app/country-selector.ts
+[ ] CountrySelector  (export class) :13
+[ ] CountrySelector.onCommit  (method) :31
+[ ] CountrySelector.clear  (method) :44
+
+## adev/src/content/examples/aria/combobox/src/datepicker/basic/app/app.ts
+[ ] App  (export class) :60
+[ ] App.isFocusTarget  (method) :78
+      -- Helper to identify the current focus target in templates
+[ ] App.constructor  (ctor) :83
+[ ] App.nextMonth  (method) :200
+[ ] App.prevMonth  (method) :204
+[ ] App.selectDate  (method) :208
+[ ] App.onInputInput  (method) :223
+      -- Parse and reconcile dynamic input typing to calendar state
+[ ] App.onInputKeydown  (method) :232
+      -- Handle keyboard inputs on the trigger input field.
+[ ] App.onGridKeydown  (method) :255
+      -- Safe W3C calendar grid boundaries keys navigation checks
+[ ] App.navigateToDate  (method) :350
+[ ] App.handleWidgetKeydown  (method) :380
+
+## adev/src/content/examples/aria/combobox/src/datepicker/material/app/app.ts
+[ ] App  (export class) :60
+[ ] App.isFocusTarget  (method) :78
+      -- Helper to identify the current focus target in templates
+[ ] App.constructor  (ctor) :83
+[ ] App.nextMonth  (method) :200
+[ ] App.prevMonth  (method) :204
+[ ] App.selectDate  (method) :208
+[ ] App.onInputInput  (method) :223
+      -- Parse and reconcile dynamic input typing to calendar state
+[ ] App.onInputKeydown  (method) :232
+      -- Handle keyboard inputs on the trigger input field.
+[ ] App.onGridKeydown  (method) :255
+      -- Safe W3C calendar grid boundaries keys navigation checks
+[ ] App.navigateToDate  (method) :350
+[ ] App.handleWidgetKeydown  (method) :380
+
+## adev/src/content/examples/aria/combobox/src/datepicker/retro/app/app.ts
+[ ] App  (export class) :60
+[ ] App.isFocusTarget  (method) :78
+      -- Helper to identify the current focus target in templates
+[ ] App.constructor  (ctor) :83
+[ ] App.nextMonth  (method) :200
+[ ] App.prevMonth  (method) :204
+[ ] App.selectDate  (method) :208
+[ ] App.onInputInput  (method) :223
+      -- Parse and reconcile dynamic input typing to calendar state
+[ ] App.onInputKeydown  (method) :232
+      -- Handle keyboard inputs on the trigger input field.
+[ ] App.onGridKeydown  (method) :255
+      -- Safe W3C calendar grid boundaries keys navigation checks
+[ ] App.navigateToDate  (method) :350
+[ ] App.handleWidgetKeydown  (method) :380
+
+## adev/src/content/examples/aria/combobox/src/dialog/app/app.ts
+[ ] App  (export class) :29
+[ ] App.constructor  (ctor) :45
+[ ] App.onCommit  (method) :63
+[ ] App.onSearchEscape  (method) :73
+
+## adev/src/content/examples/aria/combobox/src/dialog/material/app/app.ts
+[ ] App  (export class) :29
+[ ] App.constructor  (ctor) :45
+[ ] App.onCommit  (method) :63
+[ ] App.onSearchEscape  (method) :73
+
+## adev/src/content/examples/aria/combobox/src/dialog/retro/app/app.ts
+[ ] App  (export class) :29
+[ ] App.constructor  (ctor) :45
+[ ] App.onCommit  (method) :63
+[ ] App.onSearchEscape  (method) :73
+
+## adev/src/content/examples/aria/grid/src/calendar/basic/app/app.ts
+[ ] App  (export class) :36
+[ ] App.nextMonth  (method) :127
+[ ] App.prevMonth  (method) :131
+[ ] App.scrollDown  (method) :135
+[ ] App.scrollUp  (method) :140
+[ ] App.onKeyDown  (method) :145
+
+## adev/src/content/examples/aria/grid/src/calendar/material/app/app.ts
+[ ] App  (export class) :36
+[ ] App.nextMonth  (method) :127
+[ ] App.prevMonth  (method) :131
+[ ] App.scrollDown  (method) :135
+[ ] App.scrollUp  (method) :140
+[ ] App.onKeyDown  (method) :145
+
+## adev/src/content/examples/aria/grid/src/calendar/retro/app/app.ts
+[ ] App  (export class) :36
+[ ] App.nextMonth  (method) :127
+[ ] App.prevMonth  (method) :131
+[ ] App.scrollDown  (method) :135
+[ ] App.scrollUp  (method) :140
+[ ] App.onKeyDown  (method) :145
+
+## adev/src/content/examples/aria/grid/src/overview/basic/app/app.ts
+[ ] randomSpan  (function) :14
+[ ] generateValidGrid  (function) :20
+[ ] App  (export class) :64
+
+## adev/src/content/examples/aria/grid/src/pill-list/basic/app/app.ts
+[ ] App  (export class) :10
+[ ] App.removeTag  (method) :13
+
+## adev/src/content/examples/aria/grid/src/pill-list/material/app/app.ts
+[ ] App  (export class) :10
+[ ] App.removeTag  (method) :13
+
+## adev/src/content/examples/aria/grid/src/pill-list/retro/app/app.ts
+[ ] App  (export class) :10
+[ ] App.removeTag  (method) :13
+
+## adev/src/content/examples/aria/grid/src/table/basic/app/app.ts
+[ ] App  (export class) :28
+[ ] App.constructor  (ctor) :76
+[ ] App.startEdit  (method) :82
+[ ] App.onClickEdit  (method) :98
+[ ] App.completeEdit  (method) :105
+[ ] App.updateSelection  (method) :114
+[ ] App.sortTaskById  (method) :119
+
+## adev/src/content/examples/aria/grid/src/table/retro/app/app.ts
+[ ] App  (export class) :28
+[ ] App.constructor  (ctor) :76
+[ ] App.startEdit  (method) :82
+[ ] App.onClickEdit  (method) :98
+[ ] App.completeEdit  (method) :105
+[ ] App.updateSelection  (method) :114
+[ ] App.sortTaskById  (method) :119
+
+## adev/src/content/examples/aria/listbox/src/basic/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/listbox/src/basic/material/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/listbox/src/basic/retro/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/listbox/src/chips/horizontal/app.ts
+[ ] App  (export class) :8
+
+## adev/src/content/examples/aria/listbox/src/horizontal/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/listbox/src/horizontal/material/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/listbox/src/horizontal/retro/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/listbox/src/modes/app/explicit/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/listbox/src/modes/app/follow/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/menu/src/menu-context/app/app.ts
+[ ] App  (export class) :11
+[ ] App.onContextMenu  (method) :18
+[ ] App.onItemSelected  (method) :30
+[ ] App.onOverlayKeydown  (method) :34
+[ ] App.closeContextMenu  (method) :40
+
+## adev/src/content/examples/aria/menu/src/menu-standalone/app/app.ts
+[ ] App  (export class) :11
+
+## adev/src/content/examples/aria/menu/src/menu-standalone/material/app/app.ts
+[ ] App  (export class) :11
+
+## adev/src/content/examples/aria/menu/src/menu-standalone/retro/app/app.ts
+[ ] App  (export class) :11
+
+## adev/src/content/examples/aria/menu/src/menu-trigger-disabled/app/app.ts
+[ ] App  (export class) :11
+
+## adev/src/content/examples/aria/menu/src/menu-trigger-disabled/material/app/app.ts
+[ ] App  (export class) :11
+
+## adev/src/content/examples/aria/menu/src/menu-trigger-disabled/retro/app/app.ts
+[ ] App  (export class) :11
+
+## adev/src/content/examples/aria/menu/src/menu-trigger/app/app.ts
+[ ] App  (export class) :11
+
+## adev/src/content/examples/aria/menu/src/menu-trigger/material/app/app.ts
+[ ] App  (export class) :11
+
+## adev/src/content/examples/aria/menu/src/menu-trigger/retro/app/app.ts
+[ ] App  (export class) :11
+
+## adev/src/content/examples/aria/menubar/src/basic/app/app.ts
+[ ] App  (export class) :11
+[ ] App.onFocusIn  (method) :27
+
+## adev/src/content/examples/aria/menubar/src/basic/material/app/app.ts
+[ ] App  (export class) :11
+[ ] App.onFocusIn  (method) :27
+
+## adev/src/content/examples/aria/menubar/src/basic/retro/app/app.ts
+[ ] App  (export class) :11
+[ ] App.onFocusIn  (method) :27
+
+## adev/src/content/examples/aria/menubar/src/disabled/app/app.ts
+[ ] App  (export class) :11
+[ ] App.onFocusIn  (method) :27
+
+## adev/src/content/examples/aria/menubar/src/disabled/material/app/app.ts
+[ ] App  (export class) :11
+[ ] App.onFocusIn  (method) :27
+
+## adev/src/content/examples/aria/menubar/src/disabled/retro/app/app.ts
+[ ] App  (export class) :11
+[ ] App.onFocusIn  (method) :27
+
+## adev/src/content/examples/aria/menubar/src/rtl/app/app.ts
+[ ] App  (export class) :12
+[ ] App.onFocusIn  (method) :28
+
+## adev/src/content/examples/aria/menubar/src/rtl/material/app/app.ts
+[ ] App  (export class) :12
+[ ] App.onFocusIn  (method) :28
+
+## adev/src/content/examples/aria/menubar/src/rtl/retro/app/app.ts
+[ ] App  (export class) :12
+[ ] App.onFocusIn  (method) :28
+
+## adev/src/content/examples/aria/multiselect/src/basic/app/app.ts
+[ ] App  (export class) :12
+[ ] App.constructor  (ctor) :46
+
+## adev/src/content/examples/aria/multiselect/src/basic/material/app/app.ts
+[ ] App  (export class) :12
+[ ] App.constructor  (ctor) :46
+
+## adev/src/content/examples/aria/multiselect/src/basic/retro/app/app.ts
+[ ] App  (export class) :12
+[ ] App.constructor  (ctor) :46
+
+## adev/src/content/examples/aria/multiselect/src/icons/app/app.ts
+[ ] App  (export class) :12
+[ ] App.constructor  (ctor) :53
+
+## adev/src/content/examples/aria/multiselect/src/icons/material/app/app.ts
+[ ] App  (export class) :12
+[ ] App.constructor  (ctor) :53
+
+## adev/src/content/examples/aria/multiselect/src/icons/retro/app/app.ts
+[ ] App  (export class) :12
+[ ] App.constructor  (ctor) :53
+
+## adev/src/content/examples/aria/multiselect/src/limited/app/app.ts
+[ ] App  (export class) :12
+[ ] App.constructor  (ctor) :46
+[ ] App.isOptionDisabled  (method) :53
+
+## adev/src/content/examples/aria/multiselect/src/limited/material/app/app.ts
+[ ] App  (export class) :12
+[ ] App.constructor  (ctor) :46
+[ ] App.isOptionDisabled  (method) :53
+
+## adev/src/content/examples/aria/multiselect/src/limited/retro/app/app.ts
+[ ] App  (export class) :12
+[ ] App.constructor  (ctor) :46
+[ ] App.isOptionDisabled  (method) :53
+
+## adev/src/content/examples/aria/select/src/basic/app/app.ts
+[ ] App  (export class) :12
+[ ] App.constructor  (ctor) :30
+[ ] App.onCommit  (method) :36
+
+## adev/src/content/examples/aria/select/src/basic/material/app/app.ts
+[ ] App  (export class) :12
+[ ] App.constructor  (ctor) :30
+[ ] App.onCommit  (method) :36
+
+## adev/src/content/examples/aria/select/src/basic/retro/app/app.ts
+[ ] App  (export class) :12
+[ ] App.constructor  (ctor) :30
+[ ] App.onCommit  (method) :36
+
+## adev/src/content/examples/aria/select/src/disabled/app/app.ts
+[ ] App  (export class) :12
+[ ] App.constructor  (ctor) :30
+[ ] App.onCommit  (method) :36
+
+## adev/src/content/examples/aria/select/src/disabled/material/app/app.ts
+[ ] App  (export class) :12
+[ ] App.constructor  (ctor) :30
+[ ] App.onCommit  (method) :36
+
+## adev/src/content/examples/aria/select/src/disabled/retro/app/app.ts
+[ ] App  (export class) :12
+[ ] App.constructor  (ctor) :30
+[ ] App.onCommit  (method) :36
+
+## adev/src/content/examples/aria/select/src/icons/app/app.ts
+[ ] App  (export class) :12
+[ ] App.constructor  (ctor) :37
+[ ] App.onCommit  (method) :43
+
+## adev/src/content/examples/aria/select/src/icons/material/app/app.ts
+[ ] App  (export class) :12
+[ ] App.constructor  (ctor) :37
+[ ] App.onCommit  (method) :43
+
+## adev/src/content/examples/aria/select/src/icons/retro/app/app.ts
+[ ] App  (export class) :12
+[ ] App.constructor  (ctor) :37
+[ ] App.onCommit  (method) :43
+
+## adev/src/content/examples/aria/tabs/src/disabled/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/tabs/src/disabled/material/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/tabs/src/disabled/retro/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/tabs/src/explicit-selection/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/tabs/src/explicit-selection/material/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/tabs/src/explicit-selection/retro/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/tabs/src/selection-follows-focus/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/tabs/src/selection-follows-focus/material/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/tabs/src/selection-follows-focus/retro/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/tabs/src/vertical/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/tabs/src/vertical/material/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/tabs/src/vertical/retro/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/toolbar/src/basic/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/toolbar/src/basic/material/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/toolbar/src/basic/retro/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/toolbar/src/disabled/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/toolbar/src/disabled/app/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/toolbar/src/disabled/material/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/toolbar/src/disabled/retro/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/toolbar/src/rtl/app/app.ts
+[ ] App  (export class) :11
+
+## adev/src/content/examples/aria/toolbar/src/rtl/material/app/app.ts
+[ ] App  (export class) :11
+
+## adev/src/content/examples/aria/toolbar/src/rtl/retro/app/app.ts
+[ ] App  (export class) :11
+
+## adev/src/content/examples/aria/toolbar/src/vertical/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/toolbar/src/vertical/material/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/toolbar/src/vertical/retro/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/aria/tree/src/disabled-focusable/basic/app/app.ts
+[ ] App  (export class) :19
+
+## adev/src/content/examples/aria/tree/src/disabled-focusable/retro/app/app.ts
+[ ] App  (export class) :19
+
+## adev/src/content/examples/aria/tree/src/multi-select/basic/app/app.ts
+[ ] App  (export class) :19
+
+## adev/src/content/examples/aria/tree/src/multi-select/retro/app/app.ts
+[ ] App  (export class) :19
+
+## adev/src/content/examples/aria/tree/src/nav/basic/app/app.ts
+[ ] App  (export class) :20
+
+## adev/src/content/examples/aria/tree/src/single-select-follow-focus/basic/app/app.ts
+[ ] App  (export class) :19
+
+## adev/src/content/examples/aria/tree/src/single-select-follow-focus/retro/app/app.ts
+[ ] App  (export class) :19
+
+## adev/src/content/examples/aria/tree/src/single-select/basic/app/app.ts
+[ ] App  (export class) :19
+
+## adev/src/content/examples/aria/tree/src/single-select/retro/app/app.ts
+[ ] App  (export class) :19
+
+## adev/src/content/examples/attribute-directives/src/app/app.component.1.ts
+[ ] AppComponent  (export class) :10
+      -- #docregion class
+
+## adev/src/content/examples/attribute-directives/src/app/app.component.ts
+[ ] AppComponent  (export class) :11
+      -- #docregion class
+
+## adev/src/content/examples/attribute-directives/src/app/highlight.directive.1.ts
+[ ] HighlightDirective  (export class) :7
+[ ] HighlightDirective.constructor  (ctor) :10
+
+## adev/src/content/examples/attribute-directives/src/app/highlight.directive.2.ts
+[ ] HighlightDirective  (export class) :16
+      -- #enddocregion decorator
+[ ] HighlightDirective.onMouseEnter  (method) :20
+      -- #docregion mouse-methods
+[ ] HighlightDirective.onMouseLeave  (method) :24
+[ ] HighlightDirective.highlight  (method) :28
+
+## adev/src/content/examples/attribute-directives/src/app/highlight.directive.3.ts
+[ ] HighlightDirective  (export class) :12
+[ ] HighlightDirective.onMouseEnter  (method) :20
+      -- #docregion mouse-enter
+[ ] HighlightDirective.onMouseLeave  (method) :25
+[ ] HighlightDirective.highlight  (method) :29
+
+## adev/src/content/examples/attribute-directives/src/app/highlight.directive.ts
+[ ] HighlightDirective  (export class) :10
+[ ] HighlightDirective.onMouseEnter  (method) :20
+      -- #docregion mouse-enter
+[ ] HighlightDirective.onMouseLeave  (method) :25
+[ ] HighlightDirective.highlight  (method) :29
+
+## adev/src/content/examples/built-in-directives/src/app/app.component.ts
+[ ] AppComponent  (export class) :51
+[ ] AppComponent.ngOnInit  (method) :84
+[ ] AppComponent.setUppercaseName  (method) :91
+[ ] AppComponent.setCurrentClasses  (method) :96
+      -- #docregion setClasses
+[ ] AppComponent.setCurrentStyles  (method) :107
+      -- #docregion setStyles
+[ ] AppComponent.isActiveToggle  (method) :117
+[ ] AppComponent.giveNullCustomerValue  (method) :121
+[ ] AppComponent.resetItems  (method) :125
+[ ] AppComponent.resetList  (method) :131
+[ ] AppComponent.changeIds  (method) :137
+[ ] AppComponent.clearTrackByCounts  (method) :144
+[ ] AppComponent.trackByItems  (method) :151
+      -- #docregion trackByItems
+[ ] AppComponent.trackById  (method) :156
+[ ] AppComponent.getValue  (method) :160
+
+## adev/src/content/examples/built-in-directives/src/app/item-detail/item-detail.component.ts
+[ ] ItemDetailComponent  (export class) :10
+
+## adev/src/content/examples/built-in-directives/src/app/item-switch.component.ts
+[ ] StoutItemComponent  (export class) :10
+      -- #docregion input
+[ ] BestItemComponent  (export class) :19
+[ ] DeviceItemComponent  (export class) :27
+[ ] LostItemComponent  (export class) :35
+[ ] UnknownItemComponent  (export class) :43
+
+## adev/src/content/examples/built-in-directives/src/app/item.ts
+[ ] Item  (export class) :1
+[ ] Item.constructor  (ctor) :12
+[ ] Item.clone  (method) :22
+
+## adev/src/content/examples/cli-builder/src/my-builder.ts
+[ ] copyFileBuilder  (function) :16
+
+## adev/src/content/examples/drag-drop/src/axis-lock/app/app.ts
+[ ] CdkDragDropAxisLockExample  (export class) :13
+
+## adev/src/content/examples/drag-drop/src/boundary/app/app.ts
+[ ] CdkDragDropBoundaryExample  (export class) :13
+
+## adev/src/content/examples/drag-drop/src/connected-sorting-group/app/app.ts
+[ ] CdkDragDropConnectedSortingGroupExample  (export class) :20
+[ ] CdkDragDropConnectedSortingGroupExample.drop  (method) :25
+
+## adev/src/content/examples/drag-drop/src/connected-sorting/app/app.ts
+[ ] CdkDragDropConnectedSortingExample  (export class) :19
+[ ] CdkDragDropConnectedSortingExample.drop  (method) :24
+
+## adev/src/content/examples/drag-drop/src/copy-list/app/app.ts
+[ ] CdkDragDropCopyListExample  (export class) :19
+[ ] CdkDragDropCopyListExample.drop  (method) :23
+
+## adev/src/content/examples/drag-drop/src/custom-handle/app/app.ts
+[ ] CdkDragDropHandleExample  (export class) :13
+
+## adev/src/content/examples/drag-drop/src/custom-placeholder/app/app.ts
+[ ] CdkDragDropCustomPlaceholderExample  (export class) :19
+[ ] CdkDragDropCustomPlaceholderExample.drop  (method) :32
+
+## adev/src/content/examples/drag-drop/src/custom-preview/app/app.ts
+[ ] CdkDragDropCustomPreviewExample  (export class) :19
+[ ] CdkDragDropCustomPreviewExample.drop  (method) :66
+
+## adev/src/content/examples/drag-drop/src/delay-drag/app/app.ts
+[ ] CdkDragDropDelayExample  (export class) :13
+
+## adev/src/content/examples/drag-drop/src/disable-drag/app/app.ts
+[ ] CdkDragDropDisabledExample  (export class) :13
+[ ] CdkDragDropDisabledExample.drop  (method) :20
+
+## adev/src/content/examples/drag-drop/src/disable-sorting/app/app.ts
+[ ] CdkDragDropDisabledSortingExample  (export class) :20
+[ ] CdkDragDropDisabledSortingExample.drop  (method) :25
+
+## adev/src/content/examples/drag-drop/src/enter-predicate/app/app.ts
+[ ] CdkDragDropEnterPredicateExample  (export class) :19
+[ ] CdkDragDropEnterPredicateExample.drop  (method) :23
+[ ] CdkDragDropEnterPredicateExample.evenPredicate  (method) :37
+      -- Predicate function that only allows even numbers to be dropped into a list.
+[ ] CdkDragDropEnterPredicateExample.noReturnPredicate  (method) :42
+      -- Predicate function that doesn't allow items to be dropped into a list.
+
+## adev/src/content/examples/drag-drop/src/free-drag-position/app/app.ts
+[ ] CdkDragDropFreeDragPositionExample  (export class) :13
+[ ] CdkDragDropFreeDragPositionExample.changePosition  (method) :16
+
+## adev/src/content/examples/drag-drop/src/horizontal-sorting/app/app.ts
+[ ] CdkDragDropHorizontalSortingExample  (export class) :13
+[ ] CdkDragDropHorizontalSortingExample.drop  (method) :22
+
+## adev/src/content/examples/drag-drop/src/mixed-sorting/app/app.ts
+[ ] CdkDragDropMixedSortingExample  (export class) :13
+[ ] CdkDragDropMixedSortingExample.drop  (method) :16
+
+## adev/src/content/examples/drag-drop/src/overview/app/app.ts
+[ ] CdkDragDropOverviewExample  (export class) :13
+
+## adev/src/content/examples/drag-drop/src/root-element/app/app.ts
+[ ] CdkDragDropRootElementExample  (export class) :23
+[ ] CdkDragDropRootElementExample.ngAfterViewInit  (method) :30
+[ ] CdkDragDropRootElementExample.ngOnDestroy  (method) :39
+[ ] CdkDragDropRootElementExample.openDialog  (method) :43
+
+## adev/src/content/examples/drag-drop/src/sort-predicate/app/app.ts
+[ ] CdkDragDropSortPredicateExample  (export class) :13
+[ ] CdkDragDropSortPredicateExample.drop  (method) :16
+[ ] CdkDragDropSortPredicateExample.sortPredicate  (method) :24
+      -- Predicate function that only allows even numbers to be sorted into even indices and odd numbers at odd indices.
+
+## adev/src/content/examples/drag-drop/src/sorting/app/app.ts
+[ ] CdkDragDropSortingExample  (export class) :13
+[ ] CdkDragDropSortingExample.drop  (method) :26
+
+## adev/src/content/examples/dynamic-form/src/app/app.component.ts
+[ ] AppComponent  (export class) :22
+
+## adev/src/content/examples/dynamic-form/src/app/dynamic-form-question.component.ts
+[ ] DynamicFormQuestionComponent  (export class) :12
+[ ] DynamicFormQuestionComponent.isValid  (accessor) :16
+
+## adev/src/content/examples/dynamic-form/src/app/dynamic-form.component.ts
+[ ] DynamicFormComponent  (export class) :16
+[ ] DynamicFormComponent.onSubmit  (method) :25
+
+## adev/src/content/examples/dynamic-form/src/app/question-base.ts
+[ ] QuestionBase  (export class) :2
+      -- #docregion
+[ ] QuestionBase.constructor  (ctor) :12
+
+## adev/src/content/examples/dynamic-form/src/app/question-control.service.ts
+[ ] QuestionControlService  (export class) :8
+[ ] QuestionControlService.toFormGroup  (method) :9
+
+## adev/src/content/examples/dynamic-form/src/app/question-dropdown.ts
+[ ] DropdownQuestion  (export class) :4
+
+## adev/src/content/examples/dynamic-form/src/app/question-textbox.ts
+[ ] TextboxQuestion  (export class) :4
+
+## adev/src/content/examples/dynamic-form/src/app/question.service.ts
+[ ] QuestionService  (export class) :10
+[ ] QuestionService.getQuestions  (method) :12
+      -- TODO: get from a remote source of question metadata
+
+## adev/src/content/examples/elements/src/app/app.ts
+[ ] App  (export class) :16
+[ ] App.constructor  (ctor) :17
+
+## adev/src/content/examples/elements/src/app/popup.service.ts
+[ ] PopupService  (export class) :12
+[ ] PopupService.showAsComponent  (method) :18
+      -- before adding the popup to the DOM.
+[ ] PopupService.showAsElement  (method) :45
+      -- This uses the new custom-element method to add the popup to the DOM.
+
+## adev/src/content/examples/elements/src/app/popup.ts
+[ ] Popup  (export class) :44
+
+## adev/src/content/examples/form-validation/e2e/src/app.e2e-spec.ts
+[ ] getPage  (function) :49
+[ ] tests  (function) :69
+[ ] expectFormIsValid  (function) :151
+[ ] expectFormIsInvalid  (function) :155
+[ ] triggerRoleValidation  (function) :159
+[ ] waitForAlterEgoValidation  (function) :164
+[ ] bobTests  (function) :169
+[ ] asyncValidationTests  (function) :190
+[ ] crossValidationTests  (function) :216
+
+## adev/src/content/examples/form-validation/src/app/app.component.ts
+[ ] AppComponent  (export class) :21
+
+## adev/src/content/examples/form-validation/src/app/reactive/actor-form-reactive.component.1.ts
+[ ] HeroFormReactiveComponent  (export class) :13
+[ ] HeroFormReactiveComponent.name  (accessor) :31
+[ ] HeroFormReactiveComponent.skill  (accessor) :35
+
+## adev/src/content/examples/form-validation/src/app/reactive/actor-form-reactive.component.2.ts
+[ ] HeroFormReactiveComponent  (export class) :14
+[ ] HeroFormReactiveComponent.ngOnInit  (method) :25
+[ ] HeroFormReactiveComponent.name  (accessor) :45
+[ ] HeroFormReactiveComponent.skill  (accessor) :49
+[ ] HeroFormReactiveComponent.role  (accessor) :53
+
+## adev/src/content/examples/form-validation/src/app/reactive/actor-form-reactive.component.ts
+[ ] ActorFormReactiveComponent  (export class) :14
+[ ] ActorFormReactiveComponent.name  (accessor) :37
+[ ] ActorFormReactiveComponent.skill  (accessor) :41
+[ ] ActorFormReactiveComponent.role  (accessor) :45
+
+## adev/src/content/examples/form-validation/src/app/shared/actors.service.ts
+[ ] ActorsService  (export class) :8
+[ ] ActorsService.isRoleTaken  (method) :9
+
+## adev/src/content/examples/form-validation/src/app/shared/forbidden-name.directive.ts
+[ ] forbiddenNameValidator  (export function) :13
+      -- An actor's name can't match the given regular expression
+[ ] ForbiddenValidatorDirective  (export class) :33
+[ ] ForbiddenValidatorDirective.validate  (method) :36
+
+## adev/src/content/examples/form-validation/src/app/shared/role.directive.ts
+[ ] UniqueRoleValidator  (export class) :14
+      -- #docregion async-validator
+[ ] UniqueRoleValidator.validate  (method) :17
+[ ] UniqueRoleValidatorDirective  (export class) :37
+[ ] UniqueRoleValidatorDirective.validate  (method) :40
+
+## adev/src/content/examples/form-validation/src/app/shared/unambiguous-role.directive.ts
+[ ] unambiguousRoleValidator  (export arrow) :13
+      -- An actor's name can't match the actor's role
+[ ] UnambiguousRoleValidatorDirective  (export class) :34
+[ ] UnambiguousRoleValidatorDirective.validate  (method) :35
+
+## adev/src/content/examples/form-validation/src/app/shared/unambiguous-role.ts
+[ ] unambiguousRoleValidator  (export arrow) :13
+      -- An actor's name can't match the actor's role
+[ ] UnambiguousRoleValidatorDirective  (export class) :34
+[ ] UnambiguousRoleValidatorDirective.validate  (method) :35
+
+## adev/src/content/examples/form-validation/src/app/template/actor-form-template.component.ts
+[ ] ActorFormTemplateComponent  (export class) :18
+
+## adev/src/content/examples/forms-overview/src/app/app.component.ts
+[ ] AppComponent  (export class) :11
+
+## adev/src/content/examples/forms-overview/src/app/reactive/favorite-color/favorite-color.component.ts
+[ ] FavoriteColorReactive  (export class) :9
+
+## adev/src/content/examples/forms-overview/src/app/shared/utils.ts
+[ ] createNewEvent  (export function) :1
+
+## adev/src/content/examples/forms-overview/src/app/template/favorite-color/favorite-color.component.ts
+[ ] FavoriteColorTemplate  (export class) :9
+
+## adev/src/content/examples/forms/src/app/actor-form/actor-form.component.ts
+[ ] ActorFormComponent  (export class) :15
+[ ] ActorFormComponent.onSubmit  (method) :24
+[ ] ActorFormComponent.newActor  (method) :33
+      -- #docregion final, new-actor
+[ ] ActorFormComponent.heroine  (method) :38
+[ ] ActorFormComponent.showFormControls  (method) :50
+      -- Name via form.controls = {{showFormControls(actorForm)}}
+
+## adev/src/content/examples/forms/src/app/actor.ts
+[ ] Actor  (export class) :2
+      -- #docregion
+[ ] Actor.constructor  (ctor) :3
+
+## adev/src/content/examples/forms/src/app/app.component.ts
+[ ] AppComponent  (export class) :9
+
+## adev/src/content/examples/hello-world/src/app/app.component-old.ts
+[ ] HelloWorldComponent  (export class) :8
+
+## adev/src/content/examples/hello-world/src/app/app.component.ts
+[ ] HelloWorldComponent  (export class) :8
+
+## adev/src/content/examples/hello-world/src/app/tailwind-app.component.ts
+[ ] HelloWorldComponent  (export class) :7
+
+## adev/src/content/examples/i18n/doc-files/app.module.ts
+[ ] AppModule  (export class) :14
+
+## adev/src/content/examples/i18n/doc-files/locale_plural_function.ts
+[ ] plural  (function) :3
+      -- #docregion
+
+## adev/src/content/examples/i18n/src/app/app.component.ts
+[ ] AppComponent  (export class) :9
+[ ] AppComponent.inc  (method) :21
+[ ] AppComponent.male  (method) :24
+[ ] AppComponent.female  (method) :27
+[ ] AppComponent.other  (method) :30
+[ ] AppComponent.toggleDisplay  (method) :33
+
+## adev/src/content/examples/reactive-forms/e2e/src/app.e2e-spec.ts
+[ ] getInput  (function) :135
+
+## adev/src/content/examples/reactive-forms/src/app/app.component.ts
+[ ] AppComponent  (export class) :13
+[ ] AppComponent.toggleEditor  (method) :19
+
+## adev/src/content/examples/reactive-forms/src/app/name-editor/name-editor.component.ts
+[ ] NameEditorComponent  (export class) :14
+[ ] NameEditorComponent.updateName  (method) :20
+      -- #docregion update-value
+
+## adev/src/content/examples/reactive-forms/src/app/profile-editor/profile-editor.component.1.ts
+[ ] ProfileEditorComponent  (export class) :13
+[ ] ProfileEditorComponent.updateProfile  (method) :30
+      -- #docregion patch-value
+
+## adev/src/content/examples/reactive-forms/src/app/profile-editor/profile-editor.component.2.ts
+[ ] ProfileEditorComponent  (export class) :17
+[ ] ProfileEditorComponent.aliases  (accessor) :36
+      -- #enddocregion form-builder, formgroup-compare
+[ ] ProfileEditorComponent.updateProfile  (method) :40
+[ ] ProfileEditorComponent.addAlias  (method) :49
+
+## adev/src/content/examples/reactive-forms/src/app/profile-editor/profile-editor.component.ts
+[ ] ProfileEditorComponent  (export class) :16
+[ ] ProfileEditorComponent.aliases  (accessor) :35
+      -- #docregion aliases-getter
+[ ] ProfileEditorComponent.updateProfile  (method) :40
+[ ] ProfileEditorComponent.addAlias  (method) :49
+      -- #docregion add-alias
+[ ] ProfileEditorComponent.onSubmit  (method) :54
+      -- #docregion on-submit
+
+## adev/src/content/examples/routing-with-urlmatcher/src/app/app.ts
+[ ] App  (export class) :10
+
+## adev/src/content/examples/routing-with-urlmatcher/src/app/profile/profile.ts
+[ ] Profile  (export class) :8
+
+## adev/src/content/examples/schematics-for-libraries/projects/my-lib/schematics/my-service/index.1.ts
+[ ] myService  (export function) :6
+      -- #docregion factory
+
+## adev/src/content/examples/schematics-for-libraries/projects/my-lib/schematics/my-service/index.ts
+[ ] createHost  (function) :21
+[ ] myService  (export function) :42
+
+## adev/src/content/examples/schematics-for-libraries/projects/my-lib/schematics/ng-add/index.ts
+[ ] ngAdd  (export function) :5
+
+## adev/src/content/examples/schematics-for-libraries/projects/my-lib/src/lib/my-lib.component.ts
+[ ] MyLibComponent  (export class) :9
+
+## adev/src/content/examples/schematics-for-libraries/projects/my-lib/src/lib/my-lib.module.ts
+[ ] MyLibModule  (export class) :9
+
+## adev/src/content/examples/schematics-for-libraries/projects/my-lib/src/lib/my-lib.service.ts
+[ ] MyLibService  (export class) :6
+
+## adev/src/content/examples/schematics-for-libraries/src/app/app.component.ts
+[ ] AppComponent  (export class) :9
+
+## adev/src/content/examples/schematics-for-libraries/src/app/app.module.ts
+[ ] AppModule  (export class) :12
+
+## adev/src/content/examples/security/src/app/app.component.ts
+[ ] AppComponent  (export class) :15
+
+## adev/src/content/examples/security/src/app/bypass-security.component.ts
+[ ] BypassSecurityComponent  (export class) :10
+[ ] BypassSecurityComponent.constructor  (ctor) :18
+[ ] BypassSecurityComponent.updateVideoUrl  (method) :29
+      -- #docregion trust-video-url
+
+## adev/src/content/examples/security/src/app/inner-html-binding.component.ts
+[ ] InnerHtmlBindingComponent  (export class) :9
+      -- #docregion class
+
+## adev/src/content/examples/service-worker-getting-started/src/app/app.component.ts
+[ ] AppComponent  (export class) :8
+[ ] AppComponent.updateCheck  (method) :14
+
+## adev/src/content/examples/service-worker-getting-started/src/app/check-for-update.service.ts
+[ ] CheckForUpdateService  (export class) :7
+[ ] CheckForUpdateService.constructor  (ctor) :11
+
+## adev/src/content/examples/service-worker-getting-started/src/app/handle-unrecoverable-state.service.ts
+[ ] notifyUser  (function) :4
+[ ] HandleUnrecoverableStateService  (export class) :8
+      -- #docregion sw-unrecoverable-state
+[ ] HandleUnrecoverableStateService.constructor  (ctor) :10
+
+## adev/src/content/examples/service-worker-getting-started/src/app/log-update.service.ts
+[ ] LogUpdateService  (export class) :6
+      -- #docregion sw-update
+[ ] LogUpdateService.constructor  (ctor) :8
+
+## adev/src/content/examples/service-worker-getting-started/src/app/prompt-update.service.ts
+[ ] promptUser  (function) :8
+[ ] PromptUpdateService  (export class) :14
+      -- #docregion sw-version-ready
+[ ] PromptUpdateService.constructor  (ctor) :15
+
+## adev/src/content/examples/signal-forms/src/comparison/app/reactive-forms.ts
+[ ] LoginComponent  (export class) :47
+[ ] LoginComponent.onSubmit  (method) :53
+
+## adev/src/content/examples/signal-forms/src/comparison/app/signal-forms.ts
+[ ] LoginComponent  (export class) :37
+[ ] LoginComponent.onSubmit  (method) :51
+
+## adev/src/content/examples/signal-forms/src/comparison/app/template-driven-forms.ts
+[ ] LoginComponent  (export class) :61
+[ ] LoginComponent.onSubmit  (method) :65
+
+## adev/src/content/examples/signal-forms/src/compat-form-control-integration/app/app.ts
+[ ] enterprisePasswordValidator  (function) :8
+      -- Dummy enterprisePasswordValidator for the example
+[ ] App  (export class) :23
+[ ] App.constructor  (ctor) :45
+
+## adev/src/content/examples/signal-forms/src/compat-form-group-integration/app/app.ts
+[ ] App  (export class) :13
+[ ] App.constructor  (ctor) :36
+
+## adev/src/content/examples/signal-forms/src/login-simple/app/app.ts
+[ ] App  (export class) :15
+[ ] App.onSubmit  (method) :23
+
+## adev/src/content/examples/signal-forms/src/login-validation-complete/app/app.ts
+[ ] App  (export class) :23
+[ ] App.onSubmit  (method) :36
+
+## adev/src/content/examples/signal-forms/src/login-validation/app/app.ts
+[ ] App  (export class) :15
+[ ] App.onSubmit  (method) :28
+
+## adev/src/content/examples/structural-directives/src/app/app.component.ts
+[ ] AppComponent  (export class) :17
+[ ] AppComponent.trackById  (method) :27
+
+## adev/src/content/examples/structural-directives/src/app/hero-switch.components.ts
+[ ] HappyHeroComponent  (export class) :9
+[ ] SadHeroComponent  (export class) :17
+[ ] ConfusedHeroComponent  (export class) :25
+[ ] UnknownHeroComponent  (export class) :33
+
+## adev/src/content/examples/structural-directives/src/app/hero.component.ts
+[ ] HeroComponent  (export class) :17
+[ ] HeroComponent.onLoadHero  (method) :20
+
+## adev/src/content/examples/structural-directives/src/app/if-loaded.directive.ts
+[ ] IfLoadedDirective  (export class) :8
+[ ] IfLoadedDirective.constructor  (ctor) :13
+[ ] IfLoadedDirective.ngTemplateGuard_appIfLoaded  (method) :28
+
+## adev/src/content/examples/structural-directives/src/app/trigonometry.directive.ts
+[ ] TrigonometryDirective  (export class) :6
+[ ] TrigonometryDirective.constructor  (ctor) :12
+[ ] TrigonometryDirective.ngTemplateContextGuard  (method) :31
+      -- template of this directive will be rendered
+[ ] TrigonometryContext  (class) :39
+[ ] toRadians  (function) :45
+
+## adev/src/content/examples/v21-game-world/e2e/src/app.e2e-spec.ts
+[ ] getCharacterPosition  (function) :6
+
+## adev/src/content/examples/v21-game-world/src/app/app.ts
+[ ] App  (export class) :499
+[ ] App.constructor  (ctor) :550
+[ ] App.gameLoop  (method) :563
+[ ] App.handleKeydown  (method) :617
+      -- 6. EVENT HANDLERS & METHODS
+[ ] App.handleKeyup  (method) :637
+[ ] App.preventArrowDefault  (method) :645
+[ ] App.handleButtonPress  (method) :652
+[ ] App.handleButtonRelease  (method) :656
+[ ] App.closeDialog  (method) :663
+[ ] App.isMoveAllowed  (method) :682
+
+## adev/src/content/tutorials/deferrable-views/intro/src/app/app.ts
+[ ] App  (export class) :7
+
+## adev/src/content/tutorials/deferrable-views/steps/1-what-are-deferrable-views/answer/src/app/app.ts
+[ ] App  (export class) :24
+
+## adev/src/content/tutorials/deferrable-views/steps/1-what-are-deferrable-views/answer/src/app/article-comments.ts
+[ ] ArticleComments  (export class) :22
+
+## adev/src/content/tutorials/deferrable-views/steps/1-what-are-deferrable-views/src/app/app.ts
+[ ] App  (export class) :22
+
+## adev/src/content/tutorials/deferrable-views/steps/1-what-are-deferrable-views/src/app/article-comments.ts
+[ ] ArticleComments  (export class) :22
+
+## adev/src/content/tutorials/deferrable-views/steps/2-loading-error-placeholder/answer/src/app/app.ts
+[ ] App  (export class) :30
+
+## adev/src/content/tutorials/deferrable-views/steps/2-loading-error-placeholder/answer/src/app/article-comments.ts
+[ ] ArticleComments  (export class) :22
+
+## adev/src/content/tutorials/deferrable-views/steps/2-loading-error-placeholder/src/app/app.ts
+[ ] App  (export class) :24
+
+## adev/src/content/tutorials/deferrable-views/steps/2-loading-error-placeholder/src/app/article-comments.ts
+[ ] ArticleComments  (export class) :22
+
+## adev/src/content/tutorials/deferrable-views/steps/3-defer-triggers/answer/src/app/app.ts
+[ ] App  (export class) :32
+
+## adev/src/content/tutorials/deferrable-views/steps/3-defer-triggers/answer/src/app/article-comments.ts
+[ ] ArticleComments  (export class) :22
+
+## adev/src/content/tutorials/deferrable-views/steps/3-defer-triggers/src/app/app.ts
+[ ] App  (export class) :30
+
+## adev/src/content/tutorials/deferrable-views/steps/3-defer-triggers/src/app/article-comments.ts
+[ ] ArticleComments  (export class) :22
+
+## adev/src/content/tutorials/first-app/intro/src/app/app.ts
+[ ] App  (export class) :7
+
+## adev/src/content/tutorials/first-app/steps/01-hello-world/src/app/app.ts
+[ ] App  (export class) :9
+
+## adev/src/content/tutorials/first-app/steps/02-Home/src/app/app.ts
+[ ] App  (export class) :9
+
+## adev/src/content/tutorials/first-app/steps/03-HousingLocation/src/app/app.ts
+[ ] App  (export class) :19
+
+## adev/src/content/tutorials/first-app/steps/03-HousingLocation/src/app/home/home.ts
+[ ] Home  (export class) :15
+
+## adev/src/content/tutorials/first-app/steps/04-interfaces/src/app/app.ts
+[ ] App  (export class) :19
+
+## adev/src/content/tutorials/first-app/steps/04-interfaces/src/app/home/home.ts
+[ ] Home  (export class) :20
+
+## adev/src/content/tutorials/first-app/steps/04-interfaces/src/app/housing-location/housing-location.ts
+[ ] HousingLocation  (export class) :8
+
+## adev/src/content/tutorials/first-app/steps/05-inputs/src/app/app.ts
+[ ] App  (export class) :19
+
+## adev/src/content/tutorials/first-app/steps/05-inputs/src/app/home/home.ts
+[ ] Home  (export class) :21
+
+## adev/src/content/tutorials/first-app/steps/05-inputs/src/app/housing-location/housing-location.ts
+[ ] HousingLocation  (export class) :8
+
+## adev/src/content/tutorials/first-app/steps/06-property-binding/src/app/app.ts
+[ ] App  (export class) :19
+
+## adev/src/content/tutorials/first-app/steps/06-property-binding/src/app/home/home.ts
+[ ] Home  (export class) :21
+
+## adev/src/content/tutorials/first-app/steps/06-property-binding/src/app/housing-location/housing-location.ts
+[ ] HousingLocation  (export class) :9
+
+## adev/src/content/tutorials/first-app/steps/07-dynamic-template-values/src/app/app.ts
+[ ] App  (export class) :19
+
+## adev/src/content/tutorials/first-app/steps/07-dynamic-template-values/src/app/home/home.ts
+[ ] Home  (export class) :21
+
+## adev/src/content/tutorials/first-app/steps/07-dynamic-template-values/src/app/housing-location/housing-location.ts
+[ ] HousingLocation  (export class) :9
+
+## adev/src/content/tutorials/first-app/steps/08-ngFor/src/app/app.ts
+[ ] App  (export class) :19
+
+## adev/src/content/tutorials/first-app/steps/08-ngFor/src/app/home/home.ts
+[ ] Home  (export class) :21
+
+## adev/src/content/tutorials/first-app/steps/08-ngFor/src/app/housing-location/housing-location.ts
+[ ] HousingLocation  (export class) :20
+
+## adev/src/content/tutorials/first-app/steps/09-services/src/app/app.ts
+[ ] App  (export class) :19
+
+## adev/src/content/tutorials/first-app/steps/09-services/src/app/home/home.ts
+[ ] Home  (export class) :23
+
+## adev/src/content/tutorials/first-app/steps/09-services/src/app/housing-location/housing-location.ts
+[ ] HousingLocation  (export class) :21
+
+## adev/src/content/tutorials/first-app/steps/10-routing/src/app/app.ts
+[ ] App  (export class) :19
+
+## adev/src/content/tutorials/first-app/steps/10-routing/src/app/home/home.ts
+[ ] Home  (export class) :23
+[ ] Home.constructor  (ctor) :27
+
+## adev/src/content/tutorials/first-app/steps/10-routing/src/app/housing-location/housing-location.ts
+[ ] HousingLocation  (export class) :21
+
+## adev/src/content/tutorials/first-app/steps/10-routing/src/app/housing.service.ts
+[ ] HousingService  (export class) :4
+[ ] HousingService.getAllHousingLocations  (method) :110
+[ ] HousingService.getHousingLocationById  (method) :114
+
+## adev/src/content/tutorials/first-app/steps/11-details-page/src/app/app.ts
+[ ] App  (export class) :21
+
+## adev/src/content/tutorials/first-app/steps/11-details-page/src/app/details/details.ts
+[ ] Details  (export class) :8
+
+## adev/src/content/tutorials/first-app/steps/11-details-page/src/app/home/home.ts
+[ ] Home  (export class) :24
+[ ] Home.constructor  (ctor) :28
+
+## adev/src/content/tutorials/first-app/steps/11-details-page/src/app/housing-location/housing-location.ts
+[ ] HousingLocation  (export class) :22
+
+## adev/src/content/tutorials/first-app/steps/11-details-page/src/app/housing.service.ts
+[ ] HousingService  (export class) :5
+[ ] HousingService.getAllHousingLocations  (method) :111
+[ ] HousingService.getHousingLocationById  (method) :115
+
+## adev/src/content/tutorials/first-app/steps/12-forms/src/app/app.ts
+[ ] App  (export class) :22
+
+## adev/src/content/tutorials/first-app/steps/12-forms/src/app/details/details.ts
+[ ] Details  (export class) :32
+[ ] Details.constructor  (ctor) :37
+
+## adev/src/content/tutorials/first-app/steps/12-forms/src/app/home/home.ts
+[ ] Home  (export class) :24
+[ ] Home.constructor  (ctor) :28
+
+## adev/src/content/tutorials/first-app/steps/12-forms/src/app/housing-location/housing-location.ts
+[ ] HousingLocation  (export class) :23
+
+## adev/src/content/tutorials/first-app/steps/12-forms/src/app/housing.service.ts
+[ ] HousingService  (export class) :5
+[ ] HousingService.getAllHousingLocations  (method) :111
+[ ] HousingService.getHousingLocationById  (method) :115
+
+## adev/src/content/tutorials/first-app/steps/13-search/src/app/app.ts
+[ ] App  (export class) :22
+
+## adev/src/content/tutorials/first-app/steps/13-search/src/app/details/details.ts
+[ ] Details  (export class) :48
+[ ] Details.constructor  (ctor) :58
+[ ] Details.submitApplication  (method) :62
+
+## adev/src/content/tutorials/first-app/steps/13-search/src/app/home/home.ts
+[ ] Home  (export class) :24
+[ ] Home.constructor  (ctor) :28
+
+## adev/src/content/tutorials/first-app/steps/13-search/src/app/housing-location/housing-location.ts
+[ ] HousingLocation  (export class) :23
+
+## adev/src/content/tutorials/first-app/steps/13-search/src/app/housing.service.ts
+[ ] HousingService  (export class) :5
+[ ] HousingService.getAllHousingLocations  (method) :111
+[ ] HousingService.getHousingLocationById  (method) :115
+[ ] HousingService.submitApplication  (method) :118
+
+## adev/src/content/tutorials/first-app/steps/14-http/src-final/app/app.ts
+[ ] App  (export class) :22
+
+## adev/src/content/tutorials/first-app/steps/14-http/src-final/app/details/details.ts
+[ ] Details  (export class) :48
+[ ] Details.constructor  (ctor) :60
+[ ] Details.submitApplication  (method) :68
+
+## adev/src/content/tutorials/first-app/steps/14-http/src-final/app/home/home.ts
+[ ] Home  (export class) :24
+[ ] Home.constructor  (ctor) :30
+[ ] Home.filterResults  (method) :40
+
+## adev/src/content/tutorials/first-app/steps/14-http/src-final/app/housing-location/housing-location.ts
+[ ] HousingLocation  (export class) :23
+
+## adev/src/content/tutorials/first-app/steps/14-http/src-final/app/housing.service.ts
+[ ] HousingService  (export class) :5
+[ ] HousingService.getAllHousingLocations  (method) :8
+[ ] HousingService.getHousingLocationById  (method) :13
+[ ] HousingService.submitApplication  (method) :19
+
+## adev/src/content/tutorials/first-app/steps/14-http/src/app/app.ts
+[ ] App  (export class) :22
+
+## adev/src/content/tutorials/first-app/steps/14-http/src/app/details/details.ts
+[ ] Details  (export class) :48
+[ ] Details.constructor  (ctor) :60
+[ ] Details.submitApplication  (method) :65
+
+## adev/src/content/tutorials/first-app/steps/14-http/src/app/home/home.ts
+[ ] Home  (export class) :24
+[ ] Home.constructor  (ctor) :30
+[ ] Home.filterResults  (method) :35
+
+## adev/src/content/tutorials/first-app/steps/14-http/src/app/housing-location/housing-location.ts
+[ ] HousingLocation  (export class) :23
+
+## adev/src/content/tutorials/first-app/steps/14-http/src/app/housing.service.ts
+[ ] HousingService  (export class) :5
+[ ] HousingService.getAllHousingLocations  (method) :111
+[ ] HousingService.getHousingLocationById  (method) :115
+[ ] HousingService.submitApplication  (method) :119
+
+## adev/src/content/tutorials/homepage/src/main.ts
+[ ] Demo  (export class) :15
+
+## adev/src/content/tutorials/learn-angular/intro/src/app/app.ts
+[ ] App  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/1-components-in-angular/answer/src/app/app.ts
+[ ] App  (export class) :12
+
+## adev/src/content/tutorials/learn-angular/steps/1-components-in-angular/src/app/app.ts
+[ ] App  (export class) :12
+
+## adev/src/content/tutorials/learn-angular/steps/10-deferrable-views/answer/src/app/app.ts
+[ ] App  (export class) :67
+
+## adev/src/content/tutorials/learn-angular/steps/10-deferrable-views/answer/src/app/comments.ts
+[ ] Comments  (export class) :13
+
+## adev/src/content/tutorials/learn-angular/steps/10-deferrable-views/src/app/app.ts
+[ ] App  (export class) :15
+
+## adev/src/content/tutorials/learn-angular/steps/10-deferrable-views/src/app/comments.ts
+[ ] Comments  (export class) :13
+
+## adev/src/content/tutorials/learn-angular/steps/11-optimizing-images/answer/src/app/app.ts
+[ ] App  (export class) :9
+
+## adev/src/content/tutorials/learn-angular/steps/11-optimizing-images/answer/src/app/user.ts
+[ ] User  (export class) :22
+
+## adev/src/content/tutorials/learn-angular/steps/11-optimizing-images/src/app/app.ts
+[ ] App  (export class) :9
+
+## adev/src/content/tutorials/learn-angular/steps/11-optimizing-images/src/app/user.ts
+[ ] User  (export class) :21
+
+## adev/src/content/tutorials/learn-angular/steps/12-enable-routing/answer/src/app/app.ts
+[ ] App  (export class) :16
+
+## adev/src/content/tutorials/learn-angular/steps/12-enable-routing/answer/src/app/home/home.ts
+[ ] Home  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/12-enable-routing/answer/src/app/user/user.ts
+[ ] User  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/12-enable-routing/src/app/app.ts
+[ ] App  (export class) :15
+
+## adev/src/content/tutorials/learn-angular/steps/12-enable-routing/src/app/home/home.ts
+[ ] Home  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/12-enable-routing/src/app/user/user.ts
+[ ] User  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/13-define-a-route/answer/src/app/app.ts
+[ ] App  (export class) :16
+
+## adev/src/content/tutorials/learn-angular/steps/13-define-a-route/answer/src/app/home/home.ts
+[ ] Home  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/13-define-a-route/answer/src/app/user/user.ts
+[ ] User  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/13-define-a-route/src/app/app.ts
+[ ] App  (export class) :16
+
+## adev/src/content/tutorials/learn-angular/steps/13-define-a-route/src/app/home/home.ts
+[ ] Home  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/13-define-a-route/src/app/user/user.ts
+[ ] User  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/14-routerLink/answer/src/app/app.ts
+[ ] App  (export class) :16
+
+## adev/src/content/tutorials/learn-angular/steps/14-routerLink/answer/src/app/home/home.ts
+[ ] Home  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/14-routerLink/answer/src/app/user/user.ts
+[ ] User  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/14-routerLink/src/app/app.ts
+[ ] App  (export class) :16
+
+## adev/src/content/tutorials/learn-angular/steps/14-routerLink/src/app/home/home.ts
+[ ] Home  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/14-routerLink/src/app/user/user.ts
+[ ] User  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/15-forms/answer/src/app/app.ts
+[ ] App  (export class) :9
+
+## adev/src/content/tutorials/learn-angular/steps/15-forms/answer/src/app/user.ts
+[ ] User  (export class) :16
+
+## adev/src/content/tutorials/learn-angular/steps/15-forms/src/app/app.ts
+[ ] App  (export class) :9
+
+## adev/src/content/tutorials/learn-angular/steps/15-forms/src/app/user.ts
+[ ] User  (export class) :12
+
+## adev/src/content/tutorials/learn-angular/steps/16-form-control-values/answer/src/app/app.ts
+[ ] App  (export class) :9
+
+## adev/src/content/tutorials/learn-angular/steps/16-form-control-values/answer/src/app/user.ts
+[ ] User  (export class) :17
+[ ] User.showFramework  (method) :21
+
+## adev/src/content/tutorials/learn-angular/steps/16-form-control-values/src/app/app.ts
+[ ] App  (export class) :9
+
+## adev/src/content/tutorials/learn-angular/steps/16-form-control-values/src/app/user.ts
+[ ] User  (export class) :17
+[ ] User.showFramework  (method) :21
+
+## adev/src/content/tutorials/learn-angular/steps/17-reactive-forms/answer/src/app/app.ts
+[ ] App  (export class) :20
+[ ] App.handleSubmit  (method) :26
+
+## adev/src/content/tutorials/learn-angular/steps/17-reactive-forms/src/app/app.ts
+[ ] App  (export class) :20
+
+## adev/src/content/tutorials/learn-angular/steps/18-forms-validation/answer/src/app/app.ts
+[ ] App  (export class) :16
+
+## adev/src/content/tutorials/learn-angular/steps/18-forms-validation/src/app/app.ts
+[ ] App  (export class) :16
+
+## adev/src/content/tutorials/learn-angular/steps/19-creating-an-injectable-service/answer/src/app/app.ts
+[ ] App  (export class) :8
+
+## adev/src/content/tutorials/learn-angular/steps/19-creating-an-injectable-service/answer/src/app/car.service.ts
+[ ] CarService  (export class) :4
+[ ] CarService.getCars  (method) :7
+[ ] CarService.getCar  (method) :11
+
+## adev/src/content/tutorials/learn-angular/steps/19-creating-an-injectable-service/src/app/app.ts
+[ ] App  (export class) :8
+
+## adev/src/content/tutorials/learn-angular/steps/19-creating-an-injectable-service/src/app/car.service.ts
+[ ] CarService  (export class) :3
+[ ] CarService.getCars  (method) :6
+[ ] CarService.getCar  (method) :10
+
+## adev/src/content/tutorials/learn-angular/steps/2-updating-the-component-class/answer/src/app/app.ts
+[ ] App  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/2-updating-the-component-class/src/app/app.ts
+[ ] App  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/20-inject-based-di/answer/src/app/app.ts
+[ ] App  (export class) :8
+
+## adev/src/content/tutorials/learn-angular/steps/20-inject-based-di/answer/src/app/car.service.ts
+[ ] CarService  (export class) :4
+[ ] CarService.getCars  (method) :7
+[ ] CarService.getCar  (method) :11
+
+## adev/src/content/tutorials/learn-angular/steps/20-inject-based-di/src/app/app.ts
+[ ] App  (export class) :8
+
+## adev/src/content/tutorials/learn-angular/steps/20-inject-based-di/src/app/car.service.ts
+[ ] CarService  (export class) :4
+[ ] CarService.getCars  (method) :7
+[ ] CarService.getCar  (method) :11
+
+## adev/src/content/tutorials/learn-angular/steps/22-pipes/answer/src/app/app.ts
+[ ] App  (export class) :9
+
+## adev/src/content/tutorials/learn-angular/steps/22-pipes/src/app/app.ts
+[ ] App  (export class) :8
+
+## adev/src/content/tutorials/learn-angular/steps/23-pipes-format-data/answer/src/app/app.ts
+[ ] App  (export class) :15
+
+## adev/src/content/tutorials/learn-angular/steps/23-pipes-format-data/src/app/app.ts
+[ ] App  (export class) :15
+
+## adev/src/content/tutorials/learn-angular/steps/24-create-a-pipe/answer/src/app/app.ts
+[ ] App  (export class) :9
+
+## adev/src/content/tutorials/learn-angular/steps/24-create-a-pipe/answer/src/app/reverse.pipe.ts
+[ ] ReversePipe  (export class) :6
+[ ] ReversePipe.transform  (method) :7
+
+## adev/src/content/tutorials/learn-angular/steps/24-create-a-pipe/src/app/app.ts
+[ ] App  (export class) :9
+
+## adev/src/content/tutorials/learn-angular/steps/24-create-a-pipe/src/app/reverse.pipe.ts
+[ ] ReversePipe  (export class) :3
+[ ] ReversePipe.transform  (method) :4
+
+## adev/src/content/tutorials/learn-angular/steps/3-composing-components/answer/src/app/app.ts
+[ ] User  (export class) :7
+[ ] App  (export class) :20
+
+## adev/src/content/tutorials/learn-angular/steps/3-composing-components/src/app/app.ts
+[ ] User  (export class) :7
+[ ] App  (export class) :16
+
+## adev/src/content/tutorials/learn-angular/steps/4-control-flow-if/answer/src/app/app.ts
+[ ] App  (export class) :13
+
+## adev/src/content/tutorials/learn-angular/steps/4-control-flow-if/src/app/app.ts
+[ ] App  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/5-control-flow-for/answer/src/app/app.ts
+[ ] App  (export class) :11
+
+## adev/src/content/tutorials/learn-angular/steps/5-control-flow-for/src/app/app.ts
+[ ] App  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/6-property-binding/answer/src/app/app.ts
+[ ] App  (export class) :8
+
+## adev/src/content/tutorials/learn-angular/steps/6-property-binding/src/app/app.ts
+[ ] App  (export class) :8
+
+## adev/src/content/tutorials/learn-angular/steps/7-event-handling/answer/src/app/app.ts
+[ ] App  (export class) :12
+[ ] App.showSecretMessage  (method) :15
+
+## adev/src/content/tutorials/learn-angular/steps/7-event-handling/src/app/app.ts
+[ ] App  (export class) :12
+[ ] App.showSecretMessage  (method) :15
+
+## adev/src/content/tutorials/learn-angular/steps/8-input/answer/src/app/app.ts
+[ ] App  (export class) :9
+
+## adev/src/content/tutorials/learn-angular/steps/8-input/answer/src/app/user.ts
+[ ] User  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/8-input/src/app/app.ts
+[ ] App  (export class) :9
+
+## adev/src/content/tutorials/learn-angular/steps/8-input/src/app/user.ts
+[ ] User  (export class) :7
+
+## adev/src/content/tutorials/learn-angular/steps/9-output/answer/src/app/app.ts
+[ ] App  (export class) :12
+[ ] App.addItem  (method) :15
+
+## adev/src/content/tutorials/learn-angular/steps/9-output/answer/src/app/child.ts
+[ ] Child  (export class) :12
+[ ] Child.addItem  (method) :15
+
+## adev/src/content/tutorials/learn-angular/steps/9-output/src/app/app.ts
+[ ] App  (export class) :12
+[ ] App.addItem  (method) :15
+
+## adev/src/content/tutorials/learn-angular/steps/9-output/src/app/child.ts
+[ ] Child  (export class) :12
+[ ] Child.addItem  (method) :13
+
+## adev/src/content/tutorials/playground/0-hello-world/src/main.ts
+[ ] Playground  (export class) :8
+
+## adev/src/content/tutorials/playground/1-signals/src/main.ts
+[ ] CookieRecipe  (export class) :20
+[ ] CookieRecipe.update  (method) :27
+
+## adev/src/content/tutorials/playground/2-control-flow/src/main.ts
+[ ] Todos  (export class) :25
+[ ] Todos.add  (method) :28
+[ ] Todos.toggle  (method) :32
+
+## adev/src/content/tutorials/playground/3-minigame/src/main.ts
+[ ] getChangingQuote  (function) :31
+[ ] getResultQuote  (function) :42
+[ ] Playground  (export class) :59
+[ ] Playground.constructor  (ctor) :123
+[ ] Playground.resetGame  (method) :127
+[ ] Playground.mouseDown  (method) :132
+[ ] Playground.stopDragging  (method) :136
+[ ] Playground.mouseMove  (method) :140
+[ ] Playground.adjustAngle  (method) :161
+[ ] Playground.touchMove  (method) :167
+[ ] Playground.guess  (method) :174
+[ ] Playground.powerUpAccuracy  (method) :187
+[ ] Playground.close  (method) :209
+[ ] Playground.getText  (method) :214
+[ ] Playground.toggleA11yControls  (method) :227
+
+## adev/src/content/tutorials/playground/4-signal-forms/src/main.ts
+[ ] LoginApp  (export class) :50
+[ ] LoginApp.onSubmit  (method) :62
+
+## adev/src/content/tutorials/playground/5-aria-accordion/src/main.ts
+[ ] AccordionApp  (export class) :74
+
+## adev/src/content/tutorials/signal-forms/intro/src/app/app.ts
+[ ] App  (export class) :8
+
+## adev/src/content/tutorials/signal-forms/steps/1-set-up-form-model/answer/src/app/app.ts
+[ ] App  (export class) :15
+
+## adev/src/content/tutorials/signal-forms/steps/1-set-up-form-model/src/app/app.ts
+[ ] App  (export class) :12
+
+## adev/src/content/tutorials/signal-forms/steps/2-connect-form-template/answer/src/app/app.ts
+[ ] App  (export class) :16
+
+## adev/src/content/tutorials/signal-forms/steps/2-connect-form-template/src/app/app.ts
+[ ] App  (export class) :17
+
+## adev/src/content/tutorials/signal-forms/steps/3-add-validation/answer/src/app/app.ts
+[ ] App  (export class) :16
+
+## adev/src/content/tutorials/signal-forms/steps/3-add-validation/src/app/app.ts
+[ ] App  (export class) :17
+
+## adev/src/content/tutorials/signal-forms/steps/4-display-errors/answer/src/app/app.ts
+[ ] App  (export class) :16
+
+## adev/src/content/tutorials/signal-forms/steps/4-display-errors/src/app/app.ts
+[ ] App  (export class) :16
+
+## adev/src/content/tutorials/signal-forms/steps/5-add-submission/answer/src/app/app.ts
+[ ] App  (export class) :16
+[ ] App.onSubmit  (method) :29
+
+## adev/src/content/tutorials/signal-forms/steps/5-add-submission/src/app/app.ts
+[ ] App  (export class) :17
+
+## adev/src/content/tutorials/signals/intro/src/app/app.ts
+[ ] App  (export class) :8
+[ ] App.increment  (method) :13
+[ ] App.decrement  (method) :17
+
+## adev/src/content/tutorials/signals/steps/1-creating-your-first-signal/answer/src/app/app.ts
+[ ] App  (export class) :22
+[ ] App.goOnline  (method) :25
+[ ] App.goOffline  (method) :29
+[ ] App.toggleStatus  (method) :33
+
+## adev/src/content/tutorials/signals/steps/1-creating-your-first-signal/src/app/app.ts
+[ ] App  (export class) :25
+
+## adev/src/content/tutorials/signals/steps/10-reacting-to-signal-changes-with-effect/answer/src/app/app.ts
+[ ] App  (export class) :53
+[ ] App.constructor  (ctor) :60
+[ ] App.toggleTheme  (method) :88
+[ ] App.login  (method) :92
+[ ] App.logout  (method) :97
+
+## adev/src/content/tutorials/signals/steps/10-reacting-to-signal-changes-with-effect/src/app/app.ts
+[ ] App  (export class) :54
+[ ] App.constructor  (ctor) :61
+[ ] App.toggleTheme  (method) :70
+[ ] App.login  (method) :74
+[ ] App.logout  (method) :79
+
+## adev/src/content/tutorials/signals/steps/2-deriving-state-with-computed-signals/answer/src/app/app.ts
+[ ] App  (export class) :43
+[ ] App.goOnline  (method) :69
+[ ] App.goAway  (method) :73
+[ ] App.goOffline  (method) :77
+[ ] App.toggleStatus  (method) :81
+
+## adev/src/content/tutorials/signals/steps/2-deriving-state-with-computed-signals/src/app/app.ts
+[ ] App  (export class) :42
+[ ] App.goOnline  (method) :51
+[ ] App.goAway  (method) :55
+[ ] App.goOffline  (method) :59
+[ ] App.toggleStatus  (method) :63
+
+## adev/src/content/tutorials/signals/steps/3-deriving-state-with-linked-signals/answer/src/app/app.ts
+[ ] App  (export class) :50
+[ ] App.toggleNotifications  (method) :77
+[ ] App.goOnline  (method) :82
+[ ] App.goAway  (method) :86
+[ ] App.goOffline  (method) :90
+[ ] App.toggleStatus  (method) :94
+
+## adev/src/content/tutorials/signals/steps/3-deriving-state-with-linked-signals/src/app/app.ts
+[ ] App  (export class) :46
+[ ] App.goOnline  (method) :82
+[ ] App.goAway  (method) :86
+[ ] App.goOffline  (method) :90
+[ ] App.toggleStatus  (method) :94
+
+## adev/src/content/tutorials/signals/steps/4-managing-async-data-with-signals/answer/src/app/app.ts
+[ ] App  (export class) :33
+[ ] App.loadUser  (method) :44
+[ ] App.reloadUser  (method) :48
+
+## adev/src/content/tutorials/signals/steps/4-managing-async-data-with-signals/answer/src/app/user-api.ts
+[ ] getUserData  (export function) :2
+      -- Mock API function for loading user data
+
+## adev/src/content/tutorials/signals/steps/4-managing-async-data-with-signals/src/app/app.ts
+[ ] App  (export class) :31
+
+## adev/src/content/tutorials/signals/steps/4-managing-async-data-with-signals/src/app/user-api.ts
+[ ] getUserData  (export function) :2
+      -- Mock API function for loading user data
+
+## adev/src/content/tutorials/signals/steps/5-component-communication-with-signals/answer/src/app/app.ts
+[ ] App  (export class) :30
+[ ] App.updateProduct  (method) :36
+[ ] App.toggleAvailability  (method) :41
+
+## adev/src/content/tutorials/signals/steps/5-component-communication-with-signals/answer/src/app/product-card.ts
+[ ] ProductCard  (export class) :20
+
+## adev/src/content/tutorials/signals/steps/5-component-communication-with-signals/src/app/app.ts
+[ ] App  (export class) :28
+
+## adev/src/content/tutorials/signals/steps/5-component-communication-with-signals/src/app/product-card.ts
+[ ] ProductCard  (export class) :15
+
+## adev/src/content/tutorials/signals/steps/6-two-way-binding-with-model-signals/answer/src/app/app.ts
+[ ] App  (export class) :43
+[ ] App.toggleTermsFromParent  (method) :49
+      -- Methods to test two-way binding
+[ ] App.resetAll  (method) :53
+
+## adev/src/content/tutorials/signals/steps/6-two-way-binding-with-model-signals/answer/src/app/custom-checkbox.ts
+[ ] CustomCheckbox  (export class) :13
+[ ] CustomCheckbox.toggle  (method) :20
+
+## adev/src/content/tutorials/signals/steps/6-two-way-binding-with-model-signals/src/app/app.ts
+[ ] App  (export class) :46
+
+## adev/src/content/tutorials/signals/steps/6-two-way-binding-with-model-signals/src/app/custom-checkbox.ts
+[ ] CustomCheckbox  (export class) :14
+
+## adev/src/content/tutorials/signals/steps/7-using-signals-with-services/answer/src/app/app.ts
+[ ] App  (export class) :24
+
+## adev/src/content/tutorials/signals/steps/7-using-signals-with-services/answer/src/app/cart-display.ts
+[ ] CartDisplay  (export class) :50
+[ ] CartDisplay.addLaptop  (method) :53
+[ ] CartDisplay.addMouse  (method) :57
+[ ] CartDisplay.addKeyboard  (method) :61
+[ ] CartDisplay.increaseQuantity  (method) :65
+[ ] CartDisplay.decreaseQuantity  (method) :73
+[ ] CartDisplay.removeItem  (method) :81
+[ ] CartDisplay.clearCart  (method) :85
+
+## adev/src/content/tutorials/signals/steps/7-using-signals-with-services/answer/src/app/cart-store.ts
+[ ] CartStore  (export class) :5
+[ ] CartStore.addItem  (method) :20
+[ ] CartStore.removeItem  (method) :34
+[ ] CartStore.updateQuantity  (method) :38
+[ ] CartStore.clearCart  (method) :49
+
+## adev/src/content/tutorials/signals/steps/7-using-signals-with-services/src/app/app.ts
+[ ] App  (export class) :23
+
+## adev/src/content/tutorials/signals/steps/7-using-signals-with-services/src/app/cart-display.ts
+[ ] CartDisplay  (export class) :49
+[ ] CartDisplay.addLaptop  (method) :52
+[ ] CartDisplay.addMouse  (method) :56
+[ ] CartDisplay.addKeyboard  (method) :60
+[ ] CartDisplay.increaseQuantity  (method) :64
+[ ] CartDisplay.decreaseQuantity  (method) :69
+[ ] CartDisplay.removeItem  (method) :74
+[ ] CartDisplay.clearCart  (method) :78
+
+## adev/src/content/tutorials/signals/steps/7-using-signals-with-services/src/app/cart-store.ts
+[ ] CartStore  (export class) :6
+[ ] CartStore.addItem  (method) :18
+[ ] CartStore.removeItem  (method) :32
+[ ] CartStore.updateQuantity  (method) :36
+[ ] CartStore.clearCart  (method) :47
+
+## adev/src/content/tutorials/signals/steps/8-using-signals-with-directives/answer/src/app/app.ts
+[ ] App  (export class) :20
+
+## adev/src/content/tutorials/signals/steps/8-using-signals-with-directives/answer/src/app/highlight-directive.ts
+[ ] HighlightDirective  (export class) :11
+[ ] HighlightDirective.onMouseEnter  (method) :35
+[ ] HighlightDirective.onMouseLeave  (method) :39
+
+## adev/src/content/tutorials/signals/steps/8-using-signals-with-directives/src/app/app.ts
+[ ] App  (export class) :20
+
+## adev/src/content/tutorials/signals/steps/8-using-signals-with-directives/src/app/highlight-directive.ts
+[ ] HighlightDirective  (export class) :7
+
+## adev/src/content/tutorials/signals/steps/9-query-child-elements-with-signal-queries/answer/src/app/app.ts
+[ ] App  (export class) :42
+[ ] App.updateQuantity  (method) :54
+[ ] App.showFirstProductDetails  (method) :61
+[ ] App.initiateCheckout  (method) :68
+
+## adev/src/content/tutorials/signals/steps/9-query-child-elements-with-signal-queries/answer/src/app/cart-summary.ts
+[ ] CartSummary  (export class) :17
+[ ] CartSummary.initiateCheckout  (method) :27
+      -- Public method for parent interaction
+
+## adev/src/content/tutorials/signals/steps/9-query-child-elements-with-signal-queries/answer/src/app/product-card.ts
+[ ] ProductCard  (export class) :30
+[ ] ProductCard.toggleDetails  (method) :40
+[ ] ProductCard.highlight  (method) :45
+      -- Public methods for parent interaction
+
+## adev/src/content/tutorials/signals/steps/9-query-child-elements-with-signal-queries/src/app/app.ts
+[ ] App  (export class) :43
+[ ] App.updateQuantity  (method) :54
+[ ] App.showFirstProductDetails  (method) :61
+[ ] App.initiateCheckout  (method) :66
+
+## adev/src/content/tutorials/signals/steps/9-query-child-elements-with-signal-queries/src/app/cart-summary.ts
+[ ] CartSummary  (export class) :17
+[ ] CartSummary.initiateCheckout  (method) :27
+      -- Public method for parent interaction
+
+## adev/src/content/tutorials/signals/steps/9-query-child-elements-with-signal-queries/src/app/product-card.ts
+[ ] ProductCard  (export class) :30
+[ ] ProductCard.toggleDetails  (method) :40
+[ ] ProductCard.highlight  (method) :45
+      -- Public methods for parent interaction
+
+## adev/src/content/tutorials/zoneless-migration/steps/4-make-tests-compatible-with-zoneless/src/app/test-helpers.ts
+[ ] fakeAsync  (export function) :4
+[ ] withProxyZone  (export function) :7
+
+## adev/src/context/llms.mts
+[ ] postProcessOutputContent  (function) :19
+[ ] main  (function) :90
+
+## adev/src/main.server.ts
+[ ] bootstrap  (arrow) :13

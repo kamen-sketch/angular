@@ -1,0 +1,333 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Angular mXSS loop — real Chromium proof</title>
+<style>
+  body{font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;margin:0;padding:16px;background:#0b0e14;color:#c9d1d9}
+  h1{font-size:16px;margin:0 0 4px}
+  .sub{color:#8b949e;margin:0 0 14px}
+  table{border-collapse:collapse;width:100%;margin:8px 0 18px}
+  th,td{border:1px solid #30363d;padding:5px 8px;text-align:left;vertical-align:top}
+  th{background:#161b22;color:#e6edf3}
+  td.n{text-align:center;font-weight:700}
+  .rounds3{background:#3d1d1d}
+  .diff{background:#3d2d0f}
+  .ok{color:#3fb950}.bad{color:#f85149}.warn{color:#d29922}
+  code{color:#79c0ff;word-break:break-all}
+  .box{border:1px solid #30363d;border-radius:6px;padding:10px 12px;margin:10px 0;background:#0d1117}
+  .verdict{font-size:15px;font-weight:700;padding:10px 12px;border-radius:6px;margin:12px 0}
+  .verdict.confirmed{background:#12261a;border:1px solid #238636;color:#3fb950}
+  .verdict.refuted{background:#26120f;border:1px solid #da3633;color:#f85149}
+  small{color:#8b949e}
+</style>
+</head>
+<body>
+<h1>Angular HTML sanitizer — mXSS stabilization loop, executed in real Chromium</h1>
+<p class="sub">Ports <code>html_sanitizer.ts</code> and <code>inert_body.ts</code> verbatim; uses the browser's own DOMParser. No abstraction.</p>
+<div id="out"></div>
+
+<script>
+"use strict";
+// =====================================================================
+// VERBATIM PORT of packages/core/src/sanitization/inert_body.ts
+// (DOMParserHelper strategy — the one Chromium uses)
+// =====================================================================
+function getInertBodyElement(html) {
+  html = '<body><remove></remove>' + html;
+  try {
+    const body = new window.DOMParser().parseFromString(html, 'text/html').body;
+    if (body === null) return null;
+    body.firstChild && body.firstChild.remove();
+    return body;
+  } catch { return null; }
+}
+
+// =====================================================================
+// VERBATIM PORT of the constants + SanitizingHtmlSerializer
+// from packages/core/src/sanitization/html_sanitizer.ts
+// =====================================================================
+function tagSet(tags){const r={};for(const t of tags.split(','))r[t]=true;return r;}
+function merge(...sets){const r={};for(const s of sets)for(const v in s)if(s.hasOwnProperty(v))r[v]=true;return r;}
+const VOID_ELEMENTS=tagSet('area,br,col,hr,img,wbr');
+const OPTIONAL_END_TAG_BLOCK_ELEMENTS=tagSet('colgroup,dd,dt,li,p,tbody,td,tfoot,th,thead,tr');
+const OPTIONAL_END_TAG_INLINE_ELEMENTS=tagSet('rp,rt');
+const OPTIONAL_END_TAG_ELEMENTS=merge(OPTIONAL_END_TAG_INLINE_ELEMENTS,OPTIONAL_END_TAG_BLOCK_ELEMENTS);
+const BLOCK_ELEMENTS=merge(OPTIONAL_END_TAG_BLOCK_ELEMENTS,tagSet('address,article,aside,blockquote,caption,center,del,details,dialog,dir,div,dl,figure,figcaption,footer,h1,h2,h3,h4,h5,h6,header,hgroup,hr,ins,main,map,menu,nav,ol,pre,section,summary,table,ul'));
+const INLINE_ELEMENTS=merge(OPTIONAL_END_TAG_INLINE_ELEMENTS,tagSet('a,abbr,acronym,audio,b,bdi,bdo,big,br,cite,code,del,dfn,em,font,i,img,ins,kbd,label,map,mark,picture,q,ruby,rp,rt,s,samp,small,source,span,strike,strong,sub,sup,time,track,tt,u,var,video'));
+const VALID_ELEMENTS=merge(VOID_ELEMENTS,BLOCK_ELEMENTS,INLINE_ELEMENTS,OPTIONAL_END_TAG_ELEMENTS);
+const URI_ATTRS=tagSet('background,cite,href,itemtype,longdesc,poster,src,xlink:href');
+const HTML_ATTRS=tagSet('abbr,accesskey,align,alt,autoplay,axis,bgcolor,border,cellpadding,cellspacing,class,clear,color,cols,colspan,compact,controls,coords,datetime,default,dir,download,face,headers,height,hidden,hreflang,hspace,ismap,itemscope,itemprop,kind,label,lang,language,loop,media,muted,nohref,nowrap,open,preload,rel,rev,role,rows,rowspan,rules,scope,scrolling,shape,size,sizes,span,srclang,srcset,start,summary,tabindex,target,title,translate,type,usemap,valign,value,vspace,width');
+const ARIA_ATTRS=tagSet('aria-activedescendant,aria-atomic,aria-autocomplete,aria-busy,aria-checked,aria-colcount,aria-colindex,aria-colspan,aria-controls,aria-current,aria-describedby,aria-details,aria-disabled,aria-dropeffect,aria-errormessage,aria-expanded,aria-flowto,aria-grabbed,aria-haspopup,aria-hidden,aria-invalid,aria-keyshortcuts,aria-label,aria-labelledby,aria-level,aria-live,aria-modal,aria-multiline,aria-multiselectable,aria-orientation,aria-owns,aria-placeholder,aria-posinset,aria-pressed,aria-readonly,aria-relevant,aria-required,aria-roledescription,aria-rowcount,aria-rowindex,aria-rowspan,aria-selected,aria-setsize,aria-sort,aria-valuemax,aria-valuemin,aria-valuenow,aria-valuetext');
+const VALID_ATTRS=merge(URI_ATTRS,HTML_ATTRS,ARIA_ATTRS);
+const SKIP_TRAVERSING_CONTENT_IF_INVALID_ELEMENTS=tagSet('script,style,template');
+
+const SAFE_URL_PATTERN=/^(?!javascript:)(?:[a-z0-9+.-]+:|[^&:\/?#]*(?:[\/?#]|$))/i;
+function _sanitizeUrl(url){url=String(url);if(url.match(SAFE_URL_PATTERN))return url;return 'unsafe:'+url;}
+
+const SURROGATE_PAIR_REGEXP=/[\uD800-\uDBFF][\uDC00-\uDFFF]/g;
+const NON_ALPHANUMERIC_REGEXP=/([^\#-~ |!])/g;
+function encodeEntities(value){
+  return value.replace(/&/g,'&amp;')
+    .replace(SURROGATE_PAIR_REGEXP,function(m){const hi=m.charCodeAt(0),low=m.charCodeAt(1);return '&#'+((hi-0xd800)*0x400+(low-0xdc00)+0x10000)+';';})
+    .replace(NON_ALPHANUMERIC_REGEXP,function(m){return '&#'+m.charCodeAt(0)+';';})
+    .replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function getNodeName(node){const n=node.nodeName;return typeof n==='string'?n:'FORM';}
+function getTemplateContent(el){return 'content' in el && el.nodeType===Node.ELEMENT_NODE && el.nodeName==='TEMPLATE'?el.content:null;}
+
+class SanitizingHtmlSerializer{
+  constructor(){this.sanitizedSomething=false;this.buf=[];}
+  sanitizeChildren(el){
+    let current=el.firstChild;let traverseContent=true;let parentNodes=[];
+    while(current){
+      if(current.nodeType===Node.ELEMENT_NODE){traverseContent=this.startElement(current);}
+      else if(current.nodeType===Node.TEXT_NODE){this.chars(current.nodeValue);}
+      else{this.sanitizedSomething=true;}
+      if(traverseContent && current.firstChild){parentNodes.push(current);current=current.firstChild;continue;}
+      while(current){
+        if(current.nodeType===Node.ELEMENT_NODE){this.endElement(current);}
+        let next=current.nextSibling;
+        if(next){current=next;break;}
+        current=parentNodes.pop();
+      }
+    }
+    return this.buf.join('');
+  }
+  startElement(element){
+    const tagName=getNodeName(element).toLowerCase();
+    if(!VALID_ELEMENTS.hasOwnProperty(tagName)){this.sanitizedSomething=true;return !SKIP_TRAVERSING_CONTENT_IF_INVALID_ELEMENTS.hasOwnProperty(tagName);}
+    this.buf.push('<');this.buf.push(tagName);
+    const elAttrs=element.attributes;
+    for(let i=0;i<elAttrs.length;i++){
+      const elAttr=elAttrs.item(i);const attrName=elAttr.name;const lower=attrName.toLowerCase();
+      if(!VALID_ATTRS.hasOwnProperty(lower)){this.sanitizedSomething=true;continue;}
+      let value=elAttr.value;
+      if(URI_ATTRS[lower])value=_sanitizeUrl(value);
+      this.buf.push(' ',attrName,'="',encodeEntities(value),'"');
+    }
+    this.buf.push('>');return true;
+  }
+  endElement(current){
+    const tagName=getNodeName(current).toLowerCase();
+    if(VALID_ELEMENTS.hasOwnProperty(tagName)&&!VOID_ELEMENTS.hasOwnProperty(tagName)){this.buf.push('</');this.buf.push(tagName);this.buf.push('>');}
+  }
+  chars(chars){this.buf.push(encodeEntities(chars));}
+}
+
+// =====================================================================
+// f = one parse+serialize round (the operation the loop iterates)
+// =====================================================================
+function f(html){const b=getInertBodyElement(html);return b?b.innerHTML:'';}
+
+// True number of rounds needed to reach a DOM fixed point (uncapped-ish).
+function roundsToFixedPoint(H0,cap=20){
+  let cur=H0,n=0;
+  while(n<cap){const nxt=f(cur);n++;if(nxt===cur)return{rounds:n,stable:cur};cur=nxt;}
+  return{rounds:Infinity,stable:cur};
+}
+
+// =====================================================================
+// VERBATIM the BUGGY loop from html_sanitizer.ts:304-346, instrumented.
+// Returns the final sanitized string AND the iteration count.
+// =====================================================================
+function sanitizeHtml_BUGGY(unsafeHtmlInput){
+  let inertBodyElement=null;
+  let iterations=0;
+  try{
+    let unsafeHtml=unsafeHtmlInput?String(unsafeHtmlInput):'';
+    inertBodyElement=getInertBodyElement(unsafeHtml);
+    let mXSSAttempts=5;
+    let parsedHtml=unsafeHtml;
+    do{
+      if(mXSSAttempts===0)throw new Error('Failed to sanitize html because the input is unstable');
+      mXSSAttempts--;iterations++;
+      unsafeHtml=parsedHtml;
+      parsedHtml=inertBodyElement.innerHTML;                 // (A) read
+      inertBodyElement=getInertBodyElement(unsafeHtml);      // (B) parse
+    }while(unsafeHtml!==parsedHtml);
+    const sanitizer=new SanitizingHtmlSerializer();
+    const safeHtml=sanitizer.sanitizeChildren(getTemplateContent(inertBodyElement)||inertBodyElement);
+    return{out:safeHtml,iterations};
+  }finally{
+    if(inertBodyElement){const parent=getTemplateContent(inertBodyElement)||inertBodyElement;while(parent.firstChild)parent.firstChild.remove();}
+  }
+}
+
+// =====================================================================
+// CORRECTED loop: swap (A) and (B) so parsedHtml is read from an element
+// freshly parsed from the CURRENT unsafeHtml. This is a true fixed-point loop.
+// =====================================================================
+function sanitizeHtml_FIXED(unsafeHtmlInput){
+  let inertBodyElement=null;
+  let iterations=0;
+  try{
+    let unsafeHtml=unsafeHtmlInput?String(unsafeHtmlInput):'';
+    inertBodyElement=getInertBodyElement(unsafeHtml);
+    let mXSSAttempts=5;
+    let parsedHtml=unsafeHtml;
+    do{
+      if(mXSSAttempts===0)throw new Error('Failed to sanitize html because the input is unstable');
+      mXSSAttempts--;iterations++;
+      unsafeHtml=parsedHtml;
+      inertBodyElement=getInertBodyElement(unsafeHtml);      // (B) parse first
+      parsedHtml=inertBodyElement.innerHTML;                 // (A) then read
+    }while(unsafeHtml!==parsedHtml);
+    const sanitizer=new SanitizingHtmlSerializer();
+    const safeHtml=sanitizer.sanitizeChildren(getTemplateContent(inertBodyElement)||inertBodyElement);
+    return{out:safeHtml,iterations};
+  }finally{
+    if(inertBodyElement){const parent=getTemplateContent(inertBodyElement)||inertBodyElement;while(parent.firstChild)parent.firstChild.remove();}
+  }
+}
+
+// =====================================================================
+// VECTOR BATTERY — inputs historically associated with parser instability
+// (foreign content, raw-text elements, table foster-parenting, etc.)
+// The goal: find any input whose DOM fixed point needs >=3 rounds.
+// =====================================================================
+const vectors = [
+  ['plain', '<p>hello</p>'],
+  ['svg foreignObject + p', '<svg><foreignObject><p>x</foreignObject></svg>'],
+  ['svg style img', '<svg><style><img src=x onerror=alert(1)></style></svg>'],
+  ['math mtext', '<math><mtext><table><mglyph><style><img src=x onerror=alert(1)>'],
+  ['math annotation-xml', '<math><annotation-xml encoding="text/html"><style><img src=x onerror=alert(1)></style></annotation-xml></math>'],
+  ['svg in table', '<table><svg><foreignObject><p>x'],
+  ['noscript', '<noscript><p title="</noscript><img src=x onerror=alert(1)>">'],
+  ['noscript nested', '<noscript>&lt;img src=x onerror=alert(1)&gt;</noscript>'],
+  ['style raw text', '<style><style/><img src=x onerror=alert(1)>'],
+  ['xmp', '<xmp></xmp><img src=x onerror=alert(1)>'],
+  ['textarea', '<textarea></textarea><img src=x onerror=alert(1)>'],
+  ['select option', '<select><option><style></option></select><img src=x>'],
+  ['table foster', '<table><td><svg><style><img src=x onerror=alert(1)></style>'],
+  ['svg desc breakout', '<svg><desc><![CDATA[</desc><img src=x onerror=alert(1)>]]></svg>'],
+  ['comment in svg', '<svg><!--<img src=x onerror=alert(1)>--></svg>'],
+  ['form nested', '<form><form><img src=x></form></form>'],
+  ['nested template', '<template><template><img src=x></template></template>'],
+  ['li foster', '<ul><li><table><li>'],
+  ['p auto close', '<p><div>x</div></p>'],
+  ['deep svg math', '<svg><foreignObject><math><mtext><style><a href="&#x3000;javascript:alert(1)">'],
+  ['entity in attr', '<a title="&#x3000;&#x3000;">x</a>'],
+  ['svg script foreign', '<svg><script>alert(1)<\/script></svg>'],
+  ['mglyph malformed', '<math><mtext><i><mglyph><style></style></mglyph></i></mtext></math>'],
+  ['cdata outside foreign', '<![CDATA[<img src=x onerror=alert(1)>]]>'],
+  ['plaintext (no close)', '<plaintext><img src=x onerror=alert(1)>'],
+  ['xmp (no close)', '<xmp><img src=x onerror=alert(1)>'],
+  ['style (no close)', '<style><img src=x onerror=alert(1)>'],
+  ['title (no close)', '<title><img src=x onerror=alert(1)>'],
+  ['textarea (no close)', '<textarea>&lt;img src=x&gt;'],
+  ['iframe srcdoc-ish', '<iframe><p>&lt;b&gt;x'],
+  ['noembed', '<noembed><img src=x onerror=alert(1)>'],
+  ['noframes', '<noframes><img src=x onerror=alert(1)>'],
+];
+
+try{
+const out=document.getElementById('out');
+let rows='';
+let anyThreeRound=false;
+let anyDivergence=false;
+const divergences=[];
+
+function safeRun(fn,input){try{const r=fn(input);return{out:r.out,iterations:r.iterations,threw:false};}catch(e){return{out:null,iterations:null,threw:true,msg:String(e.message||e)};}}
+
+let anyUnstable=false;
+const unstables=[];
+const threeRoundStable=[];
+for(const [name,input] of vectors){
+  const fp=roundsToFixedPoint(input);
+  const buggy=safeRun(sanitizeHtml_BUGGY,input);
+  const fixed=safeRun(sanitizeHtml_FIXED,input);
+  if(!fixed.threw && fixed.iterations>=3){threeRoundStable.push({name,input,fixedIters:fixed.iterations,buggyIters:buggy.iterations,match:buggy.out===fixed.out});}
+  const diverges = !buggy.threw && !fixed.threw && buggy.out !== fixed.out;
+  const fixedUnstable = fixed.threw;                    // correct loop rejects; buggy loop silently accepts
+  const threeRound = fp.rounds>=3;
+  if(threeRound)anyThreeRound=true;
+  if(diverges){anyDivergence=true;divergences.push({name,input,buggy:buggy.out,fixed:fixed.out,rounds:fp.rounds});}
+  if(fixedUnstable){anyUnstable=true;unstables.push({name,input,buggyOut:buggy.out,buggyIters:buggy.iterations,rounds:fp.rounds});}
+  let statusCell,cls;
+  if(fixedUnstable){statusCell='<span class="bad">FIXED=THREW / BUGGY=silent</span>';cls='diff';}
+  else if(diverges){statusCell='<span class="bad">DIFFER</span>';cls='diff';}
+  else{statusCell='<span class="ok">same</span>';cls=threeRound?'rounds3':'';}
+  rows += `<tr class="${cls}">
+    <td>${name}</td>
+    <td><code>${encodeEntities(input)}</code></td>
+    <td class="n">${fp.rounds===Infinity?'&ge;20':fp.rounds}</td>
+    <td class="n">${buggy.threw?'threw':buggy.iterations}</td>
+    <td class="n">${fixed.threw?'<span class="bad">threw</span>':fixed.iterations}</td>
+    <td class="n">${statusCell}</td>
+  </tr>`;
+}
+
+// Also: prove the max iteration count of the buggy loop over ALL vectors,
+// and that the "unstable" throw is never triggered in the BUGGY loop.
+let maxBuggyIter=0,maxFixedIter=0,buggyEverThrew=false;
+for(const [,input] of vectors){
+  const b=safeRun(sanitizeHtml_BUGGY,input);
+  if(b.threw){buggyEverThrew=true;}else{maxBuggyIter=Math.max(maxBuggyIter,b.iterations);}
+  const fx=safeRun(sanitizeHtml_FIXED,input);
+  if(!fx.threw)maxFixedIter=Math.max(maxFixedIter,fx.iterations);
+}
+
+let html='';
+html += `<div class="box"><b>Chromium:</b> <code id="ua"></code></div>`;
+html += `<table><thead><tr><th>vector</th><th>input</th><th>true rounds→fixed point</th><th>BUGGY loop iters</th><th>FIXED loop iters</th><th>output</th></tr></thead><tbody>${rows}</tbody></table>`;
+html += `<div class="box">Max iterations the <b>BUGGY</b> loop ever performed across all ${vectors.length} vectors: <b class="${maxBuggyIter<=2?'bad':'ok'}">${maxBuggyIter}</b>. The buggy loop <b>never threw</b> "input is unstable": <b class="${buggyEverThrew?'ok':'bad'}">${buggyEverThrew?'threw at least once':'NEVER — dead code'}</b>.<br>Max iterations the <b>FIXED</b> loop performed (excluding throws): <b>${maxFixedIter}</b>. The FIXED loop <b class="${anyUnstable?'bad':'ok'}">${anyUnstable?'threw "unstable" for '+unstables.length+' vector(s)':'never threw'}</b> — proving those inputs genuinely never stabilize within the 5-round budget in real Chromium.</div>`;
+
+// Verdict
+if(anyUnstable){
+  html += `<div class="verdict confirmed">CONFIRMED IN REAL CHROMIUM — ${unstables.length} vector(s) genuinely fail to reach a DOM fixed point within the 5-round budget. The CORRECT loop detects this and throws "input is unstable" (fail-closed). The BUGGY loop as shipped stops after ≤2 iterations, never detects the instability, and silently returns a non-stabilized result (fail-open). This is precisely the mXSS scenario the loop was written to prevent.</div>`;
+} else if(anyDivergence){
+  html += `<div class="verdict confirmed">CONFIRMED — buggy and correct loops produce DIFFERENT sanitized output on real Chromium for ${divergences.length} vector(s). The early-termination bug is observable end-to-end.</div>`;
+} else if(anyThreeRound){
+  html += `<div class="verdict confirmed">PARTIAL — a real ≥3-round instability exists in Chromium, but the allowlist serializer masks the output difference for the tested vectors.</div>`;
+} else {
+  html += `<div class="verdict refuted">NOT SHOWN — no tested input needed ≥3 rounds in this Chromium build.</div>`;
+}
+
+if(unstables.length){
+  html += `<div class="box"><b>Instability details (FIXED loop throws, BUGGY loop stays silent):</b>`;
+  for(const u of unstables){
+    // Show the real round-by-round mutation chain from Chromium's own parser.
+    let cur=u.input;const chain=[cur];
+    for(let i=0;i<7;i++){const nxt=f(cur);chain.push(nxt);if(nxt===cur)break;cur=nxt;}
+    let chainHtml=chain.map((s,i)=>`<div><small>H${i} =</small> <code>${encodeEntities(s)}</code></div>`).join('');
+    html += `<div style="margin:8px 0;padding:8px;border:1px solid #30363d;border-radius:4px">
+      <div><small>vector:</small> <b>${u.name}</b> &nbsp; <small>rounds to fixed point:</small> ${u.rounds===Infinity?'&ge;20 (never within cap)':u.rounds}</div>
+      <div><small>input:</small> <code>${encodeEntities(u.input)}</code></div>
+      <div style="margin-top:6px"><small>real parse chain (each line = one browser parse+serialize round):</small>${chainHtml}</div>
+      <div style="margin-top:6px"><small>BUGGY loop returned after</small> <b>${u.buggyIters}</b> <small>iteration(s), output:</small> <code class="bad">${encodeEntities(u.buggyOut)}</code></div>
+      <div><small>CORRECT loop:</small> <code class="bad">THREW "Failed to sanitize html because the input is unstable"</code></div>
+    </div>`;
+  }
+  html += `</div>`;
+}
+
+if(divergences.length){
+  html += `<div class="box"><b>Divergence details:</b>`;
+  for(const d of divergences){
+    html += `<div style="margin:8px 0;padding:8px;border:1px solid #30363d;border-radius:4px">
+      <div><small>vector:</small> ${d.name} &nbsp; <small>true rounds:</small> ${d.rounds}</div>
+      <div><small>input:</small> <code>${encodeEntities(d.input)}</code></div>
+      <div><small>BUGGY output (Angular today):</small> <code class="bad">${encodeEntities(d.buggy)}</code></div>
+      <div><small>FIXED output (fixed point):</small> <code class="ok">${encodeEntities(d.fixed)}</code></div>
+    </div>`;
+  }
+  html += `</div>`;
+}
+
+out.innerHTML=html;
+document.getElementById('ua').textContent=navigator.userAgent;
+if(threeRoundStable.length){
+  html += `<div class="box"><b>Stabilizing inputs that need &ge;3 rounds (buggy loop truncates to &le;2):</b>`;
+  for(const t of threeRoundStable){
+    html += `<div><small>${t.name}:</small> FIXED took <b>${t.fixedIters}</b> rounds, BUGGY took <b>${t.buggyIters}</b>; outputs ${t.match?'<span class="ok">matched</span>':'<span class="bad">DIFFERED</span>'} — <code>${encodeEntities(t.input)}</code></div>`;
+  }
+  html += `</div>`;
+}
+
+window.__RESULT__={anyThreeRound,anyDivergence,anyUnstable,unstables,threeRoundStable,divergences,maxBuggyIter,maxFixedIter,buggyEverThrew,vectorCount:vectors.length};
+}catch(err){
+  document.getElementById('out').innerHTML='<pre class="bad">HARNESS ERROR:\n'+(err&&err.stack||err)+'</pre>';
+  window.__RESULT__={error:String(err&&err.stack||err)};
+}
+</script>
+</body>
+</html>

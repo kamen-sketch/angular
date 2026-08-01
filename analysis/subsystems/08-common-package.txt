@@ -1,0 +1,112 @@
+SUBSISTEM 08 :: @angular/common (directive klasik, pipe, HttpClient, Location)
+Lokasi   : packages/common/**
+Status   : DIANALISIS - directive struktural, pipe kunci, arsitektur HttpClient
+==============================================================================
+
+ISI PAKET
+---------
+  src/directives/   NgIf, NgForOf, NgSwitch, NgClass, NgStyle, NgPlural,
+                    NgTemplateOutlet, NgComponentOutlet, NgOptimizedImage
+  src/pipes/        async, date, number/currency/percent, json, keyvalue,
+                    slice, uppercase/lowercase/titlecase, i18nPlural, i18nSelect
+  src/location/     Location, LocationStrategy (Path/Hash), PlatformLocation
+  src/i18n/         data lokal, format tanggal/angka, aturan plural
+  http/             HttpClient beserta ekosistemnya (interceptor, backend, XSRF,
+                    transfer cache, httpResource)
+  src/navigation/   integrasi Navigation API
+  src/viewport_scroller.ts, src/dom_adapter.ts, src/cookie.ts
+
+DIRECTIVE STRUKTURAL LAMA vs CONTROL FLOW BAWAAN
+-------------------------------------------------
+NgIf/NgForOf adalah directive biasa yang memanipulasi `ViewContainerRef` -
+berbeda dari @if/@for (subsistem 04) yang menjadi INSTRUKSI runtime tanpa
+directive sama sekali. Itulah sumber keunggulan performa control flow baru:
+tidak ada instance directive, tidak ada input binding, tidak ada differ.
+
+NgIf: menyimpan `_thenViewRef`/`_elseViewRef` dan hanya membuat ulang view saat
+cabang benar-benar berganti (`_updateView` memeriksa ref yang ada dulu).
+Dua static field-nya penting untuk type-checking template:
+  - `ngTemplateGuard_ngIf: 'binding'` -> mempersempit tipe lewat ekspresi binding
+    (inilah yang membuat `*ngIf="user"` menghilangkan `null` di dalam blok).
+  - `ngTemplateContextGuard` -> memberi tahu compiler tipe konteks template.
+
+NgForOf: memakai `IterableDiffer` (dari core) yang menghasilkan daftar operasi;
+`_applyChanges` menerjemahkannya menjadi create/remove/move pada ViewContainer,
+lalu menyegarkan `index`/`count`/`even`/`odd` semua view. Pesan error khusus
+menyarankan `keyvalue` pipe bila yang di-bind adalah objek, bukan iterable.
+
+ASYNC PIPE - INTERAKSI DENGAN CHANGE DETECTION
+-----------------------------------------------
+`AsyncPipe` memilih strategi (Subscribable atau Promise), berlangganan, dan
+memanggil `markForCheck()` saat nilai baru datang. Detail penting: flag
+`markForCheckOnValueUpdate` dimatikan selama pemanggilan `_subscribe` awal,
+karena nilai yang datang SINKRON pada saat itu akan langsung dikembalikan oleh
+`transform` - memanggil markForCheck di situ hanya akan memicu putaran CD yang
+sia-sia. Pipe melepaskan langganan di `ngOnDestroy` (pipe adalah stateful).
+
+HttpClient - RANTAI INTERCEPTOR
+--------------------------------
+Arsitekturnya adalah rantai fungsi yang dibangun dengan `reduceRight`:
+
+  chainedInterceptorFn(chainTail, interceptorFn, injector)
+      -> (req, finalHandler) => runInInjectionContext(injector,
+             () => interceptorFn(req, downstream => chainTail(downstream, finalHandler)))
+
+Ujung rantai adalah `interceptorChainEndFn` yang memanggil backend sebenarnya.
+Interceptor gaya lama (kelas dengan `intercept()`) dibungkus menjadi bentuk
+fungsional oleh `adaptLegacyInterceptorToChain`, sehingga kedua gaya berbagi
+satu mekanisme.
+
+Dua hal yang sering tidak disadari:
+  - Setiap interceptor fungsional dijalankan DI DALAM konteks injeksi, sehingga
+    boleh memanggil `inject()`.
+  - Setiap request mendaftar sebagai PendingTask (`REQUESTS_CONTRIBUTE_TO_STABILITY`),
+    sehingga `ApplicationRef.whenStable()` dan SSR menunggu request selesai.
+
+`HttpClient.request` adalah satu implementasi dengan puluhan overload; jenis
+kembalian (Observable<body>, Observable<HttpEvent>, dsb) ditentukan oleh
+kombinasi `observe` dan `responseType`. Backend dipilih lewat DI:
+`HttpXhrBackend` atau `FetchBackend`. `transfer_cache.ts` menyimpan hasil
+request SSR ke TransferState agar klien tidak mengulang request yang sama.
+
+LOCATION
+--------
+`Location` adalah fasad di atas `LocationStrategy` (PathLocationStrategy dengan
+History API, atau HashLocationStrategy) di atas `PlatformLocation` (abstraksi
+window.location agar bisa diganti di server). Router memakai lapisan ini,
+bukan `window` langsung.
+
+DAFTAR FUNGSI YANG SUDAH DIPAHAMI
+---------------------------------
+[x] NgIf._updateView | packages/common/src/directives/ng_if.ts:214 | Membuat/menukar view then-else hanya bila cabang berganti; membersihkan container lebih dulu.
+[x] NgIf.ngIf | packages/common/src/directives/ng_if.ts:185 | Setter kondisi yang menyimpan nilai ke konteks ($implicit) lalu memperbarui view.
+[x] NgIf.ngIfThen | packages/common/src/directives/ng_if.ts:195 | Setter template "then" dinamis, mereset view yang ada.
+[x] NgIf.ngIfElse | packages/common/src/directives/ng_if.ts:207 | Setter template "else" dinamis.
+[x] NgIf.ngTemplateContextGuard | packages/common/src/directives/ng_if.ts:259 | Penanda bagi type-checker tentang tipe konteks template NgIf.
+[x] assertTemplate | packages/common/src/directives/ng_if.ts:278 | Validasi bahwa nilai yang diberikan benar-benar TemplateRef.
+[x] NgForOf.ngDoCheck | packages/common/src/directives/ng_for_of.ts:253 | Membuat differ saat pertama kali, menjalankan diff, dan menerapkan perubahan.
+[x] NgForOf._applyChanges | packages/common/src/directives/ng_for_of.ts:286 | Menerjemahkan operasi differ menjadi create/remove/move pada ViewContainerRef dan menyegarkan index/count semua view.
+[x] NgForOf.ngForTrackBy | packages/common/src/directives/ng_for_of.ts:208 | Setter fungsi trackBy dengan peringatan dev bila bukan fungsi.
+[x] NgForOf.ngTemplateContextGuard | packages/common/src/directives/ng_for_of.ts:333 | Penanda tipe konteks NgForOfContext untuk type-checker.
+[x] applyViewChange | packages/common/src/directives/ng_for_of.ts:346 | Memperbarui $implicit pada view yang dipakai ulang.
+[x] getTypeName | packages/common/src/directives/ng_for_of.ts:353 | Nama tipe nilai untuk pesan error differ.
+[x] NgForOfContext.first | packages/common/src/directives/ng_for_of.ts:53 | Variabel kontekstual `first`.
+[x] NgForOfContext.last | packages/common/src/directives/ng_for_of.ts:58 | Variabel kontekstual `last`.
+[x] NgForOfContext.even | packages/common/src/directives/ng_for_of.ts:63 | Variabel kontekstual `even`.
+[x] NgForOfContext.odd | packages/common/src/directives/ng_for_of.ts:68 | Variabel kontekstual `odd`.
+[x] AsyncPipe.transform | packages/common/src/pipes/async_pipe.ts:178 | Berlangganan sumber async, mengembalikan nilai terakhir, dan berganti langganan bila objeknya berubah.
+[x] AsyncPipe._subscribe | packages/common/src/pipes/async_pipe.ts:202 | Memilih strategi lalu membuat langganan yang memanggil _updateLatestValue.
+[x] AsyncPipe._selectStrategy | packages/common/src/pipes/async_pipe.ts:212 | Membedakan Promise dari Subscribable/Observable.
+[x] AsyncPipe._dispose | packages/common/src/pipes/async_pipe.ts:226 | Melepas langganan dan mereset state pipe.
+[x] AsyncPipe._updateLatestValue | packages/common/src/pipes/async_pipe.ts:235 | Menyimpan nilai baru dan memanggil markForCheck hanya untuk emisi asinkron.
+[x] AsyncPipe.ngOnDestroy | packages/common/src/pipes/async_pipe.ts:160 | Melepas langganan saat pipe dihancurkan.
+[x] SubscribableStrategy.createSubscription | packages/common/src/pipes/async_pipe.ts:35 | Berlangganan Observable/Subscribable dengan penerusan error ke ErrorHandler.
+[x] SubscribableStrategy.dispose | packages/common/src/pipes/async_pipe.ts:55 | Unsubscribe.
+[x] PromiseStrategy.createSubscription | packages/common/src/pipes/async_pipe.ts:62 | Menyambungkan then/catch Promise ke callback pipe.
+[x] PromiseStrategy.dispose | packages/common/src/pipes/async_pipe.ts:102 | Promise tidak bisa dibatalkan - dispose adalah no-op.
+[x] interceptorChainEndFn | packages/common/http/src/interceptor.ts:149 | Ujung rantai interceptor: memanggil handler backend sebenarnya.
+[x] adaptLegacyInterceptorToChain | packages/common/http/src/interceptor.ts:160 | Membungkus HttpInterceptor berbasis kelas menjadi fungsi rantai.
+[x] chainedInterceptorFn | packages/common/http/src/interceptor.ts:174 | Membungkus interceptor fungsional dan menjalankannya dalam konteks injeksi.
+[x] legacyInterceptorFnFactory | packages/common/http/src/interceptor.ts:227 | Membangun rantai dari multi-provider HTTP_INTERCEPTORS dan mendaftarkan pending task per request.
+[x] HttpClient.request | packages/common/http/src/client.ts:457 | Implementasi tunggal di balik puluhan overload: menyusun HttpRequest, menjalankan rantai handler, memetakan hasil sesuai opsi observe/responseType.
+[x] addBody | packages/common/http/src/client.ts:43 | Menyisipkan body ke dalam objek opsi untuk metode POST/PUT/PATCH.

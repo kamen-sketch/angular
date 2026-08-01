@@ -1,0 +1,2773 @@
+CACAT FRAMEWORK YANG SEBENARNYA (bukan intended behavior)
+Lanjutan dari : analysis/SINK-REACHABILITY.txt, analysis/NPM-VALIDATION.txt
+Perbedaan     : berkas-berkas sebelumnya menilai "apakah sink terjangkau".
+                Berkas ini menanyakan hal lain: "di mana Angular MELANGGAR
+                kontraknya sendiri?" — yaitu tempat perilaku kode berbeda dari
+                yang jelas-jelas diniatkan penulisnya.
+==============================================================================
+
+KRITERIA YANG DIPAKAI
+---------------------
+Sesuatu disebut CACAT (bukan desain) bila ada bukti internal bahwa penulis
+kode berniat lain daripada yang terjadi. Bukti internal yang saya terima:
+  - jatah/anggaran yang tidak pernah bisa terpakai
+  - pesan galat yang tidak dapat dicapai
+  - komentar yang menjanjikan perilaku yang tidak diimplementasikan
+  - referensi ke simbol yang tidak ada
+  - dua jalur setara yang diperlakukan berbeda tanpa alasan
+
+Temuan "tidak disanitasi tapi memang dirancang begitu" (R-06 [style.x],
+R-07 ngSrc) TIDAK masuk daftar ini — sudah dikeluarkan sesuai arahan.
+
+==============================================================================
+F-01  Loop proteksi mXSS berhenti prematur, tidak pernah mencapai fixed point
+      BERKAS  : packages/core/src/sanitization/html_sanitizer.ts:314-326
+      SIFAT   : cacat logika (off-by-one pada pipelining)
+      DAMPAK  : garda fail-closed menjadi fail-open (kode mati); regresi
+                defense-in-depth. BUKAN XSS — dibuktikan di Chromium 141 nyata.
+      BUKTI   : analysis/evidence/mxss-loop-real-chromium.png
+                analysis/tools/mxss-browser/ (reproduksi Playwright)
+==============================================================================
+
+  KODE APA ADANYA
+  ---------------
+      let mXSSAttempts = 5;
+      let parsedHtml = unsafeHtml;
+
+      do {
+        if (mXSSAttempts === 0) {
+          throw new Error('Failed to sanitize html because the input is unstable');
+        }
+        mXSSAttempts--;
+
+        unsafeHtml = parsedHtml;
+        parsedHtml = inertBodyElement!.innerHTML;              // (A)
+        inertBodyElement = inertBodyHelper.getInertBodyElement(unsafeHtml);  // (B)
+      } while (unsafeHtml !== parsedHtml);
+
+  NIAT YANG DINYATAKAN (komentar baris 312-313)
+  ---------------------------------------------
+      "mXSS protection. Repeatedly parse the document to make sure it
+       stabilizes, so that a browser trying to auto-correct incorrect HTML
+       cannot cause formerly inert HTML to become dangerous."
+
+  APA YANG SEBENARNYA TERJADI
+  ---------------------------
+  Urutan (A) lalu (B) membuat `parsedHtml` selalu dibaca dari elemen yang
+  diparse dari `unsafeHtml` iterasi SEBELUMNYA, sedangkan `unsafeHtml` sudah
+  dimajukan ke nilai berikutnya. Tulis P = parse, S = serialize:
+
+      sebelum loop : inert = P(H0),  parsedHtml = H0
+      iterasi 1    : unsafeHtml = H0
+                     parsedHtml = S(inert) = S(P(H0)) = H1
+                     inert      = P(H0)                    <- diparse ulang dari H0
+                     uji: H0 != H1  -> lanjut
+      iterasi 2    : unsafeHtml = H1
+                     parsedHtml = S(inert) = S(P(H0)) = H1 <- SAMA dengan unsafeHtml
+                     inert      = P(H1)
+                     uji: H1 != H1  -> BERHENTI
+
+  Pada iterasi ke-2, `parsedHtml` dan `unsafeHtml` dijamin identik SECARA
+  KONSTRUKSI, karena keduanya sama-sama bernilai S(P(H0)). Kondisi keluar
+  karena itu selalu terpenuhi di iterasi ke-2, apa pun masukannya.
+
+  BUKTI DI PERAMBAN NYATA (Chromium 141) — bukan lagi simulasi abstrak
+  --------------------------------------------------------------------
+  Laporan pertama ditolak karena buktinya hanya simulasi JS dengan `transform`
+  abstrak. Kini kode SANITIZER ASLI (port verbatim html_sanitizer.ts +
+  inert_body.ts) dijalankan di Chromium 141 memakai DOMParser peramban sendiri,
+  lewat Playwright. Perkakas: analysis/tools/mxss-browser/ (report.html,
+  sanitizer.js, shot.mjs). Tangkapan layar: analysis/evidence/
+  mxss-loop-real-chromium.png.
+
+  Hasil terukur atas 32+ vektor (foreign content, raw-text element, dsb.):
+
+  1. Loop yang DIKIRIM berputar MAKSIMAL 2 kali untuk SEMUA masukan.
+     `maxBuggyIter = 2`. Anggaran 5 tidak pernah terpakai; galat "input is
+     unstable" tidak pernah terlempar (`buggyEverThrew = false`).
+
+  2. Ada masukan yang BENAR-BENAR butuh 3 ronde untuk stabil di Chromium nyata:
+        <math><mtext><table><mglyph><style><img src=x onerror=alert(1)>   -> 3 ronde
+        <ul><li><table><li>                                              -> 3 ronde
+     Loop yang diperbaiki melakukan 3 iterasi; loop yang dikirim berhenti di 2,
+     yakni SEBELUM titik stabil. Membuktikan ">=3 ronde" itu nyata, bukan teori.
+
+  3. Ada masukan yang TIDAK PERNAH stabil di Chromium nyata:
+        <plaintext><img src=x onerror=alert(1)>
+     Setiap ronde parse menambah satu `</plaintext>` (rantai H0..H6 terukur,
+     tumbuh tanpa batas). Loop yang DIPERBAIKI mendeteksi ini lalu MELEMPAR
+     "input is unstable" (fail-closed). Loop yang DIKIRIM diam-diam kembali
+     setelah 2 iterasi (fail-open) dan tidak pernah menyadarinya.
+
+  Jadi galat "input is unstable" BUKAN mustahil secara prinsip — masukan
+  peramban nyata memicunya. Cacatnya: loop versi rilis tidak akan pernah
+  mencapai galat itu.
+
+  TIGA AKIBAT YANG BISA DIVERIFIKASI
+  ----------------------------------
+  1. Jatah `mXSSAttempts = 5` tidak pernah terpakai habis (selalu tersisa 3).
+  2. `throw new Error('...the input is unstable')` adalah KODE MATI —
+     tidak ada masukan apa pun yang dapat mencapainya.
+  3. Normalisasi berhenti setelah 2 parse, bukan pada titik stabil. Untuk
+     rantai mutasi yang butuh >=3 ronde, serializer bekerja pada dokumen yang
+     belum stabil.
+
+  MENGAPA INI CACAT, BUKAN DESAIN
+  -------------------------------
+  Ketiga elemen ini hanya masuk akal bila penulis mengira loop dapat berputar
+  lebih dari dua kali:
+    - anggaran 5 percobaan (untuk apa, bila maksimum 2?)
+    - pesan galat "input is unstable" (kapan bisa terjadi, bila selalu stabil?)
+    - komentar "repeatedly parse ... to make sure it stabilizes"
+  Jadi perilaku kode bertentangan dengan niat yang tertulis di kode itu sendiri.
+  Ini definisi cacat, bukan trade-off yang dipilih.
+
+  PERBAIKAN
+  ---------
+  Cukup MENUKAR dua pernyataan terakhir — parse dulu, baru baca hasilnya:
+
+        unsafeHtml = parsedHtml;
+        inertBodyElement = inertBodyHelper.getInertBodyElement(unsafeHtml);  // (B)
+        parsedHtml = inertBodyElement.innerHTML;                             // (A)
+
+  Diverifikasi pada simulasi yang sama (scratchpad/fix-check.mjs):
+      tak pernah stabil : MELEMPAR -> 'input is unstable'   (benar)
+      stabil ronde 3    : 3 iterasi, mencapai H2            (benar)
+      sudah stabil      : 1 iterasi                         (benar, tidak berubah)
+
+  DAMPAK KEAMANAN — PENILAIAN JUJUR (mengapa laporan pertama ditolak)
+  ------------------------------------------------------------------
+  Ini BUKAN XSS siap pakai, dan setelah pengujian peramban nyata saya justru
+  MEMPERKUAT sikap itu, bukan melemahkannya. Diuji langsung: apakah keluaran
+  loop yang cacat, saat DIPARSE ULANG peramban (seperti aplikasi menetapkan
+  el.innerHTML), pernah menghasilkan simpul berbahaya (img[onerror]/script)?
+
+      Battery 6+ vektor mXSS klasik -> `anyLiveDanger = false`.
+      Contoh math/mtext: baik loop cacat maupun loop benar menghasilkan
+      keluaran IDENTIK dan AMAN: `<img src="x">` (atribut onerror dibuang
+      allowlist, apa pun jumlah rondenya).
+
+  Sebabnya: langkah akhir `_sanitizeHtml` bukan meneruskan string mentah,
+  melainkan `SanitizingHtmlSerializer.sanitizeChildren()` yang MEMBANGUN ULANG
+  keluaran dari nol via allowlist (`VALID_ELEMENTS`/`VALID_ATTRS`) +
+  `encodeEntities`. Benteng utama itu tetap utuh dan efektif TERLEPAS dari
+  berapa ronde loop berputar. Itulah kemungkinan besar alasan tim keamanan
+  menolak laporan pertama: tanpa eksploitasi tingkat-keluaran, loop yang rusak
+  adalah regresi defense-in-depth, bukan kerentanan.
+
+  APA YANG SESUNGGUHNYA TERBUKTI (dan layak dilaporkan)
+  -----------------------------------------------------
+  Bukan XSS. Yang terbukti di peramban nyata adalah: sebuah GARDA FAIL-CLOSED
+  telah diam-diam menjadi FAIL-OPEN.
+    - Niat kode: bila HTML tak kunjung stabil setelah 5 ronde, TOLAK (lempar).
+    - Kenyataan: loop tak pernah mencapai ronde ke-3, sehingga masukan yang
+      benar-benar tak stabil (`<plaintext>...`) LOLOS diam-diam alih-alih
+      ditolak. Garda backstop-nya mati total (kode mati).
+  Nilainya: garda mXSS ada justru sebagai jaring pengaman untuk saat asumsi
+  serializer allowlist suatu hari tak berlaku (mis. elemen/atribut baru, bug
+  peramban baru). Jaring itu kini bolong. Itu cacat keamanan yang sah untuk
+  diperbaiki — dengan perbaikan 2 baris — meski hari ini belum bisa dieksploitasi.
+
+  CAKUPAN TES
+  -----------
+  Satu-satunya tes bernama mXSS (html_sanitizer_spec.ts:292) sebenarnya menguji
+  jalur `_sanitizeUrl`, bukan perilaku multi-ronde loop. Tidak ada tes yang
+  menegaskan berapa kali loop berputar atau bahwa galat "unstable" dapat
+  terjadi. Inilah sebabnya cacat ini tidak tertangkap.
+
+  CATATAN PELAPORAN (untuk pengajuan ulang)
+  -----------------------------------------
+  Framing ulang yang disarankan saat mengajukan kembali ke security@angular.io:
+  JANGAN mengklaim XSS. Ajukan sebagai "fail-closed mXSS guard rendered
+  unreachable (dead code) — defense-in-depth regression", lampirkan tangkapan
+  layar peramban nyata (analysis/evidence/mxss-loop-real-chromium.png) dan
+  perkakas reproduksi (analysis/tools/mxss-browser/). Tekankan tiga fakta
+  terukur: (1) loop <=2 iterasi selalu; (2) masukan 3-ronde nyata ada; (3)
+  masukan tak-stabil nyata (<plaintext>) lolos diam-diam alih-alih ditolak.
+  Perbaikan bersifat sepele (tukar dua baris) dan tanpa risiko regresi.
+
+==============================================================================
+F-02  Referensi menggantung `SECURITY_SENSITIVE_ELEMENTS` di KEDUA salinan schema
+      BERKAS  : packages/compiler/src/schema/dom_security_schema.ts:112
+                packages/core/src/sanitization/dom_security_schema.ts:112
+      SIFAT   : cacat dokumentasi / bahaya pemeliharaan
+==============================================================================
+
+  Kedua berkas memuat instruksi identik:
+
+      // Keep this in sync with SECURITY_SENSITIVE_ELEMENTS in
+      // packages/core/src/sanitization/sanitization.ts
+
+  Simbol `SECURITY_SENSITIVE_ELEMENTS` TIDAK ADA di seluruh repositori.
+  Pencarian menyeluruh hanya menemukan dua komentar ini sendiri.
+
+  Yang benar-benar ada di sanitization.ts:
+      :317  SECURITY_SENSITIVE_ATTRIBUTE_NAMES  = new Set(['href','xlink:href'])
+      :323  SVG_ANIMATION_SENSITIVE_STATIC_VALUES
+
+  MENGAPA INI PENTING, BUKAN SEKADAR SALAH KETIK
+  ----------------------------------------------
+  Berkas ini dibuka dengan enam baris blok "STOP — DO NOT EDIT THIS LIST
+  WITHOUT A SECURITY REVIEW". Dalam berkas berlabel demikian, instruksi
+  "keep in sync with X" adalah kontrol pemeliharaan. Bila X tidak dapat
+  ditemukan, peninjau berikutnya tidak punya cara mengetahui apa yang harus
+  disinkronkan — kontrolnya tidak bisa dijalankan. Dan karena instruksi ini
+  digandakan di dua berkas, keduanya sama-sama menyesatkan.
+
+  PERBAIKAN: ganti nama simbol menjadi yang benar
+  (`SECURITY_SENSITIVE_ATTRIBUTE_NAMES` dan `SVG_ANIMATION_SENSITIVE_STATIC_VALUES`).
+
+==============================================================================
+F-03  `srcset` diizinkan sanitizer HTML tetapi tidak diperlakukan sebagai URL
+      BERKAS  : packages/core/src/sanitization/html_sanitizer.ts:79-89
+      SIFAT   : inkonsistensi; dampak keamanan dapat diabaikan
+==============================================================================
+
+      URI_ATTRS  = 'background,cite,href,itemtype,longdesc,poster,src,xlink:href'
+      HTML_ATTRS = '...,sizes,span,srclang,srcset,start,...'
+
+  `src` ada di URI_ATTRS sehingga nilainya melewati `_sanitizeUrl`.
+  `srcset` ada di HTML_ATTRS saja, sehingga LOLOS tanpa sanitasi URL —
+  padahal isinya persis daftar URL, pada elemen yang sama.
+
+  DAMPAK: dapat diabaikan. `srcset` hanya dipakai memuat gambar; skema seperti
+  `javascript:` tidak dieksekusi di sana. Saya mencantumkannya bukan sebagai
+  kerentanan melainkan sebagai inkonsistensi nyata: dua atribut dengan isi
+  sejenis pada elemen sama diperlakukan berbeda tanpa alasan yang tertulis.
+
+  Berdekatan, TODO lama yang belum dikerjakan di baris 198:
+      // TODO(martinprobst): Special case image URIs for data:image/...
+  Ini sejalan dengan pengamatan pada berkas tes `url_sanitizer_spec.ts`, yang
+  hanya mendaftarkan `data:image/...`, `data:video/...`, `data:audio/...`
+  sebagai URL sah — padahal implementasinya meloloskan SEMUA `data:`,
+  termasuk `data:text/html`. Niat (tipe media aman saja) dan implementasi
+  (semua tipe) tidak sama. Peramban modern memblokir navigasi tingkat atas ke
+  `data:`, sehingga dampak praktisnya kecil.
+
+==============================================================================
+F-04  Pembacaan `firstChild` pertama melewati pemeriksaan DOM clobbering
+      BERKAS  : packages/core/src/sanitization/html_sanitizer.ts:133
+      SIFAT   : inkonsistensi defensif; tidak dapat dieksploitasi
+==============================================================================
+
+  Baris 133 (masuk ke traversal):
+      let current: Node = el.firstChild!;            // langsung, tanpa cek
+
+  Baris 148 (menuruni anak berikutnya):
+      current = getFirstChild(current)!;             // lewat cek clobbering
+
+  `getFirstChild` sengaja dibuat untuk memvalidasi bahwa `.firstChild` tidak
+  di-clobber (`isClobberedElement` memakai `compareDocumentPosition`). Semua
+  penurunan lain memakainya; hanya pembacaan pertama yang tidak.
+
+  TIDAK DAPAT DIEKSPLOITASI: `el` di sini adalah inert body element atau
+  `<template>.content` (DocumentFragment). DOM clobbering bekerja lewat akses
+  properti bernama pada `document` dan `HTMLFormElement`; keduanya tidak
+  berlaku untuk kedua jenis simpul tersebut. Saya mencantumkannya hanya sebagai
+  inkonsistensi yang sebaiknya dirapikan agar niat defensifnya seragam.
+
+==============================================================================
+F-05  Validator APP_ID hanya ada di ngDevMode, sedangkan nilainya
+      diinterpolasi TANPA escaping ke dalam <script> pada SSR PRODUKSI
+      BERKAS  : packages/platform-server/src/utils.ts:171-177   (sink)
+                packages/core/src/application/application_tokens.ts:55-70 (guard)
+                packages/core/src/platform/platform_ref.ts:55        (guard dev-only)
+                packages/core/src/application/create_application.ts:69 (guard dev-only)
+      SIFAT   : guard dilucuti tepat pada mode build tempat nilainya berbahaya
+==============================================================================
+
+  SINK — interpolasi mentah ke literal string JS di dalam <script>
+  ---------------------------------------------------------------
+      const replayScriptContents =
+        `window.__jsaction_bootstrap(` +
+        `document.body,` +
+        `"${appId}",` +                                   // <- MENTAH, tanpa escaping
+        `${JSON.stringify(Array.from(regular))},` +       // <- tanpa escaping '<'
+        `${JSON.stringify(Array.from(capture))}` +
+        `);`;
+      const replayScript = createScript(doc, replayScriptContents, nonce);
+
+  `createScript` menetapkan `script.textContent = textContent`. Karena
+  `<script>` adalah RAW TEXT ELEMENT, isinya diserialisasi apa adanya tanpa
+  entity-escaping — sehingga `</script>` di dalamnya benar-benar menutup tag.
+
+  GUARD YANG ADA — dan dilucuti di produksi
+  -----------------------------------------
+      // application_tokens.ts:55-70
+      export const validAppIdInitializer: StaticProvider = {
+        provide: ENVIRONMENT_INITIALIZER, multi: true,
+        useValue: () => {
+          const appId = inject(APP_ID);
+          const isAlphanumeric = /^[a-zA-Z0-9\-_]+$/.test(appId);
+          if (!isAlphanumeric) throw new RuntimeError(INVALID_APP_ID, ...);
+        },
+      };
+
+  Regex itu allowlist ketat: tidak mengizinkan kutip, `<`, maupun backslash —
+  bukti bahwa penulis SADAR nilai ini harus dibatasi. Tetapi pendaftarannya:
+
+      platform_ref.ts:55        ...(ngDevMode ? [validAppIdInitializer] : []),
+      create_application.ts:69  ...(ngDevMode ? [validAppIdInitializer] : []),
+
+  Kedua call site membungkusnya dengan `ngDevMode`. Pada build produksi
+  (termasuk SSR produksi) validator TIDAK ADA sama sekali.
+
+  BUKTI (analysis/tools/appid-demo.mjs, replikasi persis template literal)
+  -----------------------------------------------------------------------
+      appId "x\";alert(document.domain);//"   -> ditolak dev, LOLOS produksi
+        window.__jsaction_bootstrap(document.body,"x";alert(document.domain);//",["click"],[]);
+                                                    ^ literal string JS tertutup dini
+
+      appId "x</script><img src=x onerror=alert(1)>" -> ditolak dev, LOLOS produksi
+        window.__jsaction_bootstrap(document.body,"x</script><img src=x onerror=alert(1)>",...);
+                                                     ^ tag <script> tertutup, HTML menyusul
+
+  INKONSISTENSI DENGAN BERKAS SAUDARA
+  -----------------------------------
+  `TransferState.toJson()` (core/src/transfer_state.ts:143-146) menulis ke
+  jenis `<script>` yang SAMA dan meng-escape dengan sengaja:
+
+      // Escape script tag to avoid break out of <script> tag in serialized output.
+      return JSON.stringify(this.store).replace(/</g, '\\u003C').replace(/\//g, '\\u002F');
+
+  Jadi basis kode ini TAHU aturannya dan menerapkannya di satu tempat, lalu
+  melanggarnya di tempat lain yang konteksnya identik. Persis kelas cacat yang
+  sama dengan F-01/F-02: kontrak yang dinyatakan sendiri tidak dipenuhi.
+
+  PRASYARAT & PENILAIAN JUJUR
+  ---------------------------
+  Jalur ini hanya aktif bila:
+    - SSR dipakai, DAN
+    - event replay aktif (skrip event-dispatch disisipkan CLI —
+      `if (eventDispatchScript)` pada utils.ts:169), DAN
+    - build produksi (ngDevMode false, validator hilang)
+
+  Yang TIDAK saya klaim: ini BUKAN kerentanan jarak jauh pada aplikasi biasa.
+  `APP_ID` normalnya konstanta statis yang ditulis pengembang, bukan masukan
+  pengguna. Untuk dieksploitasi, `APP_ID` harus berasal dari sumber yang bisa
+  dipengaruhi penyerang — mis. server SSR multi-tenant yang menyetel APP_ID per
+  tenant dari berkas konfigurasi atau variabel lingkungan. Itu mungkin, tetapi
+  tidak umum.
+
+  Yang saya klaim: ini cacat sejati. Sebuah guard yang dibuat KHUSUS untuk
+  membatasi nilai ini dikompilasi keluar tepat pada satu-satunya mode build
+  di mana nilai tersebut mencapai sink tanpa escaping. Perbaikannya ada dua
+  pilihan, keduanya murah:
+    (a) escape di sink — samakan dengan pola toJson():
+        `"${appId.replace(/</g,'\\u003C').replace(/"/g,'\\"')}"` — atau lebih
+        baik lagi pakai JSON.stringify(appId) alih-alih kutip manual, LALU
+        escape `<`; atau
+    (b) jadikan validator APP_ID selalu aktif (lepas dari ngDevMode) —
+        biayanya satu regex sekali saat bootstrap.
+  Opsi (a) lebih tepat karena memperbaiki sink, bukan hanya satu sumbernya;
+  perhatikan bahwa nama event pada `JSON.stringify(...)` juga belum di-escape
+  terhadap `<` di konteks raw-text yang sama.
+
+==============================================================================
+F-06  Gate allowlist i18n dapat ditembus lewat rantai prototipe
+      (akses bracket, bukan hasOwnProperty)
+      BERKAS  : packages/core/src/render3/i18n/i18n_parse.ts:841
+      SIFAT   : gate allowlist tidak sepenuhnya menutup; inkonsisten dengan
+                baris 824 pada objek yang SAMA, berjarak 17 baris
+==============================================================================
+
+  KONTEKS
+  -------
+  i18n punya implementasi sanitasi HTML KEDUA yang terpisah dari
+  `html_sanitizer.ts`: `parseIcuCase` (i18n_parse.ts:741) memarse isi pesan ICU
+  memakai inert body, lalu `walkIcuTree` (:789) menyaringnya memakai
+  `VALID_ELEMENTS`/`VALID_ATTRS` yang diimpor dari html_sanitizer.
+
+  DUA GATE, DUA PERLAKUAN BERBEDA
+  -------------------------------
+      :824   if (VALID_ATTRS.hasOwnProperty(lowerAttrName)) {     // cabang binding — AMAN
+      :841   } else if (VALID_ATTRS[lowerAttrName]) {             // cabang statis  — BOCOR
+
+  `VALID_ATTRS` dibangun `tagSet`/`merge` (html_sanitizer.ts:18-32) memakai
+  objek literal `{}`, BUKAN `Object.create(null)`. Rantai prototipe karena itu
+  hidup, sehingga akses bracket mengembalikan nilai truthy untuk properti
+  `Object.prototype`.
+
+  BUKTI (analysis/tools/proto-bypass.mjs)
+  ---------------------------------------
+  Sepuluh nama menembus gate baris 841 sementara baris 824 menolaknya:
+      constructor, toString, valueOf, hasOwnProperty, isPrototypeOf,
+      propertyIsEnumerable, toLocaleString, __proto__,
+      __defineGetter__, __lookupGetter__
+
+  Untuk nama-nama itu `i18nResolveSanitizer` mengembalikan NONE (tidak ada di
+  security schema), sehingga alur jatuh ke:
+      addCreateAttribute(create, newIndex, attr.name, val);   // nilai MENTAH
+
+  PENILAIAN JUJUR — mengapa dampaknya kecil
+  -----------------------------------------
+  Saya uji secara eksplisit apakah ada nama BERBAHAYA di rantai prototipe:
+      onerror, onload, href, src, srcdoc, formaction, action, data, style
+      -> tidak satu pun ada di Object.prototype
+  Jadi yang lolos hanyalah nama atribut inert. `setAttribute('constructor', x)`
+  tidak mengeksekusi apa pun. Ditambah lagi, pesan terjemahan pada mayoritas
+  aplikasi adalah aset BUILD-TIME (berkas .xlf) yang tepercaya, bukan masukan
+  pengguna runtime.
+
+  Jadi ini BUKAN kerentanan. Yang membuatnya tetap layak dicatat: sebuah gate
+  allowlist keamanan yang tidak menutup rapat, pada berkas yang sama dan objek
+  yang sama dengan gate yang menutup rapat 17 baris di atasnya. Cukup ubah
+  `VALID_ATTRS[lowerAttrName]` menjadi `VALID_ATTRS.hasOwnProperty(lowerAttrName)`
+  — atau bangun set-set itu dengan `Object.create(null)` sehingga SELURUH pola
+  akses bracket di basis kode ini menjadi aman sekaligus.
+
+  CATATAN: pola akses bracket serupa ada di html_sanitizer.ts:199
+  (`if (URI_ATTRS[lower])`), tetapi di sana AMAN karena sudah dijaga lebih dulu
+  oleh `VALID_ATTRS.hasOwnProperty(lower)` pada baris 193, dan tidak ada nama
+  `Object.prototype` yang menjadi anggota sah `VALID_ATTRS`.
+
+==============================================================================
+F-07  Salinan kedua pemetaan sanitizer tidak menangani konteks ARRAY yang
+      tipenya sendiri izinkan  (LATEN — belum terjangkau)
+      BERKAS  : packages/compiler/src/template/pipeline/src/phases/
+                  resolve_i18n_attr_sanitizers.ts:49-70   (salinan i18n)
+                  resolve_sanitizers.ts:60-74             (salinan utama)
+      SIFAT   : logika duplikat yang menyimpang; cabang hilang = fail-open diam
+==============================================================================
+
+  CARA DITEMUKAN
+  --------------
+  Bukan lewat pembacaan manual, melainkan oleh detektor salinan-di-rename
+  (analysis/regex-corpus/scan-renamed-copies.mjs) yang memasangkan keduanya pada
+  jaccard 0.60. Pengelompokan berdasarkan nama dasar TIDAK akan menemukannya —
+  namanya berbeda. Inilah alasan detektor semua-pasangan itu dibuat.
+
+  DUA SALINAN PEMETAAN YANG SAMA
+  ------------------------------
+  resolve_sanitizers.ts memetakan SecurityContext -> fungsi sanitizer lewat Map,
+  resolve_i18n_attr_sanitizers.ts lewat switch. Keenam pemetaannya COCOK:
+      HTML->sanitizeHtml  STYLE->sanitizeStyle  SCRIPT->sanitizeScript
+      URL->sanitizeUrl    RESOURCE_URL->sanitizeResourceUrl
+      ATTRIBUTE_NO_BINDING->validateAttribute
+
+  SELISIH YANG PENTING
+  --------------------
+  Tipe `ExtractedAttributeOp.securityContext` adalah
+      SecurityContext | SecurityContext[]        (ir/src/ops/create.ts:833)
+
+  Salinan UTAMA menangani kedua bentuk:
+      if (Array.isArray(op.securityContext) && hasCompositeUrlSecurityContext(...))
+        sanitizerFn = Identifiers.sanitizeUrlOrResourceUrl;
+      else
+        sanitizerFn = sanitizerFns.get(getOnlySecurityContext(op.securityContext));
+
+  Salinan I18N hanya menangani bentuk skalar:
+      switch (op.securityContext) { case SecurityContext.HTML: ... }
+
+  Sebuah array tidak pernah `===` nilai enum numerik, sehingga bila
+  `op.securityContext` berupa array TIDAK ADA case yang cocok, `expr` dikembalikan
+  apa adanya, dan atributnya lolos TANPA sanitizer — diam-diam, tanpa galat.
+
+  MENGAPA SAAT INI BELUM TERJANGKAU (diverifikasi)
+  ------------------------------------------------
+  Ditelusuri dari mana array berasal:
+    - Array HANYA dihasilkan `calcHostBindingSecurityContexts`, dipakai di
+      ingest.ts:128,137 — keduanya jalur HOST BINDING.
+    - Atribut TEMPLATE memakai `domSchema.securityContext(...)`
+      (ingest.ts:540,1461) yang mengembalikan SATU nilai, bukan array.
+    - `resolveI18nAttrSanitizers` hanya memproses op dengan `i18nContext !== null`,
+      dan i18n tidak berlaku pada host binding.
+  Irisan "punya i18nContext" x "securityContext berupa array" karena itu KOSONG
+  pada kompilasi hari ini. Jadi ini cacat LATEN, bukan kerentanan.
+
+  MENGAPA TETAP LAYAK DIPERBAIKI
+  ------------------------------
+  Yang menahan bukan kode, melainkan kebetulan: i18n kebetulan hanya ada di
+  template, dan template kebetulan hanya menghasilkan konteks tunggal. Tipe
+  datanya sendiri sudah menyatakan array itu sah. Begitu salah satu asumsi
+  berubah — i18n pada host binding, atau konteks komposit pada template —
+  sanitasi hilang tanpa satu pun galat.
+
+  Bandingkan dengan salinan utama yang justru MELEMPAR bila konteksnya ambigu
+  (`AssertionError: Ambiguous security context`, resolve_sanitizers.ts:131):
+  salinan utama fail-closed, salinan i18n fail-open. Dua salinan logika yang
+  sama dengan sikap kegagalan berlawanan.
+
+  PERBAIKAN: samakan penanganannya — pakai `getOnlySecurityContext()` yang sudah
+  ada di salinan utama, atau minimal `default:` yang melempar bila bentuknya tak
+  terduga, sehingga kegagalannya tidak diam.
+
+==============================================================================
+F-08  UrlTree hasil parse tidak idempoten: dua URL berbeda menghasilkan pohon
+      berbeda tetapi serialisasi yang SAMA
+      BERKAS  : @angular/router DefaultUrlSerializer (parse/serialize)
+      SIFAT   : kebingungan rute (route confusion)
+      STATUS  : DAMPAK SUDAH DIUJI dengan Router sungguhan — TERBUKTI BERBEDA
+      BUKTI   : analysis/evidence/f08-route-confusion.png
+                analysis/tools/router-fuzz/impact.html
+==============================================================================
+
+  CARA DITEMUKAN
+  --------------
+  Fuzzer properti round-trip (analysis/tools/router-fuzz/fuzz-url.html),
+  20.000 kasus, benih 20260731. Hasil: 16.769 stabil, 40 tidak stabil,
+  0 gagal diparse ulang. Minimisasi otomatis mengerucutkan KEEMPAT PULUH
+  ketidakstabilan ke satu bentuk: karakter tunggal `)`.
+
+  PERILAKU TERUKUR
+  ----------------
+      parse(")")            -> root.children.primary.segments = [{path:"", ...}]
+      serialize(itu)        -> "/"
+      parse("/")            -> root.children = {}            <- TIDAK ADA anak
+      serialize(itu)        -> "/"
+
+  Jadi:
+    - round-trip STRING stabil  : "/" -> "/" (konvergen langsung)
+    - round-trip POHON TIDAK stabil: pohon-1 punya anak primary bersegmen kosong,
+      pohon-2 tidak punya anak sama sekali.
+
+  Cara lain menyatakan hal yang sama, dan ini bentuk yang lebih tajam:
+      `)` dan `/` adalah dua URL BERBEDA yang menghasilkan UrlTree BERBEDA,
+      tetapi keduanya menserialisasi ke string yang SAMA (`/`).
+
+  Penyebabnya: `)` adalah pembatas penutup outlet. Sebuah `)` liar tanpa `(`
+  pembuka menyisakan segmen kosong pada outlet primary, dan segmen kosong itu
+  hilang saat diserialisasi — sehingga informasinya tidak dapat dipulihkan.
+
+  PENILAIAN JUJUR
+  ---------------
+  Ini inkonsistensi normalisasi yang NYATA dan dapat direproduksi, tetapi saya
+  TIDAK mengklaimnya sebagai kerentanan. Yang melemahkannya:
+    - stringnya langsung konvergen ke `/`, jadi bilah alamat segera ternormalisasi
+    - masukannya URL cacat (`)` liar), bukan bentuk yang muncul dari tautan wajar
+    - tidak ada bukti batas keamanan terlewati
+
+  LANGKAH SECURITY IMPACT — SUDAH DIKERJAKAN, DAN HASILNYA MENGUBAH VONIS
+  -----------------------------------------------------------------------
+  Diuji dengan Router SUNGGUHAN (bootstrapApplication + provideRouter), tabel
+  rute berisi `''`, `'admin'`, dan `'**'`, masing-masing dengan guard pencatat
+  yang merekam persis apa yang dilihatnya. Perbandingan dilakukan secara
+  TERSTRUKTUR (rute yang cocok, segmen, data guard), bukan atas string.
+
+      aspek                 navigasi ")"              navigasi "/"
+      --------------------  ------------------------  --------------------
+      router.url            "/"                       "/"        <- SAMA
+      routeConfig.path      "**"  (wildcard)          ""  (rute kosong)
+      UrlSegment daun       [{path:""}]               []
+      guard yang berjalan   rute-wildcard             rute-kosong
+      url yang dilihat guard [{path:""}]              []
+
+  Kontrol positif: `/admin` mencocok ke rute `admin` — membuktikan harness ini
+  memang mampu membedakan rute, sehingga hasil di atas bukan artefak alat buta.
+
+  KESIMPULAN: `)` dan `/` MENCOCOK KE RUTE BERBEDA dan MENJALANKAN GUARD
+  BERBEDA, padahal bilah alamat menampilkan `/` untuk keduanya.
+
+  KONFOUND YANG SEMPAT MENYESATKAN (dicatat karena penting)
+  ---------------------------------------------------------
+  Percobaan pertama menunjukkan "perbedaan" yang TERNYATA PALSU: navigasi ke `/`
+  mengembalikan false dengan guard kosong, karena router SUDAH berada di `/`
+  akibat tes `)` sebelumnya — `navigateByUrl` menjadi no-op. Bila saya berhenti
+  di situ, saya akan melaporkan artefak urutan tes sebagai temuan.
+  Diperbaiki dengan mendahului setiap pengukuran dengan navigasi ke URL netral
+  acak. Hasil di atas adalah hasil SETELAH perbaikan itu.
+
+  PENILAIAN DAMPAK — JUJUR
+  ------------------------
+  Yang TERBUKTI: kebingungan rute. Satu URL yang tampil sebagai `/` di bilah
+  alamat mengaktifkan rute wildcard, bukan rute `''`. Guard milik rute `''`
+  TIDAK berjalan sama sekali.
+
+  Yang BELUM terbukti, dan tidak saya klaim: eskalasi hak akses. Arah dampaknya
+  bergantung konfigurasi aplikasi:
+    - Bila rute `''` yang dijaga dan `**` tidak, penyerang yang mengirim tautan
+      `)` membuat korban melewati guard rute `''` — tetapi yang dirender adalah
+      komponen wildcard (biasanya halaman 404), sehingga umumnya bukan kebocoran.
+    - Yang lebih layak dikhawatirkan: KETIDAKSESUAIAN SEBELUM/SESUDAH MUAT ULANG.
+      Sebelum muat ulang aplikasi berada di rute `**`; setelah muat ulang bilah
+      alamat berisi `/` sehingga aplikasi berada di rute `''`. Dua keadaan berbeda
+      untuk satu alamat yang sama.
+    - Menjadi serius hanya bila aplikasi menaruh logika keamanan pada rute `**`
+      atau menyimpulkan otorisasi dari `router.url` (yang berbunyi `/`)
+      alih-alih dari rute yang benar-benar aktif.
+
+  KASUS DUNIA NYATA — DESINKRONISASI ANTAR-LAPISAN
+  ------------------------------------------------
+  Menelusuri "aplikasi nyata seperti apa yang terdampak" menghasilkan bentuk yang
+  jauh lebih tajam daripada `)` vs `/`. Petunjuknya: `)` MEMOTONG sisa URL.
+
+  Terukur (analysis/evidence/f08-crosslayer-desync.txt, tools/router-fuzz/):
+
+  (1) Angular mencocokkan SEMUA varian ini ke rute `admin`, dan `router.url`
+      menjadi `/admin` — sampahnya dibuang:
+          /admin)     /admin)x     /admin)/y     /admin(     /admin)?q=1
+      Dua kontrol membuktikan presisinya:
+          /ADMIN)     -> wildcard  (pencocokan rute peka huruf besar-kecil)
+          /admin%29   -> wildcard  (segmen literal "admin)"; jadi yang istimewa
+                                    memang karakter `)` MENTAH, bukan bentuk
+                                    ter-encode)
+
+  (2) Peramban mengirim `)` MENTAH ke server (diverifikasi dengan server yang
+      mencatat req.url):
+          diminta "/admin)"   -> server menerima "/admin)"
+          diminta "/admin)/y" -> server menerima "/admin)/y"
+      `)` adalah sub-delim yang sah pada path (RFC 3986), jadi peramban tidak
+      meng-encode-nya.
+
+  (3) Pencocok path sisi-server yang lazim TIDAK menganggapnya `/admin`:
+          req.path === '/admin'                          -> TIDAK cocok
+          p === '/admin' || p.startsWith('/admin/')      -> TIDAK cocok
+          nginx  location = /admin                        -> TIDAK cocok
+          regex  ^/admin$                                 -> TIDAK cocok
+          nginx  location /admin  (prefix)                -> cocok (satu-satunya)
+
+  Jadi primitifnya: SATU URL yang oleh lapisan server dinilai BUKAN `/admin`,
+  tetapi oleh router Angular dirender SEBAGAI rute `admin`.
+
+  BENTUK APLIKASI YANG BENAR-BENAR RENTAN
+  ---------------------------------------
+  Yang dibutuhkan: otorisasi berbasis STRING PATH dilakukan di lapisan lain,
+  DAN Angular merender rutenya. Itu berarti SSR/prerender, bukan SPA murni:
+
+      // Express di depan Angular SSR — pola yang sangat lazim
+      app.use((req, res, next) => {
+        if (req.path === '/admin' || req.path.startsWith('/admin/')) {
+          if (!isAuthed(req)) return res.status(403).send('Forbidden');
+        }
+        next();
+      });
+      app.get('*', angularSsrHandler);
+
+  Permintaan `/admin)`:
+    - middleware: req.path = "/admin)" -> tidak cocok -> PEMERIKSAAN AUTH DILEWATI
+    - app.get('*') -> Angular SSR -> router mencocokkan rute `admin`
+    - halaman admin dirender di server dan dikirim ke penyerang tanpa autentikasi
+
+  Bentuk setara: aturan auth di CDN/WAF/reverse proxy atas path eksak, dan
+  konfigurasi server-route @angular/ssr yang mencocokkan path secara harfiah.
+
+  BATAS YANG HARUS DINYATAKAN
+  ---------------------------
+  - Pada SPA MURNI ini BUKAN bypass. Server memang menyajikan index.html untuk
+    semua path, dan guard klien TETAP BERJALAN — terukur: `rute-admin` berjalan
+    untuk `/admin)`. Jadi ini bukan bypass guard Angular.
+  - Yang saya UKUR terpisah: (1) pencocokan rute Angular, (2) apa yang diterima
+    server, (3) perilaku pencocok server. Yang saya SIMPULKAN, bukan jalankan
+    ujung-ke-ujung: komposisi ketiganya pada aplikasi SSR nyata dengan middleware
+    auth. Membangun aplikasi SSR berautentikasi sungguhan adalah langkah
+    berikutnya yang belum dikerjakan.
+  - Tanggung jawabnya bisa diperdebatkan: sebagian akan menyebut ini kesalahan
+    aplikasi (jangan otorisasi berdasarkan string path). Bantahannya: Angular
+    MENDIAMKAN karakter yang mengubah arti path, sehingga dua lapisan yang sama-
+    sama masuk akal menjadi tidak sinkron. Menolak `)` liar, atau tidak
+    memotongnya diam-diam, menutup seluruh kelas ini.
+
+  Karena itu F-08 naik dari "inkonsistensi normalisasi" menjadi "desinkronisasi
+  path antar-lapisan" — dengan jalur eksploitasi yang masuk akal dan komponennya
+  terukur, tetapi komposisi ujung-ke-ujungnya belum didemonstrasikan.
+
+  HIPOTESIS XSS — DIUJI DAN DIBANTAH
+  ----------------------------------
+  Pertanyaan wajar berikutnya: bila `)` memotong URL, bisakah sisa yang dipotong
+  dipakai menyelundupkan muatan XSS? Diuji, dan jawabannya TIDAK. Tiga pengukuran
+  menutup jalur itu (analysis/evidence/f08-xss-hypothesis-refuted.txt):
+
+  (a) Peramban meng-encode metakarakter HTML pada path. Memuat
+          /admin)"><img src=x onerror=alert(1)>
+      membuat server menerima
+          /admin)%22%3E%3Cimg%20src=x%20onerror=alert(1)%3E
+      `"`, `<`, `>` menjadi %22/%3C/%3E. Jadi `<script>` mentah TIDAK dapat
+      dikirim lewat path. (Bandingkan: `)` sendiri TIDAK di-encode — itulah
+      sebabnya desinkronisasi path tetap berlaku, tetapi XSS tidak.)
+
+  (b) Angular MENORMALKAN bilah alamat, termasuk pada MUAT LANGSUNG — bukan hanya
+      navigasi klien. Terukur sebelum dan sesudah bootstrap:
+          sebelum boot : location.pathname = "/admin)EVIL"
+          sesudah boot : location.pathname = "/admin"
+      Muatan lenyap dari `location`. Query dan fragment sesudah `)` ikut dibuang.
+
+  (c) Tidak ada residu yang tersisa untuk dibaca aplikasi:
+          location.search           -> ""
+          location.hash             -> ""
+          snapshot.queryParams      -> {}
+          snapshot.fragment         -> null
+          segmen                    -> ["admin"]
+      Kontrol: `/admin?q=BERSIH#f` MEMPERTAHANKAN query dan fragment dengan benar,
+      membuktikan pengukuran ini memang mampu melihat keduanya bila ada.
+
+  Jadi bagian yang dipotong DIBUANG, bukan disimpan diam-diam di suatu tempat.
+  Tidak ada bahan untuk XSS, dan tidak ada desinkronisasi `router.url` vs
+  `location` di sisi klien — keduanya sepakat setelah bootstrap.
+
+  CATATAN ZERO-TRUST YANG TETAP BERLAKU
+  -------------------------------------
+  Yang tersisa setelah XSS dibantah tetap satu hal, dan justru itu intinya:
+  LAPISAN SERVER DAN LAPISAN ANGULAR MELIHAT PATH YANG BERBEDA untuk satu
+  permintaan yang sama. Konsekuensi yang masuk akal tanpa perlu XSS:
+    - otorisasi berbasis path di server/proxy/CDN dilewati (bagian sebelumnya)
+    - log akses server mencatat `/admin)EVIL` sementara telemetri klien mencatat
+      `/admin`; korelasi saat penyelidikan insiden menjadi tidak cocok
+    - aturan WAF/rate-limit per-path dinilai atas string yang kemudian ditafsirkan
+      ulang oleh Angular
+
+  Ini kelas "otorisasi dilakukan di layer berbeda" — bukan kelas injeksi.
+
+  Status rantai validasi sekarang:
+      hipotesis YA | trace YA | neg-ctl YA | pos-ctl YA | runtime YA
+      | security impact YA (terukur, terbatas) | repro independen YA
+
+==============================================================================
+F-09  Cookie XSRF cacat menggagalkan SELURUH permintaan HTTP yang memutasi
+      (decodeURIComponent tanpa penjagaan)
+      BERKAS  : packages/common/src/cookie.ts:16          (decode tanpa guard)
+                packages/common/http/src/xsrf.ts:119      (getToken di LUAR try)
+      SIFAT   : penolakan layanan sisi klien, persisten
+      STATUS  : RANTAI LENGKAP — penanaman cookie lintas-origin kini
+                DIDEMONSTRASIKAN dengan dua host sungguhan
+      BUKTI   : analysis/evidence/f09-xsrf-cookie-dos.txt
+                analysis/tools/xsrf/
+==============================================================================
+
+  CARA DITEMUKAN
+  --------------
+  Oleh pola BARU G-15 ("decode tanpa penjagaan"). Menariknya, XSRF sudah pernah
+  saya periksa sebelumnya dan dinyatakan BENAR — tetapi saat itu saya hanya
+  memeriksa cek same-origin-nya, bukan parsing cookie-nya. Polanya menemukan apa
+  yang pembacaan manual saya lewatkan.
+
+  RANTAI
+  ------
+      packages/common/src/cookie.ts:9-20
+        export function parseCookieValue(cookieStr, name) {
+          ...
+          if (cookieName.trim() === name) {
+            return decodeURIComponent(cookieValue);   // <- TANPA try/catch
+          }
+        }
+
+      packages/common/http/src/xsrf.ts:104-125
+        try {
+          ... new URL(...) ...            // try HANYA membungkus parsing URL
+        } catch { return next(req); }
+
+        const token = inject(HttpXsrfTokenExtractor).getToken();  // <- DI LUAR try
+
+  `decodeURIComponent('%')` melempar `URIError: URI malformed`. Karena
+  `getToken()` berada di luar satu-satunya blok try, galat itu merambat keluar
+  dari interceptor dan menggagalkan permintaannya.
+
+  Diverifikasi ADA di bundel npm rilis:
+      @angular/common/fesm2022/_xhr-chunk.mjs    -> parseCookieValue tanpa guard
+      @angular/common/fesm2022/_module-chunk.mjs -> getToken() setelah blok catch
+
+  BUKTI RUNTIME (HttpClient asli dari npm, Chromium)
+  --------------------------------------------------
+      cookie "XSRF-TOKEN=abc123"  -> POST BERHASIL
+      cookie "XSRF-TOKEN=%"       -> POST GAGAL: URIError: URI malformed
+      cookie "XSRF-TOKEN=abc123"  -> POST BERHASIL kembali
+
+  Kontrol terakhir penting: memulihkan cookie sah membuat permintaan berhasil
+  lagi, jadi kegagalan benar-benar disebabkan cookie itu, bukan keadaan aplikasi
+  yang terlanjur rusak.
+
+  DAMPAK — PENILAIAN JUJUR
+  ------------------------
+  Ini KETERSEDIAAN, bukan kerahasiaan atau integritas. Tidak ada kebocoran data
+  dan tidak ada bypass XSRF (justru sebaliknya: permintaan tidak terkirim).
+
+  Yang membuatnya layak dilaporkan:
+    - mengenai SEMUA metode yang memutasi (POST/PUT/DELETE/PATCH) same-origin,
+      yakni hampir seluruh fungsi tulis aplikasi
+    - PERSISTEN: cookie bertahan sampai dihapus; korban tidak punya cara mudah
+      memulihkannya tanpa devtools
+    - dapat dipicu tanpa XSS lewat COOKIE TOSSING: subdomain saudara
+      (mis. evil.example.com) dapat menyetel `XSRF-TOKEN=%; Domain=example.com`
+      sehingga app.example.com lumpuh untuk operasi tulis
+    - nilai cookie dengan `%` tunggal adalah cookie yang SAH secara sintaks
+
+  Yang TIDAK saya klaim: eksekusi kode, kebocoran token, atau bypass proteksi
+  XSRF.
+
+  PENANAMAN COOKIE — SUDAH DIDEMONSTRASIKAN (menutup celah terakhir)
+  -------------------------------------------------------------------
+  Sebelumnya cookie tossing hanyalah ASUMSI. Kini diukur dengan dua host nyata
+  (/etc/hosts -> 127.0.0.1), satu jar cookie peramban, dan aplikasi Angular asli:
+  analysis/evidence/f09-cookie-tossing-demo.txt, tools/xsrf/cookie-toss.mjs
+
+      tahap                                    cookie dilihat app   POST
+      ---------------------------------------  -------------------  ---------
+      1. sebelum serangan                      ""                   BERHASIL
+      2. evil.contoh.test menyetel
+         `XSRF-TOKEN=%; Domain=contoh.test`    -                    -
+      3. korban membuka app.contoh.test        "XSRF-TOKEN=%"       GAGAL
+                                                                    URIError
+
+  Yang penting pada demonstrasi ini:
+    - Penyerang berada di ORIGIN BERBEDA (evil.contoh.test), bukan di origin
+      korban. Tidak dibutuhkan XSS pada app.contoh.test.
+    - Satu-satunya kemampuan yang dipakai adalah menyetel cookie ber-`Domain`
+      pada domain INDUK — perilaku cookie yang normal dan tidak diblokir peramban
+      (hanya prefiks `__Host-` yang mencegahnya, dan Angular tidak memakainya).
+    - Langkah 1 adalah kontrol: tanpa cookie, POST BERHASIL. Jadi kegagalan pada
+      langkah 3 benar-benar disebabkan cookie yang ditanam.
+
+  MODEL ANCAMAN: "related-domain attacker" — penyerang menguasai SATU subdomain
+  saudara. Ini model yang diakui dan nyata pada organisasi dengan subdomain
+  konten pengguna, hosting bersama, subdomain pemasaran yang dikelola pihak
+  ketiga, atau subdomain lama yang terbengkalai.
+
+  Dampak akhir: penolakan layanan LINTAS-ORIGIN dan PERSISTEN atas seluruh
+  operasi tulis aplikasi, tanpa XSS. Korban tidak dapat memulihkannya tanpa
+  menghapus cookie secara manual.
+
+  PERBAIKAN
+  ---------
+  Bungkus decode-nya, dan putuskan sikap gagalnya secara sadar:
+
+      if (cookieName.trim() === name) {
+        try { return decodeURIComponent(cookieValue); }
+        catch { return cookieValue; }   // atau null — tetapi JANGAN melempar
+      }
+
+  Perbaikan setara di sisi pemanggil: pindahkan `getToken()` ke dalam blok try
+  yang sudah ada di xsrfInterceptorFn, sehingga kegagalan ekstraksi token tidak
+  pernah menggagalkan permintaan.
+
+==============================================================================
+F-10  HttpParams({fromString}) melempar URIError pada persen-encoding cacat —
+      lebih rapuh daripada URLSearchParams platform
+      BERKAS  : packages/common/http/src/params.ts:64-75 (decodeKey/decodeValue)
+                packages/common/http/src/params.ts:180   (parse di KONSTRUKTOR)
+      SIFAT   : cacat KOREKTNESS/ketangguhan (divergensi dari platform)
+      DAMPAK  : KECIL. Bukan DoS layanan. Hanya SATU pengguna, pada SATU
+                page-load, dan TIDAK persisten (navigasi bersih memulihkan).
+      STATUS  : DIBUKTIKAN RUNTIME (npm 22.1.0); pembanding platform diukur
+      BUKTI   : analysis/evidence/f10-httpparams-uri-malformed.txt
+                analysis/tools/httpparams/
+==============================================================================
+
+  CARA DITEMUKAN
+  --------------
+  Menriase saudara F-09 yang sempat dilewati: G-15 juga menandai params.ts:65,74.
+  F-09 mengajarkan bentuknya; ini instans yang sama pada jalur berbeda.
+
+  KODE
+  ----
+      // params.ts:64-75  — codec baku HttpUrlEncodingCodec
+      decodeKey(key: string): string   { return decodeURIComponent(key); }
+      decodeValue(value: string)       { return decodeURIComponent(value); }
+
+      // params.ts:173-180 — parse terjadi di KONSTRUKTOR, bukan lazy
+      if (options.fromString) {
+        this.map = paramParser(options.fromString, this.encoder);  // dapat melempar
+      }
+
+  Komentar di berkas yang sama (params.ts:81-83) secara EKSPLISIT menganjurkan
+  pola yang rentan:
+      "The `window.location.search` can be used while creating an instance of
+       the `HttpParams` class (e.g. `new HttpParams({ fromString:
+       window.location.search })`)."
+
+  BUKTI RUNTIME (HttpParams asli dari npm)
+  ----------------------------------------
+      new HttpParams({fromString: 'a=1&b=2'})        -> OK
+      new HttpParams({fromString: 'a=%'})            -> THROW URIError: URI malformed
+      new HttpParams({fromString: 'q=100%off'})      -> THROW URIError
+      new HttpParams({fromString: '?filter=50%&x=1'}) -> THROW URIError
+
+  PEMBANDING PLATFORM — ini yang menjadikannya CACAT, bukan sekadar perilaku JS
+  ----------------------------------------------------------------------------
+  `URLSearchParams` (standar web untuk tugas yang SAMA) TIDAK melempar pada
+  masukan yang sama; `%` liar diperlakukan sebagai `%` harfiah:
+      new URLSearchParams('q=100%off')   -> [["q","100%off"]]
+      new URLSearchParams('a=%')         -> [["a","%"]]
+      new URLSearchParams('?filter=50%') -> [["filter","50%"]]
+
+  Jadi HttpParams LEBIH RAPUH daripada primitif platform yang ditirunya, pada
+  jalur yang dokumentasinya sendiri anjurkan.
+
+  DAMPAK — PENILAIAN JUJUR (dikoreksi setelah pertanyaan tajam: "web-nya down?")
+  ----------------------------------------------------------------------------
+  TIDAK. Web-nya tidak down. Koreksi ini penting dan saya sebelumnya salah
+  membingkai:
+    - Hanya pengguna yang URL-nya kebetulan memuat `%` liar yang terdampak.
+    - Hanya pada page-load itu; TIDAK persisten — navigasi/refresh dengan URL
+      bersih langsung memulihkan.
+    - Server dan pengguna lain TIDAK terpengaruh sama sekali.
+    - Praktis SELF-INFLICTED (pengguna mengetik/menandai URL aneh) atau paling
+      jauh "kirim korban satu tautan rusak" yang efeknya cuma halaman error
+      sekali, lalu hilang.
+
+  Jadi ini BUKAN penolakan layanan dalam arti bermakna. Ini cacat KOREKTNESS:
+  HttpParams berbeda dari `URLSearchParams` platform pada masukan yang sama, ke
+  arah yang lebih rapuh. Itu tetap layak diperbaiki (menyelaraskan dengan
+  platform), tetapi bobotnya jauh di bawah F-09.
+
+  KOREKSI ISTILAH: saya sempat menulis F-10 "lebih mudah dijangkau daripada
+  F-09". Itu mencampur KETERJANGKAUAN dengan DAMPAK. Lebih gampang dipicu TIDAK
+  berarti lebih parah. Dalam hal DAMPAK, F-10 jauh di bawah F-09:
+      F-09: seluruh operasi tulis korban mati, PERSISTEN, lintas-origin
+      F-10: satu halaman satu pengguna error sekali, lalu pulih sendiri
+
+  PERBAIKAN
+  ---------
+  Jadikan codec baku toleran seperti URLSearchParams — decode dengan fallback:
+      decodeValue(value: string) {
+        try { return decodeURIComponent(value); } catch { return value; }
+      }
+  (idem decodeKey). Ini menyelaraskan HttpParams dengan perilaku platform dan
+  menutup F-10 tanpa mengubah kasus yang sah.
+
+
+==============================================================================
+F-11  AngularJSUrlCodec: pembungkus aman ADA di berkas yang sama, tapi
+      decodePath()/decodeHash() tetap memanggil decodeURIComponent MENTAH
+      — $locationShim gagal konstruksi pada URL dengan persen cacat
+==============================================================================
+
+  BERKAS
+  ------
+  packages/common/upgrade/src/params.ts
+      :247-254  tryDecodeURIComponent()  <- pembungkus aman, try/catch
+      :150      decodePath()   -> decodeURIComponent MENTAH
+      :167      decodeHash()   -> decodeURIComponent MENTAH
+      :271-273  parseKeyValue() -> MEMAKAI tryDecodeURIComponent
+  packages/common/upgrade/src/location_shim.ts
+      :369      this.$$path   = urlCodec.decodePath(path)     <- tanpa penjaga
+      :370      this.$$search = urlCodec.decodeSearch(...)    <- ADA penjaga
+      :371      this.$$hash   = urlCodec.decodeHash(...)      <- tanpa penjaga
+      :81       konstruktor memanggil $$parseLinkUrl(initialUrl, initialUrl)
+
+  KENAPA INI CACAT, BUKAN SELERA
+  ------------------------------
+  Kelas cacatnya adalah "penjaga menganggur": penulis berkas ini SUDAH
+  menyatakan — lewat kodenya sendiri — bahwa decodeURIComponent perlu
+  dibungkus, dan pembungkus itu memang dipakai untuk query string. Tiga
+  baris berurutan di parseAppUrl (369/370/371) menguraikan path, search dan
+  hash dari URL yang sama; hanya satu dari ketiganya yang dijaga. Tidak ada
+  komentar, tanda, atau uji yang menyatakan bahwa path dan hash sengaja
+  dibiarkan melempar. Ini inkonsistensi yang bisa dibuktikan, bukan pilihan
+  desain yang dinyatakan.
+
+  RANTAI VALIDASI
+  ---------------
+  1. HIPOTESIS   Escape persen yang tidak sah pada path/hash membuat
+                 decodeURIComponent melempar URIError yang tidak tertangkap.
+  2. CODE TRACE  konstruktor $locationShim -> $$parseLinkUrl -> $$parse ->
+                 parseAppUrl -> decodePath/decodeHash. Tidak ada try/catch di
+                 sepanjang rantai (satu-satunya try/catch di location_shim.ts
+                 ada di $$notifyChangeListeners:407 dan
+                 setBrowserUrlWithFallback:467 — keduanya di HILIR).
+  3. KETERJANGKAUAN  Parser URL WHATWG MEMPERTAHANKAN "%zz" apa adanya:
+                 new URL('https://app.test/a%zz').pathname === '/a%zz'.
+                 Diverifikasi lagi di Chromium: location.pathname === '/a%zz'.
+  4. KONTROL POSITIF  decodeSearch('a=%zz') dan decodeSearch('%zz=1') SELAMAT
+                 pada harness yang sama. Membuktikan harness memanggil kode
+                 nyata dan pembeda satu-satunya adalah ada/tidaknya try/catch.
+  5. KONTROL NEGATIF  decodePath('/a%20b'), '/a%2Fb', '/<script>', '/\0'
+                 semuanya OK. Pemicunya spesifik pada escape persen cacat,
+                 bukan "masukan aneh apa pun melempar".
+  6. RUNTIME PROOF  Terhadap ARTEFAK npm ASLI @angular/common@22.1.0
+                 (fesm2022/upgrade.mjs), bukan port tangan:
+                   analysis/tools/upgrade-decode/probe.mjs      6/6 melempar
+                   analysis/tools/upgrade-decode/shim-e2e.mjs   3/6 URL bikin
+                       konstruktor $locationShim GAGAL
+                   analysis/tools/upgrade-decode/browser-proof.mjs
+                       Chromium, masukan dari navigasi sungguhan: 2/3 melempar
+                   analysis/evidence/F-11-chromium.png
+  7. REPRODUKSI INDEPENDEN  Ketiga harness memuat bundel npm publik; tidak ada
+                 kode Angular yang ditranskripsi ulang. Pihak lain cukup
+                 `npm i @angular/common@22.1.0` lalu menjalankan probe.mjs.
+
+  HASIL shim-e2e (dependensi identik, HANYA URL awal yang berubah)
+  ----------------------------------------------------------------
+    bootstrap OK      https://app.test/dashboard          path="/dashboard"
+    bootstrap OK      https://app.test/a%20b              path="/a b"
+    bootstrap OK      https://app.test/dashboard?q=%zz    path="/dashboard"
+    BOOTSTRAP GAGAL   https://app.test/dashboard#%zz      URIError: URI malformed
+    BOOTSTRAP GAGAL   https://app.test/a%zz               URIError: URI malformed
+    BOOTSTRAP GAGAL   https://app.test/a%                 URIError: URI malformed
+
+  DAMPAK — dengan disiplin yang sama seperti koreksi F-10
+  -------------------------------------------------------
+  Siapa yang rugi?   Hanya pengguna yang membuka tautan itu.
+  Berapa lama?       Selama ia berada di URL tersebut.
+  Pulih sendiri?     Ya, begitu bernavigasi ke URL yang bersih.
+  Layanannya down?   TIDAK. Ini murni sisi klien; server tidak terpengaruh.
+
+  Jadi F-11 BUKAN kerentanan DoS layanan. Ia adalah cacat kebenaran/ketahanan
+  dengan tingkat keparahan setara F-10 — dengan satu perbedaan yang membuatnya
+  lebih buruk dari F-10 dalam hal luasnya kegagalan: yang gagal bukan satu
+  pemanggilan API, melainkan KONSTRUKTOR $locationShim, sehingga seluruh
+  aplikasi hibrida (ngUpgrade) gagal bootstrap, bukan hanya satu fitur.
+  Tautan penyerang -> halaman korban kosong. Tidak ada kebocoran data, tidak
+  ada eksekusi kode, tidak ada bypass otorisasi.
+
+  Kenapa tetap layak dilaporkan: perbaikannya satu baris, tidak ada trade-off,
+  dan konsistensi dengan decodeSearch justru mengurangi kejutan.
+
+  PERBAIKAN
+  ---------
+  Pakai pembungkus yang sudah ada di berkas yang sama:
+      segments[i] = tryDecodeURIComponent(segments[i]) ?? segments[i];
+      ...
+      hash = tryDecodeURIComponent(hash) ?? hash;
+  Ini menyelaraskan decodePath/decodeHash dengan decodeSearch dan mengembalikan
+  segmen mentah bila tidak dapat diuraikan — persis yang dilakukan platform
+  (URLSearchParams) dan persis yang sudah dilakukan parseKeyValue.
+
+  BAGAIMANA CACAT INI DITEMUKAN
+  -----------------------------
+  Pemindai G-22 "penjaga menganggur" (analysis/regex-corpus/scan-unused-guard.mjs):
+  cari modul yang MENDEFINISIKAN pembungkus aman untuk sebuah primitif lalu
+  tetap memanggil primitif mentahnya di tempat lain. Di seluruh 2037 berkas
+  packages/, hanya SATU modul yang cocok — berkas ini. Nilai kelas ini: ia
+  tidak menebak niat penulis, ia mengadu kode dengan pernyataan penulis
+  sendiri.
+
+
+==============================================================================
+F-12  Pola dataGroup service worker dicocokkan sebagai SUBSTRING terhadap URL
+      absolut — pola `/api/**` menangkap dan meng-cache respons LINTAS-ORIGIN
+==============================================================================
+
+  BERKAS
+  ------
+  packages/service-worker/config/src/generator.ts
+      :126  processNavigationUrls  -> `^${urlToRegex(url, baseHref)}$`   ANCHOR
+      :153  globListToMatcher neg  -> '^' + globToRegex(...) + '$'       ANCHOR
+      :158  globListToMatcher pos  -> '^' + globToRegex(...) + '$'       ANCHOR
+      :96   assetGroups.patterns   -> urlToRegex(url, baseHref, true)    TANPA
+      :104  dataGroups.patterns    -> urlToRegex(url, baseHref, true)    TANPA
+  packages/service-worker/worker/src/data.ts
+      :305  this.patterns.some((p) => p.test(req.url))     <- req.url MENTAH
+  packages/service-worker/worker/src/assets.ts
+      :126  ... p.test(url)  dengan url = adapter.normalizeUrl(req.url)
+  packages/service-worker/worker/src/adapter.ts
+      :84-88 normalizeUrl MEMBANDINGKAN origin — tapi data.ts tidak memakainya
+
+  DUA INKONSISTENSI-DIRI YANG BERGABUNG
+  -------------------------------------
+  (a) Di satu berkas generator, tiga dari lima tempat meng-anchor regexnya;
+      dua yang tidak justru yang dikirim ke manifest dan dipakai saat runtime.
+  (b) Di sisi runtime, `assets.ts` menormalkan URL lebih dulu (yang memeriksa
+      origin), `data.ts` menguji `req.url` absolut apa adanya.
+
+  Hasil gabungannya: pola path `/api/**` menjadi regex `\/api\/.*` tanpa anchor,
+  diuji terhadap `https://origin-lain/...`. Ia cocok di mana pun — termasuk
+  ketika `/api/` hanya muncul di QUERY STRING.
+
+  RUMUSAN AKAR MASALAH YANG TAHAN TRIAGE
+  --------------------------------------
+  Dokumentasi Angular MEMANG menyatakan pencocokan glob bersifat parsial dan
+  developer boleh meng-anchor sendiri. Laporan ini TIDAK menyangkal itu, dan
+  klaim "pola /api/** jelas dimaksudkan hanya path origin sendiri" sengaja
+  TIDAK ditekankan. Rumusan yang dipakai:
+
+      Pola dataGroups bergaya path dievaluasi sebagai substring tanpa anchor
+      terhadap URL permintaan absolut. Akibatnya konfigurasi TIDAK DAPAT
+      mengungkapkan makna alaminya — "path ini pada origin aplikasi sendiri" —
+      tanpa menanam origin deployment ke dalam regex.
+
+  Menulis `^/api/.*$` tidak menolong: pola itu tidak akan pernah cocok karena
+  yang diuji URL absolut. Satu-satunya bentuk aman adalah
+  `^https://app\.example\.com/api/.*$`, yang memaksa developer meng-hardcode
+  origin dan memelihara konfigurasi berbeda untuk staging, produksi, custom
+  domain, dan hosting multi-tenant.
+
+  RANTAI VALIDASI
+  ---------------
+  1. HIPOTESIS   Pola tanpa anchor yang diuji terhadap URL absolut akan cocok
+                 untuk URL lintas-origin.
+  2. CODE TRACE  generator.ts:104 -> manifest.dataGroups[].patterns ->
+                 data.ts:257 new RegExp(pattern) -> data.ts:305 test(req.url).
+                 Tidak ada pemeriksaan origin di sepanjang jalur itu.
+  3. KONTROL POSITIF  navigationUrls dari KONFIGURASI YANG SAMA di-anchor dan
+                 TIDAK cocok untuk URL lintas-origin yang sama.
+  4. KONTROL NEGATIF  URL lintas-origin tanpa `/api/` lewat ke jaringan pada
+                 kedua pengambilan — jadi pemicunya memang pencocokan substring.
+  5. RUNTIME PROOF  `ngsw-worker.js` @angular/service-worker@22.1.0 yang
+                 SEBENARNYA dikirim npm, dimuat di ServiceWorkerGlobalScope
+                 tiruan; event install/activate/message/fetch nyata.
+                   analysis/tools/ngsw/pattern-anchor.mjs
+                   analysis/tools/ngsw/crossorigin-cache.mjs
+                   analysis/tools/ngsw/mock-sw.mjs
+  6. REPRODUKSI INDEPENDEN  Cukup `npm i @angular/service-worker@22.1.0`.
+                 Tidak ada kode Angular yang ditranskripsi ulang; Generator dan
+                 worker keduanya dimuat dari artefak npm.
+
+  HASIL RUNTIME (setiap panggilan jaringan mengembalikan body berbeda)
+  --------------------------------------------------------------------
+    https://app.example.com/api/orders                 #1 jaringan, #2 CACHE
+    https://payments.other-company.test/v1/api/charge  #1 jaringan, #2 CACHE
+    https://analytics.other.test/t?u=/api/x            #1 jaringan, #2 CACHE
+    https://payments.other-company.test/v1/charge      #1 jaringan, #2 jaringan
+
+    Cache Storage aplikasi sesudahnya:
+      ngsw:/:1:data:api:cache
+        https://payments.other-company.test/v1/api/charge
+        https://analytics.other.test/t?u=/api/x
+
+  DAMPAK
+  ------
+  Siapa yang rugi?  Pengguna aplikasi yang punya dataGroup dengan fragmen path
+                    yang juga muncul pada URL pihak ketiga yang diambil aplikasi.
+  Berapa lama?      Sampai maxAge habis atau versi SW berganti. TIDAK pulih
+                    sendiri per muat-halaman; entri ada di disk.
+  Layanan down?     Tidak.
+  Menembus SOP?     TIDAK. Halaman sendiri yang memulai permintaannya; SW tidak
+                    memperoleh akses baca baru. Jangan dilebih-lebihkan.
+
+  Yang benar-benar didapat:
+    1. Respons pihak ketiga disajikan BASI dan permintaan berikutnya tidak
+       pernah mencapai server itu. Untuk pemeriksaan yang bergantung kesegaran
+       (token dicabut, saldo, feature flag) ini masalah kebenaran yang bisa
+       berkonsekuensi keamanan.
+    2. Body respons lintas-origin dipersistenkan ke disk di Cache Storage
+       aplikasi — retensi data yang tidak diminta developer.
+    3. Tekanan eviksi LRU: maxSize dibagi bersama, trafik lintas-origin
+       menggusur data API aplikasi yang sebenarnya.
+
+  Ketelitian soal opaque: strategi 'performance' default cacheOpaqueResponses
+  = false (data.ts:353), jadi dampaknya terbatas pada endpoint pihak ketiga
+  yang mengirim header CORS. Strategi 'freshness' defaultnya true
+  (data.ts:399), sehingga respons opaque pun ikut tersimpan.
+
+  Ini cacat pertama dalam seri ini yang dampaknya PERSISTEN dan LINTAS-ORIGIN.
+  F-09/F-10/F-11 semuanya sementara dan sebatas satu pengguna satu halaman.
+
+  DAMPAK UTAMA — PENGUNGKAPAN RESPONS LINTAS-AKUN (peramban sungguhan)
+  --------------------------------------------------------------------
+  Diverifikasi di Chromium dengan Service Worker yang BENAR-BENAR terdaftar
+  lewat navigator.serviceWorker.register('/ngsw-worker.js'). Cache Storage,
+  pencocokan Vary, dan interception seluruhnya milik peramban.
+    analysis/tools/ngsw/browser/poc.mjs
+    analysis/tools/ngsw/browser/index.html
+    analysis/evidence/F-12-crossaccount.png
+
+    origin aplikasi : http://localhost:PORT_A   (SW terdaftar di sini)
+    origin IdP      : http://127.0.0.1:PORT_B   (ORIGIN BERBEDA)
+
+    T0  Alice login -> GET {IdP}/v2/api/profile  Authorization: Bearer ALICE
+    T1  Alice logout
+    T2  Bob login pada peramban yang sama, GET URL yang sama, Bearer BOB
+
+    endpoint                       T0 Alice   T2 Bob    IdP dihubungi
+    /v2/api/profile      (A)       Alice      ALICE     1x
+    /v2/profile          (B)       Alice      Bob       2x
+    /v2/api/profile +Vary(C)       Alice      ALICE     1x
+
+    Cache Storage peramban sesudah A dan C:
+      ngsw:/:1:data:api:cache
+        LINTAS-ORIGIN http://127.0.0.1:PORT_B/v2/api/profile
+
+  Bob menerima nama, email, dan role Alice. Permintaan Bob TIDAK PERNAH
+  mencapai server IdP, jadi server tidak punya kesempatan menolaknya. Ini
+  pelanggaran kerahasiaan konkret — bukan UI basi — dan tidak bergantung pada
+  asumsi bahwa otorisasi sisi klien bersifat otoritatif.
+
+  Batas: butuh peramban bersama atau pergantian akun pada peramban yang sama
+  (kiosk, perangkat keluarga, workstation bersama, logout/login berurutan).
+  Penyerang tidak perlu berbuat apa pun; peracunan terjadi lewat pemakaian
+  normal di T0.
+
+  DAMPAK TAMBAHAN — keputusan keamanan sisi klien menjadi salah
+  ------------------------------------------------------------
+  Dua skenario berikut menyerang pemeriksaan SISI KLIEN, sehingga menentukan
+  hanya pada aplikasi yang pemeriksaan sisi kliennya satu-satunya. Karena itu
+  keduanya TAMBAHAN, bukan dampak utama.
+    analysis/tools/ngsw/stale-authz.mjs
+
+  TAMBAHAN 1 — kunci yang sudah dirotasi keluar tetap diterima
+    Premis: dataGroup `/api/**`; JWKS IdP ada di /v1/api/keys.
+    Verifikasi memakai WebCrypto ASLI (ECDSA P-256 / ES256), bukan tiruan.
+    Kode aplikasinya jujur: cek kid, verifikasi tanda tangan, tolak kid yang
+    tidak ada di JWKS.
+      T0  k1 sah, aplikasi ambil JWKS               -> masuk cache
+      T1  k1 BOCOR, IdP merotasinya keluar (JWKS = k2 saja)
+      T2  JWT role=admin bertanda tangan k1 disodorkan. Tanda tangannya SAH
+          secara kriptografis; yang salah adalah k1 sudah DICABUT.
+
+      A RENTAN    pola \/api\/.*, JWKS /v1/api/keys
+                  IdP dihubungi setelah rotasi = false
+                  >>> AKSES ADMIN DIBERIKAN
+      B KONTROL   pola sama, JWKS /v1/keys (tanpa "/api/")
+                  IdP dihubungi = true  -> DITOLAK (kid sudah tidak ada)
+      C PERBAIKAN pola ^https:\/\/app\.example\.com\/api\/.*$
+                  IdP dihubungi = true  -> DITOLAK
+
+    Kode aplikasi, pasangan kunci, token, dan kode verifikasi IDENTIK di
+    ketiganya. Pembeda diterimanya token itu hanyalah BENTUK URL IdP.
+
+    KOREKSI ATAS KLAIM SAYA SENDIRI: sebelumnya saya menulis bentuk URL IdP
+    "sama sekali di luar kendali developer". Itu terlalu absolut. Developer
+    tidak mengendalikan path IdP, TETAPI ia mengendalikan dataGroups.urls dan
+    bisa menulis pola absolut ter-anchor. Rumusan yang benar: bentuk URL pihak
+    ketiga di luar kendalinya, sementara mengungkapkan "path /api/ pada origin
+    aplikasi SENDIRI" secara aman mengharuskan origin deployment ditanam ke
+    dalam regex. Konfigurasi bergaya path yang portabel tidak mempertahankan
+    semantik same-origin saat runtime.
+
+    Istilah: token pada skenario ini BUKAN "palsu"/forged. Tanda tangannya sah
+    secara kriptografis; yang salah adalah kuncinya sudah dicabut lewat rotasi
+    darurat.
+
+  TAMBAHAN 2 — pencabutan hak akses tidak berlaku
+    Tidak mengandaikan verifikasi JWT sisi klien; polanya jauh lebih umum.
+      T0  pengguna admin, aplikasi ambil hak aksesnya
+      T1  admin MENCABUT peran (karyawan keluar / akun disusupi)
+      T2  pengguna membuka panel admin lagi
+
+      A RENTAN   hak di /v2/api/entitlements
+                 IdP dihubungi setelah cabut = false
+                 aplikasi melihat {"role":"admin","active":true}
+                 >>> PANEL ADMIN TETAP TERBUKA
+      B KONTROL  hak di /v2/entitlements
+                 IdP dihubungi = true -> {"role":"viewer","active":false}
+                 -> akses dicabut dengan benar
+
+  BATAS YANG DINYATAKAN JUJUR
+    - Penegakan otoritatif seharusnya di server. Cacat ini membuat pemeriksaan
+      SISI KLIEN salah. Untuk aplikasi yang pemeriksaan sisi kliennya
+      satu-satunya (gating UI admin, feature gating, verifikasi token pihak
+      ketiga di klien), kegagalannya langsung.
+    - Penyerang tidak perlu berbuat apa pun untuk meracuni cache; peracunan
+      terjadi lewat pemakaian normal di T0. Yang "diserang" adalah waktu.
+    - maxAge dipilih developer; nilai lazim jam hingga hari, dan selama itu
+      rotasi kunci darurat serta pencabutan hak TIDAK SAMPAI ke peramban.
+
+  Klasifikasi yang paling tepat: cross-origin unintended service worker
+  caching akibat pencocokan pola URL tanpa anchor terhadap URL absolut —
+  security-relevant correctness flaw / cache-scope confusion, dengan severity
+  yang bergantung aplikasi tetapi terbukti mencapai pengungkapan data
+  lintas-akun.
+
+
+==============================================================================
+F-13  ngsw meng-hardcode `ignoreVary: true` dan tidak mengeksposnya —
+      pertahanan `Vary: Authorization` sisi server dinonaktifkan tanpa syarat
+==============================================================================
+
+  BERKAS
+  ------
+  packages/service-worker/config/src/generator.ts:203-210
+      function buildCacheQueryOptions(
+        inOptions?: Pick<CacheQueryOptions, 'ignoreSearch'>,
+      ): CacheQueryOptions {
+        return {
+          ignoreVary: true,
+          ...inOptions,
+        };
+      }
+  packages/service-worker/config/src/in.ts:44,64
+      cacheQueryOptions?: Pick<CacheQueryOptions, 'ignoreSearch'>;
+  goldens/public-api/service-worker/config/index.api.md:10,54  (idem)
+  adev/src/content/ecosystem/service-workers/config.md:154
+      hanya `ignoreSearch` yang didokumentasikan; `ignoreVary` tidak disebut
+
+  KENAPA INI PENTING
+  ------------------
+  `Vary` adalah mekanisme HTTP standar bagi server untuk menyatakan "respons
+  ini tidak boleh dipakai ulang untuk permintaan dengan header berbeda".
+  `Vary: Authorization` dan `Vary: Cookie` adalah pertahanan baku terhadap
+  reuse cache lintas-prinsipal.
+
+  Angular menonaktifkannya TANPA SYARAT, dan tipe publiknya tidak mengekspos
+  `ignoreVary`, sehingga aplikasi tidak punya cara yang didukung untuk
+  menyalakannya kembali. Server yang SUDAH melakukan hal yang benar tetap
+  tidak terlindungi.
+
+  BUKTI — sebab disematkan pada ENTRI CACHE YANG SAMA
+  ---------------------------------------------------
+  Di dalam halaman, permintaan Bob dicocokkan dua kali terhadap entri yang
+  baru saja ditulis ngsw (analysis/tools/ngsw/browser/poc.mjs, arm C, IdP
+  mengirim `Vary: Authorization`):
+
+      Cache.match(permintaan Bob) pada ngsw:/:1:data:api:cache
+        {ignoreVary:true}  (yang dipakai ngsw) -> {"name":"Alice", ...}
+        default peramban   (menghormati Vary)  -> TIDAK COCOK
+
+  Peramban akan menolak kecocokan itu. ngsw memaksanya cocok.
+
+  PoC MANDIRI, SAME-ORIGIN
+  ------------------------
+  F-13 TIDAK bergantung pada F-12. PoC-nya same-origin sepenuhnya, endpointnya
+  SENGAJA dicakup dataGroups, sehingga tidak ada ruang untuk mengatakan
+  "endpoint itu masuk cache karena pola lintas-origin yang keliru".
+    analysis/tools/ngsw/browser/poc-f13.mjs
+    analysis/tools/ngsw/browser/index-f13.html
+    analysis/evidence/F-13-ignorevary.png
+
+    Alice Authorization : Bearer ALICE
+    Bob   Authorization : Bearer BOB
+    URL                 : IDENTIK, http://localhost:PORT/api/profile
+    Header respons      : Vary: Authorization
+
+    A SEPERTI DIKIRIM (ignoreVary: true dari Generator)
+      permintaan sampai ke server                 1
+      cache.match(bobRequest)                     -> undefined
+      cache.match(bobRequest,{ignoreVary:true})   -> respons ALICE
+      Bob menerima nama+surel+role Alice
+    B DITAMBAL (ignoreVary: false)
+      permintaan sampai ke server                 2
+      Bob menerima datanya sendiri
+
+  PRASYARAT, DINYATAKAN APA ADANYA
+  --------------------------------
+  KOREKSI ATAS KLAIM SAYA SENDIRI: saya sempat menulis "F-13 mengangkat
+  severity terlepas dari kebutuhan peramban bersama". Itu terlalu jauh. F-13
+  memang menghapus prasyarat lintas-origin yang tidak disengaja, TETAPI
+  eksploitasinya tetap memerlukan DUA KONTEKS OTORISASI yang dapat dibedakan
+  meminta URL yang sama dalam masa hidup cache Service Worker.
+
+  Itu tidak harus dua orang berbagi komputer. Bentuk realistisnya:
+    - logout Alice lalu login Bob
+    - pergantian tenant atau organisasi
+    - account switcher bawaan produk SaaS
+    - admin melakukan impersonation lalu kembali ke akunnya
+    - token berubah setelah role atau identitas diganti
+    - satu pengguna dengan akun personal dan bisnis
+    - kiosk atau workstation bersama
+
+  ISTILAH YANG BENAR
+  ------------------
+  `Vary` BUKAN berarti "jangan cache". Artinya representasi ini dipilih
+  berdasarkan nilai header permintaan tersebut, sehingga cache HARUS
+  mempertimbangkan header itu saat mencari kecocokan. Default Cache API adalah
+  `ignoreVary: false`. Rumusan yang dipakai di laporan: server menyatakan
+  dengan benar bahwa representasi bervariasi menurut header Authorization;
+  pencocokan baku peramban karena itu menolak respons Alice untuk permintaan
+  Bob; Angular menimpa keputusan itu dengan ignoreVary: true.
+
+  SEVERITY
+  --------
+  Medium adalah klaim paling defensif: kerahasiaannya konkret, tetapi dibatasi
+  perlunya transisi identitas pada profil peramban yang sama. Bisa lebih tinggi
+  bila account/tenant switching adalah alur normal produk, respons memuat data
+  finansial/medis/token/PII sensitif, endpoint dipakai banyak tenant, penyerang
+  dapat mengarahkan korban berganti akun, atau cache bertahan sesudah logout
+  yang dianggap membersihkan sesi. Tidak diklaim tanpa bukti tambahan.
+
+  USULAN
+  ------
+  Minimal:
+      function buildCacheQueryOptions(
+        inOptions?: Pick<CacheQueryOptions, 'ignoreSearch' | 'ignoreVary'>,
+      ): CacheQueryOptions {
+        return {ignoreVary: false, ...inOptions};
+      }
+  Bila `true` perlu dipertahankan demi kompatibilitas aset statis, pisahkan
+  defaultnya: assetGroups boleh mempertahankan perilaku lama (isinya di-hash,
+  tidak bergantung header), dataGroups default `false`.
+
+  DILAPORKAN TERPISAH DARI F-12
+  -----------------------------
+  F-13 dikirim sebagai laporan keamanan MANDIRI, bukan subbagian F-12.
+  Dokumentasi Angular mengakui pencocokan glob bersifat parsial, sehingga F-12
+  lebih mungkin diperlakukan sebagai bug correctness; menggabungkannya berisiko
+  menyeret turun F-13 yang jauh lebih kuat. Di laporan F-13, F-12 hanya disebut
+  satu kalimat di bagian akhir.
+    Laporan  : analysis/reports/F-13-ngsw-ignorevary.md
+    Prosedur : analysis/reports/PENGIRIMAN-F13.md
+
+  KENAPA BUKAN PERILAKU YANG DIRANCANG
+  ------------------------------------
+  Dokumentasi (adev/.../service-workers/config.md, bagian dataGroups.urls)
+  hanya menyatakan "A list of URL patterns. URLs that match these patterns are
+  cached according to this data group's policy." Tidak ada penyebutan bahwa
+  pencocokannya substring, tidak ada bahwa pola path berlaku lintas-origin.
+  Caching lintas-origin memang didukung — dengan menulis URL absolut (dokumen
+  menyebut CDN seperti Google Fonts), bukan sebagai efek samping `/api/**`.
+
+  PERBAIKAN
+  ---------
+  Menambahkan `^` saja TIDAK cukup — dan ini bagian penting dari laporannya.
+  `data.ts` menguji URL absolut, sehingga pola path yang di-anchor
+  (`^\/api\/.*$`) justru tidak akan pernah cocok.
+
+  Perbaikan juga TIDAK BOLEH memaksa seluruh dataGroups menjadi same-origin:
+  Angular memang mendukung caching data lintas-origin secara sengaja
+  (dokumentasinya membahas respons opaque dan cacheOpaqueResponses). Usulan
+  yang kompatibel:
+
+    1. Pola yang diawali "/" dianggap path pada origin Service Worker.
+    2. Pola yang memuat skema/origin, mis. "https://cdn.example/**", tetap
+       diperlakukan sebagai pola lintas-origin seperti sekarang.
+    3. Pencocokan bergaya path dilakukan terhadap pathname + search yang sudah
+       dinormalkan, bukan terhadap seluruh URL absolut origin lain.
+
+  Secara konsep, di data.ts:
+
+      const parsed = new URL(req.url);
+      if (configuredPattern.startsWith('/')) {
+        if (parsed.origin !== adapter.origin) return false;
+        return pattern.test(parsed.pathname + parsed.search);
+      }
+      return pattern.test(req.url);
+
+  SEVERITY YANG REALISTIS
+  -----------------------
+    Medium         bila ada bukti pengungkapan data lintas-akun atau operasi
+                   berprivilege konkret  <- yang dibuktikan laporan ini
+    Low            bila hanya entitlement/UI sisi klien yang basi
+    Informational  bila triage menilai partial matching + staleness sudah
+                   terdokumentasi
+
+  Laporan siap kirim: analysis/reports/F-12-ngsw-crossorigin-cache.md
+
+
+==============================================================================
+F-14  Validators.pattern(string) membungkus pola dengan `^` dan `$` TANPA grup
+      non-capturing -> alternasi tingkat atas lolos dari anchor
+==============================================================================
+
+  BERKAS
+  ------
+  packages/forms/src/validators.ts:569-596
+
+      if (pattern.charAt(0) !== '^') regexStr += '^';
+      regexStr += pattern;
+      if (pattern.charAt(pattern.length - 1) !== '$') regexStr += '$';
+      regex = new RegExp(regexStr);
+
+  packages/forms/src/directives/validators.ts:695
+      createValidator = (input) => patternValidator(input)   <- direktif [pattern]
+                                                                memakai fungsi yang SAMA
+
+  DUA CACAT DALAM SATU FUNGSI
+  ---------------------------
+  A. `|` punya presedensi TERENDAH dalam regex. `^cat|dog$` berarti
+     `(^cat)|(dog$)`, bukan `^(cat|dog)$`. Alternatif di TENGAH
+     (`admin|user|guest` -> `^admin|user|guest$`) tidak menyentuh `^` maupun
+     `$` sama sekali, sehingga cocok sebagai SUBSTRING di mana pun.
+
+  B. Pemeriksaan anchor memakai `charAt`, bukan parsing. Pola yang berakhir
+     dengan dolar TER-ESCAPE (`\$`, artinya karakter dolar literal) dikira
+     sudah ber-anchor, sehingga `$` tidak ditambahkan sama sekali.
+
+  ACUAN — BUKAN SELERA SAYA
+  -------------------------
+  HTML Standard mendefinisikan atribut `pattern` pada <input> dikompilasi
+  setara dengan membungkusnya: "^(?:" + pattern + ")$".
+    https://html.spec.whatwg.org/multipage/input.html#the-pattern-attribute
+  Dokumentasi Angular sendiri menyandingkan `Validators.pattern('[a-zA-Z ]*')`
+  dengan `<input pattern="[a-zA-Z ]*">` sebagai padanan (validators.ts:380-386),
+  dan Angular menyediakan direktif `[pattern]` yang memakai fungsi yang sama.
+  Jadi peramban adalah acuan yang sah.
+
+  Dokumentasi menyatakan MEKANISMENYA ("the `^` character is prepended and the
+  `$` character is appended") tetapi tidak pernah memperingatkan bahwa alternasi
+  membatalkan anchor itu. Berkas uji Angular sendiri
+  (packages/forms/test/validators_spec.ts:389-441) hanya menguji kelas karakter
+  — TIDAK ADA satu pun kasus dengan alternasi.
+
+  RANTAI VALIDASI
+  ---------------
+  1. HIPOTESIS    Anchor yang dirangkai tanpa grup tidak mengikat alternasi.
+  2. CODE TRACE   validators.ts:576-582; tidak ada `(?:` di mana pun.
+  3. KONTROL POSITIF  pola tanpa alternasi berperilaku benar (5/5).
+  4. KONTROL NEGATIF  `(cat|dog)` — developer yang kebetulan menulis kurung
+                  sendiri TIDAK terdampak; `lizard` tetap ditolak. Pemicunya
+                  spesifik, bukan "semuanya diterima".
+  5. RUNTIME PROOF  Terhadap artefak npm @angular/forms@22.1.0:
+                    analysis/tools/forms-pattern/probe.mjs
+                      4 bypass alternasi, 2 bypass dolar-ter-escape
+  6. PEMBANDING PLATFORM  Chromium, pola dan nilai yang sama dinilai dua kali —
+                  `input.validity.patternMismatch` bawaan peramban vs
+                  `Validators.pattern` Angular:
+                    analysis/tools/forms-pattern/vs-platform.mjs
+                    analysis/evidence/F-14-vs-platform.png
+                    10 dari 24 kasus TIDAK SEPAKAT — SEMUANYA ke arah Angular
+                    lebih longgar. Tidak ada satu pun kasus sebaliknya.
+
+  CONTOH KETIDAKSEPAKATAN
+  -----------------------
+    pattern             value                  peramban   Angular
+    cat|dog             "bulldog"              ditolak    DITERIMA
+    cat|dog             "catastrophe"          ditolak    DITERIMA
+    admin|user|guest    "abuserx"              ditolak    DITERIMA
+    admin|user|guest    "no-user-here-really"  ditolak    DITERIMA
+    read|write|delete   "can-write-anything"   ditolak    DITERIMA
+    jpg|png|gif         "evil.svg.gif"         ditolak    DITERIMA
+    jpg|png|gif         "jpg.exe"              ditolak    DITERIMA
+    [0-9]+\$            "12$ dan lain-lain"    ditolak    DITERIMA
+
+  DAMPAK — dengan disiplin yang sama seperti koreksi F-10
+  -------------------------------------------------------
+  Ini validasi formulir SISI KLIEN. Ia BUKAN batas otorisasi, dan penegakan
+  yang otoritatif seharusnya di server. Saya tidak mengklaim lebih dari itu.
+
+  Yang benar-benar didapat:
+    1. Cacat kebenaran yang tidak ambigu: sintaks yang sama, dinilai berbeda
+       dari platform yang ditirunya, dengan perbedaan SELALU ke arah lebih
+       longgar.
+    2. Bentuk bypass yang nyata bila pola dipakai sebagai allowlist sebelum
+       sebuah sink (ekstensi berkas, nama peran, target pengalihan). Allowlist
+       memang lazim ditulis dengan alternasi — itu bentuk paling alami untuk
+       "salah satu dari".
+    3. Developer tidak punya petunjuk bahwa ia salah: dokumentasi menyandingkan
+       validator ini dengan atribut HTML yang berperilaku berbeda.
+
+  Severity sebagai kerentanan: RENDAH. Sebagai cacat kebenaran: jelas, dengan
+  perbaikan satu baris tanpa trade-off.
+
+  PERBAIKAN
+  ---------
+      regexStr = `^(?:${pattern})$`;
+  dan buang kedua pemeriksaan `charAt` — grup non-capturing membuatnya tidak
+  perlu, sekaligus menutup cacat B. Ini juga menyelaraskan Angular dengan cara
+  HTML Standard mengompilasi atribut `pattern`.
+
+  CATATAN KOMPATIBILITAS: perubahan ini MENGETATKAN validasi. Aplikasi yang
+  polanya memuat alternasi tingkat atas akan mulai menolak nilai yang tadinya
+  diterima. Itu justru perbaikannya, tetapi layak disebut di catatan rilis.
+
+  BAGAIMANA DITEMUKAN
+  -------------------
+  Bukan oleh pemindai. Setelah G-23 dan G-24 (lihat di bawah) habis, saya
+  berpindah ke paket yang belum tersentuh — @angular/forms — dan mencari kelas
+  yang sudah terbukti membayar di F-12: PERANGKAIAN ANCHOR. Pelajarannya: yang
+  berpindah antar-area bukan regexnya, melainkan KELAS cacatnya.
+
+
+==============================================================================
+F-17  Meta service: `META_KEYS_MAP[prop] || prop` membaca lewat rantai
+      prototipe pada objek literal biasa
+==============================================================================
+
+  BERKAS
+  ------
+  packages/platform-browser/src/browser/meta.ts
+      :209  const META_KEYS_MAP: {[prop: string]: string} = {httpEquiv: 'http-equiv'};
+      :198  function getMetaKeyMap(prop: string): string {
+      :199    return META_KEYS_MAP[prop] || prop;
+      :180  setMetaElementAttributes -> el.setAttribute(getMetaKeyMap(prop), tag[prop])
+      :195  containsAttributes       -> elem.getAttribute(getMetaKeyMap(key))
+
+  `META_KEYS_MAP` adalah objek literal biasa dan MEWARISI seluruh anggota
+  `Object.prototype`. Untuk prop seperti `toString`, `constructor`, `valueOf`,
+  atau `__proto__`, pembacaan itu mengembalikan FUNGSI/OBJEK bawaan — truthy —
+  sehingga fallback `|| prop` tidak pernah tercapai dan nilai itu diteruskan
+  sebagai NAMA ATRIBUT ke `setAttribute`.
+
+  Kelas yang sama dengan F-06 (i18n_parse.ts:841), di lokasi baru dan pada API
+  publik (`Meta.addTag` / `addTags` / `updateTag`).
+
+  YANG MEMBUATNYA LAYAK DICATAT
+  -----------------------------
+  Berkas yang SAMA sudah menunjukkan penulisnya memikirkan masukan bermusuhan:
+  `escapeSelectorValue` (:188-192) ditambahkan khusus untuk mencegah injeksi
+  selektor CSS, lengkap dengan komentarnya. Kesadaran itu tidak sampai ke
+  `getMetaKeyMap` sepuluh baris di atasnya. Ini pola G-22 lagi.
+
+  RANTAI VALIDASI
+  ---------------
+  1. HIPOTESIS   Akses bracket pada objek literal membaca Object.prototype.
+  2. CODE TRACE  meta.ts:199 -> :180 setAttribute. Tidak ada hasOwn di jalur.
+  3. RUNTIME PROOF  Chromium, artefak npm @angular/platform-browser@22.1.0:
+                    analysis/tools/meta-proto/probe.mjs
+                    analysis/evidence/F-17-meta-proto.png
+
+       kunci          getMetaKeyMap ->   meta.addTag(...)
+       name           "name"             ok
+       httpEquiv      "http-equiv"       ok
+       property       "property"         ok
+       sesuatuAsing   "sesuatuAsing"     ok          <- KONTROL NEGATIF
+       toString       function           InvalidCharacterError
+       constructor    function           InvalidCharacterError
+       valueOf        function           InvalidCharacterError
+       __proto__      object             InvalidCharacterError
+
+  4. KONTROL NEGATIF  `sesuatuAsing` — kunci tak dikenal yang BUKAN warisan —
+                 tetap jatuh ke fallback dan bekerja normal. Jadi pemicunya
+                 spesifik pada anggota Object.prototype, bukan pada "kunci
+                 aneh" apa pun. 4/4 warisan gagal, 0/4 normal gagal.
+
+  DAMPAK — RENDAH, dan saya tidak mengklaim lebih
+  -----------------------------------------------
+  Akibatnya `InvalidCharacterError` dilempar; panggilan addTag gagal. Bukan
+  pengungkapan data, bukan eskalasi hak, bukan XSS — nama atribut yang
+  dihasilkan selalu TIDAK SAH sehingga peramban menolaknya, bukan menerima
+  atribut yang salah.
+
+  Keterjangkauan bergantung aplikasi: pemakaian lazim memakai kunci literal
+  (`{name: 'description', content: ...}`) dan tidak terpengaruh. Yang terpapar
+  adalah aplikasi yang meneruskan objek dari sumber data ke `addTag`/`addTags`
+  — pola yang nyata untuk metadata SEO yang digerakkan CMS.
+
+  PERBAIKAN
+  ---------
+      const META_KEYS_MAP = Object.assign(Object.create(null), {httpEquiv: 'http-equiv'});
+  atau
+      return Object.hasOwn(META_KEYS_MAP, prop) ? META_KEYS_MAP[prop] : prop;
+
+  CATATAN HARNESS — dua kegagalan alat yang menyamar sebagai temuan
+  -----------------------------------------------------------------
+  1. Jalan pertama melaporkan SEMUA 8 baris melempar. Sebabnya bukan cacat:
+     `getDOM()` mengembalikan null karena adapter DOM belum dipasang (normalnya
+     terjadi saat bootstrap platform). Diperbaiki dengan memanggil
+     `ɵBrowserDomAdapter.makeCurrent()`. Tanpa kontrol negatif, ini akan
+     tercatat sebagai temuan yang jauh lebih besar daripada yang sebenarnya.
+  2. Komentar di dalam halaman memuat backtick, yang mengakhiri template
+     literal induknya -> SyntaxError.
+
+  Keduanya dicatat karena keduanya adalah mode kegagalan yang sama: alat yang
+  rusak menghasilkan keluaran yang terlihat seperti hasil.
+
+
+==============================================================================
+F-18  animations: SELF_TOKEN_REGEX kehilangan backslash — "s*" bukan kelas
+      whitespace, sehingga normalizeSelector menghasilkan selektor CSS cacat
+==============================================================================
+
+  BERKAS
+  ------
+  packages/animations/browser/src/dsl/animation_ast_builder.ts
+      :80   const SELF_TOKEN = ':self';
+      :81   const SELF_TOKEN_REGEX = new RegExp(`s*${SELF_TOKEN}s*,?`, 'g');
+      :589  const hasAmpersand = selector.split(/\s*,\s*/)      <- backslash BENAR di sini
+      :593  selector = selector.replace(SELF_TOKEN_REGEX, '');
+
+  Maksudnya tidak ambigu: buang `:self` beserta whitespace di sekitarnya dan
+  koma yang menyertainya. EMPAT BARIS DI ATASNYA penulisnya menuliskan kelas
+  whitespace dengan benar (`/\s*,\s*/`), jadi ia memang bermaksud whitespace —
+  bukan huruf "s" literal.
+
+  Yang benar-benar dibangun: /s*:selfs*,?/g — huruf "s" literal nol-atau-lebih,
+  ":self", huruf "s" literal nol-atau-lebih, koma opsional. Tidak pernah
+  memakan whitespace.
+
+  Diverifikasi ADA di artefak npm: @angular/animations/fesm2022/browser.mjs:178.
+  Sumber regex diambil programatik dari bundel, tidak diketik ulang.
+
+  HASIL — peramban sebagai penilai
+  --------------------------------
+  analysis/tools/animations-selfregex/probe.mjs
+  analysis/evidence/F-18-selfregex.png
+
+  Selektor yang dihasilkan regex terkirim, dan vonis querySelectorAll:
+
+      query(':self')              -> ""              DITOLAK (kosong)
+      query(':self, .card')       -> " .card"        sah
+      query(':self , .card')      -> " , .card"      DITOLAK SyntaxError
+      query('.card, :self')       -> ".card, "       DITOLAK SyntaxError
+      query('.card , :self')      -> ".card , "      DITOLAK SyntaxError
+      query('.cards, :self')      -> ".cards, "      DITOLAK SyntaxError
+      query(':self,.card')        -> ".card"         sah
+      query('.card, :self, .row') -> ".card,  .row"  sah
+
+  Benar secara semantik (sah DI PERAMBAN dan memilih himpunan elemen yang sama
+  dengan acuan): 4/8.
+
+  Kontrol negatifnya penting: bentuk yang paling lazim ditulis orang —
+  `query(':self, .card')` — kebetulan SELAMAT. Itulah sebabnya cacat ini bisa
+  bertahan lama tanpa terlihat.
+
+  DUA KOREKSI ATAS USULAN PERBAIKAN SAYA SENDIRI
+  ----------------------------------------------
+  Datanya menolak saya dua kali, dan keduanya dicatat di harness:
+
+  1. "Cukup tambahkan backslash" (/\s*:self\s*,?/g) -> 5/8. Masih meninggalkan
+     koma menggantung pada urutan "X, :self", karena `,?` hanya ada SESUDAH
+     token.
+  2. "Serap koma di kedua sisi" (/\s*,?\s*:self\s*,?\s*/g) -> 7/8. Menghasilkan
+     selektor yang SAH tetapi SALAH ARTI: `.card, :self, .row` menjadi
+     `.card.row` — elemen yang punya KEDUA kelas, bukan salah satu. Uji
+     "diterima peramban" saja TIDAK menangkap ini; perlu perbandingan himpunan
+     elemen. Itulah sebabnya harness ini punya kolom semantik.
+
+  PERBAIKAN YANG BENAR
+  --------------------
+  Bukan regex sama sekali. Pecah pada koma, buang token `:self`, gabungkan
+  kembali — persis yang SUDAH dilakukan baris `hasAmpersand` empat baris di
+  atasnya:
+
+      const bagian = selector.split(/\s*,\s*/);
+      const hasAmpersand = bagian.includes(SELF_TOKEN);
+      if (hasAmpersand) {
+        selector = bagian.filter((t) => t !== SELF_TOKEN && t !== '').join(', ');
+      }
+
+  Ini juga menghapus SELF_TOKEN_REGEX seluruhnya dan membuat kedua jalur
+  memakai satu sumber kebenaran.
+
+  DAMPAK — RENDAH, tanpa dimensi keamanan
+  ---------------------------------------
+  Selektor `query()` ditulis developer, bukan pengguna. Akibatnya
+  `querySelectorAll` melempar SyntaxError saat animasi dijalankan, atau
+  animasi diam-diam tidak mengenai elemen apa pun. Tidak ada dimensi keamanan:
+  tidak ada masukan tak-tepercaya, tidak ada kebocoran, tidak ada eskalasi.
+
+  BATAS BUKTI YANG DINYATAKAN
+  ---------------------------
+  `normalizeSelector` tidak diekspor, jadi harness ini MEREPRODUKSI fungsi itu
+  (baris 588-603) alih-alih memanggilnya, lalu menyerahkan vonis selektornya
+  kepada peramban sungguhan. Yang terbukti: regex terkirim (diambil dari
+  bundel npm) + logika fungsi itu menghasilkan selektor yang ditolak
+  querySelectorAll. Yang TIDAK saya amati langsung: lemparan dari dalam
+  pipeline animasi Angular yang berjalan penuh.
+
+
+==============================================================================
+G-27  Pemindai pembacaan rantai prototipe — kandidat baru, SEMUA gugur di
+      triase keterjangkauan
+==============================================================================
+
+  analysis/regex-corpus/scan-proto-read.mjs   (exit 0 = kedua jangkar ditemukan)
+
+  Kelas ini sudah membayar dua kali TANPA alat (F-06, F-17), jadi ia dijadikan
+  pemindai supaya bukan tebakan saya yang menentukan lokasinya.
+
+  TITIK BUTA YANG DITANGKAP VALIDASI-DIRI
+  ---------------------------------------
+  Jalan pertama TIDAK menemukan F-06. Dua celah sekaligus:
+    (a) `VALID_ATTRS` dibangun dengan `merge(...)`, bukan objek literal;
+    (b) ia dideklarasikan di html_sanitizer.ts lalu DIIMPOR ke i18n_parse.ts.
+  Pemindai satu-berkas akan selalu melewatkan celah (b). Keduanya diperbaiki;
+  sekarang kedua jangkar ditemukan dan pemindai keluar dengan status 0.
+
+  TRIASE KANDIDAT BARU — tiga yang paling mungkin, semuanya gugur
+  ---------------------------------------------------------------
+  1. platform-browser/src/dom/events/key_events.ts:155
+         let keycode = _keyMap[event.key] || event.key;
+     `event.key` MEMANG masukan runtime dari platform. Untuk 'constructor',
+     `_keyMap` mengembalikan fungsi -> truthy -> lolos cek `!keycode` ->
+     `keycode.toLowerCase()` melempar TypeError.
+     GUGUR: papan ketik fisik tidak dapat menghasilkan key 'constructor'.
+     Hanya `new KeyboardEvent({key:'constructor'})` yang bisa, dan itu
+     menuntut eksekusi skrip same-origin — kompromi yang sudah terjadi.
+
+  2. router/src/recognize.ts:589   (checkOutletNameUniqueness)
+         const routeWithSameOutletName = names[n.value.outlet];
+     Untuk outlet bernama 'constructor', `names[...]` mengembalikan `Object`
+     -> truthy -> masuk cabang error -> `routeWithSameOutletName.url.map(...)`
+     melempar TypeError SEBELUM RuntimeError yang dimaksud terbentuk.
+     GUGUR sebagai masukan tak-tepercaya: node hanya terbentuk bila konfigurasi
+     rute aplikasi MENDEKLARASIKAN outlet bernama itu. Nama outlet di URL saja
+     tidak cukup. Jadi ini dikendalikan developer, bukan penyerang.
+
+  3. core/primitives/event-dispatch/src/cache.ts:47
+         return parseCache[text];        // text = nilai atribut jsaction
+     Untuk 'constructor'/'__proto__', pengembaliannya truthy sehingga hasil
+     parse palsu dipakai dan event tidak jadi diputar ulang untuk elemen itu.
+     Polusi prototipe TIDAK terjadi: `setParsed` hanya dipanggil bila
+     `getParsed` falsy, dan untuk kunci warisan ia tidak pernah falsy.
+     GUGUR: menuntut penyisipan atribut `jsaction` ke DOM — yaitu injeksi HTML,
+     yang sudah berarti XSS.
+
+  KESIMPULAN JUJUR
+  ----------------
+  Tidak ada temuan baru dari putaran ini. Yang dihasilkan adalah alat yang
+  menutup kelas ini secara sistematis dan menemukan kembali kedua kasus yang
+  sudah diketahui. Sisa kandidat (~17) semuanya berkunci build-time atau
+  konstanta.
+
+  Nilai negatif ini: kelas "pembacaan rantai prototipe" kini berstatus
+  DIPERIKSA MENYELURUH, bukan sekadar "dua kasus yang kebetulan saya lihat".
+
+
+==============================================================================
+F-19  APP_ID diinterpolasi MENTAH ke selektor CSS — sink KEDUA untuk akar
+      masalah yang sama dengan F-05
+==============================================================================
+
+  BERKAS
+  ------
+  packages/platform-browser/src/dom/shared_styles_host.ts:71-73
+
+      const elements = doc.head?.querySelectorAll(
+        `style[${APP_ID_ATTRIBUTE_NAME}="${appId}"],link[${APP_ID_ATTRIBUTE_NAME}="${appId}"]`,
+      );
+
+  Dipanggil dari konstruktor `SharedStylesHost` (:135), jadi berjalan pada
+  SETIAP bootstrap aplikasi yang memakai platform-browser.
+
+  AKAR MASALAH SAMA DENGAN F-05
+  -----------------------------
+  `APP_ID` divalidasi `validAppIdInitializer` (/^[a-zA-Z0-9\-_]+$/,
+  application_tokens.ts:55-70), tetapi initializer itu HANYA didaftarkan di
+  bawah ngDevMode:
+      core/src/platform/platform_ref.ts:55        ...(ngDevMode ? [validAppIdInitializer] : [])
+      core/src/application/create_application.ts:69  idem
+  Di build produksi validasi itu TIDAK BERJALAN.
+
+  F-05 menemukan sink pertama: APP_ID mentah masuk ke `<script>` replay SSR
+  (platform-server/src/utils.ts:171). F-19 adalah sink KEDUA dengan jenis
+  berbeda: injeksi selektor CSS, di paket dan jalur eksekusi yang berbeda.
+
+  POLA G-22 LAGI, LINTAS BERKAS DALAM SATU PAKET
+  ----------------------------------------------
+  `platform-browser` SUDAH punya penjaga untuk persis masalah ini:
+      browser/meta.ts:188-192
+      function escapeSelectorValue(value: string): string {
+        // Escape backslashes and double quotes to prevent CSS selector injection.
+        // This securely confines the value inside an attribute selector.
+        return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+      }
+  Penjaga itu ditulis dengan komentar yang menyebut masalahnya secara harfiah,
+  dan tidak dipakai di shared_styles_host.ts.
+
+  RANTAI VALIDASI
+  ---------------
+  1. HIPOTESIS   Kutip ganda pada APP_ID keluar dari selektor atribut.
+  2. CODE TRACE  shared_styles_host.ts:71-73 -> konstruktor :135. Tidak ada
+                 escaping di jalur itu. Bentuknya diverifikasi ADA di bundel
+                 npm (_dom_renderer-chunk.mjs) sebelum uji dijalankan.
+  3. RUNTIME PROOF  Chromium, <head> berisi 2 elemen milik Angular
+                 (ng-app-id="ng") + <title>, <meta name="csrf">, link pihak
+                 ketiga, dan style milik orang lain:
+                   analysis/tools/appid-selector/probe.mjs
+                   analysis/evidence/F-19-appid-selector.png
+
+      APP_ID                saat ini                dengan escapeSelectorValue
+      "ng"                  2 elemen, 0 asing       2 elemen, 0 asing
+      "my-app_2"            0 elemen, 0 asing       0 elemen, 0 asing
+      'x" ], * , [z="'      6 elemen, 4 ASING       0 elemen, 0 asing
+      'a"b'                 DITOLAK SyntaxError     0 elemen, 0 asing
+      'a\b'                0 elemen, 0 asing       0 elemen, 0 asing
+
+  4. KONTROL NEGATIF  SETIAP APP_ID yang LOLOS validator dev berperilaku benar.
+                 Pemicunya persis karakter yang validator itu tolak — dan
+                 validator itu tidak berjalan di produksi.
+
+  APA YANG TERJADI PADA ELEMEN ASING
+  ----------------------------------
+  Elemen yang ikut terpilih diproses seperti milik Angular:
+    :78  styleElement.removeAttribute(APP_ID_ATTRIBUTE_NAME)
+    :82  external.set(...)  atau  :87  inline.set(...)
+  Sesudah itu mereka masuk catatan penggunaan style dan dapat DIHAPUS dari DOM
+  lewat `removeElements` pada removeUsage()/ngOnDestroy(). Pada uji ini yang
+  ikut tertarik adalah <title>, <meta name="csrf">, dan <link> pihak ketiga.
+
+  DAMPAK — dinyatakan hati-hati
+  -----------------------------
+  Ini BUKAN jalur masukan pengguna. `APP_ID` disediakan developer lewat DI.
+  Yang membuatnya layak dilaporkan bukan "penyerang mengendalikan APP_ID",
+  melainkan:
+    1. Angular MENYEDIAKAN validator untuk nilai ini, jadi ia sendiri
+       menganggap nilai itu perlu dibatasi — tetapi hanya menegakkannya di dev.
+       Aplikasi yang lolos di dev bisa berperilaku berbeda di produksi.
+    2. Sink-nya kini terbukti lebih dari satu (F-05 + F-19), sehingga
+       memperbaiki satu sink saja tidak menutup kelasnya.
+    3. Perbaikannya sudah ada di paket yang sama dan tidak dipakai.
+
+  Severity sebagai kerentanan: RENDAH (butuh APP_ID yang dipilih developer).
+  Sebagai cacat: jelas, dengan dua perbaikan yang sama-sama sepele.
+
+  PERBAIKAN
+  ---------
+  Pakai `escapeSelectorValue` yang sudah ada di browser/meta.ts:188-192, DAN
+  daftarkan `validAppIdInitializer` di luar ngDevMode. Keduanya, bukan salah
+  satu: escaping menutup sink ini, validasi menutup kelasnya.
+
+==============================================================================
+AREA DIPERIKSA, NEGATIF: @angular/upgrade (jembatan ngUpgrade)
+==============================================================================
+
+  Diperiksa untuk seluruh kelas yang sudah membayar sesi ini. Tidak ada temuan.
+
+  Satu-satunya sink HTML adalah upgrade_helper.ts:254
+      private compileHtml(html: string | TrustedHTML): ILinkFn {
+        this.element.innerHTML = html;
+  Ia diberi makan lewat `trustedHTMLFromLegacyTemplate` (security/trusted_types.ts),
+  yang membuat kebijakan Trusted Types bernama `angular#unsafe-upgrade` dengan
+  `createHTML: (s) => s` — pass-through.
+
+  Itu TERLIHAT seperti temuan, tetapi bukan: berkasnya menyatakan sendiri apa
+  adanya, dengan @fileoverview "@security All use of this module is
+  security-sensitive and should go through security review" dan pada fungsinya
+  "the template string should always be under full control of the application
+  author, as untrusted input can cause an XSS vulnerability."
+
+  Nama kebijakannya pun memuat kata "unsafe". Ini jembatan legasi yang sengaja
+  tidak menyanitasi template AngularJS, dinyatakan terbuka. Melaporkannya
+  sebagai kerentanan berarti mengabaikan dokumentasi yang ada di berkas itu
+  sendiri.
+
+  Tidak ditemukan: pembacaan rantai prototipe yang tak dijaga, perangkaian
+  anchor regex, maupun asimetri antar-pemanggil.
+
+
+==============================================================================
+F-20  TransferState.get() membaca lewat rantai prototipe, sementara hasKey()
+      dua puluh baris di bawahnya memakai hasOwnProperty
+==============================================================================
+
+  BERKAS
+  ------
+  packages/core/src/transfer_state.ts
+
+      :82   store: Record<string, unknown | undefined> = {};        <- objek literal
+      :90   get<T>(key, defaultValue): T {
+              return this.store[key] !== undefined ? this.store[key] : defaultValue;
+            }                                                        <- TANPA penjaga
+      :111  hasKey<T>(key): boolean {
+              return this.store.hasOwnProperty(key);                 <- DENGAN penjaga
+            }
+
+  Satu kelas, dua perlakuan. `get()` mengembalikan anggota Object.prototype
+  alih-alih `defaultValue` yang diminta pemanggil.
+
+  BAGAIMANA DITEMUKAN
+  -------------------
+  Menelusuri core/src/resource seperti diminta. `resource({id})` meneruskan
+  string pilihan developer LANGSUNG sebagai StateKey:
+      core/src/resource/resource.ts:83   options.id as StateKey<T>
+  Tanpa hashing, tanpa namespacing. Itu mengarahkan pemeriksaan ke penyimpanan
+  TransferState-nya, dan asimetrinya ada di sana.
+
+  Bandingkan dengan `httpResource`, yang untuk keperluan yang sama memakai
+  `retrieveStateFromCache` -> `makeCacheKey(req, url)` -> SHA-256 dari
+  [method, responseType, url, body, params]. Dua jalur transfer-state di satu
+  fitur, dua tingkat kehati-hatian yang berbeda.
+
+  RUNTIME PROOF — artefak npm @angular/core@22.1.0, store KOSONG
+  --------------------------------------------------------------
+  analysis/tools/transferstate-get/probe.mjs   (exit 0 = terkonfirmasi)
+
+      kunci             hasKey()   get(kunci, DEFAULT) mengembalikan
+      profil            false      DEFAULT (benar)
+      user-42           false      DEFAULT (benar)
+      toString          false      function toString() { [native code] }
+      constructor       false      function Object() { [native code] }
+      valueOf           false      function valueOf() { [native code] }
+      hasOwnProperty    false      function hasOwnProperty() { [native code] }
+
+  Tiga hal sekaligus, dan ketiganya diperlukan:
+    1. `hasKey()` menjawab false dengan BENAR untuk semua kunci warisan —
+       jadi penjaganya memang ada di kelas ini, hanya tidak di `get()`.
+    2. `get()` pada store yang SAMA mengembalikan fungsi bawaan.
+    3. Kunci biasa berperilaku benar — KONTROL NEGATIF: pemicunya spesifik
+       anggota Object.prototype, bukan "semua kunci aneh rusak".
+
+  DAMPAK — RENDAH, dan saya tidak mengklaim lebih
+  -----------------------------------------------
+  Jalur `resource()` sendiri KEBETULAN aman: resource.ts:290 memanggil
+  `hasKey()` lebih dulu, sehingga cabang `get()` tidak pernah tercapai untuk
+  kunci warisan. Yang tidak aman adalah API PUBLIKNYA: aplikasi yang memanggil
+  `transferState.get(makeStateKey('toString'), fallback)` menerima fungsi,
+  bukan fallback-nya.
+
+  Kuncinya dipilih developer, bukan penyerang. Tidak ada pengungkapan data,
+  tidak ada eskalasi. Yang salah adalah kontrak: `get(key, defaultValue)`
+  menjanjikan defaultValue ketika kunci tidak ada, dan `hasKey()` sendiri
+  menyatakan kunci itu TIDAK ADA.
+
+  PERBAIKAN
+  ---------
+      get<T>(key: StateKey<T>, defaultValue: T): T {
+        return this.store.hasOwnProperty(key) ? (this.store[key] as T) : defaultValue;
+      }
+  atau jadikan `store = Object.create(null)`, yang sekaligus menutup
+  `remove()` dan `toJson()`.
+
+  CATATAN: ini instans KETIGA dari kelas yang sama dalam sesi ini
+  (F-06 VALID_ATTRS, F-17 META_KEYS_MAP, F-20 TransferState.store) dan
+  instans PERTAMA yang ditemukan lewat penelusuran fitur, bukan lewat G-27.
+  Pemindai G-27 melewatkannya karena `store` adalah PROPERTI KELAS
+  (`store: Record<...> = {}`), bukan deklarasi `const NAME = {`. Celah itu
+  dicatat di korpus.
+
+
+==============================================================================
+AREA DIPERIKSA, NEGATIF: bentuk ketiga G-27 — peta PROPERTI KELAS
+==============================================================================
+
+  Celah yang dicatat pada F-20 kini ditutup. G-27 mendapat langkah ketiga:
+  peta yang dideklarasikan sebagai properti kelas dan dibaca lewat
+  `this.NAMA[k]`. 2037 berkas, 10 kandidat. Validasi-diri sekarang menuntut
+  F-06, F-17, DAN F-20 sekaligus, ditambah satu kontrol negatif dari berkas
+  yang sama (`onSerializeCallbacks`, dijaga di transfer_state.ts:134, karena
+  itu TIDAK boleh muncul di laporan).
+
+  DUA KALI VALIDASI-DIRI MENOLAK PEMINDAI SAYA SENDIRI
+  ----------------------------------------------------
+  Versi pertama menguji penjaga pada tingkat BERKAS: transfer_state.ts memuat
+  `hasOwnProperty`, maka berkas itu "aman" — F-20 hilang dari laporan.
+  Versi kedua menguji pada tingkat PETA: `this.store.hasOwnProperty` memang
+  ada, maka `this.store` "aman" — F-20 masih hilang. Penjaga itu ada di
+  `hasKey()`, metode yang berbeda dari `get()`.
+
+  Itu bukan detail teknis. Penjaga-yang-ada-tapi-tidak-di-sini ADALAH kelas
+  cacat yang paling produktif sepanjang audit ini (F-11, F-12, F-13, F-15,
+  F-17, F-19, F-20). Uji yang menganggapnya aman membutakan pemindai justru
+  terhadap satu-satunya hal yang dicarinya.
+
+  RUANG LINGKUP PENJAGA ADALAH BATAS METODE, BUKAN JARAK BARIS
+  ------------------------------------------------------------
+  Jendela "N baris ke atas" gagal ke DUA arah, dan triase membuktikan keduanya:
+
+    sempit  placeholder.ts:158 terlapor sebagai cacat, padahal
+            :152  const seen = this._placeHolderNameCounts.hasOwnProperty(base);
+            :153  if (!seen) { ...; return base; }
+            :158  const id = this._placeHolderNameCounts[base];
+            Penjaganya dihoist ke boolean lalu dipakai untuk keluar lebih awal.
+            Benar, hanya enam baris jauhnya. FALSE POSITIVE.
+
+    lebar   F-20 tertelan: `hasKey()` hanya dua puluh baris dari `get()`.
+
+  Pembedanya bukan jarak — penjaga placeholder.ts berada DI DALAM metode yang
+  sama, penjaga F-20 tidak. Pemindai sekarang mencari penjaga di dalam metode
+  yang melingkupi pembacaan, dan tidak lebih jauh. Setelah itu false positive
+  tadi hilang dan F-20 tetap terlapor.
+
+  TRIASE 10 KANDIDAT — TIDAK ADA YANG NAIK JADI TEMUAN
+  -----------------------------------------------------
+  common/src/directives/ng_plural.ts:69   this._caseViews[key]
+      BERSIH, dan alasannya di HULU. `key` berasal dari `getPluralCategory`,
+      yang hanya bisa mengembalikan (a) anggota `cases`, dan `cases` adalah
+      `Object.keys(this._caseViews)` — kunci MILIK SENDIRI saja — atau
+      (b) literal 'other' bila ada di `cases`, atau (c) melempar. Tidak ada
+      jalan bagi kunci warisan untuk sampai ke pembacaan itu.
+
+  router/src/router_scroller.ts:153       this.store[this.restoredId]
+      BERSIH. `restoredId` bertipe number (:45, :91 dari
+      `e.restoredState.navigationId`). Tidak satu pun anggota
+      `Object.prototype` bernama angka.
+
+  compiler/src/i18n/serializers/placeholder.ts:55,70  this._signatureToName[sig]
+      BERSIH. `sig` adalah keluaran `_hashTag`/`_hashClosingTag`, yang selalu
+      berawalan '<'. Tidak bisa menyamai nama anggota `Object.prototype`.
+
+  core/primitives/event-dispatch/src/eventcontract.ts:231,244
+      ASIMETRI NYATA, DAMPAK DAPAT DIABAIKAN — dicatat, tidak dikejar.
+      `addEvent` menjaga dengan `eventType in this.eventHandlers` (:153),
+      sedangkan `getEventTypesForBrowserEventType` (:231) dan `handler` (:244)
+      membaca langsung. Tapi `in` SENDIRI menelusuri rantai prototipe, jadi
+      penjaga di :153 bukan pemeriksaan kepemilikan; ia salah ke arah yang
+      sama. Untuk memicunya sebuah aplikasi harus mengikat nama peristiwa
+      kustom bernama `toString`/`valueOf`/`constructor` di templatnya sendiri.
+      Bukan masukan penyerang, tidak ada pengungkapan. Diperiksa, bukan cacat
+      yang layak dilaporkan.
+
+  Sisanya (animations `_namespaceLookup`, `_triggerCache`, compiler
+  `publicToNextId`, benchpress `parameters_`) berkunci nilai build-time atau
+  id yang dihasilkan sendiri; tidak ada yang menerima string dari runtime.
+
+  HASIL: bentuk ketiga menambah CAKUPAN, bukan temuan. Itu tetap ada nilainya —
+  "belum diperiksa" berubah menjadi "diperiksa, bersih", dan pemindainya kini
+  tidak bisa lagi buta terhadap cacat yang sudah terbukti.
+
+==============================================================================
+F-21  encodeUriSegment melepas escape pada ':' — karakter yang dipakai
+      parsernya sendiri sebagai pembatas nama outlet
+==============================================================================
+
+  BERKAS
+  ------
+  packages/router/src/url_tree.ts
+
+      :513  function encodeUriString(s) {
+              return encodeURIComponent(s)
+                .replace(/%40/g, '@')
+                .replace(/%3A/gi, ':')     <- ':' DIKEMBALIKAN jadi literal
+                .replace(/%24/g, '$')
+                .replace(/%2C/gi, ',');
+            }
+
+      :548  export function encodeUriSegment(s) {
+              return encodeUriString(s)
+                .replace(/\(/g, '%28')     <- '(' DIESCAPE, karena struktural
+                .replace(/\)/g, '%29')     <- ')' DIESCAPE, karena struktural
+                .replace(/%26/gi, '&');
+            }
+
+  Dalam satu ekspresi, dua karakter struktural diescape dan satu dilepas.
+  Parser di berkas yang SAMA memakai ':' sebagai pembatas nama outlet:
+
+      private parseParens(allowPrimary, depth) {
+        ...
+        if (path.indexOf(':') > -1) {
+          outletName = path.slice(0, path.indexOf(':'));
+        } else if (allowPrimary) {
+          outletName = PRIMARY_OUTLET;
+        }
+
+  Serializer TIDAK menuliskan awalan `k:` untuk outlet primer di dalam kurung
+  (serializeSegment, cabang non-root), sehingga titik dua PERTAMA yang ditemui
+  parser di posisi itu berasal dari DATA, bukan dari sintaks.
+
+  SIFAT YANG DIUJI, DAN SIFAT YANG SALAH SAYA PILIH LEBIH DULU
+  ------------------------------------------------------------
+  Ukurannya bukan spesifikasi luar: serializer dan parser adalah kelas yang
+  sama, `DefaultUrlSerializer`. Serializer yang keluarannya tidak bisa dibaca
+  ulang oleh parsernya sendiri salah menurut ukurannya sendiri.
+
+  Sifat pertama yang saya uji — "pohon hasil round-trip identik" — TERLALU
+  LEBAR, dan kontrol negatifnya yang membongkarnya. Dengan ukuran itu
+  `/p/(a%3Ab)` ikut gagal, dan saya nyaris memasukkannya ke temuan. Ternyata
+  `/p/(ab)`, tanpa titik dua sama sekali, gagal dengan cara yang persis sama:
+  grup kurung berisi satu anak primer memang DIRATAKAN ke induknya. Normalisasi
+  yang disengaja, tidak ada hubungannya dengan titik dua.
+
+  Sifat yang benar-benar membedakan: MUNCULNYA NAMA OUTLET BARU. Perataan
+  kurung tidak pernah memunculkan nama baru; cacat ini memunculkannya, dan
+  namanya diambil dari data pengguna. Kedua baris itu SENGAJA dipertahankan di
+  tabel probe, ditandai sebagai normalisasi yang diketahui.
+
+  RUNTIME PROOF — artefak npm @angular/router@22.1.0
+  --------------------------------------------------
+  analysis/tools/router-colon/probe.mjs   (exit 0 = terkonfirmasi)
+
+    /p/(a%3Ab//aux:x)      -> /p/(a:b//aux:x)
+                              outlet {aux,primary} -> {a,aux,primary}
+    /p/(admin%3Adash//aux:x) -> /p/(admin:dash//aux:x)
+                              outlet {aux,primary} -> {admin,aux,primary}
+
+  KONTROL NEGATIF — semuanya round-trip dengan BENAR:
+    '(' dan ')' terenkode   -> diescape encodeUriSegment, utuh
+    '/' dan ';' terenkode   -> dibiarkan %2F / %3B, utuh
+    ':' di segmen biasa     -> utuh (di luar kurung ':' tidak struktural)
+    ':' di outlet BERNAMA   -> utuh (awalan `k:` sudah memakan titik dua pertama)
+    tanpa ':' sama sekali   -> utuh
+
+  Jadi pemicunya bukan "kurung merusak segalanya", melainkan satu karakter di
+  satu posisi. Dan fungsi yang SAMA membuktikan penulisnya tahu aturannya:
+  ia mengescape '(' dan ')' tepat karena keduanya struktural.
+
+  KETERJANGKAUAN — dibangun dari DATA, bukan dari URL yang dibuat-buat
+  --------------------------------------------------------------------
+  Bagian kedua probe tidak berangkat dari string URL sama sekali. Ia membangun
+  UrlTree lewat kelas publik (UrlTree/UrlSegment/UrlSegmentGroup) — yang sama
+  dengan yang dibangun `Router.createUrlTree` — lalu menyerahkannya ke
+  serializer:
+
+    nilai "laporan"     -> /p/(laporan//aux:x)     outlet utuh   (kontrol)
+    nilai "admin:dash"  -> /p/(admin:dash//aux:x)  outlet {aux,primary}
+                                                   -> {admin,aux,primary}
+                                                   segmen primer HILANG
+
+  Nilai penggunanya tidak pernah menyentuh sintaks URL; ia hanya sebuah string
+  di dalam sebuah segmen. Serializer sendiri yang menjadikannya sintaks.
+
+  DAMPAK — RENDAH sebagai kerentanan, jelas sebagai cacat kebenaran
+  -----------------------------------------------------------------
+  Yang saya klaim: URL yang ditulis aplikasi ke address bar tidak bisa dibaca
+  ulang menjadi pohon yang sama. Setelah reload, back, atau berbagi tautan,
+  rute yang aktif berbeda dari yang dinavigasikan: segmen outlet primer hilang,
+  dan sebuah outlet bernama-dari-data muncul menggantikannya.
+
+  Yang TIDAK saya klaim: ini bukan jalan penyerang-ke-korban dengan sendirinya.
+  Outlet baru itu hanya benar-benar aktif bila konfigurasi rute aplikasi
+  kebetulan punya outlet dengan nama tersebut, dan guard aplikasi tetap
+  berjalan atas pohon hasil parse. Yang pasti terjadi tanpa syarat tambahan
+  adalah HILANGNYA segmen primer yang dimaksud.
+
+  PRASYARAT, dinyatakan terus terang:
+    (a) aplikasi memakai outlet tambahan (auxiliary outlet), DAN
+    (b) sebuah nilai yang dipengaruhi pengguna mendarat di segmen PERTAMA
+        grup primer di dalam kurung.
+
+  PERBAIKAN
+  ---------
+  Perlakukan ':' seperti '(' dan ')' sudah diperlakukan — pada posisi tempat ia
+  struktural. Yang paling sempit: jangan lepas escape %3A untuk segmen, yaitu
+  pindahkan `.replace(/%3A/gi, ':')` dari `encodeUriString` (dipakai bersama
+  oleh query dan segmen) ke `encodeUriQuery` saja, tempat ':' memang tidak
+  struktural. Query dan fragment tidak berubah perilakunya.
+
+  Catatan: ini mengubah bentuk URL yang dihasilkan untuk segmen yang memuat
+  ':' , jadi bukan perubahan yang tak kasat mata — perlu dinilai sebagai
+  perubahan perilaku, bukan sekadar tambalan.
+
+  BUKAN untuk proses keamanan. Ini cacat kebenaran; jalur yang tepat adalah
+  isu publik, bukan security@angular.io.
+
+
+==============================================================================
+F-22  URL protokol-relatif ("//host") dijaga di DUA dari TIGA tempat;
+      sisi serialisasi + joinWithSlash tidak
+==============================================================================
+
+  CATATAN PENGERASAN, BUKAN KERENTANAN YANG DITUNJUKKAN. Dinyatakan di
+  depan supaya tidak terbaca lebih besar dari yang dibuktikan.
+
+  ASAL PERTANYAANNYA
+  ------------------
+  Ini pertanyaan F-21 yang dibawa ke paket lain: apakah penjaga yang ada di
+  satu sisi juga ada di sisi seberangnya? Router menuliskan bahayanya sendiri,
+  lengkap dengan alasannya, di sisi PARSE:
+
+      packages/router/src/url_tree.ts  parseRootSegment()
+        // ... would otherwise produce a `//path`-style serialized URL, which
+        // browsers interpret as protocol-relative (resolving to a different
+        // origin) and reject with a SecurityError when passed to
+        // `history.pushState`/`replaceState`.
+        while (this.consumeOptional('/')) {}
+
+  Jalur KELUARnya — yang mengisi atribut href RouterLink dan memberi makan
+  pushState — seluruhnya adalah satu fungsi di paket lain:
+
+      packages/common/src/location/location_strategy.ts:152
+        override prepareExternalUrl(internal) {
+          return joinWithSlash(this._baseHref, internal);
+        }
+
+      packages/common/src/location/util.ts  joinWithSlash()
+        if (!start) return end;                          <- lolos apa adanya
+        if (start.endsWith('/'))
+          return end.startsWith('/') ? start + end.slice(1) : start + end;
+
+  RUNTIME PROOF — @angular/common@22.1.0 + @angular/router@22.1.0 + Chromium
+  --------------------------------------------------------------------------
+  analysis/tools/protocol-relative/probe.mjs   (exit 0)
+
+  [1] joinWithSlash — API PUBLIK (`Location.joinWithSlash`), 4/12 meloloskan:
+        baseHref ""  + "//evil.test/x"  -> "//evil.test/x"   PROTOKOL-RELATIF
+        baseHref "/" + "//evil.test/x"  -> "//evil.test/x"   PROTOKOL-RELATIF
+        baseHref "/app" + "//evil.test/x" -> "/app//evil.test/x"   AMAN
+      Justru baseHref DEFAULT yang berbahaya; baseHref tidak kosong
+      menetralkan "//" karena hasilnya berawalan satu garis miring.
+
+  [2] DUA KONTROL POSITIF — bahaya yang SAMA, sudah dijaga di tempat lain:
+        (a) parse:    "//evil.test/x" -> "/evil.test/x"
+        (b) commands: createUrlTree(["//evil.test"]) -> "/evil.test"
+                      createUrlTree(["","x"])        -> "/x"
+      Inilah yang membuat catatan ini layak ada. Kalau hanya satu tempat yang
+      menjaga, "memang disengaja" masih masuk akal. Dua dari tiga dijaga
+      membuat yang ketiga lebih mirip kelalaian.
+
+  [3] Sisi SERIALISASI — tidak ada penjaga setara:
+        UrlTree dgn segmen ["", "x"] -> serialize "//x"     PROTOKOL-RELATIF
+      UrlTree/UrlSegment/UrlSegmentGroup adalah API publik, dan RouterLink
+      serta navigateByUrl menerima UrlTree secara langsung.
+
+  [4] Perilaku peramban yang DIUKUR, bukan diasumsikan (Chromium):
+        <a href="//evil.test/x">   -> http://evil.test/x    LINTAS ORIGIN
+        <a href="///evil.test/x">  -> http://evil.test/x    LINTAS ORIGIN
+        <a href="/app//evil.test"> -> tetap origin sendiri  (kontrol)
+        history.pushState("//evil.test/x") -> SecurityError
+      Dua sink, dua akibat berbeda: href berpindah origin, pushState melempar.
+      Komentar penjaga di sisi parse ternyata akurat pada keduanya.
+
+  YANG TIDAK SAYA KLAIM
+  ---------------------
+  Jalur normal TIDAK terpengaruh, dan itu diukur, bukan diperkirakan:
+  `router.navigate([...])` dengan commands string terbukti aman di [2b],
+  termasuk `["//evil.test"]`. `computeNavigation` membuang bagian kosong
+  pada indeks 0, sehingga segmen pertama tidak pernah kosong lewat jalur itu.
+
+  Untuk mencapainya, aplikasi harus:
+    (a) membangun UrlTree sendiri dengan segmen pertama kosong lalu
+        menyerahkannya ke RouterLink/navigateByUrl, ATAU
+    (b) memanggil Location.go/prepareExternalUrl dengan path berawalan "//".
+  Keduanya jalur yang jarang, dan keduanya berawal dari kode aplikasi.
+  Karena itu: celah pertahanan-berlapis, bukan kerentanan yang ditunjukkan.
+
+  PERBAIKAN
+  ---------
+  Runtuhkan garis miring awal yang beruntun di `joinWithSlash` — satu-satunya
+  tempat baseHref dan path bertemu, dan satu-satunya tempat hasil akhir yang
+  akan menjadi href atau argumen pushState benar-benar terlihat.
+
+  Jalur pelaporan: isu publik. Bukan security@angular.io — tidak ada
+  kerentanan yang bisa ditunjukkan tanpa kerja sama kode aplikasi.
+
+
+==============================================================================
+AREA DIPERIKSA, NEGATIF: skema keamanan DOM & sanitizer URL
+==============================================================================
+
+  core/src/sanitization/dom_security_schema.ts vs
+  compiler/src/schema/dom_security_schema.ts
+      Berkasnya sendiri menyatakan salah satunya SALINAN yang harus disinkronkan
+      manual — kandidat desync yang kuat. Dibandingkan dari `SECURITY_SCHEMA`
+      ke bawah: IDENTIK. Bersih.
+
+  Pencarian kunci case-mismatch: skema mendaftarkan nama camelCase
+  ('attributeName', 'allowFullscreen', 'referrerPolicy'), sedangkan header
+  berkas mengklaim semuanya di-lowercase untuk lookup. Diperiksa kedua sisi:
+  `registerContext` memakai `attr.toLowerCase()` dan `element.toLowerCase()`,
+  `checkSecurityContext` memakai `propName.toLowerCase()` dan
+  `tagName.toLowerCase()`. Konsisten. Bersih.
+
+  KONTROL POSITIF untuk F-06/F-17/F-20: skema ini memakai
+  `createNullObj = () => Object.create(null)` untuk SETIAP tingkat petanya.
+  Jadi penjaga terhadap rantai prototipe memang dikenal dan diterapkan di
+  paket ini — yang menguatkan bahwa ketiadaannya di tempat lain adalah
+  kelalaian, bukan gaya penulisan yang berbeda.
+
+  html_sanitizer.ts:199   `if (URI_ATTRS[lower]) value = _sanitizeUrl(value);`
+      Bentuk F-06 PERSIS, di dalam sanitizer itu sendiri, enam baris di bawah
+      `VALID_ATTRS.hasOwnProperty(lower)` di :193. TETAPI arahnya FAIL-SAFE:
+      nilai warisan selalu truthy, sehingga akibatnya adalah sanitasi TAMBAHAN,
+      bukan sanitasi yang dilewati. Dan `URI_ATTRS` adalah himpunan bagian
+      `VALID_ATTRS`, sehingga kuncinya sudah lolos hasOwnProperty di :193.
+      Inkonsistensi gaya, bukan kerentanan. Dicatat, tidak dilaporkan.
+
+  ATTRIBUTE_NO_BINDING: skema mendaftarkan animate/set/animateMotion/
+  animateTransform, sedangkan `SVG_ANIMATION_SENSITIVE_STATIC_VALUES` di
+  sanitization.ts hanya memuat animate dan set. Ditelusuri: yang tidak ada di
+  peta runtime jatuh ke `throw` tanpa syarat di akhir `ɵɵvalidateAttribute` —
+  jadi selisihnya justru LEBIH KETAT, dan memang begitu rancangannya (peta
+  runtime hanya memuat kasus yang boleh lolos bersyarat). Bersih.
+
+  CACAT DOKUMENTASI (bukan kerentanan, layak isu publik):
+      compiler/src/schema/dom_security_schema.ts:112
+      core/src/sanitization/dom_security_schema.ts:112
+        "Keep this in sync with SECURITY_SENSITIVE_ELEMENTS in
+         packages/core/src/sanitization/sanitization.ts"
+      Pengenal `SECURITY_SENSITIVE_ELEMENTS` TIDAK ADA di mana pun dalam
+      repositori — hanya dua komentar ini yang menyebutnya. Padanan yang
+      sebenarnya bernama `SVG_ANIMATION_SENSITIVE_STATIC_VALUES`. Sebuah
+      kewajiban sinkronisasi manual pada kode keamanan yang menunjuk ke nama
+      yang sudah tidak ada; justru rujukan seperti inilah yang membuat desync
+      lolos tanpa disadari.
+
+==============================================================================
+AUDIT KORPUS — apakah alat-alat saya terlalu ketat untuk menemukan cacat LOGIKA?
+==============================================================================
+
+  Pertanyaan ini diajukan setelah korpus membesar. Jawabannya diukur, bukan
+  dinilai dari kesan, dan dua tebakan pertama saya sendiri TERBANTAH.
+
+  (1) SENSUS ASAL TEMUAN — 20 temuan
+  ----------------------------------
+      PENELUSURAN (membaca kode & mengikuti fitur) : 15
+        F-01 F-02 F-03 F-04 F-05 F-06 F-12 F-13 F-14 F-17 F-18 F-19 F-20 F-21 F-22
+      PEMINDAI (korpus G-xx)                       :  4
+        F-07 (scan-renamed-copies), F-09 & F-10 (G-15), F-11 (G-22)
+      FUZZER                                       :  1
+        F-08
+
+      Dan dari empat yang berasal pemindai, F-10 adalah saudara F-09 pada pola
+      yang sama — jadi kelas BARU yang benar-benar dilahirkan pemindai: tiga.
+
+      Ini sensus saya sendiri atas catatan saya sendiri, jadi bukan ukuran yang
+      netral. Tetapi arahnya terlalu curam untuk dijelaskan oleh kesalahan
+      penggolongan.
+
+  (2) MENGAPA — dan ini BUKAN soal penyaring yang terlalu ketat
+  -------------------------------------------------------------
+      Sebuah pemindai selalu ditulis SESUDAH kelasnya diketahui. Ia menyandikan
+      BENTUK yang sudah pernah dilihat. Karena itu, secara konstruksi, ia
+      menggeneralisasi dan mengukuhkan — ia tidak bisa MELAHIRKAN kelas baru.
+      Nilai terbesarnya sepanjang audit ini justru: (a) validasi-diri, dan
+      (b) mengubah "belum diperiksa" menjadi "diperiksa, bersih".
+
+      Lebih dalam lagi: SEMUA pemindai saya bersifat SINTAKTIS. Jangkar regex,
+      pembacaan rantai prototipe, penjaga menganggur, default boolean yang
+      bertentangan, salinan yang di-rename. Semua punya tanda tangan teks.
+      Cacat LOGIKA tidak punya. Tidak ada regex untuk "kondisi ini terbalik",
+      "seharusnya <= bukan <", atau "satu cabang enum terlewat". Melonggarkan
+      penyaring hanya menaikkan derau, bukan hasil.
+
+  (3) PERCOBAAN YANG MEMBANTAH DUA TEBAKAN SAYA
+  ----------------------------------------------
+      analysis/tools/router-fuzz/oracle-audit.mjs   (exit 0)
+
+      Fuzzer router MENEMUKAN F-08 tetapi MELEWATKAN F-21. Tiga hipotesis:
+        H1 orakelnya terlalu sempit
+        H2 alfabetnya terlalu sempit
+        H3 generatornya terlalu lemah secara STRUKTUR
+
+      Hasil, benih dan N (20.000) identik:
+
+        jalan                          orakel B   outlet-baru   URL ber-"%3A"
+        alfabet ASLI, generator datar     484          0              0
+        alfabet +%3A, generator datar     413          0          4.346
+        generator SADAR-GRAMATIKA       1.911      1.911         13.866
+
+      H1 SALAH — orakel "pohon berubah" sudah menandai 484 kasus sejak jalan
+                 pertama; ketajamannya tidak pernah kurang.
+      H2 SALAH SENDIRIAN — menambahkan %3A menaikkan URL yang memuatnya dari
+                 0 ke 4.346, dan temuan F-21 TETAP NOL.
+      H3 BENAR — begitu generatornya membangun bentuk gramatikal (grup kurung,
+                 outlet bernama, anak primer), 1.911 kasus muncul.
+
+      SEBABNYA: F-21 bukan sifat sebuah KARAKTER melainkan sifat sebuah
+      HUBUNGAN — titik dua terenkode, di segmen PERTAMA, milik outlet PRIMER,
+      DI DALAM kurung, BERSEBELAHAN dengan outlet bernama. Lima syarat
+      serentak. Peluang tujuh token acak menyusun diri seperti itu praktis nol,
+      berapa pun N-nya. Menaikkan N dari 20.000 ke 20.000.000 tidak menolong.
+
+      Catatan kejujuran: jalan PERTAMA percobaan ini pun salah. Orakel "himpunan
+      outlet berubah" menggabungkan dua arah berlawanan — outlet HILANG (tanda
+      tangan F-08) dan outlet MUNCUL (tanda tangan F-21) — lalu melaporkan 469
+      lawan 407 dan tidak memisahkan apa pun. Orakel harus BERARAH.
+
+  (4) JAWABANNYA
+  --------------
+      Ya, alat-alat saya terlalu ketat — tetapi bukan pada PENYARINGnya,
+      melainkan pada BENTUK yang mampu mereka bangkitkan dan kenali. Mereka
+      longgar dalam menilai dan sempit dalam membayangkan.
+
+      Arah yang produktif BUKAN melonggarkan pola, melainkan:
+        (a) orakel KESEPAKATAN — bila dua tempat harus setuju, ketidaksetujuan
+            adalah cacat logika tanpa perlu tanda tangan sintaktis;
+        (b) pembangkitan SADAR-STRUKTUR, bukan token acak (terbukti di atas);
+        (c) membaca ALASAN yang ditulis penjaga itu sendiri — F-22 lahir dari
+            sebuah komentar yang menjelaskan MENGAPA sesuatu berbahaya.
+
+      Butir (a) langsung diwujudkan sebagai G-30 di bawah ini.
+
+  (5) KEGAGALAN PROSES YANG DITEMUKAN AUDIT INI
+  ----------------------------------------------
+      Saat memeriksa area sanitization pada sesi ini, saya menuliskan rujukan
+      menggantung `SECURITY_SENSITIVE_ELEMENTS` sebagai temuan BARU. Itu sudah
+      tercatat sebagai F-02 sejak fase awal. Korpus yang membesar ternyata
+      melampaui daya ingat saya atas isinya sendiri, dan tidak ada mekanisme
+      yang mencegah pengulangan. G-30 kini menutup celah itu untuk kelas ini:
+      ia menemukan kembali F-02 sebagai jangkar validasi-diri, sehingga
+      instans berikutnya akan tampak sebagai pengulangan, bukan penemuan.
+
+
+==============================================================================
+F-23  Kewajiban sinkronisasi menunjuk enum yang tidak ada lagi di tempat itu
+      (`InjectFlags` "above") — instans KEDUA dari kelas F-02
+==============================================================================
+
+  BERKAS  packages/core/src/di/interface/injector.ts
+
+      :19  This enum is an exact copy of the `InjectFlags` enum above, ...
+      :20  ... The `InjectFlags` enum can
+      :21  be turned into a const enum when ViewEngine is removed (see TODO at
+           the `InjectFlags` enum
+      :24  Keep this enum in sync with `InjectFlags` enum above.
+      :26  export const enum InternalInjectFlags {
+
+  Tidak ada enum `InjectFlags` di berkas itu, dan tidak ada di seluruh
+  @angular/core. Yang tersisa dengan nama itu ada di paket LAIN:
+  packages/compiler/src/core.ts:85. Jadi "enum above" menunjuk ke sesuatu yang
+  sudah tidak ada di tempat yang ditunjuk. Komentar :21 bahkan menyebut
+  "when ViewEngine is removed" — ViewEngine SUDAH dihapus.
+
+  DITEMUKAN OLEH G-30, bukan oleh pembacaan manual.
+
+  KEWAJIBAN YANG SEBENARNYA — DIPERIKSA, DAN HASILNYA BERSIH
+  -----------------------------------------------------------
+  Pasangan yang benar-benar harus sepakat adalah lintas paket, dan taruhannya
+  nyata: compiler MEMANCARKAN bit flag ini ke dalam kode factory, core
+  MEMBACANYA saat runtime. Bila nilainya melenceng, DI menerima flag yang salah.
+
+      compiler/src/core.ts          core/src/di/interface/injector.ts
+      Default  = 0                  Default  = 0b0000   = 0
+      Host     = 1 << 0 = 1         Host     = 0b0001   = 1
+      Self     = 1 << 1 = 2         Self     = 0b0010   = 2
+      SkipSelf = 1 << 2 = 4         SkipSelf = 0b0100   = 4
+      Optional = 1 << 3 = 8         Optional = 0b1000   = 8
+      ForPipe  = 1 << 4 = 16        ForPipe  = 0b10000  = 16
+
+  SEPAKAT. Tidak ada cacat nilai. Yang cacat hanya rujukannya.
+
+  Perhatikan bahwa keduanya ditulis dalam NOTASI BERBEDA (pergeseran bit vs
+  biner literal), sehingga pemeriksaan tekstual apa pun akan menyatakan mereka
+  "berbeda". Kesepakatan hanya terlihat setelah nilainya dihitung — itulah
+  alasan orakel kesepakatan harus menilai MAKNA, bukan teks.
+
+  SIFAT   : cacat dokumentasi / bahaya pemeliharaan (sama seperti F-02)
+  DAMPAK  : tidak ada dampak runtime. Yang rusak adalah kontrol pemeliharaan:
+            peninjau berikutnya yang ingin menjalankan instruksi ":24" tidak
+            punya cara menemukan apa yang harus disinkronkan.
+  PERBAIKAN: ganti "the `InjectFlags` enum above" menjadi rujukan berkas yang
+            benar (packages/compiler/src/core.ts), atau hapus instruksinya bila
+            memang tidak berlaku lagi.
+  JALUR   : isu publik, bukan security@angular.io.
+
+==============================================================================
+AUDIT LANJUTAN — validasi holdout dan peringkat ancaman
+==============================================================================
+
+  Kritik yang diterima: korpus dioptimalkan untuk cacat LOKAL yang bentuknya
+  sudah dikenal, sedangkan temuan besar lahir dari INTERAKSI lintas-komponen,
+  lintas-request, lintas-pengguna, lintas-origin. Dua bagiannya diuji langsung,
+  dan keduanya TERBUKTI.
+
+  (1) VALIDASI-DIRI SAYA MEMANG DIUJI DENGAN DATA LATIHNYA SENDIRI
+  ----------------------------------------------------------------
+  analysis/regex-corpus/holdout/validate-mutants.mjs
+
+  Dibuat lima MUTAN: cacat yang SEMANTIKNYA IDENTIK dengan kelas prototipe
+  (F-06/F-17/F-20) tetapi DITULIS BERBEDA, plus dua kontrol negatif yang
+  benar-benar aman. G-27 dijalankan atas mutan itu, bukan atas kode Angular.
+
+      m1  simbol diganti (`rules` alih-alih VALID_ATTRS)  TERTANGKAP
+      m2  peta dibangun helper: `const t = buildLookup()` LOLOS
+      m3  `Reflect.get(policy, attackerKey)`               LOLOS
+      m4  alias dulu: `const t = registry; t[k]`           LOLOS
+      m5  optional chaining: `cache?.[k]`                  LOLOS
+      n1  Map sungguhan                                    benar didiamkan
+      n2  dijaga Object.hasOwn                             benar didiamkan
+
+      DAYA TEMU  1/5 (20%)      KETEPATAN  2/2 (100%)
+
+  Angkanya sekarang tercatat sebagai garis dasar yang berperilaku RATCHET:
+  turun = gagal, naik = juga gagal sampai garis dasarnya dinaikkan dengan
+  sengaja. Dibiarkan rendah dan terlihat, bukan diperbaiki diam-diam.
+
+  ARTINYA UNTUK SELURUH CATATAN INI: setiap kalimat "area X sudah dipindai
+  dan bersih" dalam berkas ini harus dibaca sebagai "bersih MENURUT SATU
+  BENTUK", bukan bersih terhadap kelasnya. Satu-satunya mutan yang tertangkap
+  hanyalah yang berganti nama; begitu sintaksisnya berubah, pemindai buta.
+
+  (2) PERINGKAT ANCAMAN MENGONFIRMASI DIAGNOSISNYA
+  -------------------------------------------------
+  analysis/regex-corpus/triage-rank.mjs — skor dari atribut ANCAMAN
+  (lintas-principal, kredensial, state lintas-request, server tidak ditanya,
+  masukan penyerang, invarian platform, tanpa salah-pakai, jangkauan paket),
+  bukan dari bentuk sintaksis. Tiap atribut dieja supaya bisa dibantah
+  satu per satu.
+
+      TIER A (>=12) — hanya DUA dari 21 temuan:
+          17  F-13  ngsw ignoreVary:true tidak diekspos
+          17  F-12  pola dataGroup dicocokkan sbg substring URL absolut
+      TIER B (>=6) : F-08, F-01, F-03, F-04, F-22
+      TIER C (>=2) : F-06, F-05, F-21
+      TIER D (<2)  : sisanya (11 temuan)
+
+  KEDUA penghuni tier A lahir dari PENELUSURAN ngsw, bukan dari pemindai mana
+  pun. Keduanya berbentuk sama: ada Alice dan Bob, ada state bersama, dan
+  server tidak pernah ditanya untuk permintaan Bob.
+
+  Tidak satu pun pola G-xx dirancang mencari bentuk itu. Ini penjelasan paling
+  sederhana mengapa pemindai hanya melahirkan tiga kelas baru dari 21 temuan,
+  dan mengapa menambah G-31..G-100 bergaya lama akan terus mengisi tier C dan
+  D saja.
+
+  (3) YANG BELUM DIKERJAKAN — dinyatakan supaya tidak terbaca selesai
+  -------------------------------------------------------------------
+  Belum dikerjakan sama sekali:
+    - G-31 cache-key yang kehilangan informasi (property test lintas dimensi:
+      method, query ganda, header, Authorization, cookie, body, responseType,
+      credentials, Vary)
+    - G-32 metadata identitas yang hilang saat clone/retry/redirect
+    - G-33 propagasi header sensitif saat origin berubah
+    - G-34 pencarian global yang bisa ditebak (getElementById(KONSTAN))
+    - G-35 ketidaksepakatan parser/serializer dengan orakel KEAMANAN
+      (bukan sekadar round-trip string)
+    - G-36 state mutable pada SSR diuji dengan dua request paralel
+    - harness lintas-principal sebagai infrastruktur bersama
+    - model source/sink sisi server: Host, X-Forwarded-*, respons fetch,
+      redirect, cache key, Vary, credential mode, state SSR
+    - holdout untuk pemindai selain G-27 (baru satu yang punya mutan)
+
+  Dan yang paling bernilai berikutnya, sesuai kritik: MEMPERKUAT F-13 dengan
+  pembuktian bahwa perilakunya muncul pada KONFIGURASI NORMAL dan endpoint
+  realistis — bukan konsekuensi opt-in yang sudah dinyatakan tidak aman.
+  Itu bukan soal regex pencarinya, melainkan soal bukti dampaknya.
+
+==============================================================================
+LAPISAN DEF-USE INTRA-BERKAS — daya temu 20% -> 100%, biaya derau NOL
+==============================================================================
+
+  KOREKSI CATATAN LEBIH DULU
+  --------------------------
+  Ulasan terakhir menyebut tiga celah yang SUDAH ditutup di sesi ini. Dicatat
+  supaya daftar celah tidak dibaca lebih besar daripada keadaannya:
+
+    "G-27 masih buta terhadap properti kelas (F-20)"
+        Ditutup di commit f281eaa. LANGKAH 3 pemindai menangani
+        `store: Record<...> = {}` yang dibaca lewat `this.NAMA[k]`, dengan
+        penjaga dinilai PER-PEMBACAAN. Validasi-diri kini MENUNTUT F-20.
+
+    "G-27 belum menangani peta yang diimpor"
+        Ditutup lebih awal. LANGKAH 2 menggabungkan peta lokal dengan peta yang
+        dideklarasikan di berkas lain lalu diimpor — justru itulah yang membuat
+        F-06 (VALID_ATTRS dibangun di html_sanitizer.ts, dipakai di
+        i18n_parse.ts) bisa ditemukan kembali.
+
+    "belum ada deteksi salinan yang di-rename"
+        `analysis/regex-corpus/scan-renamed-copies.mjs` ada, dan justru
+        pemindai itulah yang MELAHIRKAN F-07.
+
+  Yang TETAP BERLAKU dari ulasan itu, dan memang batas sebenarnya: tidak ada
+  data-flow, tidak ada reachability, derau pada pola luas (G-06/G-08/G-19),
+  twin berbasis nama dasar, kompromi backtracking, dan G-29 yang bergantung
+  pada komentar.
+
+  YANG DIKERJAKAN: BUTIR PERTAMA — DATA-FLOW RINGAN, INTRA-BERKAS
+  ---------------------------------------------------------------
+  Saran "bahkan intra-berkas saja sudah banyak membantu" ternyata bisa diukur
+  langsung terhadap garis dasar holdout 1/5 yang sudah tercatat.
+
+  Ditambahkan ke G-27, diselesaikan sampai titik tetap dalam SATU berkas:
+      - pabrik peta   : fungsi yang mengembalikan objek literal
+      - pemanggilan   : `const table = buildLookup()`
+      - alias         : `const t = registry;`
+  Dan diperluas BENTUK SINK-nya: `Reflect.get(M, k)` dan `M?.[k]` menelusuri
+  rantai prototipe persis seperti `M[k]`.
+
+      HASIL HOLDOUT     1/5 (20%)  ->  5/5 (100%)
+      KETEPATAN         2/2        ->  2/2   (tidak berubah)
+      BIAYA DI REPO     39 pasangan -> 39 pasangan; bentuk-ketiga 10 -> 10
+      VALIDASI-DIRI     F-06/F-17/F-20 tetap lulus
+
+  DUA DARI EMPAT KEGAGALAN ITU SALAH SAYA SENDIRI, BUKAN BATAS LEKSIKAL
+  ---------------------------------------------------------------------
+  Ini bagian yang paling layak diingat. Setelah def-use dipasang, daya temu
+  baru 3/5. Dua sisanya gagal karena PENYARING PEREDAM DERAU saya sendiri:
+
+    m5  `cache?.[k]` didiamkan karena `k` ada di daftar "kunci jelas konstan"
+        (`i|j|k|idx|index`) — daftar yang dimaksudkan untuk indeks ARRAY.
+        Di m5, `k` adalah PARAMETER FUNGSI: kunci yang sepenuhnya dinamis.
+    m4  `const t = registry;` didiamkan karena ambang panjang nama 3 karakter.
+
+  Jadi penyaring yang saya pasang untuk menaikkan KETEPATAN diam-diam
+  menurunkan DAYA TEMU, dan tidak ada satu pun mekanisme sebelumnya yang bisa
+  menunjukkannya — sebab validasi-diri hanya menguji temuan yang sudah dikenal,
+  dan temuan itu kebetulan tidak memakai nama satu huruf. Hanya holdout yang
+  membuatnya terlihat.
+
+  Setelah `idx|index` dipertahankan tetapi huruf tunggal dibuang dari daftar,
+  dan ambang panjang dilepas KHUSUS untuk alias (sisi kanannya sudah terbukti
+  peta), daya temu menjadi 5/5 TANPA menambah satu pun kandidat di repositori.
+
+  HARNESS-NYA SENDIRI JUGA SALAH SEKALI
+  --------------------------------------
+  Jalan pertama menilai "tertangkap" dengan `out.includes(namaBerkas)`, lalu
+  menuduh kontrol negatif n2-guarded sebagai salah-lapor. Padahal pemindai
+  menempatkannya dengan BENAR di daftar "berkasnya punya penjaga", yang bukan
+  tuduhan cacat. Harness kini membaca hanya wilayah keluaran yang benar-benar
+  menuduh. Tanpa perbaikan itu saya akan "memperbaiki" pemindai atas penilaian
+  yang sudah tepat.
+
+  BATASNYA, DINYATAKAN TERUS TERANG
+  ----------------------------------
+  Def-use ini INTRA-BERKAS dan hanya mengenali tiga bentuk. Ia bukan taint
+  analysis: tidak mengikuti nilai lewat parameter, properti objek, callback,
+  Observable, DI, atau batas modul. Kelas mutannya pun masih satu (prototipe),
+  dan pemindai selain G-27 belum punya holdout sama sekali. Angka 100% berlaku
+  untuk lima mutan yang SAYA tulis — ia mengukur bahwa satu celah tertentu
+  sudah ditutup, bukan bahwa pemindainya kini umum.
+
+==============================================================================
+RINGKASAN
+==============================================================================
+
+  Kode    Berkas                        Sifat                    Dapat dieksploitasi
+  ------  ----------------------------  -----------------------  -------------------
+  F-01    html_sanitizer.ts:314-326     cacat logika: garda      TIDAK (diuji di
+                                        fail-closed jadi         Chromium 141 nyata:
+                                        fail-open (kode mati)    keluaran tetap aman)
+  F-02    dom_security_schema.ts:112    referensi menggantung    tidak
+          (dua salinan)                 (kontrol pemeliharaan)
+  F-03    html_sanitizer.ts:79-89       inkonsistensi srcset     tidak
+  F-04    html_sanitizer.ts:133         inkonsistensi defensif   tidak
+  F-05    platform-server/utils.ts:171  guard APP_ID dev-only,   hanya bila APP_ID
+          + application_tokens.ts:55    sink tanpa escaping      berasal dari sumber
+                                        di SSR produksi          tak-tepercaya
+                                                                 (SSR multi-tenant)
+
+  F-06    i18n_parse.ts:841             gate allowlist bocor     tidak (nama yang
+                                        lewat rantai prototipe   lolos semuanya
+                                                                 inert)
+  F-10    common/http/src/params.ts     HttpParams fromString    KECIL: 1 pengguna,
+          :64-75,180                    melempar URIError pada    1 page-load, tidak
+                                        `%` cacat; URLSearchParams persisten. Bukan
+                                        platform TIDAK melempar    DoS layanan.
+  F-09    common/src/cookie.ts:16       decodeURIComponent tanpa YA — DoS klien
+          + http/src/xsrf.ts:119        guard; cookie XSRF cacat  persisten atas
+                                        menggagalkan SEMUA        semua permintaan
+                                        permintaan yang memutasi  memutasi
+  F-08    @angular/router               desinkronisasi path      YA bila SSR +
+          DefaultUrlSerializer          antar-lapisan: `/admin)`  otorisasi path
+          + pencocokan rute             dinilai server BUKAN      sisi-server;
+                                        /admin, dirender Angular  komposisi belum
+                                        SEBAGAI /admin            diuji ujung-ke-ujung
+  F-22    common/src/location/util.ts   "//host" dijaga di sisi  PENGERASAN, bukan
+          joinWithSlash                 parse & jalur commands   kerentanan yg
+          + router serializeUrl         (2 kontrol positif),     ditunjukkan: jalur
+                                        TIDAK di sisi keluar.    normal (commands)
+                                        href jadi LINTAS ORIGIN  terbukti aman
+                                        di peramban; pushState   di [2b]
+                                        melempar SecurityError
+  F-21    router/src/url_tree.ts        encodeUriSegment melepas RENDAH sbg kerentanan,
+          :513 encodeUriString          escape ':' yang dipakai  jelas sbg cacat
+          + parseParens                 parsernya sendiri sbg    kebenaran: segmen
+                                        pembatas outlet; ( dan ) primer HILANG saat
+                                        diescape di fungsi yg    URL dibaca ulang;
+                                        sama                     outlet bernama-dari-
+                                                                 data muncul. Prasyarat:
+                                                                 app pakai aux outlet
+  F-20    core/src/transfer_state.ts    get() baca rantai        RENDAH: kunci dipilih
+          :90 vs :111                   prototipe; hasKey() 20    developer. Kontrak
+                                        baris di bawahnya pakai   yang dilanggar:
+                                        hasOwnProperty            get() mengabaikan
+                                                                  defaultValue padahal
+                                                                  hasKey() bilang tidak ada
+  F-19    platform-browser/src/dom/     APP_ID mentah ke        RENDAH sbg kerentanan
+          shared_styles_host.ts:71-73   selektor CSS; menarik    (APP_ID dipilih
+          + akar masalah F-05           4 elemen ASING (title,   developer). SINK KEDUA
+          (validator ngDevMode-only)    meta csrf, link pihak    untuk akar masalah
+                                        ketiga) ke catatan       F-05 -> memperbaiki
+                                        style Angular            satu sink tidak cukup
+  F-18    animations/browser/src/dsl/   `s*` bukan `\s*` di      RENDAH, tanpa dimensi
+          animation_ast_builder.ts:81   SELF_TOKEN_REGEX ->       keamanan: selektor
+                                        selektor cacat; 4/8       query() ditulis
+                                        bentuk query() wajar      developer, bukan
+                                        DITOLAK querySelectorAll  pengguna
+  F-17    platform-browser/src/         META_KEYS_MAP[prop] ||   RENDAH: melempar
+          browser/meta.ts:199           prop membaca rantai       InvalidCharacterError;
+                                        prototipe -> nama         nama atribut selalu
+                                        atribut tidak sah         TIDAK SAH, jadi tidak
+                                                                  ada atribut salah yang
+                                                                  diterima peramban
+  F-14    forms/src/validators.ts       `^`+pola+`$` dirangkai   RENDAH sbg kerentanan
+          :569-596                      tanpa grup -> alternasi   (validasi sisi klien),
+          + directives/validators.ts    lolos anchor; peramban    JELAS sbg cacat
+          :695 (direktif [pattern])     menolak 10/24 nilai yang  kebenaran: menyimpang
+                                        Angular terima            dari atribut HTML
+                                                                  `pattern` yang ditiru
+  F-13    service-worker/config/        ignoreVary:true di-       YA — menonaktifkan
+          generator.ts:203-210          hardcode & tidak          pertahanan Vary sisi
+                                        diekspos di tipe publik   server tanpa syarat;
+                                                                  aplikasi tidak bisa
+                                                                  menyalakannya lagi
+  F-12    service-worker/config/        pola path dicocokkan     YA — PERSISTEN dan
+          generator.ts:96,104           SEBAGAI SUBSTRING thd     LINTAS-ORIGIN.
+          + worker/src/data.ts:305      URL absolut -> `/api/**`  Respons pihak
+                                        menangkap & meng-cache    ketiga di-cache di
+                                        URL LINTAS-ORIGIN, bahkan disk & disajikan
+                                        bila `/api/` cuma di      basi sampai maxAge
+                                        query string              habis. TERBUKTI di
+                                                                  Chromium: profil+role
+                                                                  Alice disajikan ke Bob
+  F-11    common/upgrade/src/           pembungkus aman ADA di   KECIL: sisi klien,
+          params.ts:150,167             berkas yang sama tapi     1 pengguna, pulih
+          + location_shim.ts:369,371    decodePath/decodeHash     sendiri. TAPI yang
+                                        tetap mentah -> $location  gagal adalah
+                                        shim GAGAL KONSTRUKSI      KONSTRUKTOR, jadi
+                                        pada `%` cacat di          seluruh app hibrida
+                                        path/hash                  gagal bootstrap
+  F-07    resolve_i18n_attr_            salinan pemetaan         tidak (LATEN:
+          sanitizers.ts:49-70           sanitizer tak menangani  irisan i18n x
+                                        konteks array; salinan   konteks-array
+                                        utama fail-closed,       masih kosong)
+                                        salinan ini fail-open
+
+  Yang layak dilaporkan ke tim Angular: F-01 dan F-05 (lewat jalur keamanan)
+  dan F-02 (lewat isu/PR biasa — murni pemeliharaan). F-03, F-04 dan F-06
+  bersifat kerapian/pengerasan kode — F-06 punya perbaikan satu baris yang
+  sekaligus menutup seluruh kelas (bangun set dengan `Object.create(null)`).
+
+  AREA YANG SUDAH DIPERIKSA DAN TERNYATA BENAR (perluasan cakupan)
+  ----------------------------------------------------------------
+  Setelah cakupan diperlebar melampaui html_sanitizer.ts, sembilan permukaan
+  keamanan lain diperiksa dan TIDAK ditemukan cacat:
+    - TransferState.toJson()      escape `<` dan `/` dengan benar; `<script>`
+                                  raw-text tidak bisa ditembus
+    - xsrfInterceptorFn           cek same-origin benar (URL relatif di-resolve
+                                  dulu); `catch` gagal ke arah aman
+    - enforceIframeSecurity       membersihkan src/srcdoc lalu melepas node;
+                                  ɵɵvalidateAttribute fail-closed (throw)
+    - resolveElement / '#host'    sinkron: tag dipasok tNode.value, '#host'
+                                  memicu pembacaan tag asli dari DOM
+    - SVG_ANIMATION_SENSITIVE_*   entri yang hilang jatuh ke throw -> LEBIH
+                                  ketat, bukan lebih lemah
+    - Router (RouterLink)         selector '[routerLink]' generik -> konteks
+                                  komposit -> ɵɵsanitizeUrlOrResourceUrl yang
+                                  meresolusi tag saat runtime; pada <a> menjadi
+                                  ɵɵsanitizeUrl sehingga `javascript:` diblokir
+    - @angular/elements           attributeChangedCallback memakai akses bracket
+                                  (`attributeToPropertyInputs[attrName]!`) TETAPI
+                                  ter-gate: observedAttributes = Object.keys(...)
+                                  hanya memuat properti own, jadi peramban tidak
+                                  pernah memanggilnya dengan nama prototipe
+    - Hidrasi (ngh)               nilai atribut ngh hanya di-split '|' lalu
+                                  dipakai sebagai indeks ke TransferState; tidak
+                                  ada sink HTML/eval/querySelector
+    - i18n: elemen tak valid      DIBUANG total beserta seluruh anaknya (rekursi
+                                  berada di dalam if-block) -> lebih ketat
+                                  daripada html_sanitizer yang mempertahankan isi
+
+  Catatan kejujuran: dari seluruh pemindaian yang dilakukan pada fase-fase
+  sebelumnya (~360 kandidat), hanya F-01 yang merupakan cacat logika sejati
+  pada jalur keamanan. Itu bukan kegagalan pemindaian melainkan cerminan bahwa
+  model keamanan Angular — compiler menentukan SecurityContext, runtime hanya
+  menjalankan — memang rapat. Cacat yang tersisa muncul justru di tempat yang
+  tidak dijangkau pemindai pola: pada URUTAN pernyataan di dalam satu loop.

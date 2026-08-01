@@ -1,0 +1,592 @@
+INVENTORY FUNGSI :: modules
+Total simbol: 363 | file: 78
+Rincian: function=124, arrow=2, class=81, method=113, accessor=15, ctor=28
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## modules/benchmarks/src/change_detection/change_detection.perf-spec.ts
+[ ] runChangeDetectionBenchmark  (function) :64
+
+## modules/benchmarks/src/change_detection/transplanted_views/init.ts
+[ ] init  (export function) :16
+[ ] destroyDom  (function) :27
+      -- helpers
+[ ] createDom  (function) :34
+[ ] markInsertionComponentForCheck  (function) :39
+[ ] detectChanges  (function) :43
+[ ] noop  (function) :47
+
+## modules/benchmarks/src/change_detection/transplanted_views/transplanted_views.ts
+[ ] InsertionComponent  (export class) :32
+[ ] InsertionComponent.viewCount  (accessor) :36
+[ ] InsertionComponent.constructor  (ctor) :40
+[ ] InsertionComponent.trackByIndex  (method) :43
+      -- use trackBy to ensure profile isn't affected by the cost to refresh ngFor.
+[ ] DeclarationComponent  (export class) :57
+[ ] DeclarationComponent.trackTemplateRefresh  (method) :63
+[ ] TransplantedViewsModule  (export class) :75
+
+## modules/benchmarks/src/change_detection/util.ts
+[ ] newArray  (export function) :13
+[ ] newArray  (export function) :14
+[ ] newArray  (export function) :15
+
+## modules/benchmarks/src/class_bindings/app.component.ts
+[ ] AppComponent  (export class) :22
+[ ] AppComponent.constructor  (ctor) :27
+[ ] AppComponent.create  (method) :33
+[ ] AppComponent.update  (method) :37
+[ ] AppComponent.destroy  (method) :42
+
+## modules/benchmarks/src/class_bindings/app.module.ts
+[ ] AppModule  (export class) :20
+
+## modules/benchmarks/src/class_bindings/class_bindings.component.ts
+[ ] ClassBindingsComponent  (export class) :34
+
+## modules/benchmarks/src/defer/baseline/app.component.ts
+[ ] AppComponent  (export class) :43
+[ ] AppComponent.constructor  (ctor) :48
+[ ] AppComponent.getColor  (method) :53
+
+## modules/benchmarks/src/defer/defer.perf-spec.ts
+[ ] runTableBenchmark  (function) :57
+
+## modules/benchmarks/src/defer/init.ts
+[ ] getUrlParamValue  (function) :18
+[ ] syncUrlParamsToForm  (export function) :23
+[ ] init  (export function) :31
+[ ] destroyDom  (function) :34
+[ ] createDom  (function) :39
+[ ] noop  (function) :44
+
+## modules/benchmarks/src/defer/main/app.component.ts
+[ ] AppComponent  (export class) :43
+[ ] AppComponent.constructor  (ctor) :48
+[ ] AppComponent.getColor  (method) :53
+
+## modules/benchmarks/src/defer/util.ts
+[ ] TableCell  (export class) :11
+[ ] TableCell.constructor  (ctor) :12
+[ ] initTableUtils  (export function) :25
+[ ] charValue  (function) :43
+[ ] buildTable  (export function) :49
+
+## modules/benchmarks/src/expanding_rows/benchmark.ts
+[ ] InitializationRoot  (export class) :33
+[ ] InitializationRoot.ngAfterViewInit  (method) :36
+[ ] InitializationRoot.reset  (method) :38
+[ ] InitializationRoot.init  (method) :42
+[ ] InitializationRoot.runAll  (method) :46
+[ ] InitializationRoot.handleInitClick  (method) :52
+[ ] InitializationRoot.doInit  (method) :56
+[ ] ExpandingRowBenchmarkModule  (export class) :70
+      -- Component benchmarks must export a BenchmarkModule.
+[ ] execTimed  (export function) :72
+[ ] nextTick  (export function) :79
+
+## modules/benchmarks/src/expanding_rows/benchmark_module.ts
+[ ] BenchmarkArea  (export class) :30
+[ ] BenchmarkErrorHandler  (export class) :38
+[ ] BenchmarkErrorHandler.handleError  (method) :39
+[ ] BenchmarkModule  (export class) :53
+
+## modules/benchmarks/src/expanding_rows/benchmarkable_expanding_row.ts
+[ ] BenchmarkableExpandingRow  (export class) :43
+[ ] BenchmarkableExpandingRow.init  (method) :52
+[ ] BenchmarkableExpandingRow.reset  (method) :57
+
+## modules/benchmarks/src/expanding_rows/benchmarkable_expanding_row_module.ts
+[ ] BenchmarkableExpandingRowModule  (export class) :20
+
+## modules/benchmarks/src/expanding_rows/expanding_row.ts
+[ ] ExpandingRow  (export class) :126
+[ ] ExpandingRow.isExpanded  (accessor) :152
+      -- A boolean indicating if this node is expanded. This value is used to hide/show summary, caption, and content of the expanding row. There should only be one expa
+[ ] ExpandingRow.isExpanded  (accessor) :163
+      -- TS getter for isExpanded property.
+[ ] ExpandingRow.isFocused  (accessor) :178
+      -- A boolean indicating if this node is focused. This value is used to add a CSS class that should render a blue border on the right. There should only be one focu
+[ ] ExpandingRow.isFocused  (accessor) :184
+      -- TS getter for isFocused property.
+[ ] ExpandingRow.index  (accessor) :189
+      -- The index of the row in the context of the entire collection.
+[ ] ExpandingRow.index  (accessor) :200
+      -- TS getter for index property.
+[ ] ExpandingRow.constructor  (ctor) :236
+[ ] ExpandingRow.handleSummaryClick  (method) :247
+      -- Handles click on cfc-expanding-row-summary component. This will expand this row and collapse the previously expanded row. The collapse & blur is handled in [cfc
+[ ] ExpandingRow.handleSummaryFocus  (method) :259
+      -- When user tabs into child cfc-expanding-row-summary component. This method will make sure we focuse on this row, and blur on previously focused row.
+[ ] ExpandingRow.handleCaptionClick  (method) :271
+      -- cfc-expanding-row-details-caption component will call this function to notify click on its host element. Note that caption is only shown when the row is expande
+[ ] ExpandingRow.getHeight  (method) :283
+      -- Gets the height of this component. This height is used in parent [cfcExpandingRowHost] directive to compute scroll adjustment.
+[ ] ExpandingRow.expand  (method) :292
+      -- Expands this row. This will notify the host so that it can collapse previously expanded row. This function also emits onToggle @Output event to the user code.
+[ ] ExpandingRow.collapse  (method) :309
+      -- Collapses this row. Setting isExpanded to false will make sure we hide the caption and details, and show cfc-expanding-row-summary component. This also emits on
+[ ] ExpandingRow.blur  (method) :320
+      -- Blurs this row. This should remove the blue border on the left if there is any. This function will remove DOM focus on the cfc-expanding-row-summary component.
+[ ] ExpandingRow.focus  (method) :330
+      -- Focuses this row. This should put blue border on the left. If there is any previous focus/selection, those should be gone. Parent [cfcExpandingRowHost] componen
+[ ] ExpandingRow.handleKeyDown  (method) :348
+      -- We listen for TAB press here to make sure we trap the focus on the expanded row. If the row is not expanded, we don't care about this event since focus trap sho
+[ ] ExpandingRow.trapFocus  (method) :368
+      -- When this row is expanded, this function traps the focus between focusable elements contained in this row.
+
+## modules/benchmarks/src/expanding_rows/expanding_row_details_caption.ts
+[ ] ExpandingRowDetailsCaption  (export class) :41
+[ ] ExpandingRowDetailsCaption.constructor  (ctor) :53
+[ ] ExpandingRowDetailsCaption.ngOnDestroy  (method) :63
+      -- When component is destroyed, unlisten to isExpanded.
+
+## modules/benchmarks/src/expanding_rows/expanding_row_details_content.ts
+[ ] ExpandingRowDetailsContent  (export class) :34
+[ ] ExpandingRowDetailsContent.constructor  (ctor) :42
+[ ] ExpandingRowDetailsContent.ngOnDestroy  (method) :52
+      -- Unsubscribe from changes in parent isExpanded property.
+
+## modules/benchmarks/src/expanding_rows/expanding_row_host.ts
+[ ] ExpandingRowHost  (export class) :63
+[ ] ExpandingRowHost.ngAfterViewInit  (method) :142
+      -- When component initializes we need to attach click listener to the root element. This click listener will allows us to collapse the currently expanded row when 
+[ ] ExpandingRowHost.ngOnDestroy  (method) :161
+      -- Detaches the click listener on the root element. Note that we are attaching this listener on ngAfterViewInit function.
+[ ] ExpandingRowHost.handleRowCaptionClick  (method) :182
+      -- Handles caption element click on a cfc-expanding-row component. Note that caption element is visible only when the row is expanded. So this means we will collap
+[ ] ExpandingRowHost.handleRowSummaryClick  (method) :199
+      -- Handles summary element click on a cfc-expanding-row component. Note that summary element is visible only when the row is collapsed. So this event will fired pr
+[ ] ExpandingRowHost.handleRowExpand  (method) :232
+      -- Handles expansion of a row. When a new row expands, we need to remove previous expansion and collapse. We also need to save the currently expanded row so that w
+[ ] ExpandingRowHost.handleRowFocus  (method) :244
+      -- Handles focus on a row. When a new row gets focus (note that this is different from expansion), we need to remove previous focus and expansion. We need to save 
+[ ] ExpandingRowHost.focusOnLastFocusedRow  (method) :259
+      -- Called when shift+tabbing from the first focusable element after the list of expanding rows or tabbing from the last focusable element before.
+[ ] ExpandingRowHost.focusOnPreviousFocusableElement  (method) :270
+      -- Function that is called by expanding row summary to focus on the last focusable element before the list of expanding rows.
+[ ] ExpandingRowHost.focusOnNextFocusableElement  (method) :278
+      -- Function that is called by expanding row summary to focus on the next focusable element after the list of expanding rows.
+[ ] ExpandingRowHost.handleKeyDown  (method) :293
+      -- Handles keydown event on the host. We are just concerned with up, down arrow, ESC, and ENTER presses here. Note that Up/Down presses can be repeated. - Up: Focu
+[ ] ExpandingRowHost.isTargetInRow  (method) :301
+      -- Recursively returns true if target HTMLElement is within a cfc-expanding-row component. It will return false otherwise. We need this function in handleRootMouse
+[ ] ExpandingRowHost.getClickRootElement  (method) :309
+      -- Gets the click root element that is described by clickRootElementSelector
+[ ] ExpandingRowHost.handleRootMouseUp  (method) :318
+      -- Handles all of the mouseup events on the click root. When user clicks outside of an expanded row, we need to collapse that row. We trigger collapse by calling h
+[ ] ExpandingRowHost.isCollapsible  (method) :332
+      -- Check if element is collapsible.  Elements marked as uncollapsible will not collapse an open row when clicked.
+[ ] ExpandingRowHost.removePreviousFocus  (method) :348
+      -- Removes focus state from a previously focused row. We blur this row and set the focusedRow to undefined in this method. This usually happens when another row is
+[ ] ExpandingRowHost.removePreviousExpansion  (method) :360
+      -- Removes the expanded state from a previously expanded row. We collapse this row and set the expandedRow to undefined in this method. This usually happens when a
+[ ] ExpandingRowHost.getSelectedRowCollapsedHeight  (method) :373
+      -- Gets the collapsed height of the currently expanded row. We need this for scroll adjustments. Note that collapsed height of a cfc-expanding-row component is equ
+[ ] ExpandingRowHost.getSelectedRowExpandedHeight  (method) :385
+      -- Gets the current height of the expanded row. We need this value for the scroll adjustment computation.
+[ ] ExpandingRowHost.getScrollElement  (method) :397
+      -- Gets the HTML element described by scrollElementSelector @Input value. We need this value for scroll adjustments.
+[ ] ExpandingRowHost.handleEscapePress  (method) :410
+      -- Handles escape presses on the host element. Escape removes previous focus if there is one. If there is an expanded row, escape row collapses this row and focuse
+[ ] ExpandingRowHost.handleEnterPress  (method) :424
+      -- Handles enter keypress. If there is a focused row, an enter key press on host element will expand this row.
+[ ] ExpandingRowHost.focusedRowSummary  (method) :435
+      -- Returns the HTMLElement that is the currently focused row summary.
+[ ] ExpandingRowHost.getRowIndex  (method) :445
+      -- Returns the index of a given row. This enables us to figure out the row above/below the focused row.
+[ ] ExpandingRowHost.handleUpOrDownPressOnce  (method) :456
+      -- Handles up/down arrow presses on the host element. Up arrow press will focus/expand on the row above. Down arrow press will focus/expand the row below. If we ha
+[ ] ExpandingRowHost.recalcRowIndexes  (method) :510
+      -- Updates all of the rows with their new index.
+
+## modules/benchmarks/src/expanding_rows/expanding_row_module.ts
+[ ] ExpandingRowModule  (export class) :39
+
+## modules/benchmarks/src/expanding_rows/expanding_row_summary.ts
+[ ] ExpandingRowSummary  (export class) :60
+[ ] ExpandingRowSummary.constructor  (ctor) :80
+[ ] ExpandingRowSummary.ngOnDestroy  (method) :95
+      -- When component is destroyed, unlisten to isExpanded.
+[ ] ExpandingRowSummary.handleFocus  (method) :109
+      -- Handles focus event on the element. We basically want to detect any focus in this component and relay this information to parent cfc-expanding-row component.
+[ ] ExpandingRowSummary.handleKeyDown  (method) :133
+      -- Handles tab & shift+tab presses on expanding row summaries in case there are tabbable elements inside the summaries.
+[ ] ExpandingRowSummary.handleTabKeypress  (method) :152
+      -- Handles tab and shift+tab presses inside expanding row summaries; From inside collapsed row summary: - Tab: If focus was on the last focusable child, should shi
+[ ] ExpandingRowSummary.isPreviouslyFocusedRow  (method) :188
+      -- Finds the row that had focus before focus left the list of expanding rows and checks if the current row summary is that row.
+[ ] ExpandingRowSummary.focus  (method) :215
+      -- Puts the DOM focus on the main element.
+[ ] ExpandingRowSummary.blur  (method) :222
+      -- Removes the DOM focus on the main element.
+[ ] ExpandingRowSummary.getFocusableChildren  (method) :231
+      -- Returns array of focusable elements within this component.
+
+## modules/benchmarks/src/expanding_rows/expanding_row_uncollapsible.ts
+[ ] ExpandingRowUncollapsible  (export class) :19
+
+## modules/benchmarks/src/hydration/hydration.perf-spec.ts
+[ ] runTableBenchmark  (function) :58
+
+## modules/benchmarks/src/hydration/init.ts
+[ ] getUrlParamValue  (function) :19
+[ ] syncUrlParamsToForm  (export function) :24
+[ ] init  (export function) :32
+[ ] destroyDom  (function) :46
+[ ] updateDom  (function) :50
+[ ] createDom  (function) :55
+[ ] prepare  (function) :61
+[ ] noop  (function) :74
+[ ] createTableDom  (function) :89
+      -- Creates DOM to represent a table, similar to what'd be generated during the SSR.
+
+## modules/benchmarks/src/hydration/table.ts
+[ ] AppComponent  (export class) :22
+[ ] AppComponent.constructor  (ctor) :23
+[ ] TableComponent  (export class) :48
+[ ] TableComponent.getColor  (method) :51
+[ ] setupTransferState  (export function) :56
+
+## modules/benchmarks/src/hydration/util.ts
+[ ] TableCell  (export class) :11
+[ ] TableCell.constructor  (ctor) :12
+[ ] initTableUtils  (export function) :25
+[ ] charValue  (function) :43
+[ ] buildTable  (export function) :49
+
+## modules/benchmarks/src/js-web-frameworks/js-web-frameworks.perf-spec.ts
+[ ] runTableBenchmark  (function) :81
+
+## modules/benchmarks/src/js-web-frameworks/ng2/init.ts
+[ ] _random  (function) :15
+[ ] buildData  (function) :19
+[ ] init  (export function) :91
+[ ] create1K  (function) :94
+[ ] create10K  (function) :99
+[ ] deleteAll  (function) :104
+[ ] update  (function) :109
+[ ] swapRows  (function) :116
+
+## modules/benchmarks/src/js-web-frameworks/ng2/rows.ts
+[ ] JsWebFrameworksComponent  (export class) :39
+[ ] JsWebFrameworksComponent.constructor  (ctor) :43
+[ ] JsWebFrameworksComponent.select  (method) :45
+
+## modules/benchmarks/src/largeform/largeform.perf-spec.ts
+[ ] runLargeFormBenchmark  (function) :37
+
+## modules/benchmarks/src/largeform/ng2/app.ts
+[ ] AppComponent  (export class) :75
+[ ] AppComponent.constructor  (ctor) :78
+[ ] AppComponent.setCopies  (method) :84
+[ ] AppModule  (export class) :98
+
+## modules/benchmarks/src/largeform/ng2/init.ts
+[ ] init  (export function) :17
+[ ] destroyDom  (function) :21
+[ ] createDom  (function) :26
+[ ] noop  (function) :31
+
+## modules/benchmarks/src/largetable/baseline/main.ts
+[ ] destroyDom  (function) :16
+[ ] createDom  (function) :20
+[ ] noop  (function) :24
+[ ] init  (function) :26
+
+## modules/benchmarks/src/largetable/baseline/table.ts
+[ ] TableComponent  (export class) :11
+[ ] TableComponent.constructor  (ctor) :14
+[ ] TableComponent.data  (accessor) :16
+[ ] TableComponent._destroy  (method) :26
+[ ] TableComponent._update  (method) :33
+[ ] TableComponent._updateCell  (method) :45
+[ ] TableComponent._create  (method) :49
+
+## modules/benchmarks/src/largetable/largetable.perf-spec.ts
+[ ] runTableBenchmark  (function) :62
+
+## modules/benchmarks/src/largetable/ng2/init.ts
+[ ] init  (export function) :16
+[ ] destroyDom  (function) :19
+[ ] createDom  (function) :24
+[ ] noop  (function) :29
+
+## modules/benchmarks/src/largetable/ng2/table.ts
+[ ] TableComponent  (export class) :32
+[ ] TableComponent.constructor  (ctor) :35
+[ ] TableComponent.getColor  (method) :43
+
+## modules/benchmarks/src/largetable/ng2_switch/init.ts
+[ ] init  (export function) :16
+[ ] destroyDom  (function) :20
+[ ] createDom  (function) :25
+[ ] noop  (function) :30
+
+## modules/benchmarks/src/largetable/ng2_switch/table.ts
+[ ] TableComponent  (export class) :37
+[ ] TableComponent.trackByIndex  (method) :40
+[ ] AppModule  (export class) :51
+
+## modules/benchmarks/src/largetable/util.ts
+[ ] TableCell  (export class) :11
+[ ] TableCell.constructor  (ctor) :12
+[ ] initTableUtils  (export function) :25
+[ ] charValue  (function) :43
+[ ] buildTable  (export function) :49
+
+## modules/benchmarks/src/ng_template_outlet_context/ng2/main.ts
+[ ] Deep  (class) :19
+[ ] AppComponent  (class) :49
+[ ] AppComponent.swapOutFull  (method) :63
+[ ] AppComponent.modifyProperty  (method) :72
+[ ] AppComponent.modifyDeepProperty  (method) :76
+[ ] AppComponent.addNewProperty  (method) :80
+
+## modules/benchmarks/src/ng_template_outlet_context/ng_template_outlet_context.perf-spec.ts
+[ ] runBenchmarkScenario  (function) :68
+
+## modules/benchmarks/src/styling/ng2/init.ts
+[ ] init  (export function) :15
+[ ] create  (function) :26
+[ ] destroy  (function) :32
+[ ] update  (function) :37
+[ ] detectChanges  (function) :42
+[ ] modifyExternally  (function) :46
+
+## modules/benchmarks/src/styling/ng2/styling.ts
+[ ] StylingComponent  (export class) :47
+[ ] StylingComponent.getTplRef  (method) :53
+[ ] StylingModule  (export class) :63
+
+## modules/benchmarks/src/tree/baseline/main.ts
+[ ] destroyDom  (function) :16
+[ ] createDom  (function) :20
+[ ] noop  (function) :24
+[ ] init  (function) :26
+
+## modules/benchmarks/src/tree/baseline/tree.ts
+[ ] TreeComponent  (export class) :11
+[ ] TreeComponent.constructor  (ctor) :14
+[ ] TreeComponent.data  (accessor) :16
+[ ] TreeComponent._create  (method) :26
+[ ] TreeComponent._updateNode  (method) :51
+[ ] TreeComponent._update  (method) :55
+[ ] TreeComponent._destroy  (method) :65
+
+## modules/benchmarks/src/tree/ng2/init.ts
+[ ] init  (export function) :16
+[ ] destroyDom  (function) :21
+[ ] createDom  (function) :26
+[ ] detectChanges  (function) :31
+[ ] noop  (function) :39
+
+## modules/benchmarks/src/tree/ng2/tree.ts
+[ ] TreeComponent  (export class) :31
+[ ] TreeComponent.bgColor  (accessor) :33
+[ ] AppModule  (export class) :44
+[ ] AppModule.constructor  (ctor) :45
+
+## modules/benchmarks/src/tree/ng2_static/main.ts
+[ ] destroyDom  (function) :22
+[ ] createDom  (function) :27
+[ ] noop  (function) :32
+[ ] init  (function) :34
+
+## modules/benchmarks/src/tree/ng2_static/tree.ts
+[ ] createTreeComponent  (function) :23
+[ ] TreeComponent  (class) :37
+[ ] TreeComponent.bgColor  (accessor) :39
+[ ] RootTreeComponent  (export class) :54
+[ ] createAppModule  (export function) :58
+[ ] AppModule  (class) :71
+[ ] AppModule.constructor  (ctor) :72
+
+## modules/benchmarks/src/tree/ng2_switch/init.ts
+[ ] init  (export function) :16
+[ ] destroyDom  (function) :20
+[ ] createDom  (function) :25
+[ ] noop  (function) :30
+
+## modules/benchmarks/src/tree/ng2_switch/tree.ts
+[ ] TreeComponent  (export class) :31
+[ ] AppModule  (export class) :41
+
+## modules/benchmarks/src/tree/test_utils.ts
+[ ] runTreeBenchmark  (export function) :12
+[ ] openTreeBenchmark  (export function) :35
+
+## modules/benchmarks/src/tree/util.ts
+[ ] TreeNode  (export class) :11
+[ ] TreeNode.constructor  (ctor) :15
+[ ] TreeNode.style  (accessor) :28
+      -- in expressions
+[ ] getMaxDepth  (export function) :38
+[ ] initTreeUtils  (export function) :42
+[ ] _buildTree  (function) :49
+[ ] buildTree  (export function) :56
+[ ] numberValues  (function) :61
+[ ] charValues  (function) :65
+[ ] flattenTree  (export function) :69
+[ ] newArray  (export function) :80
+[ ] newArray  (export function) :81
+[ ] newArray  (export function) :82
+
+## modules/benchmarks/src/util.ts
+[ ] getIntParameter  (export function) :11
+[ ] getStringParameter  (export function) :15
+[ ] bindAction  (export function) :36
+[ ] profile  (export function) :40
+[ ] reportProfileResults  (function) :60
+[ ] urlParamsToForm  (function) :75
+      -- and store them in appropriate form fields on the page
+
+## modules/playground/src/animate/app/animate-app.ts
+[ ] AnimateApp  (export class) :77
+[ ] AnimateApp.remove  (method) :83
+[ ] AnimateApp.reorderAndRemove  (method) :90
+[ ] AnimateApp.bgStatusChanged  (method) :97
+[ ] AnimateApp.state  (accessor) :101
+[ ] AnimateApp.state  (accessor) :104
+
+## modules/playground/src/animate/main.ts
+[ ] ExampleModule  (export class) :15
+
+## modules/playground/src/async/main.ts
+[ ] AsyncApplication  (class) :53
+[ ] AsyncApplication.increment  (method) :62
+[ ] AsyncApplication.delayedIncrement  (method) :66
+[ ] AsyncApplication.multiDelayedIncrements  (method) :74
+[ ] helper  (function) :78
+[ ] AsyncApplication.periodicIncrement  (method) :92
+[ ] AsyncApplication.cancelDelayedIncrement  (method) :97
+[ ] AsyncApplication.cancelMultiDelayedIncrements  (method) :104
+[ ] AsyncApplication.cancelPeriodicIncrement  (method) :111
+[ ] ExampleModule  (class) :125
+
+## modules/playground/src/hello_world/main.ts
+[ ] GreetingService  (export class) :14
+      -- A service available to the Injector, used by the HelloCmp component.
+[ ] RedDec  (export class) :24
+[ ] RedDec.constructor  (ctor) :27
+[ ] HelloCmp  (export class) :51
+[ ] HelloCmp.constructor  (ctor) :54
+[ ] HelloCmp.changeGreeting  (method) :58
+[ ] ExampleModule  (export class) :64
+
+## modules/playground/src/http/app/http_comp.ts
+[ ] HttpCmp  (export class) :23
+[ ] HttpCmp.constructor  (ctor) :25
+
+## modules/playground/src/http/main.ts
+[ ] ExampleModule  (export class) :21
+
+## modules/playground/src/jsonp/app/jsonp_comp.ts
+[ ] JsonpCmp  (export class) :27
+[ ] JsonpCmp.constructor  (ctor) :30
+
+## modules/playground/src/jsonp/main.ts
+[ ] ExampleModule  (export class) :21
+
+## modules/playground/src/key_events/main.ts
+[ ] KeyEventsApp  (export class) :28
+[ ] KeyEventsApp.onKeyDown  (method) :32
+[ ] KeyEventsApp.onShiftEnter  (method) :37
+[ ] KeyEventsApp.resetShiftEnter  (method) :42
+[ ] KeyEventsApp._getEventFullKey  (method) :50
+      -- Get a more readable version of current pressed keys.
+[ ] ExampleModule  (export class) :79
+
+## modules/playground/src/sourcemap/main.ts
+[ ] ErrorComponent  (export class) :17
+[ ] ErrorComponent.createError  (method) :18
+[ ] ExampleModule  (export class) :24
+
+## modules/playground/src/svg/main.ts
+[ ] SvgGroup  (export class) :17
+[ ] SvgApp  (export class) :26
+[ ] ExampleModule  (export class) :29
+
+## modules/playground/src/template_driven_forms/main.ts
+[ ] CheckoutModel  (class) :18
+      -- A domain model we are binding the form controls to.
+[ ] creditCardValidator  (export function) :33
+      -- Custom validator.
+[ ] CreditCardValidator  (export class) :52
+[ ] ShowError  (export class) :76
+[ ] ShowError.constructor  (ctor) :81
+[ ] ShowError.errorMessage  (accessor) :85
+[ ] ShowError._errorMessage  (method) :98
+[ ] TemplateDrivenForms  (export class) :172
+[ ] TemplateDrivenForms.onSubmit  (method) :176
+[ ] ExampleModule  (export class) :186
+
+## modules/playground/src/todo/app/TodoStore.ts
+[ ] KeyModel  (export class) :12
+      -- base model for RecordStore
+[ ] KeyModel.constructor  (ctor) :13
+[ ] Todo  (export class) :16
+[ ] Todo.constructor  (ctor) :17
+[ ] TodoFactory  (export class) :27
+[ ] TodoFactory.nextUid  (method) :30
+[ ] TodoFactory.create  (method) :34
+[ ] Store  (export class) :41
+      -- Store manages any generic item that inherits from KeyModel
+[ ] Store.add  (method) :44
+[ ] Store.remove  (method) :48
+[ ] Store.removeBy  (method) :52
+
+## modules/playground/src/todo/main.ts
+[ ] TodoApp  (export class) :20
+[ ] TodoApp.constructor  (ctor) :23
+[ ] TodoApp.enterTodo  (method) :28
+[ ] TodoApp.editTodo  (method) :33
+[ ] TodoApp.doneEditing  (method) :37
+[ ] TodoApp.addTodo  (method) :49
+[ ] TodoApp.completeMe  (method) :53
+[ ] TodoApp.deleteMe  (method) :57
+[ ] TodoApp.toggleAll  (method) :61
+[ ] TodoApp.clearCompleted  (method) :68
+[ ] ExampleModule  (export class) :74
+
+## modules/playground/src/zippy_component/app/zippy.ts
+[ ] Zippy  (export class) :16
+[ ] Zippy.toggle  (method) :22
+
+## modules/playground/src/zippy_component/main.ts
+[ ] ZippyApp  (export class) :26
+[ ] ZippyApp.pushLog  (method) :29
+[ ] ExampleModule  (export class) :35
+
+## modules/ssr-benchmarks/run-benchmark.ts
+[ ] main  (function) :34
+[ ] benchmarkRun  (function) :52
+[ ] durationToString  (function) :92
+[ ] storePerformanceLogOfCurrentRun  (export function) :100
+      -- This function mutates the measures map by adding the performance entries. Each entry is sorted, which will make the map keys sorted by startTime
+
+## modules/ssr-benchmarks/src/app/app.component.ts
+[ ] AppComponent  (export class) :28
+[ ] AppComponent.onClick  (method) :30
+
+## modules/ssr-benchmarks/src/main.server.ts
+[ ] bootstrap  (arrow) :15
+[ ] render  (arrow) :24
+      -- Function that will profile the server-side rendering (But won't prevent the monkey patching of DOM apis as this is introduced by the CLI)
+
+## modules/ssr-benchmarks/test-data.ts
+[ ] testData  (export function) :11
+[ ] randomUUID  (function) :16
+      -- We can drop this and use crypto.randomUUID() once we move to node 20
+[ ] initData  (export function) :32
+
+## modules/utilities/e2e_util.ts
+[ ] openBrowser  (export function) :15
+[ ] verifyNoBrowserErrors  (export function) :37
+
+## modules/utilities/perf_util.ts
+[ ] runBenchmark  (export function) :30
+[ ] _prepareBenchpressSetup  (function) :71
+[ ] loadBenchpressModule  (function) :128
+      -- Loads the benchpress module through a CJS/ESM interop.

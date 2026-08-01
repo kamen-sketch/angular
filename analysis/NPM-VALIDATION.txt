@@ -1,0 +1,235 @@
+VALIDASI TEMUAN TERJANGKAU TERHADAP PAKET NPM ANGULAR RILIS
+Lanjutan dari: analysis/SINK-REACHABILITY.txt
+Paket yang diuji: @angular/core@22.1.0, @angular/common@22.1.0, @angular/compiler@22.1.0
+Tanggal        : 2026-07-31
+==============================================================================
+
+TUJUAN
+------
+Memverifikasi bahwa dua temuan yang dinyatakan TERCAPAI pada analisis
+keterjangkauan (R-06 dan R-07) benar-benar ada di artefak npm yang dipasang
+pengguna, bukan hanya di kode sumber repositori. Ini adalah gerbang terakhir
+untuk mengeluarkan false positive: kode sumber bisa menipu bila ada
+transformasi build yang menambah/menghapus sesuatu.
+
+METODE: `npm install @angular/core@latest @angular/common@latest
+@angular/compiler@latest` lalu memeriksa berkas FESM2022 (format distribusi
+ES module yang dibundel per paket).
+
+==============================================================================
+V-01  R-06: Injeksi CSS satu-properti via [style.x]  ->  TERKONFIRMASI
+==============================================================================
+
+  BUKTI 1: Tanda tangan instruksi styling di npm bundle TIDAK memiliki
+  parameter sanitizer.
+
+  @angular/core fesm2022/_debug_node-chunk.mjs:
+
+    function ɵɵstyleProp(prop, value, suffix) {        // TANPA sanitizer
+      checkStylingProperty(prop, value, suffix, false);
+      return ɵɵstyleProp;
+    }
+
+    function ɵɵstyleMap(styles) {                      // TANPA sanitizer
+      checkStylingMap(styleKeyValueArraySet, styleStringParser, styles, false);
+    }
+
+  Sebagai pembanding, instruksi yang MEMILIKI sanitizer:
+
+    function ɵɵattribute(name, value, sanitizer, namespace) {  // ADA sanitizer
+      ...
+      elementAttributeInternal(tNode, lView, name, value, sanitizer, namespace);
+    }
+
+    function ɵɵproperty(propName, value, sanitizer) {  // ADA sanitizer
+
+  BUKTI 2: checkStylingProperty dan checkStylingMap dalam bundle tidak
+  memanggil fungsi sanitasi apa pun. Alur lengkap:
+    checkStylingProperty -> normalizeSuffix -> updateStyling -> applyStyling
+  Tidak ada titik di rantai ini yang memanggil ɵɵsanitizeStyle atau sanitizer
+  lain apa pun.
+
+  BUKTI 3: applyStyling di npm bundle menulis SATU properti lewat CSSOM:
+
+    function applyStyling(renderer, isClassBased, rNode, prop, value) {
+      ...
+      renderer.setStyle(rNode, prop, value, flags);
+      ...
+    }
+
+  Ini mengonfirmasi bahwa peramban hanya mem-parse nilai dalam konteks satu
+  properti CSS saja — nilai tidak bisa memekar menjadi deklarasi tambahan.
+
+  BUKTI 4: IR compiler tidak punya slot sanitizer untuk StyleProp:
+
+    @angular/compiler fesm2022/compiler.mjs:
+
+    function createStylePropOp(xref, name, expression, unit, sourceSpan) {
+      return { kind: OpKind.StyleProp, target: xref, name, expression, unit,
+               sourceSpan, ...TRAIT_DEPENDS_ON_SLOT_CONTEXT, ... };
+    }
+    // Tidak ada field 'sanitizer' — bandingkan dengan Attribute op yang punya.
+
+    Saat diturunkan ke instruksi akhir:
+      case OpKind.StyleProp:
+        OpList.replace(op, classProp(op.name, op.expression, op.sourceSpan));
+    // Tidak ada sanitizer yang diteruskan.
+
+    Sedangkan untuk Attribute:
+      case OpKind.Attribute:
+        OpList.replace(op, attribute(op.name, op.expression, op.sanitizer, ...));
+    // Sanitizer DITERUSKAN.
+
+  BUKTI 5: ɵɵsanitizeStyle BUKAN kode mati — ia diekspor di npm bundle dan
+  dipetakan oleh compiler untuk konteks [attr.style]:
+
+    @angular/compiler fesm2022/compiler.mjs:21395-21396:
+      case SecurityContext.STYLE:
+        expr = importExpr(Identifiers.sanitizeStyle).callFn([expr]);
+    // Ini untuk binding ATRIBUT biasa, bukan instruksi styling.
+
+    registerContext(SecurityContext.STYLE, undefined, [['*', ['style']]]);
+    // Schema mendaftarkan 'style' pada semua tag -> SecurityContext.STYLE.
+    // Tapi ini hanya berlaku untuk [attr.style], bukan [style.x]/[style].
+
+  KESIMPULAN V-01:
+    TERKONFIRMASI BUKAN FALSE POSITIVE.
+    [style.x] dan [style] melewati ɵɵstyleProp/ɵɵstyleMap yang memang tidak
+    menerima sanitizer — baik di kode sumber maupun di artefak npm rilis.
+    Dampaknya tetap INJEKSI CSS SATU-PROPERTI (bukan XSS), karena penulisan
+    lewat renderer.setStyle menggunakan CSSOM yang membatasi konteks parsing.
+    Ini PERILAKU YANG DIRANCANG, bukan cacat.
+
+==============================================================================
+V-02  R-07: Permintaan jaringan arbitrer via ngSrc    ->  TERKONFIRMASI
+==============================================================================
+
+  BUKTI 1: Rantai nilai ngSrc → src di npm bundle, tanpa sanitasi:
+
+  @angular/common fesm2022/common.mjs:
+
+    // Input ngSrc -> getRewrittenSrc -> callImageLoader -> setHostAttribute
+    getRewrittenSrc() {
+      if (!this._renderedSrc) {
+        const imgConfig = { src: this.ngSrc };
+        this._renderedSrc = this.callImageLoader(imgConfig);
+      }
+      return this._renderedSrc;
+    }
+
+    callImageLoader(configWithoutCustomParams) {
+      let augmentedConfig = configWithoutCustomParams;
+      if (this.loaderParams) { augmentedConfig.loaderParams = this.loaderParams; }
+      const ratio = this.getAspectRatio();
+      if (ratio !== null && augmentedConfig.width) {
+        augmentedConfig.height = Math.round(augmentedConfig.width / ratio);
+      }
+      return this.imageLoader(augmentedConfig);  // Pemanggilan loader
+    }
+
+    // Default loader: identitas langsung
+    const noopImageLoader = config => config.src;
+    // Artinya: ngSrc -> config.src -> setHostAttribute('src', ...) langsung
+
+    updateSrcAndSrcset(forceSrcRecalc = false) {
+      ...
+      const rewrittenSrc = this.getRewrittenSrc();
+      this.setHostAttribute('src', rewrittenSrc);  // <- SINK
+      ...
+    }
+
+    setHostAttribute(name, value) {
+      this.renderer.setAttribute(this.imgElement, name, value);  // Tanpa sanitasi
+    }
+
+  BUKTI 2: Guard data: dan blob: ada tapi HANYA di ngDevMode:
+
+    @angular/common fesm2022/common.mjs:780-789:
+    if (ngDevMode) {                              // <- DI DALAM ngDevMode
+      const ngZone = this.injector.get(NgZone);
+      assertNonEmptyInput(this, 'ngSrc', this.ngSrc);
+      ...
+      assertNotBase64Image(this);                 // <- Tolak data:
+      assertNotBlobUrl(this);                     // <- Tolak blob:
+      ...
+    }
+
+    Pada build produksi, ngDevMode di-tree-shake menjadi false oleh Terser/esbuild,
+    sehingga seluruh blok dihapus. Guard TIDAK ADA di bundel produksi.
+
+  BUKTI 3: Tidak ada panggilan sanitizer di seluruh @angular/common bundle:
+
+    $ grep 'sanitize\|ɵɵsanitize' common.mjs
+    (0 kecocokan)
+
+    Seluruh paket @angular/common tidak memuat fungsi sanitasi apa pun.
+    NgOptimizedImage menulis src/srcset melalui renderer.setAttribute tanpa
+    perantara keamanan apa pun.
+
+  BUKTI 4: Loader kustom (Cloudinary/Imgix/dll) tidak menambah sanitasi.
+
+    function createImageLoader(buildUrlFn, exampleUrls) {
+      return function provideImageLoader(path) {
+        ...
+        return (config) => { ... return buildUrlFn(path, {...config, src: normalizeSrc(config.src)}); };
+      };
+    }
+
+    normalizeSrc hanya menghapus garis miring awal. buildUrlFn membangun URL
+    dengan menggabungkan path + src. Tidak ada pemeriksaan keamanan.
+
+  KESIMPULAN V-02:
+    TERKONFIRMASI BUKAN FALSE POSITIVE.
+    ngSrc langsung menjadi atribut src pada <img> melalui renderer.setAttribute
+    tanpa sanitasi, baik di kode sumber maupun artefak npm rilis. Guard data:/blob:
+    hanya aktif di mode pengembangan. Dampaknya adalah PERMINTAAN JARINGAN
+    ARBITRER (bukan XSS, karena <img src> tidak mengeksekusi kode), yang bisa
+    menyebabkan kebocoran Referer, pelacakan, atau SSRF pada sisi loader.
+    Ini PERILAKU YANG DIRANCANG — img src bukan konteks RESOURCE_URL.
+
+==============================================================================
+RINGKASAN VALIDASI
+==============================================================================
+
+  Temuan    Sumber               NPM Paket      Status         Dampak
+  --------  -------------------  -------------  -------------  ----------------
+  R-06/V-01 [style.x]/[style]   @angular/core  TERKONFIRMASI  Injeksi CSS
+            ɵɵstyleProp/Map     @22.1.0                        satu-properti
+            tanpa sanitizer                                    (bukan XSS)
+
+  R-07/V-02 ngSrc -> img src    @angular/common TERKONFIRMASI  Permintaan
+            renderer.setAttribute @22.1.0                      jaringan
+            tanpa sanitizer                                    arbitrer
+                                                               (bukan XSS)
+
+  Keduanya BUKAN false positive: jalur kode yang sama persis terdapat di
+  artefak npm yang dipasang pengguna. Namun keduanya juga BUKAN cacat keamanan:
+
+  1. V-01 dilindungi oleh mekanisme CSSOM: renderer.setStyle menulis satu
+     properti, bukan seluruh deklarasi. Peramban membuang nilai tidak valid.
+     Menambah sanitizer di sini akan merusak kasus pakai sah (gradient, custom
+     properties, calc()) tanpa mengurangi risiko secara bermakna.
+
+  2. V-02 mengikuti model keamanan DOM: <img src> bukan konteks RESOURCE_URL,
+     melainkan URL biasa. Angular tidak menyanitasi URL biasa pada atribut src
+     karena img tidak mengeksekusi kode. Guard dev-only bersifat informatif
+     (mencegah kesalahan pengembang), bukan lapisan keamanan.
+
+  Kedua temuan ini layak masuk dalam MODEL ANCAMAN aplikasi yang memproses
+  data tidak tepercaya, tetapi tidak memerlukan perbaikan framework.
+
+==============================================================================
+CATATAN METODE
+==============================================================================
+Validasi dilakukan dengan memeriksa FESM2022 bundle dari paket npm rilis —
+berkas .mjs yang menjadi sumber ES import dalam bundler aplikasi (webpack,
+esbuild, Vite). Ini adalah representasi yang paling dekat dengan apa yang
+berakhir di bundel produksi pengguna, karena:
+  - Tree-shaking hanya MENGHAPUS kode, tidak menambah sanitizer baru
+  - ngDevMode dihapus oleh Terser/esbuild, bukan ditambah
+  - Tidak ada transformasi build Angular yang menyisipkan sanitizer setelah
+    kompilasi AOT
+
+Satu-satunya transformasi yang bisa mengubah kesimpulan ini adalah bila
+aplikasi memakai wrapper kustom di atas ɵɵstyleProp atau NgOptimizedImage
+yang menambah sanitasi sendiri — yang bukan tanggung jawab framework.

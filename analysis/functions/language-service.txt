@@ -1,0 +1,852 @@
+INVENTORY FUNGSI :: language-service
+Total simbol: 600 | file: 46
+Rincian: function=214, arrow=2, class=39, method=315, accessor=6, ctor=24
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## packages/language-service/api.ts
+[ ] isNgLanguageService  (export function) :498
+
+## packages/language-service/override_rename_ts_plugin.ts
+[ ] isAngularCore  (function) :11
+[ ] isExternalAngularCore  (function) :15
+[ ] isInternalAngularCore  (function) :19
+[ ] factory  (arrow) :27
+      -- This factory is used to disable the built-in rename provider, see `packages/language-service/README.md#override-rename-ts-plugin` for more info.
+
+## packages/language-service/plugin-factory.ts
+[ ] factory  (export arrow) :12
+
+## packages/language-service/src/adapters.ts
+[ ] LanguageServiceAdapter  (export class) :29
+[ ] LanguageServiceAdapter.constructor  (ctor) :43
+[ ] LanguageServiceAdapter.getSourceFile  (method) :47
+[ ] LanguageServiceAdapter.resourceNameToFileName  (method) :56
+[ ] LanguageServiceAdapter.isShim  (method) :76
+[ ] LanguageServiceAdapter.isResource  (method) :80
+[ ] LanguageServiceAdapter.fileExists  (method) :85
+[ ] LanguageServiceAdapter.readFile  (method) :89
+[ ] LanguageServiceAdapter.getCurrentDirectory  (method) :93
+[ ] LanguageServiceAdapter.getCanonicalFileName  (method) :97
+[ ] LanguageServiceAdapter.realpath  (method) :105
+      -- Return the real path of a symlink. This method is required in order to resolve symlinks in node_modules.
+[ ] LanguageServiceAdapter.readResource  (method) :115
+      -- readResource() is an Angular-specific method for reading files that are not managed by the TS compiler host, namely templates and stylesheets. It is a method on
+[ ] LanguageServiceAdapter.getModifiedResourceFiles  (method) :144
+[ ] LSParseConfigHost  (export class) :162
+      -- Used to read configuration files. A language service parse configuration host is independent of the adapter because signatures of calls like `FileSystem#readFil
+[ ] LSParseConfigHost.constructor  (ctor) :163
+[ ] LSParseConfigHost.exists  (method) :164
+[ ] LSParseConfigHost.readFile  (method) :167
+[ ] LSParseConfigHost.lstat  (method) :175
+[ ] LSParseConfigHost.readdir  (method) :188
+[ ] LSParseConfigHost.pwd  (method) :197
+[ ] LSParseConfigHost.extname  (method) :200
+[ ] LSParseConfigHost.resolve  (method) :203
+[ ] LSParseConfigHost.dirname  (method) :206
+[ ] LSParseConfigHost.join  (method) :209
+
+## packages/language-service/src/attribute_completions.ts
+[ ] buildAttributeCompletionTable  (export function) :216
+      -- Given an element and its context, produce a `Map` of all possible attribute completions. 3 kinds of attributes are considered for completion, from highest to lo
+[ ] buildSnippet  (function) :422
+[ ] addAttributeCompletionEntries  (export function) :455
+      -- Given an `AttributeCompletion`, add any available completions to a `ts.CompletionEntry` array of results. The kind of completions generated depends on whether t
+[ ] getDirectiveSymbol  (function) :609
+[ ] getAttributeCompletionSymbol  (export function) :620
+[ ] selectorAttributes  (function) :651
+      -- Iterates over `CssSelector` attributes, which are internally represented in a zipped array style which is not conducive to straightforward iteration.
+[ ] getStructuralAttributes  (function) :657
+[ ] buildAnimationCompletionEntries  (export function) :723
+
+## packages/language-service/src/codefixes/code_fixes.ts
+[ ] CodeFixes  (export class) :16
+[ ] CodeFixes.constructor  (ctor) :20
+[ ] CodeFixes.hasFixForCode  (method) :43
+[ ] CodeFixes.getCodeFixesAtPosition  (method) :51
+      -- When the user moves the cursor or hovers on a diagnostics, this function will be invoked by LS, and collect all the responses from the `codeActionMetas` which c
+[ ] CodeFixes.getAllCodeActions  (method) :99
+      -- When the user wants to fix the all same type of diagnostics in the `scope`, this function will be called and fix all diagnostics which will be filtered by the `
+
+## packages/language-service/src/codefixes/fix_invalid_banana_in_box.ts
+[ ] getTheBoundEventAtPosition  (function) :93
+[ ] convertBoundEventToTsTextChange  (function) :120
+      -- Flip the invalid "box in a banana" `([thing])` to the correct "banana in a box" `[(thing)]`.
+
+## packages/language-service/src/codefixes/fix_missing_import.ts
+[ ] getCodeActions  (function) :48
+
+## packages/language-service/src/codefixes/fix_missing_required_inputs.ts
+[ ] getBoundAttributes  (function) :158
+[ ] findLastAttributeInTheElement  (function) :197
+      -- If the last attribute is from the structural directive, it is skipped and returns the previous attribute.
+
+## packages/language-service/src/codefixes/fix_unused_standalone_imports.ts
+[ ] isFullyUnusedArray  (function) :165
+      -- Checks whether a diagnostic was reported on a node where all imports are unused.
+
+## packages/language-service/src/codefixes/utils.ts
+[ ] convertFileTextChangeInTcb  (export function) :62
+      -- Convert the span of `textChange` in the TCB to the span of the template.
+[ ] isFixAllAvailable  (export function) :124
+      -- 'fix all' is only available when there are multiple diagnostics that the code action meta indicates it can fix.
+
+## packages/language-service/src/compiler_factory.ts
+[ ] CompilerFactory  (export class) :33
+      -- Manages the `NgCompiler` instance which backs the language service, updating or replacing it as needed to produce an up-to-date understanding of the current pro
+[ ] CompilerFactory.constructor  (ctor) :37
+[ ] CompilerFactory.getOrCreate  (method) :43
+
+## packages/language-service/src/completions.ts
+[ ] buildBlockSnippet  (function) :103
+[ ] CompletionBuilder  (export class) :167
+      -- Performs autocompletion operations on a given node in the template. This class acts as a closure around all of the context required to perform the 3 autocomplet
+[ ] CompletionBuilder.constructor  (ctor) :175
+[ ] CompletionBuilder.getCompletionsAtPosition  (method) :193
+      -- Analogue for `ts.LanguageService.getCompletionsAtPosition`.
+[ ] CompletionBuilder.isLetCompletion  (method) :219
+[ ] CompletionBuilder.isBlockCompletion  (method) :223
+[ ] CompletionBuilder.getBlockCompletions  (method) :231
+[ ] CompletionBuilder.isLiteralCompletion  (method) :266
+[ ] CompletionBuilder.getLiteralCompletions  (method) :274
+[ ] CompletionBuilder.getCompletionEntryDetails  (method) :335
+      -- Analogue for `ts.LanguageService.getCompletionEntryDetails`.
+[ ] CompletionBuilder.getCompletionEntrySymbol  (method) :359
+      -- Analogue for `ts.LanguageService.getCompletionEntrySymbol`.
+[ ] CompletionBuilder.isPropertyExpressionCompletion  (method) :378
+      -- Determine if the current node is the completion of a property expression, and narrow the type of `this.node` if so. This narrowing gives access to additional me
+[ ] CompletionBuilder.getPropertyExpressionCompletion  (method) :393
+      -- Get completions for property expressions.
+[ ] CompletionBuilder.getPropertyExpressionCompletionDetails  (method) :461
+      -- Get the details of a specific completion for a property expression.
+[ ] CompletionBuilder.getPropertyExpressionCompletionSymbol  (method) :507
+      -- Get the `ts.Symbol` for a specific completion for a property expression.
+[ ] CompletionBuilder.getGlobalPropertyExpressionCompletion  (method) :538
+      -- Get completions for a property expression in a global context (e.g. `{{y|}}`).
+[ ] CompletionBuilder.getGlobalPropertyExpressionCompletionDetails  (method) :633
+      -- Get the details of a specific completion for a property expression in a global context (e.g. `{{y|}}`).
+[ ] CompletionBuilder.getGlobalPropertyExpressionCompletionSymbol  (method) :693
+      -- Get the `ts.Symbol` of a specific completion for a property expression in a global context (e.g. `{{y|}}`).
+[ ] CompletionBuilder.isElementTagCompletion  (method) :727
+[ ] CompletionBuilder.getElementTagCompletion  (method) :739
+[ ] CompletionBuilder.getTsNodeAtPosition  (method) :808
+[ ] CompletionBuilder.getElementTagCompletionDetails  (method) :816
+[ ] CompletionBuilder.getElementTagCompletionSymbol  (method) :888
+[ ] CompletionBuilder.isAnimationCompletion  (method) :908
+[ ] CompletionBuilder.getAnimationCompletions  (method) :916
+[ ] CompletionBuilder.isElementAttributeCompletion  (method) :982
+[ ] CompletionBuilder.getElementAttributeCompletions  (method) :993
+[ ] CompletionBuilder.getElementAttributeCompletionDetails  (method) :1168
+[ ] CompletionBuilder.getElementAttributeCompletionSymbol  (method) :1348
+[ ] CompletionBuilder.isPipeCompletion  (method) :1391
+[ ] CompletionBuilder.getPipeCompletions  (method) :1395
+[ ] CompletionBuilder.isValidNodeContextCompletion  (method) :1431
+      -- From the AST node of the cursor position, include completion of string literals, number literals, `true`, `false`, `null`, and `undefined`.
+[ ] makeReplacementSpanFromParseSourceSpan  (function) :1448
+[ ] makeReplacementSpanFromAst  (function) :1455
+[ ] tagCompletionKind  (function) :1481
+[ ] stripBindingSugar  (function) :1495
+[ ] nodeContextFromTarget  (function) :1506
+[ ] buildAnimationNameSpan  (function) :1531
+[ ] buildAnimationPhaseSpan  (function) :1535
+[ ] getClassPropertyNameFromDirective  (function) :1542
+
+## packages/language-service/src/definitions.ts
+[ ] DefinitionBuilder  (export class) :62
+[ ] DefinitionBuilder.constructor  (ctor) :65
+[ ] DefinitionBuilder.getDefinitionAndBoundSpan  (method) :72
+[ ] DefinitionBuilder.getDefinitionsForSymbol  (method) :114
+[ ] DefinitionBuilder.getDefinitionsForSymbols  (method) :185
+[ ] DefinitionBuilder.mapShimResultsToTemplates  (method) :200
+      -- Converts and definition info result that points to a template typecheck file to a reference to the corresponding location in the template.
+[ ] DefinitionBuilder.getTypeDefinitionsAtPosition  (method) :222
+[ ] DefinitionBuilder.getTypeDefinitionsForTemplateInstance  (method) :291
+[ ] DefinitionBuilder.getDirectiveTypeDefsForBindingNode  (method) :332
+[ ] DefinitionBuilder.getTypeDefinitionsForSymbols  (method) :368
+[ ] DefinitionBuilder.getDefinitionMetaAtPosition  (method) :375
+[ ] getDefinitionForExpressionAtPosition  (function) :403
+      -- Gets an Angular-specific definition in a TypeScript source file.
+
+## packages/language-service/src/document_symbols.ts
+[ ] getExpressionText  (function) :58
+      -- Gets the source text for an expression, truncated if too long.
+[ ] getTemplateDocumentSymbols  (export function) :83
+      -- Gets document symbols for Angular templates in the given file. For TypeScript files with inline templates, returns symbols for each template. For external templ
+[ ] TemplateSymbolVisitor  (class) :135
+      -- Visitor that walks the template AST and creates document symbols.
+[ ] TemplateSymbolVisitor.constructor  (ctor) :148
+[ ] TemplateSymbolVisitor.getSymbols  (method) :153
+[ ] TemplateSymbolVisitor.addSymbol  (method) :163
+[ ] TemplateSymbolVisitor.pushChildren  (method) :168
+[ ] TemplateSymbolVisitor.popChildren  (method) :173
+[ ] TemplateSymbolVisitor.visitIfBlock  (method) :178
+      -- Control flow blocks
+[ ] TemplateSymbolVisitor.visitIfBlockBranchWithIndex  (method) :185
+[ ] TemplateSymbolVisitor.visitIfBlockBranch  (method) :229
+      -- Keep the base class method as a no-op since we handle branches in visitIfBlock
+[ ] TemplateSymbolVisitor.visitForLoopBlock  (method) :233
+[ ] TemplateSymbolVisitor.visitForLoopBlockEmpty  (method) :282
+[ ] TemplateSymbolVisitor.visitSwitchBlock  (method) :296
+[ ] TemplateSymbolVisitor.visitSwitchBlockCaseGroup  (method) :313
+[ ] TemplateSymbolVisitor.visitSwitchBlockCase  (method) :351
+      -- Keep the base class method as a no-op since we handle cases in visitSwitchBlockCaseGroup
+[ ] TemplateSymbolVisitor.visitDeferredBlock  (method) :355
+[ ] TemplateSymbolVisitor.getDeferTriggerInfo  (method) :398
+      -- Gets human-readable trigger information for a @defer block.
+[ ] TemplateSymbolVisitor.getPrefetchTriggerInfo  (method) :438
+      -- Gets human-readable prefetch trigger information for a @defer block.
+[ ] TemplateSymbolVisitor.visitDeferredBlockPlaceholder  (method) :472
+[ ] TemplateSymbolVisitor.visitDeferredBlockLoading  (method) :490
+[ ] TemplateSymbolVisitor.visitDeferredBlockError  (method) :514
+[ ] TemplateSymbolVisitor.visitElement  (method) :529
+      -- Elements and components
+[ ] TemplateSymbolVisitor.visitComponent  (method) :551
+[ ] TemplateSymbolVisitor.visitTemplate  (method) :572
+[ ] TemplateSymbolVisitor.addTemplateVariableSymbol  (method) :616
+[ ] TemplateSymbolVisitor.getStructuralDirectiveInfo  (method) :644
+      -- Detects structural directives and returns generic display information based on microsyntax/template bindings (without directive-specific hardcoding).
+[ ] TemplateSymbolVisitor.visitContent  (method) :714
+[ ] TemplateSymbolVisitor.visitReference  (method) :726
+      -- Template variables and references
+[ ] TemplateSymbolVisitor.visitVariable  (method) :736
+[ ] TemplateSymbolVisitor.visitLetDeclaration  (method) :750
+
+## packages/language-service/src/inlay_hints.ts
+[ ] normalizeEventConfig  (function) :113
+      -- Normalize the eventParameterTypes config to a structured format.
+[ ] normalizePropertyConfig  (function) :141
+      -- Normalize the propertyBindingTypes config to a structured format.
+[ ] normalizeIfAliasConfig  (function) :164
+      -- Normalize the ifAliasTypes config to a structured format.
+[ ] isSimpleIfExpression  (function) :191
+      -- Check if an @if expression is a "simple" expression. Simple: @if (variable; as alias) - just a property read from implicit receiver Complex: @if (var == 2; as a
+[ ] getInlayHintsForTemplate  (export function) :209
+      -- Get Angular-specific inlay hints for a template.
+[ ] InlayHintVisitor  (class) :437
+      -- Visitor to collect inlay hints from template nodes
+[ ] InlayHintVisitor.visitForLoopBlock  (method) :438
+[ ] InlayHintVisitor.visitIfBlockBranch  (method) :504
+[ ] InlayHintVisitor.visitBoundEvent  (method) :544
+[ ] InlayHintVisitor.visitVariable  (method) :612
+[ ] InlayHintVisitor.visitLetDeclaration  (method) :644
+[ ] InlayHintVisitor.visitReference  (method) :671
+[ ] InlayHintVisitor.visitBoundText  (method) :698
+[ ] InlayHintVisitor.visitBoundAttribute  (method) :732
+[ ] InlayHintVisitor.visitTextAttribute  (method) :851
+[ ] InlayHintVisitor.visitSwitchBlock  (method) :893
+[ ] InlayHintVisitor.visitDeferredBlock  (method) :915
+[ ] PipeExpressionVisitor  (class) :983
+      -- Visitor for pipe expressions in interpolations and bindings
+[ ] PipeExpressionVisitor.constructor  (ctor) :984
+[ ] PipeExpressionVisitor.getResolvedPipeReturnType  (method) :1005
+      -- Get the resolved return type of a pipe call from the TCB. This uses TypeScript's actual overload resolution, which handles: - Overloaded method signatures (like
+[ ] PipeExpressionVisitor.visitPipe  (method) :1024
+[ ] FunctionArgumentVisitor  (class) :1169
+      -- Visitor for function/method call arguments to show parameter name hints. This follows TypeScript's inlay hints implementation for parameter names. Example: hand
+[ ] FunctionArgumentVisitor.constructor  (ctor) :1170
+[ ] FunctionArgumentVisitor.getResolvedSignature  (method) :1188
+      -- Get the resolved signature for a function call from the TCB. This uses TypeScript's actual overload resolution.
+[ ] FunctionArgumentVisitor.visitCall  (method) :1208
+[ ] FunctionArgumentVisitor.visitSafeCall  (method) :1213
+[ ] FunctionArgumentVisitor.processCallArguments  (method) :1218
+[ ] FunctionArgumentVisitor.argumentMatchesParameterName  (method) :1373
+      -- Check if the argument expression matches the parameter name. TypeScript skips parameter hints when the argument already conveys the parameter name. e.g., handle
+[ ] FunctionArgumentVisitor.isHintableLiteral  (method) :1388
+      -- Check if an argument is a "hintable literal" - used for 'literals' mode. TypeScript only shows parameter name hints for literal values in this mode. Includes: s
+[ ] FunctionArgumentVisitor.isSpecialLiteralIdentifier  (method) :1428
+      -- Check if an identifier name is a special literal-like value. TypeScript treats undefined, NaN, and Infinity as literals for hint purposes.
+[ ] FunctionArgumentVisitor.isSpecialNumericIdentifier  (method) :1436
+      -- Check if an identifier name is a special numeric value (NaN, Infinity). Used for unary expressions like -Infinity.
+[ ] FunctionArgumentVisitor.visitArrowFunction  (method) :1448
+      -- Visit arrow functions in template expressions. Provides: 1. Parameter type hints - like TS includeInlayFunctionParameterTypeHints 2. Return type hints - like TS
+[ ] unwrapAngularType  (function) :1545
+      -- Unwraps Angular wrapper types to get the underlying value type. Handles: EventEmitter<T>, OutputEmitterRef<T>, Observable<T>, Subject<T>,          InputSignal<T
+[ ] isRequiredInput  (function) :1575
+      -- Check if an input is required (input.required() or @Input with required: true). For signal inputs, we check the type signature: - Required: InputSignal<T> (no u
+[ ] getRequiredIndicator  (function) :1662
+      -- Get the visual indicator suffix for required inputs.
+[ ] getEventType  (function) :1697
+      -- Get the $event type for an event binding from TCB type inference. Returns null if the type cannot be determined. Handles: - @Output() EventEmitter<T> - output()
+[ ] getGlobalDomType  (function) :1751
+      -- Try to get a global DOM type (like MouseEvent, KeyboardEvent) from the type checker. Returns null if the type is not found in the global scope.
+[ ] getEventTypeFromHandler  (function) :1790
+      -- Get the event type by finding the $event reference in the handler and using its inferred type from the TCB.
+[ ] EventTypeVisitor  (class) :1798
+[ ] EventTypeVisitor.visitPropertyRead  (method) :1799
+[ ] processHostListenerArgumentTypes  (function) :1989
+      -- Process @HostListener argument expressions and add type hints. For decorators like `@HostListener('click', ['$event.target', '$event.clientX'])`, this shows the
+[ ] getDomPropertyType  (function) :2076
+
+## packages/language-service/src/language_service.ts
+[ ] LanguageService  (export class) :87
+[ ] LanguageService.constructor  (ctor) :93
+[ ] LanguageService.getCompilerOptions  (method) :113
+[ ] LanguageService.ensureProjectAnalyzed  (method) :121
+      -- Triggers the Angular compiler's analysis pipeline without performing per-file type checking.
+[ ] LanguageService.getSemanticDiagnostics  (method) :129
+[ ] LanguageService.getSuggestionDiagnostics  (method) :159
+[ ] LanguageService.getDefinitionAndBoundSpan  (method) :196
+[ ] LanguageService.getTypeDefinitionAtPosition  (method) :211
+[ ] LanguageService.getQuickInfoAtPosition  (method) :226
+[ ] LanguageService.provideInlayHints  (method) :246
+      -- Provide Angular-specific inlay hints for templates. This returns hints for: - @for loop variable types: `@for (user: User of users)` - @if alias types: `@if (da
+[ ] LanguageService.getQuickInfoAtPositionImpl  (method) :318
+[ ] LanguageService.getReferencesAtPosition  (method) :352
+[ ] LanguageService.getRenameInfo  (method) :362
+[ ] LanguageService.findRenameLocations  (method) :381
+[ ] LanguageService.getLinkedEditingRangeAtPosition  (method) :404
+      -- Gets linked editing ranges for synchronized editing of HTML tag pairs. When the cursor is on an element tag name, returns both the opening and closing tag name 
+[ ] LanguageService.getCompletionBuilder  (method) :414
+[ ] LanguageService.getEncodedSemanticClassifications  (method) :443
+[ ] LanguageService.getEncodedSemanticClassificationsImpl  (method) :453
+[ ] LanguageService.getTokenTypeFromClassification  (method) :514
+[ ] LanguageService.getTokenModifierFromClassification  (method) :521
+[ ] LanguageService.getCompletionsAtPosition  (method) :525
+[ ] LanguageService.getCompletionsAtPositionImpl  (method) :535
+[ ] LanguageService.getCompletionEntryDetails  (method) :552
+[ ] LanguageService.getSignatureHelpItems  (method) :573
+[ ] LanguageService.getOutliningSpans  (method) :587
+[ ] LanguageService.getTemplateDocumentSymbols  (method) :601
+      -- Gets document symbols for Angular templates, including control flow blocks, elements, components, template references, and @let declarations. Returns symbols in
+[ ] LanguageService.getCompletionEntrySymbol  (method) :610
+[ ] LanguageService.hasCodeFixesForErrorCode  (method) :636
+      -- Performance helper that can help make quick decisions for the VSCode language server to decide whether a code fix exists for the given error code. Related conte
+[ ] LanguageService.getCodeFixesAtPosition  (method) :640
+[ ] LanguageService.getCombinedCodeFix  (method) :675
+[ ] LanguageService.getComponentLocationsForTemplate  (method) :700
+[ ] LanguageService.getTemplateLocationForComponent  (method) :727
+[ ] LanguageService.getTcb  (method) :764
+[ ] LanguageService.getPossibleRefactorings  (method) :805
+[ ] LanguageService.applyRefactoring  (method) :833
+      -- Computes edits for applying the specified refactoring. VSCode explicitly split code actions into two stages:  - 1) what actions are active?  - 2) what are the e
+[ ] LanguageService.withCompilerAndPerfTracing  (method) :877
+      -- Provides an instance of the `NgCompiler` and traces perf results. Perf results are logged only if the log level is verbose or higher. This method is intended to
+[ ] LanguageService.getCompilerOptionsDiagnostics  (method) :890
+[ ] LanguageService.watchConfigFile  (method) :921
+[ ] logCompilerOptions  (function) :943
+[ ] parseNgCompilerOptions  (function) :949
+[ ] detectAngularCoreVersion  (function) :1000
+[ ] createProgramDriver  (function) :1044
+[ ] getOrCreateTypeCheckScriptInfo  (function) :1069
+[ ] isInTypeCheckContext  (function) :1100
+[ ] isHostBindingExpression  (function) :1118
+[ ] closestAncestorNode  (function) :1141
+[ ] isInAngularContext  (function) :1158
+[ ] findTightestNodeAtPosition  (function) :1182
+[ ] getUniqueLocations  (function) :1191
+[ ] filterNgDiagnosticsForFile  (function) :1222
+      -- There are several kinds of diagnostics returned by `NgCompiler` for a source file: 1. Angular-related non-template diagnostics from decorated classes within tha
+
+## packages/language-service/src/linked_editing_range.ts
+[ ] getLinkedEditingRangeAtPosition  (export function) :28
+      -- Gets linked editing ranges for synchronized editing of HTML tag pairs. When the cursor is on an element tag name, returns both the opening and closing tag name 
+[ ] isOnTagName  (function) :96
+      -- Checks if the position is on the tag name (opening or closing).
+[ ] isOnOpeningTagName  (function) :103
+      -- Checks if the position is on the opening tag name.
+[ ] isOnClosingTagName  (function) :112
+      -- Checks if the position is on the closing tag name.
+[ ] getLinkedTagNameRanges  (function) :125
+      -- Gets the text spans for both the opening and closing tag names. The spans use absolute offsets that are already correct for the source file.
+
+## packages/language-service/src/outlining_spans.ts
+[ ] getOutliningSpans  (export function) :27
+[ ] BlockVisitor  (class) :59
+[ ] BlockVisitor.getBlockSpans  (method) :62
+[ ] BlockVisitor.visit  (method) :88
+
+## packages/language-service/src/quick_info.ts
+[ ] QuickInfoBuilder  (export class) :54
+[ ] QuickInfoBuilder.constructor  (ctor) :58
+[ ] QuickInfoBuilder.get  (method) :69
+[ ] QuickInfoBuilder.getQuickInfoForSymbol  (method) :106
+[ ] QuickInfoBuilder.getQuickInfoForBindingSymbol  (method) :135
+[ ] QuickInfoBuilder.getQuickInfoForElementSymbol  (method) :149
+[ ] QuickInfoBuilder.getQuickInfoForVariableSymbol  (method) :169
+[ ] QuickInfoBuilder.getQuickInfoForLetDeclarationSymbol  (method) :185
+[ ] QuickInfoBuilder.getQuickInfoForReferenceSymbol  (method) :200
+[ ] QuickInfoBuilder.getQuickInfoForPipeSymbol  (method) :215
+[ ] QuickInfoBuilder.getQuickInfoForDomBinding  (method) :232
+[ ] QuickInfoBuilder.getQuickInfoForDirectiveSymbol  (method) :249
+[ ] QuickInfoBuilder.getQuickInfoForSelectorlessSymbol  (method) :276
+[ ] QuickInfoBuilder.getQuickInfoFromTypeDefAtLocation  (method) :298
+[ ] QuickInfoBuilder.getQuickInfoAtTcbLocation  (method) :309
+[ ] updateQuickInfoKind  (function) :322
+[ ] displayPartsEqual  (function) :346
+
+## packages/language-service/src/quick_info_built_ins.ts
+[ ] isDollarAny  (export function) :29
+[ ] createDollarAnyQuickInfo  (export function) :39
+[ ] isDollarSafeNavigationMigration  (export function) :55
+[ ] createDollarSafeNavigationMigration  (export function) :65
+[ ] createNgTemplateQuickInfo  (export function) :82
+      -- TODO(atscott): Create special `ts.QuickInfo` for `ng-template` and `ng-container` as well.
+[ ] createQuickInfoForBuiltIn  (export function) :98
+
+## packages/language-service/src/refactorings/convert_to_signal_input/apply_input_refactoring.ts
+[ ] applySignalInputRefactoring  (export function) :25
+
+## packages/language-service/src/refactorings/convert_to_signal_input/decorators.ts
+[ ] isDecoratorInputClassField  (export function) :14
+[ ] isDirectiveOrComponentWithInputs  (export function) :25
+
+## packages/language-service/src/refactorings/convert_to_signal_input/full_class_input_refactoring.ts
+[ ] BaseConvertFullClassToSignalInputsRefactoring  (class) :27
+      -- Base language service refactoring action that can convert `@Input()` declarations of a full class to signal inputs. The user can click on an class with `@Input`
+[ ] BaseConvertFullClassToSignalInputsRefactoring.constructor  (ctor) :30
+[ ] BaseConvertFullClassToSignalInputsRefactoring.isApplicable  (method) :32
+[ ] BaseConvertFullClassToSignalInputsRefactoring.computeEditsForFix  (method) :72
+[ ] ConvertFullClassToSignalInputsRefactoring  (export class) :107
+[ ] ConvertFullClassToSignalInputsBestEffortRefactoring  (export class) :112
+
+## packages/language-service/src/refactorings/convert_to_signal_input/individual_input_refactoring.ts
+[ ] BaseConvertFieldToSignalInputRefactoring  (class) :32
+      -- Base language service refactoring action that can convert a single individual `@Input()` declaration to a signal inputs The user can click on an `@Input` proper
+[ ] BaseConvertFieldToSignalInputRefactoring.constructor  (ctor) :35
+[ ] BaseConvertFieldToSignalInputRefactoring.isApplicable  (method) :37
+[ ] BaseConvertFieldToSignalInputRefactoring.computeEditsForFix  (method) :76
+[ ] ConvertFieldToSignalInputRefactoring  (export class) :111
+[ ] ConvertFieldToSignalInputBestEffortRefactoring  (export class) :116
+
+## packages/language-service/src/refactorings/convert_to_signal_queries/apply_query_refactoring.ts
+[ ] applySignalQueriesRefactoring  (export function) :26
+
+## packages/language-service/src/refactorings/convert_to_signal_queries/decorators.ts
+[ ] isDecoratorQueryClassField  (export function) :14
+[ ] isDirectiveOrComponentWithQueries  (export function) :31
+
+## packages/language-service/src/refactorings/convert_to_signal_queries/full_class_query_refactoring.ts
+[ ] BaseConvertFullClassToSignalQueriesRefactoring  (class) :27
+      -- Base language service refactoring action that can convert decorator queries of a full class to signal queries. The user can click on an class with decorator que
+[ ] BaseConvertFullClassToSignalQueriesRefactoring.constructor  (ctor) :30
+[ ] BaseConvertFullClassToSignalQueriesRefactoring.isApplicable  (method) :32
+[ ] BaseConvertFullClassToSignalQueriesRefactoring.computeEditsForFix  (method) :72
+[ ] ConvertFullClassToSignalQueriesRefactoring  (export class) :107
+[ ] ConvertFullClassToSignalQueriesBestEffortRefactoring  (export class) :112
+
+## packages/language-service/src/refactorings/convert_to_signal_queries/individual_query_refactoring.ts
+[ ] BaseConvertFieldToSignalQueryRefactoring  (class) :29
+      -- Base language service refactoring action that can convert a single individual decorator query declaration to a signal query The user can click on an `@ViewChild
+[ ] BaseConvertFieldToSignalQueryRefactoring.constructor  (ctor) :32
+[ ] BaseConvertFieldToSignalQueryRefactoring.isApplicable  (method) :34
+[ ] BaseConvertFieldToSignalQueryRefactoring.computeEditsForFix  (method) :73
+[ ] ConvertFieldToSignalQueryRefactoring  (export class) :108
+[ ] ConvertFieldToSignalQueryBestEffortRefactoring  (export class) :114
+
+## packages/language-service/src/references_and_rename.ts
+[ ] ReferencesBuilder  (export class) :34
+[ ] ReferencesBuilder.constructor  (ctor) :37
+[ ] ReferencesBuilder.getReferencesAtPosition  (method) :44
+[ ] ReferencesBuilder.getReferencesAtTemplatePosition  (method) :53
+[ ] ReferencesBuilder.getReferencesAtTypescriptPosition  (method) :73
+[ ] isDirectRenameContext  (function) :176
+[ ] RenameBuilder  (export class) :189
+[ ] RenameBuilder.constructor  (ctor) :192
+[ ] RenameBuilder.getRenameInfo  (method) :199
+[ ] RenameBuilder.findRenameLocations  (method) :269
+[ ] RenameBuilder.findRenameLocationsAtTemplatePosition  (method) :286
+[ ] RenameBuilder.findRenameLocationsAtTypescriptPosition  (method) :312
+[ ] RenameBuilder.getTsNodeAtPosition  (method) :376
+[ ] RenameBuilder.buildRenameRequestsFromTemplateDetails  (method) :384
+[ ] RenameBuilder.buildRenameRequestAtTypescriptPosition  (method) :435
+[ ] RenameBuilder.buildPipeRenameRequest  (method) :456
+[ ] RenameBuilder.buildSelectorlessRenameRequest  (method) :482
+[ ] RenameBuilder.getSelectorlessRenameLocations  (method) :496
+      -- Gets the rename locations for a selectorless request.
+[ ] getExpectedRenameTextAndInitialRenameEntries  (function) :584
+      -- From the provided `RenameRequest`, determines what text we should expect all produced `ts.RenameLocation`s to have and creates an initial entry for indirect ren
+[ ] getRenameRequestPosition  (function) :628
+      -- Given a `RenameRequest`, determines the `FilePosition` to use asking the native TS LS for rename locations.
+
+## packages/language-service/src/references_and_rename_utils.ts
+[ ] toFilePosition  (function) :68
+      -- Converts a `TcbLocation` to a more genericly named `FilePosition`.
+[ ] getTargetDetailsAtTemplatePosition  (export function) :94
+      -- Takes a position in a template and finds equivalent targets in TS files as well as details about the targeted template node.
+[ ] getPositionsForDirectives  (function) :263
+      -- Given a set of `DirectiveSymbol`s, finds the equivalent `FilePosition` of the class declaration.
+[ ] getPositionForDirective  (function) :278
+      -- Gets the `FilePosition` for a single directive symbol.
+[ ] createLocationKey  (export function) :302
+      -- Creates a "key" for a rename/reference location by concatenating file name, span start, and span length. This allows us to de-duplicate template results when an
+[ ] convertToTemplateDocumentSpan  (export function) :313
+      -- Converts a given `ts.DocumentSpan` in a shim file to its equivalent `ts.DocumentSpan` in the template. You can optionally provide a `requiredNodeText` that ensu
+[ ] getRenameTextAndSpanAtPosition  (export function) :380
+      -- Finds the text and `ts.TextSpan` for the node at a position in a template.
+[ ] getParentClassMeta  (export function) :432
+      -- Retrieves the `PipeMeta` or `DirectiveMeta` of the given `ts.Node`'s parent class. Returns `null` if the node has no parent class or there is no meta associated
+[ ] SelectorlessCollector  (export class) :444
+      -- Visitor that collects all selectorless AST nodes from a template.
+[ ] SelectorlessCollector.getSelectorlessNodes  (method) :447
+[ ] SelectorlessCollector.visit  (method) :453
+
+## packages/language-service/src/semantic_tokens.ts
+[ ] getClassificationsForTemplate  (export function) :88
+[ ] ClassificationVisitor  (class) :105
+[ ] ClassificationVisitor.constructor  (ctor) :107
+[ ] ClassificationVisitor.getSpans  (method) :112
+[ ] ClassificationVisitor.visit  (method) :116
+[ ] ClassificationVisitor.visitElement  (method) :122
+[ ] ClassificationVisitor.visitContent  (method) :141
+[ ] ClassificationVisitor.visitContentBlock  (method) :145
+[ ] ClassificationVisitor.visitVariable  (method) :149
+[ ] ClassificationVisitor.visitReference  (method) :150
+[ ] ClassificationVisitor.visitTextAttribute  (method) :151
+[ ] ClassificationVisitor.visitBoundAttribute  (method) :152
+[ ] ClassificationVisitor.visitBoundEvent  (method) :153
+[ ] ClassificationVisitor.visitText  (method) :154
+[ ] ClassificationVisitor.visitBoundText  (method) :155
+[ ] ClassificationVisitor.visitIcu  (method) :156
+[ ] ClassificationVisitor.visitDeferredBlock  (method) :158
+[ ] ClassificationVisitor.visitDeferredBlockPlaceholder  (method) :165
+[ ] ClassificationVisitor.visitDeferredBlockError  (method) :169
+[ ] ClassificationVisitor.visitDeferredBlockLoading  (method) :173
+[ ] ClassificationVisitor.visitDeferredTrigger  (method) :177
+[ ] ClassificationVisitor.visitSwitchBlock  (method) :179
+[ ] ClassificationVisitor.visitSwitchBlockCase  (method) :183
+[ ] ClassificationVisitor.visitSwitchBlockCaseGroup  (method) :185
+[ ] ClassificationVisitor.visitSwitchExhaustiveCheck  (method) :189
+[ ] ClassificationVisitor.visitForLoopBlock  (method) :191
+[ ] ClassificationVisitor.visitForLoopBlockEmpty  (method) :196
+[ ] ClassificationVisitor.visitIfBlock  (method) :200
+[ ] ClassificationVisitor.visitIfBlockBranch  (method) :204
+[ ] ClassificationVisitor.visitTemplate  (method) :208
+[ ] ClassificationVisitor.visitUnknownBlock  (method) :212
+[ ] ClassificationVisitor.visitLetDeclaration  (method) :213
+[ ] ClassificationVisitor.visitComponent  (method) :215
+[ ] ClassificationVisitor.visitDirective  (method) :216
+[ ] ClassificationVisitor.visitAll  (method) :218
+[ ] ClassificationVisitor.rangeIntersectsWith  (method) :224
+[ ] ClassificationVisitor.classifyAs  (method) :230
+
+## packages/language-service/src/signature_help.ts
+[ ] getSignatureHelp  (export function) :21
+      -- Queries the TypeScript Language Service to get signature help for a template position.
+
+## packages/language-service/src/template_target.ts
+[ ] OutsideKeyValueMarkerAst  (class) :252
+      -- Special marker AST that can be used when the cursor is within the `sourceSpan` but not the key or value span of a node with key/value spans.
+[ ] OutsideKeyValueMarkerAst.visit  (method) :253
+[ ] getTargetAtPosition  (export function) :274
+      -- Return the template AST node or expression AST node that most accurately represents the node at the specified cursor `position`.
+[ ] findFirstMatchingNodeForSourceSpan  (function) :391
+[ ] getTcbNodesOfTemplateAtPosition  (export function) :413
+      -- Return the nodes in `TCB` of the node at the specified cursor `position`.
+[ ] TemplateTargetVisitor  (class) :457
+      -- Visitor which, given a position and a template, identifies the node within the template at that position, as well as records the path of increasingly nested nod
+[ ] TemplateTargetVisitor.visitTemplate  (method) :462
+[ ] TemplateTargetVisitor.constructor  (ctor) :486
+[ ] TemplateTargetVisitor.visit  (method) :488
+[ ] TemplateTargetVisitor.visitElement  (method) :529
+[ ] TemplateTargetVisitor.visitTemplate  (method) :533
+[ ] TemplateTargetVisitor.visitComponent  (method) :537
+[ ] TemplateTargetVisitor.visitDirective  (method) :541
+[ ] TemplateTargetVisitor.visitDirectiveHost  (method) :545
+[ ] TemplateTargetVisitor.visitContent  (method) :587
+[ ] TemplateTargetVisitor.visitContentBlock  (method) :592
+[ ] TemplateTargetVisitor.visitVariable  (method) :596
+[ ] TemplateTargetVisitor.visitReference  (method) :600
+[ ] TemplateTargetVisitor.visitTextAttribute  (method) :604
+[ ] TemplateTargetVisitor.visitBoundAttribute  (method) :608
+[ ] TemplateTargetVisitor.visitBoundEvent  (method) :614
+[ ] TemplateTargetVisitor.visitText  (method) :620
+[ ] TemplateTargetVisitor.visitBoundText  (method) :624
+[ ] TemplateTargetVisitor.visitIcu  (method) :628
+[ ] TemplateTargetVisitor.visitDeferredBlock  (method) :637
+[ ] TemplateTargetVisitor.visitDeferredBlockPlaceholder  (method) :641
+[ ] TemplateTargetVisitor.visitDeferredBlockError  (method) :645
+[ ] TemplateTargetVisitor.visitDeferredBlockLoading  (method) :649
+[ ] TemplateTargetVisitor.visitDeferredTrigger  (method) :653
+[ ] TemplateTargetVisitor.visitSwitchBlock  (method) :661
+[ ] TemplateTargetVisitor.visitSwitchBlockCase  (method) :670
+[ ] TemplateTargetVisitor.visitSwitchBlockCaseGroup  (method) :674
+[ ] TemplateTargetVisitor.visitSwitchExhaustiveCheck  (method) :679
+[ ] TemplateTargetVisitor.visitForLoopBlock  (method) :683
+[ ] TemplateTargetVisitor.visitForLoopBlockEmpty  (method) :692
+[ ] TemplateTargetVisitor.visitIfBlock  (method) :696
+[ ] TemplateTargetVisitor.visitIfBlockBranch  (method) :700
+[ ] TemplateTargetVisitor.visitUnknownBlock  (method) :706
+[ ] TemplateTargetVisitor.visitLetDeclaration  (method) :708
+[ ] TemplateTargetVisitor.visitAll  (method) :712
+[ ] TemplateTargetVisitor.visitBinding  (method) :718
+[ ] ExpressionVisitor  (class) :724
+[ ] ExpressionVisitor.constructor  (ctor) :726
+[ ] ExpressionVisitor.visit  (method) :730
+[ ] getSpanIncludingEndTag  (function) :750
+[ ] isWithinNode  (function) :775
+      -- Checks whether a position is within an AST node.
+[ ] isWithinTagBody  (function) :792
+      -- Checks whether a position is within the body or the start syntax of a node.
+
+## packages/language-service/src/ts_plugin.ts
+[ ] create  (export function) :29
+[ ] withFallback  (function) :38
+[ ] getSyntacticDiagnostics  (function) :48
+[ ] getSuggestionDiagnostics  (function) :58
+[ ] getSemanticDiagnostics  (function) :67
+[ ] getQuickInfoAtPosition  (function) :76
+[ ] getTypeDefinitionAtPosition  (function) :80
+[ ] getDefinitionAndBoundSpan  (function) :87
+[ ] getDefinitionAtPosition  (function) :94
+[ ] getReferencesAtPosition  (function) :101
+[ ] findRenameLocations  (function) :108
+[ ] getRenameInfo  (function) :119
+[ ] getEncodedSemanticClassifications  (function) :125
+[ ] getTokenTypeFromClassification  (function) :143
+[ ] getTokenModifierFromClassification  (function) :146
+[ ] getCompletionsAtPosition  (function) :150
+[ ] getCompletionEntryDetails  (function) :158
+[ ] getCompletionEntrySymbol  (function) :190
+[ ] getCompilerOptionsDiagnostics  (function) :206
+      -- Gets global diagnostics related to the program configuration and compiler options.
+[ ] getSignatureHelpItems  (function) :215
+[ ] getOutliningSpans  (function) :223
+[ ] getTcb  (function) :227
+[ ] getComponentLocationsForTemplate  (function) :234
+      -- Given an external template, finds the associated components that use it as a `templateUrl`.
+[ ] getTemplateLocationForComponent  (function) :244
+      -- Given a location inside a component, finds the location of the inline template or the file for the `templateUrl`.
+[ ] getApplicableRefactors  (function) :251
+[ ] applyRefactoring  (function) :264
+[ ] getCodeFixesAtPosition  (function) :273
+[ ] getCombinedCodeFix  (function) :306
+[ ] getTypescriptLanguageService  (function) :323
+[ ] getLinkedEditingRangeAtPosition  (function) :327
+[ ] ensureProjectAnalyzed  (function) :353
+[ ] getAngularInlayHints  (function) :357
+[ ] getTemplateDocumentSymbols  (function) :365
+[ ] getExternalFiles  (function) :409
+[ ] initialize  (export function) :435
+      -- Implementation of a ts.server.PluginModuleFactory
+
+## packages/language-service/src/utils/decorators.ts
+[ ] isDirectiveOrComponent  (export function) :12
+
+## packages/language-service/src/utils/display_parts.ts
+[ ] getSymbolDisplayInfo  (export function) :58
+[ ] createDisplayParts  (export function) :104
+      -- Construct a compound `ts.SymbolDisplayPart[]` which incorporates the container and type of a target declaration.
+[ ] unsafeCastDisplayInfoKindToScriptElementKind  (export function) :145
+      -- Convert a `SymbolDisplayInfoKind` to a `ts.ScriptElementKind` type, allowing it to pass through TypeScript APIs. In practice, this is an "illegal" type cast. Si
+[ ] getQuickInfoFromTypeDefAtLocation  (function) :151
+[ ] getDirectiveDisplayInfo  (export function) :165
+[ ] getTsSymbolDisplayInfo  (export function) :194
+
+## packages/language-service/src/utils/format.ts
+[ ] guessIndentationInSingleLine  (export function) :19
+      -- Try to guess the indentation of the node. This function returns the indentation only if the start character of this node is the first non-whitespace character i
+
+## packages/language-service/src/utils/index.ts
+[ ] getTextSpanOfNode  (export function) :48
+[ ] toTextSpan  (export function) :60
+[ ] isTemplateNodeWithKeyAndValue  (export function) :77
+[ ] isWithinKey  (export function) :83
+[ ] isWithinKeyValue  (export function) :93
+[ ] isTemplateNode  (export function) :103
+[ ] isExpressionNode  (export function) :108
+[ ] getInlineTypeCheckInfoAtPosition  (function) :117
+[ ] getTypeCheckInfoAtPosition  (export function) :177
+      -- Retrieves the `ts.ClassDeclaration` at a location along with its template AST nodes.
+[ ] tsDeclarationSortComparator  (function) :198
+      -- First, attempt to sort component declarations by file name. If the files are the same, sort by start location of the declaration.
+[ ] getFirstComponentForTemplateFile  (export function) :210
+[ ] toAttributeCssSelector  (function) :234
+      -- Given an attribute node, converts it to string form for use as a CSS selector.
+[ ] getNodeName  (function) :249
+[ ] getAttributes  (function) :256
+      -- Given a template or element node, returns all attributes on the node.
+[ ] difference  (function) :273
+      -- Given two `Set`s, returns all items in the `left` which do not appear in the `right`.
+[ ] getDirectiveMatchesForElementTag  (export function) :295
+      -- TODO(atscott): Add unit tests for this and the one for attributes
+[ ] makeElementSelector  (export function) :309
+[ ] getDirectiveMatchesForAttribute  (export function) :326
+      -- Given an attribute name, determines which directives match because the attribute is present. We find which directives are applied because of this attribute by e
+[ ] getDirectiveMatchesForSelector  (function) :349
+      -- Given a list of directives and a text to use as a selector, returns the directives which match for the selector.
+[ ] filterAliasImports  (export function) :381
+      -- Returns a new `ts.SymbolDisplayPart` array which has the alias imports from the tcb filtered out, i.e. `i0.NgForOf`.
+[ ] isImportAlias  (function) :383
+[ ] isDotPunctuation  (function) :386
+[ ] isDollarEvent  (export function) :403
+[ ] isTypeScriptFile  (export function) :407
+[ ] isExternalTemplate  (export function) :411
+[ ] isWithin  (export function) :415
+[ ] getTemplateLocationFromTcbLocation  (export function) :433
+      -- For a given location in a shim file, retrieves the corresponding file url for the template and the span in the template.
+[ ] isBoundEventWithSyntheticHandler  (export function) :463
+[ ] createQuickInfo  (export function) :489
+      -- Construct a QuickInfo object taking into account its container and type.
+
+## packages/language-service/src/utils/ts_utils.ts
+[ ] findTightestNode  (export function) :31
+      -- Return the node that most tightly encompasses the specified `position`.
+[ ] findAllMatchingNodes  (export function) :46
+      -- Finds TypeScript nodes descending from the provided root which match the given filter.
+[ ] findFirstMatchingNode  (export function) :61
+      -- Finds TypeScript nodes descending from the provided root which match the given filter.
+[ ] getClassDeclarationFromSymbolReference  (export function) :88
+      -- Resolves a ClassDeclaration from a SymbolReference.
+[ ] getParentClassDeclaration  (export function) :107
+[ ] getPropertyAssignmentFromValue  (export function) :121
+      -- Returns a property assignment from the assignment value if the property name matches the specified `key`, or `null` if there is no match.
+[ ] getClassDeclFromDecoratorProp  (export function) :152
+      -- Given a decorator property assignment, return the ClassDeclaration node that corresponds to the directive class the property applies to. If the property assignm
+[ ] collectMemberMethods  (export function) :177
+      -- Collects all member methods, including those from base classes.
+[ ] addElementToArrayLiteral  (export function) :194
+      -- Given an existing array literal expression, update it by pushing a new expression.
+[ ] objectPropertyAssignmentForKey  (export function) :205
+      -- Given an ObjectLiteralExpression node, extract and return the PropertyAssignment corresponding to the given key. `null` if no such key exists.
+[ ] updateObjectValueForKey  (export function) :220
+      -- Given an ObjectLiteralExpression node, create or update the specified key, using the provided callback to generate the new value (possibly based on an old value
+[ ] ensureArrayWithIdentifier  (export function) :238
+      -- Create a new ArrayLiteralExpression, or accept an existing one. Ensure the array contains the provided identifier. Returns the array, either updated or newly cr
+[ ] hasImport  (export function) :257
+      -- Determine whether this an import of the given `propertyName` from a particular module specifier already exists. If so, return the local name for that import, wh
+[ ] nameInExportScope  (function) :272
+[ ] importHas  (function) :280
+      -- Determine whether this import declaration already contains an import of the given `propertyName`, and if so, the name it can be referred to with in the local sc
+[ ] importCollisionExists  (function) :311
+      -- Given an unqualified name, determine whether an existing import is already using this name in the current scope. TODO: It would be better to check if *any* symb
+[ ] suggestAlternativeSymbolNames  (function) :324
+      -- Generator function that yields an infinite sequence of alternative aliases for a given symbol name.
+[ ] nonCollidingImportName  (export function) :334
+      -- Transform the given import name into an alias that does not collide with any other import symbol.
+[ ] standaloneTraitOrNgModule  (export function) :348
+      -- If the provided trait is standalone, just return it. Otherwise, returns the owning ngModule.
+[ ] updateImportsForTypescriptFile  (export function) :373
+      -- Updates the imports on a TypeScript file, by ensuring the provided import is present. Returns the text changes, as well as the name with which the imported symb
+[ ] updateImportsForAngularTrait  (export function) :433
+      -- Updates a given Angular trait, such as an NgModule or standalone Component, by adding `importName` to the list of imports on the decorator arguments.
+[ ] isStandaloneDecorator  (export function) :556
+      -- Return whether a given Angular decorator specifies `standalone: true`.
+[ ] generateImport  (export function) :589
+      -- Generate a new import. Follows the format: ```ts import {exportedSpecifierName as localName} from 'rawModuleSpecifier'; ``` If the component is exported by defa
+[ ] updateImport  (export function) :625
+      -- Update an existing named import with a new member. If `exportedSpecifierName` is null, or is equal to `name`, then the qualified import alias will be omitted. I
+[ ] getOrCreatePrinter  (function) :670
+      -- Get a ts.Printer for printing AST nodes, reusing the previous Printer if already created.
+[ ] printNode  (export function) :681
+      -- Print a given TypeScript node into a string. Used to serialize entirely synthetic generated AST, which will not have `.text` or `.fullText` set.
+[ ] getCodeActionToImportTheDirectiveDeclaration  (export function) :688
+      -- Get the code actions to tell the vscode how to import the directive into the standalone component or ng module.
+[ ] getStringLiteralText  (function) :790
+[ ] PotentialDirectiveModuleSpecifierResolverImpl  (class) :859
+      -- Try to compute the module specifier after applying the paths from tsconfig or package.json export rules. Try to reuse the module specifier if the import in the 
+[ ] PotentialDirectiveModuleSpecifierResolverImpl.constructor  (ctor) :860
+[ ] PotentialDirectiveModuleSpecifierResolverImpl.resolve  (method) :869
+[ ] PotentialDirectiveModuleSpecifierResolverImpl.getMatchTsEntry  (method) :901
+[ ] getModuleSpecifierFromImportStatement  (function) :924
+      -- Get the module specifier from the code actions returned by the `ls.getCompletionEntryDetails`. If the directive needs to update the import statement, the code a
+[ ] findTsCompletionEntryInfoForImport  (function) :997
+[ ] moduleSpecifierPointsToSymbol  (function) :1027
+[ ] getModuleSpecifierIfExists  (function) :1054
+      -- Retrieve all imports from the `importOn` and check if any import can export the node specified by `toImport`. If a matching import is found, attempt to reuse it
+
+## packages/language-service/testing/src/buffer.ts
+[ ] OpenBuffer  (export class) :16
+      -- A file that is currently open in the `ts.Project`, with a cursor position.
+[ ] OpenBuffer.constructor  (ctor) :19
+[ ] OpenBuffer.cursor  (accessor) :26
+[ ] OpenBuffer.contents  (accessor) :30
+[ ] OpenBuffer.contents  (accessor) :35
+[ ] OpenBuffer.close  (method) :55
+[ ] OpenBuffer.moveCursorToText  (method) :65
+      -- Find a snippet of text within the given buffer and position the cursor within it.     the cursor should be placed within the snippet when located in the larger 
+[ ] OpenBuffer.getDefinitionAndBoundSpan  (method) :81
+      -- Execute the `getDefinitionAndBoundSpan` operation in the Language Service at the cursor location in this buffer.
+[ ] OpenBuffer.getEncodedSemanticClassifications  (method) :85
+[ ] OpenBuffer.getCompletionsAtPosition  (method) :96
+[ ] OpenBuffer.getCompletionEntryDetails  (method) :102
+[ ] OpenBuffer.getTcb  (method) :118
+[ ] OpenBuffer.getOutliningSpans  (method) :122
+[ ] OpenBuffer.getTemplateLocationForComponent  (method) :126
+[ ] OpenBuffer.getQuickInfoAtPosition  (method) :130
+[ ] OpenBuffer.getTypeDefinitionAtPosition  (method) :134
+[ ] OpenBuffer.getReferencesAtPosition  (method) :138
+[ ] OpenBuffer.findRenameLocations  (method) :142
+[ ] OpenBuffer.getRenameInfo  (method) :146
+[ ] OpenBuffer.getSignatureHelpItems  (method) :150
+[ ] OpenBuffer.getInlayHints  (method) :154
+[ ] extractCursorInfo  (function) :177
+      -- Given a text snippet which contains exactly one cursor symbol ('¦'), extract both the offset of that cursor within the text as well as the text snippet without 
+
+## packages/language-service/testing/src/env.ts
+[ ] LanguageServiceTestEnv  (export class) :25
+      -- Testing environment for the Angular Language Service, which creates an in-memory tsserver instance that backs a Language Service to emulate an IDE that uses the
+[ ] LanguageServiceTestEnv.setup  (method) :27
+[ ] LanguageServiceTestEnv.constructor  (ctor) :68
+[ ] LanguageServiceTestEnv.addProject  (method) :73
+[ ] LanguageServiceTestEnv.getProject  (method) :91
+[ ] LanguageServiceTestEnv.getTextFromTsSpan  (method) :95
+[ ] LanguageServiceTestEnv.expectNoSourceDiagnostics  (method) :103
+
+## packages/language-service/testing/src/host.ts
+[ ] MockServerHost  (export class) :17
+[ ] MockServerHost.newLine  (accessor) :18
+[ ] MockServerHost.useCaseSensitiveFileNames  (accessor) :22
+[ ] MockServerHost.readFile  (method) :27
+[ ] MockServerHost.resolvePath  (method) :31
+[ ] MockServerHost.fileExists  (method) :35
+[ ] MockServerHost.directoryExists  (method) :41
+[ ] MockServerHost.createDirectory  (method) :47
+[ ] MockServerHost.getExecutingFilePath  (method) :51
+[ ] MockServerHost.getCurrentDirectory  (method) :57
+[ ] MockServerHost.createHash  (method) :61
+[ ] MockServerHost.args  (accessor) :65
+[ ] MockServerHost.watchFile  (method) :69
+[ ] MockServerHost.watchDirectory  (method) :78
+[ ] MockServerHost.setTimeout  (method) :87
+[ ] MockServerHost.clearTimeout  (method) :91
+[ ] MockServerHost.setImmediate  (method) :95
+[ ] MockServerHost.clearImmediate  (method) :99
+[ ] MockServerHost.write  (method) :103
+[ ] MockServerHost.writeFile  (method) :107
+[ ] MockServerHost.getDirectories  (method) :111
+[ ] MockServerHost.readDirectory  (method) :115
+[ ] MockServerHost.exit  (method) :125
+
+## packages/language-service/testing/src/language_service_test_cache.ts
+[ ] patchLanguageServiceProjectsWithTestHost  (export function) :23
+      -- Updates `ts.server.Project` to use efficient test caching of source files that aren't expected to be changed. E.g. the default libs.
+
+## packages/language-service/testing/src/project.ts
+[ ] writeTsconfig  (function) :30
+[ ] Project  (export class) :84
+[ ] Project.initialize  (method) :90
+[ ] Project.constructor  (ctor) :140
+[ ] Project.getAbsFileName  (method) :155
+[ ] Project.openFile  (method) :159
+[ ] Project.getSourceFile  (method) :186
+[ ] Project.getTypeChecker  (method) :191
+[ ] Project.getDiagnosticsForFile  (method) :195
+[ ] Project.getSuggestionDiagnosticsForFile  (method) :207
+[ ] Project.getCodeFixesAtPosition  (method) :214
+[ ] Project.getRefactoringsAtPosition  (method) :233
+[ ] Project.applyRefactoring  (method) :241
+[ ] Project.getCombinedCodeFix  (method) :251
+[ ] Project.expectNoSourceDiagnostics  (method) :264
+[ ] Project.expectNoTemplateDiagnostics  (method) :300
+[ ] Project.getTemplateTypeChecker  (method) :313
+[ ] Project.getLogger  (method) :317
+[ ] Project.getLinkedEditingRangeAtPosition  (method) :321
+[ ] Project.getSemanticDiagnostics  (method) :329
+[ ] getClassOrError  (function) :335
+
+## packages/language-service/testing/src/util.ts
+[ ] assertFileNames  (export function) :19
+      -- Expect that a list of objects with a `fileName` property matches a set of expected files by only comparing the file names and not any path prefixes. This assert
+[ ] assertFilePaths  (export function) :31
+      -- Expect that a list of objects with a `fileName` property matches a set of file paths. This assertion is independent of the order of either list.
+[ ] assertTextSpans  (export function) :57
+[ ] isNgSpecificDiagnostic  (export function) :69
+      -- Returns whether the given `ts.Diagnostic` is of a type only produced by the Angular compiler (as opposed to being an upstream TypeScript diagnostic). Template t
+[ ] getFirstClassDeclaration  (function) :74
+[ ] createModuleAndProjectWithDeclarations  (export function) :82
+[ ] AppModule  (export class) :109
+[ ] createProjectWithStandaloneDeclarations  (export function) :120
+[ ] humanizeDocumentSpanLike  (export function) :140
+[ ] getText  (export function) :160
+[ ] last  (function) :164

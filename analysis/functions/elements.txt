@@ -1,0 +1,72 @@
+INVENTORY FUNGSI :: elements
+Total simbol: 35 | file: 4
+Rincian: function=11, class=4, method=16, accessor=1, ctor=3
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## packages/elements/src/component-factory-strategy.ts
+[ ] ComponentNgElementStrategyFactory  (export class) :48
+      -- Factory that creates new ComponentNgElementStrategy instance. Gets the component factory with the constructor's injector's factory resolver and passes that fact
+[ ] ComponentNgElementStrategyFactory.constructor  (ctor) :53
+[ ] ComponentNgElementStrategyFactory.create  (method) :60
+[ ] ComponentNgElementStrategy  (export class) :69
+      -- Creates and destroys a component ref using a component factory and handles change detection in response to input changes.
+[ ] ComponentNgElementStrategy.constructor  (ctor) :101
+[ ] ComponentNgElementStrategy.connect  (method) :116
+      -- Initializes a new component if one has not yet been created and cancels any scheduled destruction.
+[ ] ComponentNgElementStrategy.disconnect  (method) :136
+      -- Schedules the component to be destroyed after some small delay in case the element is just being moved across the DOM.
+[ ] ComponentNgElementStrategy.getInputValue  (method) :158
+      -- Returns the component property value. If the component has not yet been created, the value is retrieved from the cached initialization values.
+[ ] ComponentNgElementStrategy.setInputValue  (method) :172
+      -- Sets the input value for the property. If the component has not yet been created, the value is cached and set when the component is created.
+[ ] ComponentNgElementStrategy.initializeComponent  (method) :200
+      -- Creates a new component through the component factory with the provided element host and sets up its initial inputs, listens for outputs changes, and runs an in
+[ ] ComponentNgElementStrategy.initializeInputs  (method) :221
+      -- Set any stored initial inputs on the component's properties.
+[ ] ComponentNgElementStrategy.initializeOutputs  (method) :230
+      -- Sets up listeners for the component's outputs so that the events stream emits the events.
+[ ] ComponentNgElementStrategy.runInZone  (method) :245
+      -- Runs in the angular zone, if present.
+
+## packages/elements/src/create-custom-element.ts
+[ ] NgElement  (export class) :44
+      -- Implements the functionality needed for a custom element.
+[ ] NgElement.attributeChangedCallback  (method) :62
+      -- Prototype for a handler that responds to a change in an observed attribute.
+[ ] NgElement.connectedCallback  (method) :72
+      -- Prototype for a handler that responds to the insertion of the custom element in the DOM.
+[ ] NgElement.disconnectedCallback  (method) :77
+      -- Prototype for a handler that responds to the deletion of the custom element from the DOM.
+[ ] createCustomElement  (export function) :132
+      --  @description Creates a custom element class based on an Angular component. Builds a class that encapsulates the functionality of the provided component and use
+[ ] NgElementImpl  (class) :143
+[ ] NgElementImpl.ngElementStrategy  (accessor) :148
+[ ] NgElementImpl.constructor  (ctor) :177
+[ ] NgElementImpl.attributeChangedCallback  (method) :181
+[ ] NgElementImpl.connectedCallback  (method) :191
+[ ] NgElementImpl.disconnectedCallback  (method) :218
+[ ] NgElementImpl.subscribeToEvents  (method) :230
+
+## packages/elements/src/extract-projectable-nodes.ts
+[ ] extractProjectableNodes  (export function) :15
+[ ] findMatchingIndex  (function) :40
+
+## packages/elements/src/utils.ts
+[ ] camelToDashCase  (export function) :28
+      -- Convert a camelCased string to kebab-cased.
+[ ] isElement  (export function) :35
+      -- Check whether the input is an `Element`.
+[ ] isFunction  (export function) :42
+      -- Check whether the input is a function.
+[ ] kebabToCamelCase  (export function) :49
+      -- Convert a kebab-cased string to camelCased.
+[ ] matchesSelector  (export function) :60
+      -- Check whether an `Element` matches a CSS selector. NOTE: this is duplicated from @angular/upgrade, and can be consolidated in the future
+[ ] strictEquals  (export function) :77
+      -- Test two values for strict equality, accounting for the fact that `NaN !== NaN`.
+[ ] getDefaultAttributeToPropertyInputs  (export function) :82
+      -- Gets a map of default set of attributes to observe and the properties they affect.
+[ ] getComponentInputs  (export function) :99
+      -- Gets a component's set of inputs. Uses the injector to get the component factory where the inputs are defined.

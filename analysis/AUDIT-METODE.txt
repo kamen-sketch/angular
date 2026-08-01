@@ -1,0 +1,207 @@
+AUDIT METODE — menguji temuan sesi ini terhadap kritik bug hunting berbasis AI
+==============================================================================
+Berkas ini bukan ringkasan temuan. Ini penilaian terhadap MUTU BUKTI temuan
+sendiri, memakai rantai validasi:
+
+    Hipotesis -> Code trace lengkap -> Negative control -> Positive control
+    -> Runtime proof -> Security impact -> Reproduction independen
+
+Aturan yang saya pegang: kolom yang tidak saya kerjakan ditulis TIDAK, bukan
+dikaburkan. "PASS" pada sebuah uji hanya berarti uji itu tidak memicu bug —
+bukan bukti aman.
+
+==============================================================================
+1. TABEL MUTU BUKTI PER TEMUAN
+==============================================================================
+Legenda: YA = dikerjakan & terdokumentasi | SEB = sebagian | TIDAK = tidak dikerjakan
+
+  temuan  hipo  trace  neg-ctl  pos-ctl  runtime  impact   repro-indep
+  ------  ----  -----  -------  -------  -------  -------  -----------
+  F-01    YA    YA     YA       YA       YA       YA(nol)  YA  <- baru
+  F-02    YA    YA     YA       YA       n/a      YA(nol)  SEB
+  F-03    YA    SEB    TIDAK    TIDAK    TIDAK    YA(nol)  TIDAK
+  F-04    YA    YA     TIDAK    TIDAK    TIDAK    YA(nol)  TIDAK
+  F-05    YA    YA     SEB      YA       TIDAK    SEB      TIDAK
+  F-06    YA    YA     YA       YA       SEB      YA(nol)  TIDAK
+  F-07    YA    YA     YA       TIDAK    TIDAK    YA(nol)  TIDAK
+  F-08    YA    YA     YA       YA       YA       YA(tbts) YA (benih)
+  F-09    YA    YA     YA       YA       YA       YA       YA
+
+Hanya F-01 dan F-08 yang menempuh rantai penuh.
+
+F-09 kini menempuh rantai PENUH. Kolom IMPACT sempat berstatus SEB karena
+penanaman cookie hanya diasumsikan; setelah didemonstrasikan dengan dua host
+nyata (penyerang di origin berbeda, tanpa XSS di origin korban), F-09 menjadi
+satu-satunya temuan sesi ini dengan rantai lengkap DARI kemampuan penyerang
+SAMPAI dampak.
+
+F-08 kolom IMPACT "tbts" = terbatas: pencocokan rute terbukti berbeda dan
+desinkronisasi lapisan terukur, tetapi komposisi ujung-ke-ujung pada aplikasi
+SSR berautentikasi belum dijalankan.
+
+==============================================================================
+2. CELAH PALING SERIUS YANG SUDAH DITUTUP: repro independen F-01
+==============================================================================
+Masalahnya (persis butir 7 dan 10 kritik):
+  Seluruh bukti peramban F-01 memakai PORT TANGAN html_sanitizer.ts + inert_body.ts
+  ke dalam sanitizer.js. Bila transkripsi saya meleset satu karakter — urutan
+  pernyataan, kondisi keluar, urutan replace — maka yang saya buktikan adalah
+  perilaku KODE SAYA SENDIRI, bukan perilaku Angular. Harness yang salah
+  menghasilkan "bukti" yang meyakinkan tetapi kosong.
+
+Yang dikerjakan untuk menutupnya:
+  Memanggil fungsi YANG BENAR-BENAR DIKIRIM npm. `ɵ_sanitizeHtml` ternyata
+  diekspor publik dari @angular/core@22.1.0, sehingga bundel FESM2022 asli dapat
+  dimuat di Chromium lewat import map (butuh shim resolusi ala Node karena rxjs
+  mengimpor tanpa ekstensi, plus tslib).
+
+  Hasil: 12 vektor, 12 keluaran IDENTIK, 0 berbeda, 0 gagal.
+  Bukti: analysis/evidence/npm-vs-port-verification.png
+  Perkakas: analysis/tools/mxss-browser/real-npm.html + serve-and-check.mjs
+
+Artinya: kesimpulan F-01 tidak lagi bergantung pada ketepatan transkripsi saya.
+Ini menaikkan F-01 dari "diuji dengan kode buatan sendiri" menjadi "diuji dengan
+artefak yang dipasang pengguna".
+
+CATATAN JUJUR: yang diverifikasi adalah KESEPADANAN PERILAKU pada 12 vektor,
+bukan kesetaraan kode baris demi baris. Vektor ke-13 secara teori masih bisa
+membedakan keduanya. Ini melemahkan risiko transkripsi, tidak menghapusnya.
+
+==============================================================================
+3. KELEMAHAN YANG MASIH ADA (tidak ditutup sesi ini)
+==============================================================================
+
+3.1 [DITUTUP] Fuzzing sudah dikerjakan — lihat bagian 7.
+    Catatan asli: hanya vektor yang SAYA pikirkan
+    Seluruh vektor mXSS disusun dari pengetahuan pola yang sudah dikenal
+    (foreign content, raw-text element, foster parenting). Ini persis bias
+    butir 6: mengulang bentuk yang sudah sering diuji. Rantai mutasi >=3 ronde
+    yang TIDAK terpikirkan tidak akan pernah muncul.
+    Yang seharusnya: fuzzer diferensial yang membandingkan loop cacat vs loop
+    benar atas HTML acak, dengan oracle "keluaran berbeda" — bukan daftar
+    vektor buatan tangan.
+
+3.2 Coverage tidak diukur sama sekali
+    Tidak ada satu pun angka coverage di sesi ini. Saya tidak tahu cabang mana
+    di html_sanitizer.ts / i18n_parse.ts yang tidak pernah tersentuh harness.
+    Klaim "32+ vektor" adalah ukuran USAHA, bukan ukuran CAKUPAN.
+
+3.3 Analisis lintas fungsi dikerjakan manual, tanpa alat
+    Keterjangkauan F-05 dan F-07 ditentukan dengan menelusuri pemanggil dengan
+    mata. Tidak ada call-graph, tidak ada taint tracking. Untuk F-07 saya
+    menyimpulkan "irisan kosong" dari tiga pengamatan; satu jalur yang terlewat
+    membalik kesimpulan itu.
+
+3.4 Konfigurasi build hanya diuji satu titik
+    Diuji: Chromium 141, produksi npm. TIDAK diuji: Firefox/Safari (parser HTML
+    berbeda — justru relevan untuk mXSS), platform-server/domino, ngDevMode
+    aktif, Trusted Types dipaksa aktif. F-05 bahkan MENUNTUT ngDevMode mati,
+    dan saya tidak pernah menjalankan build produksi SSR sungguhan.
+
+3.5 Dampak keamanan: nol untuk hampir semua temuan
+    Enam dari tujuh temuan berdampak nol pada aplikasi hari ini. Itu bukan
+    kegagalan pelaporan — memang begitu hasilnya — tetapi harus terus terang:
+    yang dikumpulkan sesi ini adalah UTANG KEBERSIHAN KEAMANAN, bukan kerentanan.
+    F-01 pun sudah diukur dan hasilnya `anyLiveDanger = false`.
+
+3.6 Tidak ada peninjau lain
+    Setiap hipotesis, harness, dan tafsir hasil berasal dari satu sumber: saya.
+    Butir 10 kritik tidak dapat diatasi dari dalam. Repro independen di bagian 2
+    hanya mengurangi satu bentuknya (kesalahan transkripsi), bukan bias tafsir.
+
+==============================================================================
+4. DI MANA SAYA MEMANG SEMPAT "MEYAKINKAN DIRI SENDIRI"
+==============================================================================
+Dua kejadian nyata di sesi ini, dicatat karena keduanya membenarkan butir 10:
+
+  (a) Laporan F-01 pertama ditolak. Buktinya simulasi JS dengan `transform`
+      abstrak (s => s + 'x'). Simulasi itu membuktikan sifat LOOP, tetapi saya
+      menyajikannya seolah membuktikan sesuatu tentang PERAMBAN. Reviewer benar.
+
+  (b) Verifikasi simbol G-07 sempat melaporkan "0 menggantung" — hasil yang
+      SALAH — karena ambang naif "muncul <= 1 kali". Simbol yang menggantung
+      justru disebut DUA kali (dua salinan schema). Kalau saya berhenti di situ
+      dan percaya keluarannya, F-02 akan tampak terbantah oleh alat saya sendiri.
+
+Keduanya ketahuan bukan karena metode saya, melainkan karena ada yang menantang
+hasilnya. Itu argumen langsung untuk peninjau manusia.
+
+==============================================================================
+5. YANG PALING BERGUNA DARI SESI INI (penilaian ulang)
+==============================================================================
+Bukan daftar temuannya. Yang bernilai adalah PERGESERAN SASARAN:
+
+  29 pola sink -> ~360 kandidat -> 0 cacat
+   7 pola garda -> puluhan kandidat -> 4 cacat (F-01, F-05, F-06, F-07)
+
+Pola sink mencari "operasi berbahaya". Model keamanan Angular rapat terhadap itu:
+compiler menentukan SecurityContext, runtime menjalankan. Yang tidak rapat adalah
+GARDA YANG GAGAL MENJAGA — anggaran tak terpakai, validator dilucuti di produksi,
+gate bocor lewat prototipe, cabang array hilang. Semua itu tak terlihat sebagai
+"kode berbahaya", persis butir 5 kritik.
+
+Dan konsisten dengan butir "AI sebagai pengganda, bukan pengganti": nilai
+sesungguhnya ada pada PEMETAAN dan PEMBANGKITAN KANDIDAT yang dapat diulang
+(analysis/regex-corpus/, semuanya bervalidasi-diri), bukan pada vonis akhir.
+Vonis exploitability tetap butuh manusia.
+
+==============================================================================
+6. YANG SEHARUSNYA DIKERJAKAN BERIKUTNYA (urut manfaat)
+==============================================================================
+  1. Fuzzer diferensial loop mXSS: HTML acak, oracle = keluaran loop-cacat
+     berbeda dari loop-benar. Menutup 3.1 dan sebagian 3.2. Paling mungkin
+     mengubah F-01 dari "regresi defense-in-depth" menjadi temuan berdampak,
+     ATAU membuktikan tidak ada dampak dengan jauh lebih kuat.
+  2. Ulangi battery pada Firefox dan WebKit. Parser berbeda = titik stabil
+     berbeda. Menutup 3.4, dan mXSS memang sensitif terhadap ini.
+  3. Ukur coverage cabang html_sanitizer.ts saat battery berjalan. Menutup 3.2.
+  4. Bangun aplikasi SSR produksi sungguhan untuk F-05, alih-alih membangun
+     ulang template literalnya. Menutup 3.4 untuk F-05.
+  5. Lengkapi negative/positive control untuk F-03, F-04, F-07.
+
+==============================================================================
+7. HASIL FUZZING DIFERENSIAL (menutup 3.1, menyelesaikan F-01)
+==============================================================================
+Perkakas : analysis/tools/mxss-browser/fuzz.html + run-fuzz.mjs
+Bukti    : analysis/evidence/mxss-fuzz-20k.png
+Kasus    : 20.000   benih: 20260731 (deterministik, dapat diulang)
+
+Tata bahasanya sengaja dicondongkan ke pemicu mutasi parser — foreign content
+(svg/math/foreignObject/annotation-xml/mtext/mglyph), elemen teks-mentah
+(style/xmp/plaintext/textarea/noscript/iframe), foster parenting tabel, dan
+tag yang SERING dibiarkan terbuka supaya penutupan otomatis peramban ikut diuji.
+
+  Orakel 1  validasi port berkelanjutan (npm asli vs port tangan)
+            cocok 20.000 / beda 0
+            -> Port terbukti sepadan pada 20.000 masukan acak, bukan lagi 12
+               vektor buatan tangan. Risiko transkripsi praktis tertutup.
+
+  Orakel 2  keluaran BUGGY vs FIXED berbeda   -> 0 temuan
+            -> Cacat loop TIDAK PERNAH mengubah keluaran, sekali pun.
+
+  Orakel 3  FIXED menolak tetapi BUGGY diam   -> 5 temuan
+            Setelah minimisasi otomatis, KELIMANYA mengerucut ke satu bentuk:
+                <plaintext>/ms>      /b>"<plaintext>     <plaintext -->
+                <plaintext>oup>      e><plaintext>>
+            -> Satu-satunya konstruksi tak-stabil di seluruh ruang uji adalah
+               `<plaintext>`, yakni yang sudah ditemukan manual. Fuzzer tidak
+               menemukan keluarga baru.
+
+  Orakel 4  keluaran versi RILIS berbahaya saat diparse ulang -> 0 temuan
+
+KESIMPULAN F-01 (final)
+-----------------------
+F-01 adalah cacat logika NYATA (garda fail-closed menjadi fail-open, kode mati),
+tetapi TANPA dampak keluaran. Ini bukan lagi pendapat berdasarkan vektor pilihan
+sendiri: 20.000 kasus acak yang dicondongkan ke mutasi parser tidak menghasilkan
+satu pun selisih keluaran maupun simpul berbahaya. Serializer allowlist menahan
+sepenuhnya, berapa pun ronde yang dilakukan loop.
+
+Nilai hasil NEGATIF ini: ia menutup butir 6 kritik (bias pola CVE lama) untuk
+F-01 secara khusus, dan mencegah temuan ini dilaporkan berlebihan. Bila suatu
+hari ada yang mengklaim F-01 sebagai XSS, berkas ini beserta benihnya adalah
+bantahannya.
+
+BATAS YANG TETAP ADA: 20.000 kasus dari SATU tata bahasa di SATU peramban.
+Tata bahasa lain (mis. yang menghasilkan atribut dengan entitas bersarang dalam)
+atau parser lain (Firefox/WebKit) masih dapat berperilaku berbeda.

@@ -1,0 +1,423 @@
+INVENTORY FUNGSI :: localize
+Total simbol: 237 | file: 44
+Rincian: function=83, class=28, method=110, accessor=2, ctor=14
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## packages/localize/schematics/ng-add/index.ts
+[ ] addPolyfillToConfig  (function) :27
+[ ] addTypeScriptConfigTypes  (function) :65
+[ ] addTripleSlashType  (function) :150
+[ ] moveToDependencies  (function) :157
+
+## packages/localize/src/localize/src/localize.ts
+[ ] stripBlock  (function) :178
+      -- Strip a delimited "block" from the start of the `messagePart`, if it is found. If a marker character (:) actually appears in the content at the start of a tagge
+
+## packages/localize/src/translate.ts
+[ ] loadTranslations  (export function) :64
+      -- Load translations for use by `$localize`, if doing runtime translation. If the `$localize` tagged strings are not going to be replaced at compiled time, it is p
+[ ] clearTranslations  (export function) :91
+      -- Remove all translations for `$localize`, if doing runtime translation. All translations that had been loading into memory using `loadTranslations()` will be rem
+[ ] translate  (export function) :101
+      -- Translate the text of the given message, using the loaded translations. This function may reorder (or remove) substitutions as indicated in the matching transla
+
+## packages/localize/src/utils/src/messages.ts
+[ ] parseMessage  (export function) :171
+      -- Parse a `$localize` tagged string into a structure that can be used for translation or extraction. See `ParsedMessage` for an example.
+[ ] parseMetadata  (export function) :247
+      -- Parse the given message part (`cooked` + `raw`) to extract the message metadata from the text. If the message part has a metadata block this function will extra
+[ ] parsePlaceholder  (export function) :286
+      -- Parse the given message part (`cooked` + `raw`) to extract any placeholder metadata from the text. If the message part has a metadata block this function will e
+[ ] splitBlock  (export function) :319
+      -- Split a message part (`cooked` + `raw`) into an optional delimited "block" off the front and the rest of the text of the message part. Blocks appear at the star
+[ ] computePlaceholderName  (function) :331
+[ ] findEndOfBlock  (export function) :344
+      -- Find the end of a "marked block" indicated by the first non-escaped colon.
+
+## packages/localize/src/utils/src/translations.ts
+[ ] MissingTranslationError  (export class) :24
+[ ] MissingTranslationError.constructor  (ctor) :26
+[ ] isMissingTranslationError  (export function) :31
+[ ] translate  (export function) :51
+      -- Translate the text of the `$localize` tagged-string (i.e. `messageParts` and `substitutions`) using the given `translations`. The tagged-string is parsed to ext
+[ ] parseTranslation  (export function) :93
+      -- Parse the `messageParts` and `placeholderNames` out of a target `message`. Used by `loadTranslations()` to convert target message strings into a structure that 
+[ ] makeParsedTranslation  (export function) :117
+      -- Create a `ParsedTranslation` from a set of `messageParts` and `placeholderNames`.
+[ ] makeTemplateObject  (export function) :138
+      -- Create the specialized array that is passed to tagged-string tag functions.
+[ ] describeMessage  (function) :143
+
+## packages/localize/tools/src/diagnostics.ts
+[ ] Diagnostics  (export class) :20
+      -- This class is used to collect and then report warnings and errors that occur during the execution of the tools.
+[ ] Diagnostics.hasErrors  (accessor) :22
+[ ] Diagnostics.add  (method) :25
+[ ] Diagnostics.warn  (method) :30
+[ ] Diagnostics.error  (method) :33
+[ ] Diagnostics.merge  (method) :36
+[ ] Diagnostics.formatDiagnostics  (method) :39
+
+## packages/localize/tools/src/extract/duplicates.ts
+[ ] checkDuplicateMessages  (export function) :19
+      -- Check each of the given `messages` to find those that have the same id but different message text. Add diagnostics messages for each of these duplicate messages
+[ ] serializeMessage  (function) :53
+      -- Serialize the given `message` object into a string.
+
+## packages/localize/tools/src/extract/extraction.ts
+[ ] MessageExtractor  (export class) :33
+      -- Extracts parsed messages from file contents, by parsing the contents as JavaScript and looking for occurrences of `$localize` in the source code.
+[ ] MessageExtractor.constructor  (ctor) :39
+[ ] MessageExtractor.extractMessages  (method) :50
+[ ] MessageExtractor.updateSourceLocations  (method) :76
+      -- Update the location of each message to point to the source-mapped original source location, if available.
+[ ] MessageExtractor.getOriginalLocation  (method) :119
+      -- Find the original location using source-maps if available.     `location` in the generated `sourceFile`.
+
+## packages/localize/tools/src/extract/index.ts
+[ ] extractTranslations  (export function) :79
+[ ] getSerializer  (function) :124
+
+## packages/localize/tools/src/extract/source_files/es2015_extract_plugin.ts
+[ ] makeEs2015ExtractPlugin  (export function) :20
+
+## packages/localize/tools/src/extract/source_files/es5_extract_plugin.ts
+[ ] makeEs5ExtractPlugin  (export function) :22
+
+## packages/localize/tools/src/extract/translation_files/arb_translation_serializer.ts
+[ ] ArbTranslationSerializer  (export class) :38
+      -- A translation serializer that can render JSON formatted as an Application Resource Bundle (ARB). See https://github.com/google/app-resource-bundle/wiki/Applicat
+[ ] ArbTranslationSerializer.constructor  (ctor) :39
+[ ] ArbTranslationSerializer.serialize  (method) :45
+[ ] ArbTranslationSerializer.serializeMessage  (method) :67
+[ ] ArbTranslationSerializer.serializeMeta  (method) :71
+[ ] ArbTranslationSerializer.serializeLocation  (method) :99
+[ ] getMessageId  (function) :110
+
+## packages/localize/tools/src/extract/translation_files/format_options.ts
+[ ] validateOptions  (export function) :19
+      -- Check that the given `options` are allowed based on the given `validOptions`.
+[ ] parseFormatOptions  (export function) :45
+      -- Parse the given `optionString` into a collection of `FormatOptions`.
+
+## packages/localize/tools/src/extract/translation_files/icu_parsing.ts
+[ ] extractIcuPlaceholders  (export function) :52
+      -- Split the given `text` into an array of "static strings" and ICU "placeholder names". This is required because ICU expressions in `$localize` tagged messages ma
+[ ] IcuPieces  (class) :97
+      -- A helper class to store the pieces ("static text" or "placeholder name") in an ICU.
+[ ] IcuPieces.addText  (method) :105
+      -- Add the given `text` to the current "static text" piece. Sequential calls to `addText()` will append to the current text piece.
+[ ] IcuPieces.addPlaceholder  (method) :112
+      -- Add the given placeholder `name` to the stored pieces.
+[ ] IcuPieces.toArray  (method) :123
+      -- Return the stored pieces as an array of strings. Even values are static strings (e.g. 0, 2, 4, etc) Odd values are placeholder names (e.g. 1, 3, 5, etc)
+[ ] StateStack  (class) :134
+      -- A helper class to track the current state of parsing the strings for ICU placeholders. State changes happen when we enter or leave a curly brace block. Since IC
+[ ] StateStack.enterBlock  (method) :142
+      -- Update the state upon entering a block. The new state is computed from the current state and added to the stack.
+[ ] StateStack.leaveBlock  (method) :165
+      -- Update the state upon leaving a block. The previous state is popped off the stack.
+[ ] StateStack.nestedIcu  (method) :175
+      -- Update the state upon arriving at a nested ICU. In this case, the current state of "placeholder" is incorrect, so this is popped off and the correct "icu" state
+[ ] StateStack.getCurrent  (method) :184
+      -- Get the current (most recent) state from the stack.
+[ ] tryParsePlaceholder  (function) :200
+      -- Attempt to parse a simple placeholder name from a curly braced block. If the block contains a comma `,` then it cannot be a placeholder - and is probably a nest
+[ ] assert  (function) :212
+
+## packages/localize/tools/src/extract/translation_files/json_translation_serializer.ts
+[ ] SimpleJsonTranslationSerializer  (export class) :24
+      -- This is a semi-public bespoke serialization format that is used for testing and sometimes as a format for storing translations that will be inlined at runtime.
+[ ] SimpleJsonTranslationSerializer.constructor  (ctor) :25
+[ ] SimpleJsonTranslationSerializer.serialize  (method) :26
+
+## packages/localize/tools/src/extract/translation_files/legacy_message_id_migration_serializer.ts
+[ ] LegacyMessageIdMigrationSerializer  (export class) :17
+      -- A translation serializer that generates the mapping file for the legacy message ID migration. The file is used by the `localize-migrate` script to migrate exist
+[ ] LegacyMessageIdMigrationSerializer.constructor  (ctor) :18
+[ ] LegacyMessageIdMigrationSerializer.serialize  (method) :20
+[ ] shouldMigrate  (function) :51
+      -- Returns true if a message needs to be migrated.
+
+## packages/localize/tools/src/extract/translation_files/utils.ts
+[ ] consolidateMessages  (export function) :25
+      -- Consolidate messages into groups that have the same id. Messages with the same id are grouped together so that we can quickly deduplicate messages when renderin
+[ ] hasLocation  (export function) :51
+      -- Does the given message have a location property?
+[ ] compareLocations  (export function) :57
+
+## packages/localize/tools/src/extract/translation_files/xliff1_translation_serializer.ts
+[ ] Xliff1TranslationSerializer  (export class) :33
+      -- A translation serializer that can write XLIFF 1.2 formatted files. https://docs.oasis-open.org/xliff/v1.2/os/xliff-core.html https://docs.oasis-open.org/xliff/v
+[ ] Xliff1TranslationSerializer.constructor  (ctor) :34
+[ ] Xliff1TranslationSerializer.serialize  (method) :44
+[ ] Xliff1TranslationSerializer.serializeMessage  (method) :90
+[ ] Xliff1TranslationSerializer.serializeTextPart  (method) :103
+[ ] Xliff1TranslationSerializer.serializePlaceholder  (method) :113
+[ ] Xliff1TranslationSerializer.serializeNote  (method) :133
+[ ] Xliff1TranslationSerializer.serializeLocation  (method) :139
+[ ] Xliff1TranslationSerializer.renderContext  (method) :150
+[ ] Xliff1TranslationSerializer.getMessageId  (method) :169
+      -- Get the id for the given `message`. If there was a custom id provided, use that. If we have requested legacy message ids, then try to return the appropriate id 
+[ ] getCtypeForPlaceholder  (function) :195
+      -- Compute the value of the `ctype` attribute from the `placeholder` name. The placeholder can take the following forms: - `START_BOLD_TEXT`/`END_BOLD_TEXT` - `TAG
+
+## packages/localize/tools/src/extract/translation_files/xliff2_translation_serializer.ts
+[ ] Xliff2TranslationSerializer  (export class) :32
+      -- A translation serializer that can write translations in XLIFF 2 format. https://docs.oasis-open.org/xliff/xliff-core/v2.0/os/xliff-core-v2.0-os.html
+[ ] Xliff2TranslationSerializer.constructor  (ctor) :34
+[ ] Xliff2TranslationSerializer.serialize  (method) :44
+[ ] Xliff2TranslationSerializer.serializeMessage  (method) :102
+[ ] Xliff2TranslationSerializer.serializeTextPart  (method) :115
+[ ] Xliff2TranslationSerializer.serializePlaceholder  (method) :125
+[ ] Xliff2TranslationSerializer.serializeNote  (method) :176
+[ ] Xliff2TranslationSerializer.getMessageId  (method) :196
+      -- Get the id for the given `message`. If there was a custom id provided, use that. If we have requested legacy message ids, then try to return the appropriate id 
+[ ] getTypeForPlaceholder  (function) :216
+      -- Compute the value of the `type` attribute from the `placeholder` name. If the tag is not known but starts with `TAG_`, `START_TAG_` or `CLOSE_TAG_` then the typ
+
+## packages/localize/tools/src/extract/translation_files/xmb_translation_serializer.ts
+[ ] XmbTranslationSerializer  (export class) :36
+      -- A translation serializer that can write files in XMB format. http://cldr.unicode.org/development/development-process/design-proposals/xmb
+[ ] XmbTranslationSerializer.constructor  (ctor) :37
+[ ] XmbTranslationSerializer.serialize  (method) :43
+[ ] XmbTranslationSerializer.serializeLocation  (method) :90
+[ ] XmbTranslationSerializer.serializeMessage  (method) :102
+[ ] XmbTranslationSerializer.serializeTextPart  (method) :111
+[ ] XmbTranslationSerializer.getMessageId  (method) :135
+      -- Get the id for the given `message`. If there was a custom id provided, use that. If we have requested legacy message ids, then try to return the appropriate id 
+
+## packages/localize/tools/src/extract/translation_files/xml_file.ts
+[ ] XmlFile  (export class) :14
+[ ] XmlFile.toString  (method) :19
+[ ] XmlFile.startTag  (method) :23
+[ ] XmlFile.endTag  (method) :57
+[ ] XmlFile.text  (method) :79
+[ ] XmlFile.rawText  (method) :84
+[ ] XmlFile.incIndent  (method) :89
+[ ] XmlFile.decIndent  (method) :92
+[ ] escapeXml  (function) :105
+
+## packages/localize/tools/src/migrate/index.ts
+[ ] migrateFiles  (export function) :30
+      -- Migrates the legacy message IDs based on the passed in configuration.
+
+## packages/localize/tools/src/migrate/migrate.ts
+[ ] migrateFile  (export function) :15
+      -- Migrates the legacy message IDs within a single file.
+[ ] escapeRegExp  (function) :28
+      -- Escapes special regex characters in a string.
+
+## packages/localize/tools/src/source_file_utils.ts
+[ ] isLocalize  (export function) :30
+      -- Is the given `expression` the global `$localize` identifier?
+[ ] isNamedIdentifier  (export function) :43
+      -- Is the given `expression` an identifier with the correct `name`?
+[ ] isGlobalIdentifier  (export function) :56
+      -- Is the given `identifier` declared globally.
+[ ] buildLocalizeReplacement  (export function) :66
+      -- Build a translated expression to replace the call to `$localize`.
+[ ] unwrapMessagePartsFromLocalizeCall  (export function) :93
+      -- Extract the message parts from the given `call` (to `$localize`). The message parts will either by the first argument to the `call` or it will be wrapped in cal
+[ ] unwrapSubstitutionsFromLocalizeCall  (export function) :194
+      -- Parse the localize call expression to extract the arguments that hold the substitution expressions.     the "current" FileSystem.
+[ ] unwrapMessagePartsFromTemplateLiteral  (export function) :220
+      -- Parse the tagged template literal to extract the message parts.     the "current" FileSystem.
+[ ] unwrapExpressionsFromTemplateLiteral  (export function) :246
+      -- Parse the tagged template literal to extract the interpolation expressions.     the "current" FileSystem.
+[ ] wrapInParensIfNecessary  (export function) :263
+      -- Wrap the given `expression` in parentheses if it is a binary expression. This ensures that this expression is evaluated correctly if it is embedded in another e
+[ ] unwrapStringLiteralArray  (export function) :278
+      -- Extract the string values from an `array` of string literals.     the "current" FileSystem.
+[ ] unwrapLazyLoadHelperCall  (export function) :308
+      -- This expression is believed to be a call to a "lazy-load" template object helper function. This is expected to be of the form: ```ts  function _templateObject()
+[ ] getReturnedExpression  (function) :368
+[ ] isStringLiteralArray  (export function) :394
+      -- Is the given `node` an array of literal strings?
+[ ] isArrayOfExpressions  (export function) :404
+      -- Are all the given `nodes` expressions?
+[ ] translate  (export function) :420
+      -- Translate the text of the given message, using the given translations. Logs as warning if the translation is not available
+[ ] BabelParseError  (export class) :444
+[ ] BabelParseError.constructor  (ctor) :446
+[ ] isBabelParseError  (export function) :454
+[ ] buildCodeFrameError  (export function) :458
+[ ] getLocation  (export function) :479
+[ ] serializeLocationPosition  (export function) :501
+[ ] getFileFromPath  (function) :509
+[ ] getLineAndColumn  (function) :522
+
+## packages/localize/tools/src/translate/asset_files/asset_translation_handler.ts
+[ ] AssetTranslationHandler  (export class) :22
+      -- Translate an asset file by simply copying it to the appropriate translation output paths.
+[ ] AssetTranslationHandler.constructor  (ctor) :23
+[ ] AssetTranslationHandler.canTranslate  (method) :25
+[ ] AssetTranslationHandler.translate  (method) :29
+[ ] AssetTranslationHandler.writeAssetFile  (method) :52
+
+## packages/localize/tools/src/translate/cli.ts
+[ ] convertArraysFromArgs  (function) :126
+      -- Parse each of the given string `args` and convert it to an array if it is of the form `[abc, def, ghi]`, i.e. it is enclosed in square brackets with comma delim
+
+## packages/localize/tools/src/translate/index.ts
+[ ] translateFiles  (export function) :86
+
+## packages/localize/tools/src/translate/output_path.ts
+[ ] getOutputPathFn  (export function) :25
+      -- Create a function that will compute the absolute path to where a translated file should be written. The special `{{LOCALE}}` marker will be replaced with the lo
+
+## packages/localize/tools/src/translate/source_files/es2015_translate_plugin.ts
+[ ] makeEs2015TranslatePlugin  (export function) :29
+      -- Create a Babel plugin that can be used to do compile-time translation of `$localize` tagged messages.
+
+## packages/localize/tools/src/translate/source_files/es5_translate_plugin.ts
+[ ] makeEs5TranslatePlugin  (export function) :30
+      -- Create a Babel plugin that can be used to do compile-time translation of `$localize` tagged messages.
+
+## packages/localize/tools/src/translate/source_files/locale_plugin.ts
+[ ] makeLocalePlugin  (export function) :25
+      -- This Babel plugin will replace the following code forms with a string literal containing the given `locale`. * `$localize.locale`                               
+[ ] isLocalizeGuard  (function) :82
+      -- Returns true if the expression one of: * `typeof $localize !== "undefined"` * `"undefined" !== typeof $localize` * `typeof $localize != "undefined"` * `"undefin
+
+## packages/localize/tools/src/translate/source_files/source_file_translation_handler.ts
+[ ] SourceFileTranslationHandler  (export class) :29
+      -- Translate a file by inlining all messages tagged by `$localize` with the appropriate translated message.
+[ ] SourceFileTranslationHandler.constructor  (ctor) :32
+[ ] SourceFileTranslationHandler.canTranslate  (method) :42
+[ ] SourceFileTranslationHandler.translate  (method) :46
+[ ] SourceFileTranslationHandler.translateFile  (method) :107
+[ ] SourceFileTranslationHandler.writeSourceFile  (method) :145
+
+## packages/localize/tools/src/translate/translation_files/base_visitor.ts
+[ ] BaseVisitor  (export class) :28
+      -- A simple base class for the  `Visitor` interface, which is a noop for every method. Sub-classes only need to override the methods that they care about.
+[ ] BaseVisitor.visitElement  (method) :29
+[ ] BaseVisitor.visitAttribute  (method) :30
+[ ] BaseVisitor.visitText  (method) :31
+[ ] BaseVisitor.visitComment  (method) :32
+[ ] BaseVisitor.visitExpansion  (method) :33
+[ ] BaseVisitor.visitExpansionCase  (method) :34
+[ ] BaseVisitor.visitBlock  (method) :35
+[ ] BaseVisitor.visitBlockParameter  (method) :36
+[ ] BaseVisitor.visitLetDeclaration  (method) :37
+[ ] BaseVisitor.visitComponent  (method) :38
+[ ] BaseVisitor.visitDirective  (method) :39
+
+## packages/localize/tools/src/translate/translation_files/message_serialization/message_serializer.ts
+[ ] MessageSerializer  (export class) :34
+      -- This visitor will walk over a set of XML nodes, which represent an i18n message, and serialize them into a message object of type `T`. The type of the serialize
+[ ] MessageSerializer.constructor  (ctor) :35
+[ ] MessageSerializer.serialize  (method) :42
+[ ] MessageSerializer.visitElement  (method) :49
+[ ] MessageSerializer.visitText  (method) :70
+[ ] MessageSerializer.visitExpansion  (method) :74
+[ ] MessageSerializer.visitExpansionCase  (method) :81
+[ ] MessageSerializer.visitContainedNodes  (method) :89
+[ ] MessageSerializer.visitPlaceholder  (method) :95
+[ ] MessageSerializer.visitPlaceholderContainer  (method) :99
+[ ] MessageSerializer.isPlaceholderContainer  (method) :105
+
+## packages/localize/tools/src/translate/translation_files/message_serialization/target_message_renderer.ts
+[ ] TargetMessageRenderer  (export class) :15
+      -- A message renderer that outputs `ɵParsedTranslation` objects.
+[ ] TargetMessageRenderer.message  (accessor) :19
+[ ] TargetMessageRenderer.startRender  (method) :23
+[ ] TargetMessageRenderer.endRender  (method) :24
+[ ] TargetMessageRenderer.text  (method) :27
+[ ] TargetMessageRenderer.placeholder  (method) :30
+[ ] TargetMessageRenderer.startPlaceholder  (method) :33
+[ ] TargetMessageRenderer.closePlaceholder  (method) :36
+[ ] TargetMessageRenderer.startContainer  (method) :39
+[ ] TargetMessageRenderer.closeContainer  (method) :40
+[ ] TargetMessageRenderer.startIcu  (method) :41
+[ ] TargetMessageRenderer.normalizePlaceholderName  (method) :49
+[ ] TargetMessageRenderer.renderPlaceholder  (method) :52
+[ ] TargetMessageRenderer.storeMessagePart  (method) :61
+
+## packages/localize/tools/src/translate/translation_files/translation_loader.ts
+[ ] TranslationLoader  (export class) :17
+      -- Use this class to load a collection of translation files from disk.
+[ ] TranslationLoader.constructor  (ctor) :18
+[ ] TranslationLoader.loadBundles  (method) :47
+      -- Load and parse the translation files into a collection of `TranslationBundles`. For each locale to be translated, there is an element in `translationFilePaths`.
+[ ] TranslationLoader.loadBundle  (method) :60
+      -- Load all the translations from the file at the given `filePath`.
+[ ] TranslationLoader.mergeBundles  (method) :127
+      -- There is more than one `filePath` for this locale, so load each as a bundle and then merge them all together.
+
+## packages/localize/tools/src/translate/translation_files/translation_parsers/arb_translation_parser.ts
+[ ] ArbTranslationParser  (export class) :55
+      -- A translation parser that can parse JSON formatted as an Application Resource Bundle (ARB). See https://github.com/google/app-resource-bundle/wiki/ApplicationRe
+[ ] ArbTranslationParser.analyze  (method) :56
+[ ] ArbTranslationParser.parse  (method) :70
+[ ] ArbTranslationParser.tryParseArbFormat  (method) :92
+
+## packages/localize/tools/src/translate/translation_files/translation_parsers/serialize_translation_message.ts
+[ ] serializeTranslationMessage  (export function) :22
+      -- Serialize the given `element` into a parsed translation using the given `serializer`.
+
+## packages/localize/tools/src/translate/translation_files/translation_parsers/simple_json_translation_parser.ts
+[ ] SimpleJsonTranslationParser  (export class) :36
+      -- A translation parser that can parse JSON that has the form: ```json {   "locale": "...",   "translations": {     "message-id": "Target message string",     ... 
+[ ] SimpleJsonTranslationParser.analyze  (method) :37
+[ ] SimpleJsonTranslationParser.parse  (method) :73
+
+## packages/localize/tools/src/translate/translation_files/translation_parsers/translation_utils.ts
+[ ] getAttrOrThrow  (export function) :23
+[ ] getAttribute  (export function) :31
+[ ] parseInnerRange  (export function) :45
+      -- Parse the "contents" of an XML element. This would be equivalent to parsing the `innerHTML` string of an HTML document.     contents.
+[ ] getInnerRange  (function) :59
+      -- Compute a `LexerRange` that contains all the children of the given `element`.
+[ ] canParseXml  (export function) :92
+      -- Can this XML be parsed for translations, given the expected `rootNodeName` and expected root node `attributes` that should appear in the file. document has the 
+[ ] isNamedElement  (export function) :149
+      -- Create a predicate, which can be used by things like `Array.filter()`, that will match a named XML Element from a collection of XML Nodes.
+[ ] predicate  (function) :150
+[ ] addParseDiagnostic  (export function) :159
+      -- Add an XML parser related message to the given `diagnostics` object.
+[ ] addParseError  (export function) :172
+      -- Copy the formatted error message from the given `parseError` object into the given `diagnostics` object.
+[ ] addErrorsToBundle  (export function) :183
+      -- Add the provided `errors` to the `bundle` diagnostics.
+
+## packages/localize/tools/src/translate/translation_files/translation_parsers/xliff1_translation_parser.ts
+[ ] Xliff1TranslationParser  (export class) :34
+      -- A translation parser that can load XLIFF 1.2 files. https://docs.oasis-open.org/xliff/v1.2/os/xliff-core.html https://docs.oasis-open.org/xliff/v1.2/xliff-profi
+[ ] Xliff1TranslationParser.analyze  (method) :35
+[ ] Xliff1TranslationParser.parse  (method) :39
+[ ] Xliff1TranslationParser.extractBundle  (method) :47
+[ ] XliffTranslationVisitor  (class) :105
+[ ] XliffTranslationVisitor.visitElement  (method) :106
+[ ] XliffTranslationVisitor.visitTransUnitElement  (method) :114
+
+## packages/localize/tools/src/translate/translation_files/translation_parsers/xliff2_translation_parser.ts
+[ ] Xliff2TranslationParser  (export class) :33
+      -- A translation parser that can load translations from XLIFF 2 files. https://docs.oasis-open.org/xliff/xliff-core/v2.0/os/xliff-core-v2.0-os.html
+[ ] Xliff2TranslationParser.analyze  (method) :34
+[ ] Xliff2TranslationParser.parse  (method) :38
+[ ] Xliff2TranslationParser.extractBundle  (method) :46
+[ ] Xliff2TranslationVisitor  (class) :82
+[ ] Xliff2TranslationVisitor.visitElement  (method) :83
+[ ] Xliff2TranslationVisitor.visitUnitElement  (method) :93
+[ ] Xliff2TranslationVisitor.visitSegmentElement  (method) :120
+[ ] isFileElement  (function) :177
+
+## packages/localize/tools/src/translate/translation_files/translation_parsers/xtb_translation_parser.ts
+[ ] XtbTranslationParser  (export class) :33
+      -- A translation parser that can load XTB files. http://cldr.unicode.org/development/development-process/design-proposals/xmb
+[ ] XtbTranslationParser.analyze  (method) :34
+[ ] XtbTranslationParser.parse  (method) :44
+[ ] XtbTranslationParser.extractBundle  (method) :52
+[ ] XtbVisitor  (class) :67
+[ ] XtbVisitor.visitElement  (method) :68
+[ ] computeParseWarning  (function) :120
+
+## packages/localize/tools/src/translate/translator.ts
+[ ] Translator  (export class) :74
+      -- Translate each file (e.g. source file or static asset) using the given `TranslationHandler`s. The file will be translated by the first handler that returns true
+[ ] Translator.constructor  (ctor) :75
+[ ] Translator.translateFiles  (method) :81

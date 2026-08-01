@@ -1,0 +1,551 @@
+ANALISIS TAINT-TO-SINK (ALIRAN DATA TIDAK TEPERCAYA MENUJU SINK BERBAHAYA)
+Basis: 700 fungsi yang sudah dianalisis (analysis/CHECKED-FUNCTIONS.txt)
+Sifat: tinjauan DEFENSIF terhadap kode framework Angular itu sendiri
+==============================================================================
+
+CARA MEMBACA DOKUMEN INI
+------------------------
+  SOURCE      titik masuk data yang bisa dikendalikan penyerang
+  PROPAGATOR  fungsi yang meneruskan nilai tanpa mengubah sifat bahayanya
+  SANITIZER   titik pemutus taint (guard)
+  SINK        titik eksekusi/interpretasi yang berbahaya bila taint lolos
+
+Semua rantai di bawah ditelusuri dari kode nyata, dengan referensi file:line.
+Tanda:
+  [AMAN]     ada guard wajib pada jalur ini
+  [KONDISI]  aman hanya bila syarat tertentu dipenuhi (disebutkan)
+  [BYPASS]   jalur yang memang dirancang untuk melewati guard (tanggung jawab
+             pengembang aplikasi, bukan bug framework)
+
+==============================================================================
+BAGIAN 1 - INVENTARIS SINK DI DALAM FRAMEWORK
+==============================================================================
+
+S1. renderer.setProperty(element, prop, value)
+    packages/core/src/render3/instructions/shared.ts:308
+    Sink nyata bila prop = innerHTML/outerHTML/srcdoc -> eksekusi HTML.
+
+S2. renderer.setAttribute(element, name, value, ns)
+    packages/core/src/render3/instructions/shared.ts:545
+    Sink bila name = href/src/xlink:href/formaction/action/data/codebase.
+
+S3. templateEl.innerHTML = html  (parser inert untuk sanitasi)
+    packages/core/src/sanitization/inert_body.ts:75
+    Dijalankan pada <template>/inert document, jadi skrip TIDAK dieksekusi.
+    Ini sink yang disengaja dan dinetralkan oleh konteks inert.
+
+S4. global['eval'](...) / new Function(...)
+    packages/compiler/src/output/output_jit_trusted_types.ts:105-125
+    Sink eksekusi kode; hanya dipakai JIT compiler.
+
+S5. script.src = url  (JSONP)
+    packages/common/http/src/jsonp.ts:167-168
+    Sink pemuatan kode lintas-origin.
+
+S6. iframe.src / iframe.srcdoc
+    packages/core/src/sanitization/iframe_attrs_validation.ts:40-46
+    Di sini justru dipakai untuk MENETRALKAN iframe (di-set ke string kosong).
+
+S7. TransferState.toJson() -> disisipkan ke dalam <script> HTML server
+    packages/core/src/transfer_state.ts:146
+
+S8. document.write / insertAdjacentHTML / createContextualFragment - TIDAK ADA
+    di seluruh repositori (diverifikasi ulang oleh pemindaian pola menyeluruh,
+    lihat Bagian 12: 0 kecocokan untuk ketiga pola tersebut).
+
+    Sink tambahan S9-S13 yang ditemukan pemindaian menyeluruh dirinci di
+    Bagian 12 - termasuk innerHTML di @angular/upgrade yang TIDAK tercakup
+    oleh penelusuran manual Bagian 1-11.
+
+==============================================================================
+BAGIAN 2 - RANTAI UTAMA: BINDING TEMPLATE -> DOM  [AMAN, dengan syarat]
+==============================================================================
+
+SOURCE : ekspresi template `[prop]="userControlled"` - nilainya bisa berasal
+         dari input pengguna, respons HTTP, query param, localStorage, dll.
+
+RANTAI :
+  ɵɵproperty(propName, value, sanitizer)
+      packages/core/src/render3/instructions/property.ts:41
+  -> setPropertyAndInputs(tNode, lView, propName, value, renderer, sanitizer)
+      packages/core/src/render3/instructions/shared.ts:250          [PROPAGATOR]
+     - bila nama cocok dengan input directive -> setAllInputsForProperty (:730)
+       nilai berhenti di properti kelas, TIDAK menyentuh DOM (bukan sink)
+     - selain itu lanjut ke DOM:
+  -> mapPropName (:240)   class->className, innerHtml->innerHTML, dst
+  -> setDomProperty(...)  packages/core/src/render3/instructions/shared.ts:285
+       value = sanitizer != null ? sanitizer(value, tagName, propName) : value   <-- SANITIZER
+  -> renderer.setProperty(element, propName, value)                        [SINK S1]
+
+TITIK KRITIS - siapa yang memutuskan `sanitizer` ada atau tidak?
+Komentar di shared.ts:305 menyatakan asumsinya secara eksplisit:
+    "It is assumed that the sanitizer is only added when the compiler
+     determines that the property is risky"
+
+Jadi keamanan jalur ini BERGANTUNG PADA COMPILER, bukan runtime. Rantai
+keputusannya:
+
+  domSchema.securityContext(tagName, propName, isAttribute)
+      packages/compiler/src/schema/dom_security_schema.ts
+  -> calcPossibleSecurityContexts(registry, selector, propName, isAttribute)
+      packages/compiler/src/template_parser/binding_parser.ts:884
+  -> op.securityContext disimpan saat ingest
+      packages/compiler/src/template/pipeline/src/ingest.ts:1461,1500
+  -> resolveSanitizers(job)
+      packages/compiler/src/template/pipeline/src/phases/resolve_sanitizers.ts
+     memetakan SecurityContext -> ɵɵsanitizeHtml / ɵɵsanitizeStyle /
+     ɵɵsanitizeUrl / ɵɵsanitizeResourceUrl, atau ɵɵsanitizeUrlOrResourceUrl
+     bila elemen host belum diketahui (host binding pada selector generik).
+
+KONSEKUENSI YANG PERLU DISADARI:
+  (a) Jika sebuah properti berbahaya TIDAK terdaftar di SECURITY_SCHEMA, maka
+      compiler tidak menyisipkan sanitizer dan runtime menulis nilai mentah.
+      Karena itu ada DUA salinan skema yang harus tetap sinkron:
+        packages/compiler/src/schema/dom_security_schema.ts
+        packages/core/src/sanitization/dom_security_schema.ts   (:66 mencatat
+        "Keep is a copy of DOM Security Schema")
+      Divergensi antara keduanya = celah keamanan. Ini titik audit paling
+      bernilai di seluruh jalur ini.
+  (b) Untuk elemen dinamis/host binding, tag sebenarnya baru diketahui saat
+      runtime. Angular menutup celah ini dengan dua mekanisme:
+        - ɵɵsanitizeUrlOrResourceUrl (sanitization.ts:263) memilih sanitizer
+          berdasarkan tag+prop nyata lewat getUrlSanitizer (:237);
+        - ɵɵvalidateAttribute (sanitization.ts:342) memeriksa ulang konteks
+          keamanan saat runtime memakai TNode yang sedang terpilih, dan
+          untuk <iframe> memanggil enforceIframeSecurity.
+  (c) ɵɵsanitizeHtml (:51) melakukan pemeriksaan ulang konteks sendiri:
+      bila tagName+propName ternyata BUKAN konteks HTML, nilai dikembalikan
+      apa adanya - artinya sanitizer ini tidak bisa "salah pasang" menjadi
+      lebih longgar, tapi juga tidak menambal kesalahan skema.
+
+GUARD TAMBAHAN PADA JALUR YANG SAMA:
+  validateAgainstEventProperties(name)  sanitization.ts:267
+    Menolak binding ke properti yang diawali "on" (onclick, onerror, ...)
+    -> mencegah XSS lewat handler inline. Catatan: guard ini dipanggil dari
+    setDomProperty HANYA di dalam blok `if (ngDevMode)` (shared.ts:295-302),
+    jadi di produksi ia tidak berjalan. Pertahanan produksinya ada di compiler
+    (binding semacam itu ditolak saat kompilasi), bukan di runtime.
+
+==============================================================================
+BAGIAN 3 - RANTAI ATRIBUT: [attr.x]="..."  [AMAN, dengan syarat sama]
+==============================================================================
+
+  ɵɵattribute(name, value, sanitizer, namespace)
+      packages/core/src/render3/instructions/attribute.ts:29
+  -> elementAttributeInternal(...)   shared.ts:499                 [PROPAGATOR]
+  -> setElementAttribute(...)        shared.ts:521
+        strValue = sanitizer == null ? renderStringify(value)
+                                     : sanitizer(value, tagName, name)   <-- SANITIZER
+  -> renderer.setAttribute(...)                                    [SINK S2]
+
+Detail penting: bila `value == null`, sanitizer TETAP dipanggil sebelum
+removeAttribute (shared.ts:532-536). Komentarnya menjelaskan alasannya -
+"Execute sanitizer to enforce security controls (e.g., neutralizing iframe)":
+menghapus atribut pun harus memicu enforceIframeSecurity, karena kalau tidak,
+penyerang bisa memakai urutan set-lalu-hapus untuk melewati netralisasi iframe.
+
+SUB-RANTAI IFRAME  [AMAN]
+  ɵɵvalidateAttribute(value, tagName, attributeName)   sanitization.ts:342
+  -> resolveElement (:288) menentukan tag nyata, termasuk kasus DynamicHost
+     (membaca element.tagName dan namespaceURI dari DOM)
+  -> checkSecurityContext -> bila ATTRIBUTE_NO_BINDING dan tag = iframe:
+  -> enforceIframeSecurity(iframe)   iframe_attrs_validation.ts:26
+       iframe.src = ''; iframe.srcdoc = trustedHTMLFromString('');
+       nativeRemoveNode(...)                                       [NETRALISASI]
+
+Ini pola "fail-closed": iframe yang atribut sensitifnya di-bind secara dinamis
+tidak sekadar ditolak nilainya - seluruh elemennya dibuang dari DOM.
+
+==============================================================================
+BAGIAN 4 - RANTAI i18n  [AMAN]
+==============================================================================
+  Pesan terjemahan (bisa berasal dari berkas eksternal / TMS) adalah SOURCE
+  yang sering dilupakan.
+
+  i18n_parse.ts:16-17 mengimpor ɵɵsanitizeHtml dan ɵɵsanitizeResourceUrl dan
+  menyimpannya sebagai bagian dari UPDATE OPCODE.
+  -> applyUpdateOpCodes / i18n_apply.ts:430-456 membaca `sanitizeFn` dari
+     opcode dan menerapkannya sebelum menulis ke DOM.
+  -> phase resolve_i18n_attr_sanitizers di compiler memastikan atribut di dalam
+     blok i18n mendapat sanitizer yang sama dengan atribut biasa.
+
+Artinya: string terjemahan melewati sanitizer yang sama dengan binding biasa.
+
+==============================================================================
+BAGIAN 5 - JALUR BYPASS YANG DISENGAJA  [BYPASS]
+==============================================================================
+  DomSanitizer.bypassSecurityTrustHtml/Style/Script/Url/ResourceUrl
+      packages/platform-browser/src/security/dom_sanitization_service.ts:215-231
+  -> bypassSanitizationTrust*   packages/core/src/sanitization/bypass.ts:149-197
+     membungkus string dalam kelas SafeValue bertanda.
+  -> allowSanitizationBypassAndThrow(value, type)   bypass.ts:108-126
+     dipanggil SETIAP sanitizer; bila tipe bungkus cocok, nilai dilepas mentah
+     lewat unwrapSafeValue (:100) dan LANGSUNG masuk ke sink.
+
+Ini bukan kelemahan framework melainkan titik keputusan eksplisit: setiap
+pemanggilan `bypassSecurityTrust*` di kode aplikasi adalah tempat taint
+menembus seluruh pertahanan. Untuk audit aplikasi, inilah daftar grep pertama:
+
+    grep -rn "bypassSecurityTrust" src/
+
+Catatan: `allowSanitizationBypassAndThrow` MELEMPAR bila nilai dibungkus untuk
+konteks yang salah (mis. SafeUrl dipakai di konteks HTML), sehingga bungkus
+tidak bisa dipindah-konteks.
+
+Jalur bypass kedua yang lebih halus:
+  ɵɵtrustConstantHtml (sanitization.ts:191) dan ɵɵtrustConstantResourceUrl (:217)
+  hanya menerima TemplateStringsArray dengan panjang 1 - artinya HANYA literal
+  konstan tanpa interpolasi. Ada pemeriksaan runtime eksplisit yang menolak
+  `ɵɵtrustConstantHtml\`x ${var}\``. Ini mencegah nilai dinamis menyamar sebagai
+  konstanta tepercaya.
+
+==============================================================================
+BAGIAN 6 - SINK EKSEKUSI KODE: JIT  [KONDISI]
+==============================================================================
+SOURCE : string template/metadata komponen saat kompilasi JIT.
+
+  compileComponentFromMetadata -> output JS sebagai STRING
+  -> jitStatements / output_jit.ts:79,83
+  -> newTrustedFunctionForJIT(...args)
+      packages/compiler/src/output/output_jit_trusted_types.ts:105
+      - tanpa Trusted Types: `new Function(...)`                    [SINK S4]
+      - dengan Trusted Types: `global['eval'](trustedScriptFromString(body))`
+        memakai policy 'angular' (trusted_types.ts:43)
+
+Syarat aman: template komponen harus berasal dari kode aplikasi, bukan dari
+data pengguna. Bila aplikasi membangun `@Component({template: userInput})`
+secara dinamis di mode JIT, ini adalah RCE-in-the-browser, dan tidak ada
+sanitizer di jalur ini sama sekali. Dokumentasi di fungsi tersebut
+menyatakannya: "must be assured that it is only called from the JIT compiler".
+
+Mitigasi arsitektural: aplikasi produksi memakai AOT, sehingga sink ini tidak
+ikut ter-bundle.
+
+Indireksi `global['eval']` (bukan `eval` langsung) dipakai agar modul ini bisa
+di-tree-shake - komentar di kode menjelaskan hal ini.
+
+==============================================================================
+BAGIAN 7 - JALUR JARINGAN
+==============================================================================
+
+7.1 JSONP  [KONDISI - berbahaya secara desain]
+  SOURCE : req.url (bisa dipengaruhi aplikasi/pengguna)
+  -> JsonpClientBackend.handle -> node.src = url  jsonp.ts:167-168   [SINK S5]
+  Tidak ada sanitasi URL di sini. JSONP secara definisi mengeksekusi respons
+  server sebagai skrip; keamanannya bergantung sepenuhnya pada kepercayaan
+  terhadap host tujuan. Nama callback dihasilkan internal
+  (`ng_jsonp_callback_${nextRequestId++}`, :121) sehingga tidak bisa disuntik
+  dari luar - itu satu-satunya guard di jalur ini.
+
+7.2 XSRF  [AMAN]
+  xsrfInterceptorFn   packages/common/http/src/xsrf.ts:94
+  - melewati GET/HEAD (tidak mengubah state),
+  - membandingkan origin permintaan dengan origin halaman memakai `new URL`
+    untuk menormalkan bentuk seperti '//evil.com',
+  - token HANYA dikirim untuk permintaan SAME-ORIGIN (:105-114). Ini mencegah
+    kebocoran token XSRF ke host pihak ketiga - kesalahan klasik pada
+    implementasi interceptor buatan sendiri.
+  - tidak menimpa header yang sudah ada (:121).
+  - `try/catch` di sekitar parsing URL: URL tidak valid diperlakukan sebagai
+    lintas-origin (fail-closed terhadap kebocoran token).
+
+7.3 Interceptor sebagai jalur taint
+  chainedInterceptorFn   packages/common/http/src/interceptor.ts:174
+  Setiap interceptor berjalan `runInInjectionContext` dan dapat MENGUBAH URL,
+  header, dan body. Untuk audit aplikasi, interceptor adalah propagator yang
+  perlu diperiksa: satu interceptor yang menambahkan token Authorization tanpa
+  cek origin akan membocorkan kredensial ke host mana pun.
+
+==============================================================================
+BAGIAN 8 - JALUR SSR / HIDRASI
+==============================================================================
+
+8.1 TransferState -> HTML  [AMAN]
+  TransferState.toJson()   packages/core/src/transfer_state.ts:146
+      JSON.stringify(store).replace(/</g, '\\u003C').replace(/\//g, '\\u002F')
+  Meng-escape `<` dan `/` sehingga string `</script>` di dalam data tidak bisa
+  menutup blok <script> yang menampungnya. Ini pertahanan yang tepat untuk
+  konteks penyematan JSON-dalam-script.
+  Batas: nilai yang disimpan harus JSON-serializable; objek yang tidak sesuai
+  akan hilang, bukan menjadi masalah keamanan.
+
+8.2 Data hidrasi -> struktur view  [AMAN secara struktural]
+  SOURCE : atribut `ngh="12"` di HTML dan isi TransferState.
+  -> retrieveHydrationInfoImpl   packages/core/src/hydration/utils.ts:121
+  -> data dipakai sebagai INDEKS dan JUMLAH NODE, bukan sebagai HTML.
+  Nilai dari data hidrasi tidak pernah ditulis ke innerHTML; ia hanya
+  mengarahkan penelusuran DOM (tryLocateRNodeByPath, node_lookup_utils.ts:99).
+  Konsekuensi terburuk dari data hidrasi yang rusak adalah hydration mismatch
+  (error/render ulang), bukan eksekusi skrip.
+  Catatan: pemulihan penanda teks (processTextNodeMarkersBeforeHydration,
+  utils.ts:262) mengganti KOMENTAR menjadi text node - node teks tidak
+  mengeksekusi apa pun.
+
+8.3 Event replay  [KONDISI]
+  Atribut `jsaction="click:..."` yang dihasilkan server menentukan event apa
+  yang ditangkap dan diputar ulang. Isinya adalah nama event, bukan kode.
+  Skrip penangkap dini disisipkan server (platform-server/src/utils.ts:175)
+  dengan `JSON.stringify` atas daftar nama event yang dikumpulkan compiler -
+  bukan dari data pengguna.
+
+==============================================================================
+BAGIAN 9 - JALUR ROUTER
+==============================================================================
+  SOURCE : URL browser (sepenuhnya dikendalikan penyerang lewat tautan).
+
+  UrlSerializer.parse -> UrlTree -> Recognizer.recognize (recognize.ts:97)
+  -> params/query params masuk ke ActivatedRoute -> dipakai komponen aplikasi.
+
+  Router SENDIRI tidak menulis nilai URL ke DOM. Satu-satunya penulisan atribut
+  adalah RouterLink:
+      '[attr.href]': 'reactiveHref()'   packages/router/src/directives/router_link.ts:186
+  Karena ini binding atribut `href` pada host `a[routerLink]`, compiler
+  menghitung konteks keamanan URL untuk host binding tersebut
+  (calcHostBindingSecurityContexts, ingest.ts:151) dan menyisipkan sanitizer
+  URL - jadi `javascript:` pada href akan dinetralkan _sanitizeUrl.
+
+  Taint yang tersisa adalah TANGGUNG JAWAB APLIKASI: parameter rute yang
+  di-render ke `[innerHTML]` atau diteruskan ke `bypassSecurityTrust*`.
+
+  Jalur redirect (`ApplyRedirects.applyRedirectCommands`, apply_redirects.ts:84)
+  menyalin parameter posisi dari URL ke URL tujuan. Redirect hanya menghasilkan
+  UrlTree internal (navigasi dalam aplikasi), bukan `location.href = ...`,
+  sehingga tidak menjadi open-redirect di level framework.
+
+==============================================================================
+BAGIAN 10 - RINGKASAN MATRIKS
+==============================================================================
+
+  #   SOURCE                     SINK                       STATUS
+  --  -------------------------  -------------------------  --------------------
+  1   [prop] template binding    setProperty (innerHTML)    [AMAN] sanitizer dari
+                                                            skema compile-time
+  2   [attr.x] binding           setAttribute (href/src)    [AMAN] idem + runtime
+                                                            validateAttribute
+  3   binding pada <iframe>      iframe.src/srcdoc          [AMAN] fail-closed,
+                                                            elemen dibuang
+  4   pesan terjemahan i18n      DOM lewat opcode           [AMAN] sanitizer di
+                                                            dalam update opcode
+  5   bypassSecurityTrust*       semua sink DOM             [BYPASS] disengaja
+  6   template JIT dinamis       new Function / eval        [KONDISI] hanya JIT;
+                                                            tak ada sanitizer
+  7   URL JSONP                  script.src                 [KONDISI] desain JSONP
+  8   URL lintas-origin (XSRF)   header token               [AMAN] cek same-origin
+  9   TransferState              <script> di HTML           [AMAN] escape < dan /
+  10  data hidrasi (ngh)         penelusuran DOM            [AMAN] hanya indeks
+  11  URL/route params           DOM aplikasi               [AMAN di framework];
+                                                            risiko di aplikasi
+  12  binding "on*"              handler inline             [AMAN] ditolak compiler
+                                                            + guard dev-mode
+
+==============================================================================
+BAGIAN 11 - TITIK AUDIT PRIORITAS (untuk peninjau kode framework)
+==============================================================================
+  P1. SINKRONISASI DUA SKEMA KEAMANAN.  [SUDAH DIVERIFIKASI - SAAT INI SINKRON]
+      packages/compiler/src/schema/dom_security_schema.ts
+      packages/core/src/sanitization/dom_security_schema.ts
+      Keduanya berisi daftar tag+properti sensitif dan HARUS identik. Skema
+      compiler menentukan apakah sanitizer dipasang; skema core menentukan
+      pemeriksaan runtime. Entri yang ada di satu berkas tapi tidak di berkas
+      lain menghasilkan properti yang lolos tanpa sanitasi.
+
+      HASIL VERIFIKASI (dijalankan sebagai bagian dari analisis ini):
+        node analysis/tools/check-security-schema-sync.mjs
+        -> compiler: 48 kombinasi, core: 48 kombinasi, TIDAK ADA PERBEDAAN.
+      Jadi ini bukan cacat yang ada sekarang, melainkan RISIKO PEMELIHARAAN.
+
+      KOREKSI ATAS VERIFIKASI PERTAMA (penting):
+      Versi pertama skrip ini melaporkan "30 entri" dan menyatakan sinkron.
+      Angka itu SALAH karena parser-nya memakai regex per-baris `['tag',[...]]`
+      sehingga MELEWATKAN blok yang ditulis multi-baris - yaitu seluruh blok
+      ATTRIBUTE_NO_BINDING tanpa namespace (18 kombinasi: `unknown` x 11 dan
+      `iframe` x 7). Justru blok itulah yang paling sensitif, karena memuat
+      sandbox/allow/csp/credentialless dan penampung host binding generik.
+      Kesimpulan "sinkron" kebetulan tetap benar, tetapi BUKTINYA tidak sahih
+      sampai parser diperbaiki. Versi sekarang membaca argumen registerContext
+      dengan penghitungan kurung sehingga tata letak kode tidak berpengaruh.
+
+      Yang mengikat kedua berkas hanyalah komentar
+      ("Keep is a copy of DOM Security Schema", core/dom_security_schema.ts:66).
+      Pencarian di seluruh repositori tidak menemukan uji yang membandingkan
+      kedua berkas:
+        - packages/core/test/sanitization/sanitization_spec.ts:117 menguji
+          skema CORE terhadap getUrlSanitizer (satu sisi saja);
+        - packages/core/test/acceptance/security_spec.ts:124 menyalin ulang
+          daftar SECURITY_SENSITIVE_ATTRS milik compiler secara manual dengan
+          komentar "*Must* be in sync with ...".
+      Artinya divergensi antar-paket tidak akan tertangkap CI. Skrip
+      check-security-schema-sync.mjs di direktori ini menutup celah tersebut
+      dan bisa dijadikan uji otomatis bila diinginkan. Skrip itu kini memeriksa
+      TIGA invarian sekaligus:
+        1. skema compiler == skema core          (48 vs 48 kombinasi, cocok)
+        2. entri `unknown` mencakup gabungan seluruh atribut ATTRIBUTE_NO_BINDING
+           dari semua tag konkret                (11 atribut, lengkap)
+        3. daftar atribut iframe di skema == SECURITY_SENSITIVE_ATTRS yang
+           disalin manual di security_spec.ts:126 (7 atribut, cocok)
+
+      Invarian (2) penting dan mudah terlewat: `unknown` adalah penampung untuk
+      host binding pada selector generik (elemen host belum diketahui saat
+      kompilasi). Bila sebuah atribut terdaftar untuk tag konkret tetapi lupa
+      ditambahkan ke `unknown`, maka directive dengan selector generik bisa
+      menulis atribut itu tanpa pemeriksaan runtime sama sekali.
+
+  P1b. RUJUKAN KOMENTAR YANG MENGGANTUNG.  [TEMUAN NYATA - dokumentasi]
+      Kedua berkas skema, pada baris 112, memuat komentar:
+          "Keep this in sync with SECURITY_SENSITIVE_ELEMENTS in
+           packages/core/src/sanitization/sanitization.ts"
+      Simbol `SECURITY_SENSITIVE_ELEMENTS` TIDAK ADA di berkas tersebut
+      (diverifikasi dengan pencarian menyeluruh di packages/). Nama yang
+      sebenarnya ada di sana adalah `SECURITY_SENSITIVE_ATTRIBUTE_NAMES`
+      (sanitization.ts:317) dan `SVG_ANIMATION_SENSITIVE_STATIC_VALUES` (:323).
+      Dampaknya bukan kerentanan, melainkan kewajiban sinkronisasi manual yang
+      menunjuk ke simbol yang tidak bisa ditemukan - persis jenis rujukan yang
+      membuat pemeliharaan lintas-paket gagal diam-diam.
+
+  P1c. TABEL RELAKSASI SVG BUKAN TABEL PEMBATASAN.  [DIVERIFIKASI - BUKAN CELAH]
+      Sekilas tampak ada ketidakcocokan: skema menandai empat tag SVG
+      (animate, set, animateMotion, animateTransform) sebagai ATTRIBUTE_NO_BINDING,
+      tetapi SVG_ANIMATION_SENSITIVE_STATIC_VALUES di runtime hanya memuat
+      `animate` (to/values/from) dan `set` (to).
+      Setelah membaca alur ɵɵvalidateAttribute (sanitization.ts:342-397),
+      ketidakcocokan itu DISENGAJA dan arahnya aman:
+        - bila ada entri di tabel  -> binding DIIZINKAN kecuali atribut
+          `attributeName` statis elemen tersebut bernilai href/xlink:href;
+        - bila TIDAK ada entri     -> jatuh ke `throw` tanpa syarat di akhir
+          fungsi, yaitu perlakuan yang LEBIH KETAT.
+      Jadi tabel runtime adalah daftar PELONGGARAN bersyarat, bukan daftar
+      pembatasan. Kombinasi seperti `[attributeName]` pada keempat tag, serta
+      seluruh atribut pada animateMotion/animateTransform, selalu ditolak.
+
+  P2. PROPERTI DOM BARU DARI STANDAR WEB.
+      Skema bersifat daftar-putih statis. Setiap properti baru berbahaya yang
+      ditambahkan browser (mis. atribut baru pada elemen embed) tidak otomatis
+      tersanitasi sampai skema diperbarui.
+
+  P3. HOST BINDING PADA SELECTOR GENERIK.
+      Saat elemen host tidak diketahui compile-time, jalur bergantung pada
+      ɵɵsanitizeUrlOrResourceUrl + ɵɵvalidateAttribute yang membaca TNode
+      terpilih (getSelectedIndex). Bila konteks "selected index" tidak akurat
+      pada suatu jalur eksekusi baru, pemeriksaan bisa memakai tag yang salah.
+
+  P4. validateAgainstEventProperties HANYA DEV-MODE di runtime
+      (shared.ts:295-302). Pertahanan produksi bergantung sepenuhnya pada
+      compiler. Jalur yang membangun binding tanpa melewati compiler (mis. API
+      dinamis) perlu diperiksa terhadap properti on*.
+
+  P5. SETIAP PEMAKAIAN unwrapSafeValue.
+      bypass.ts:100 adalah gerbang keluar taint. Semua pemanggilnya
+      (lima sanitizer + DomSanitizerImpl) sudah diverifikasi memanggilnya hanya
+      setelah allowSanitizationBypassAndThrow yang mencocokkan tipe konteks.
+
+==============================================================================
+BAGIAN 12 - PEMINDAIAN POLA MENYELURUH (koreksi cakupan)
+==============================================================================
+Bagian 1-11 di atas menelusuri sink yang DIPILIH MANUAL, sehingga cakupannya
+terbatas pada apa yang teringat oleh penganalisis. Untuk menutup celah itu,
+seluruh repositori dipindai dengan katalog pola:
+
+    node analysis/tools/scan-sinks.mjs      -> analysis/SINK-INVENTORY.txt
+    3.373 berkas, 28 pola (sink/source/guard)
+
+SINK YANG TERLEWAT OLEH ANALISIS MANUAL
+---------------------------------------
+S9. @angular/upgrade -> innerHTML   [KONDISI - batas kepercayaan eksplisit]
+    packages/upgrade/src/common/src/upgrade_helper.ts:254
+        private compileHtml(html) { this.element.innerHTML = html; ... }
+    Rantai: directive.template ATAU $templateCache/$http(templateUrl)
+        -> UpgradeHelper.getTemplate (:96-121)
+        -> trustedHTMLFromLegacyTemplate (security/trusted_types.ts:59)
+        -> compileHtml -> innerHTML
+    Policy Trusted Types-nya bernama `angular#unsafe-upgrade` dengan
+    `createHTML: (s) => s` - IDENTITAS, tanpa sanitasi sama sekali. Ini disengaja
+    dan didokumentasikan: "the template string should always be under full
+    control of the application author, as untrusted input can cause an XSS
+    vulnerability".
+    Implikasi praktis: aplikasi hybrid yang memuat `templateUrl` dari host yang
+    bisa dipengaruhi penyerang mendapat XSS langsung. Seluruh paket ini tidak
+    tersentuh Bagian 1-11.
+
+S10. core/schematics -> new Function   [KONDISI - waktu build, Node]
+    packages/core/schematics/utils/load_esm.ts:25
+        await new Function('modulePath', `return import(modulePath);`)(...)
+    Solusi standar untuk memuat modul ESM dari konteks CommonJS. Berjalan di
+    Node saat `ng update`/migrasi, bukan di browser. Masukannya jalur modul dari
+    perkakas, bukan data pengguna.
+
+S11. platform-browser -> <link rel=stylesheet href>   [KONDISI]
+    packages/platform-browser/src/dom/shared_styles_host.ts:103
+        createLinkElement(url, doc) { linkElement.setAttribute('href', url); }
+    Pemuatan stylesheet eksternal. Nilainya berasal dari metadata komponen hasil
+    kompilasi (`styleUrls`/external styles), bukan binding runtime - sehingga
+    TIDAK melewati jalur sanitizer di Bagian 2. Aman selama metadata komponen
+    tidak dibangun dari data runtime.
+
+S12. adev (situs angular.dev) -> innerHTML   [KONDISI - konten build-time]
+    adev/shared-docs/components/viewers/docs-viewer/docs-viewer.component.ts:108
+        contentContainer.innerHTML = content;
+    `content` adalah HTML dokumentasi hasil build dari berkas markdown di repo.
+    Bukan data pengguna, tetapi ini sink innerHTML tanpa sanitasi di aplikasi
+    yang benar-benar dideploy - layak dicatat sebagai aset yang integritas
+    build-nya harus dijaga.
+    Serupa: table-of-contents-loader.service.ts:48, tab-group.component.ts:66,
+    dan tooltip.ts:103/149 (dua terakhir memakai variabel bernama `sanitizedHtml`).
+
+S13. devtools -> DOMParser   [AMAN]
+    devtools/projects/ng-devtools-backend/src/lib/shared/highlighter/highlights.ts:225
+    Mem-parse ikon SVG konstan; inert dan tidak berasal dari data pengguna.
+
+KELAS POSITIF PALSU YANG DITEMUKAN (berguna untuk pemindaian berikutnya)
+------------------------------------------------------------------------
+Pemindaian pertama menghasilkan beberapa jenis kekeliruan yang khas TypeScript;
+polanya sudah diperbaiki dan alasannya dicatat langsung di scan-sinks.mjs:
+
+  FP1. `\beval\b` mencocokkan `a.eval(`, `$eval(`, `['eval']` karena `.`, `$`,
+       dan `'` bukan karakter kata. Diuji pada satu baris contoh: 5 kecocokan,
+       hanya 1 yang benar. Solusi: lookbehind `(?<![\w$.])`.
+       Konsekuensi: lookbehind membuang `global['eval']` yang justru dipakai
+       Angular, sehingga akses lewat bracket BUTUH POLA SENDIRI.
+       Catatan: ripgrep (regex Rust) tidak mendukung lookbehind - inilah alasan
+       pemindai ditulis sebagai skrip Node, bukan satu baris grep.
+
+  FP2. `Function` sebagai TIPE TypeScript (`fn: Function`, `Array<Function>`,
+       `as Function`) bukan pemanggilan konstruktor. Disaring lewat pola tolak.
+
+  FP3. Metode bernama `open`. Pola `(?<![\w$.])open\s*\(` mencocokkan
+       `async open(name: string)` di service-worker - 3 dari 3 kecocokan salah.
+       Penerima kini dibatasi: `window|self|globalThis|top|parent` saja.
+
+  FP4. Nama atribut berupa KONSTANTA (`NGH_ATTR_NAME`) atau anggota enum
+       (`Attribute.JSACTION`) tetap statis walau bukan literal string. Tanpa
+       penyaring, 8 dari 10 kecocokan `setAttribute` dinamis adalah positif
+       palsu. Setelah disaring: 35 -> 30 kecocokan.
+
+  FP5. ELEMEN TERLEPAS dipakai sebagai parser URL, bukan sebagai sink:
+       packages/router/upgrade/src/upgrade.ts:147-148 memanggil
+       `anchor.setAttribute('href', url)` dua kali pada anchor yang TIDAK PERNAH
+       dimasukkan ke dokumen (trik normalisasi URL warisan AngularJS). Pola
+       tekstual tidak bisa membedakan ini; hanya pembacaan konteks yang bisa.
+
+  FP6. Komentar dan JSDoc menyebut nama sink. Pemindai mengosongkan komentar
+       lebih dulu (mempertahankan nomor baris) agar dokumentasi tidak terhitung.
+
+BATAS METODE PEMINDAIAN POLA
+----------------------------
+Pemindai ini menemukan TITIK sink, bukan ALIRAN taint. Ia tidak bisa memutuskan
+apakah nilai yang sampai ke sink dikendalikan penyerang - itu tetap memerlukan
+pembacaan rantai seperti Bagian 2-11. Ia juga tidak melihat aliasing
+(`const el = node; el.innerHTML = x` tetap tertangkap, tetapi
+`const set = (o,v) => o.innerHTML = v` yang dipanggil dari tempat lain hanya
+tertangkap di titik definisinya).
+
+==============================================================================
+BAGIAN 13 - DAFTAR PERIKSA UNTUK APLIKASI PENGGUNA ANGULAR
+==============================================================================
+  [ ] grep "bypassSecurityTrust" - tiap kemunculan butuh justifikasi tertulis
+  [ ] grep "\[innerHTML\]" - pastikan sumber datanya tepercaya atau tersanitasi
+  [ ] Interceptor HTTP: apakah menambahkan kredensial tanpa cek origin?
+  [ ] JSONP: hanya ke host yang dikendalikan sendiri
+  [ ] Mode JIT di produksi: pastikan tidak ada; template tidak boleh dinamis
+  [ ] Trusted Types: aktifkan CSP require-trusted-types-for 'script' agar
+      sink S1/S4 mendapat lapisan pertahanan kedua dari browser
+  [ ] Nilai dari route params / TransferState yang dirender sebagai HTML

@@ -1,0 +1,178 @@
+SUBSISTEM 13 :: Keamanan - Sanitasi, Trusted Types, dan Titik Sink
+Lokasi   : packages/core/src/sanitization/**, packages/core/src/util/security/**,
+           packages/platform-browser/src/security/**, packages/core/src/transfer_state.ts
+Status   : SELESAI DIANALISIS (jalur taint-to-sink; lihat analysis/TAINT-TO-SINK.txt)
+==============================================================================
+
+MODEL KEAMANAN ANGULAR DALAM SATU KALIMAT
+------------------------------------------
+Compiler menentukan KONTEKS KEAMANAN setiap binding berdasarkan pasangan
+(tag, properti) dari skema DOM statis, lalu menyisipkan fungsi sanitasi yang
+sesuai ke dalam kode hasil kompilasi; runtime tinggal memanggil fungsi itu tepat
+sebelum menulis ke DOM.
+
+Konsekuensinya: keamanan bergantung pada KELENGKAPAN SKEMA, bukan pada
+pemeriksaan runtime yang menyeluruh. Runtime hanya menambahkan pemeriksaan ulang
+untuk kasus yang tidak bisa diputuskan saat kompilasi (elemen dinamis, host
+binding pada selector generik, iframe).
+
+ENAM KONTEKS KEAMANAN (SecurityContext)
+---------------------------------------
+  NONE          nilai dilewatkan apa adanya
+  HTML          innerHTML, outerHTML, iframe[srcdoc]      -> ɵɵsanitizeHtml
+  STYLE         atribut/properti style                    -> ɵɵsanitizeStyle
+  URL           a[href], form[action], *[formAction], ... -> ɵɵsanitizeUrl
+  RESOURCE_URL  iframe[src], script[src], object[data],
+                base[href], embed[src], link[href]        -> ɵɵsanitizeResourceUrl
+  SCRIPT        konteks kode                              -> ɵɵsanitizeScript
+Ditambah penanda khusus ATTRIBUTE_NO_BINDING untuk atribut yang keputusannya
+harus ditunda ke runtime (dipakai ɵɵvalidateAttribute).
+
+Perbedaan penting URL vs RESOURCE_URL: URL bisa disanitasi (protokol berbahaya
+dibuang), RESOURCE_URL TIDAK BISA - memuat resource berarti mengeksekusi isinya,
+jadi satu-satunya jalan adalah nilai konstan atau bypass eksplisit. Karena itu
+ɵɵsanitizeResourceUrl MELEMPAR bila nilainya bukan SafeResourceUrl.
+
+_sanitizeHtml: PERTAHANAN BERLAPIS
+-----------------------------------
+packages/core/src/sanitization/html_sanitizer.ts:304
+
+  1. Parsing dilakukan di DOM INERT (`<template>` atau document hasil DOMParser),
+     sehingga skrip di dalam markup tidak pernah dieksekusi (inert_body.ts).
+  2. PROTEKSI mXSS: HTML di-parse berulang (maksimal 5 kali) sampai hasil
+     serialisasi STABIL. Ini menutup serangan "mutation XSS" di mana koreksi
+     otomatis browser mengubah markup yang tadinya jinak menjadi berbahaya
+     setelah putaran parsing kedua. Bila tidak stabil setelah 5 putaran, input
+     ditolak dengan error.
+  3. Serialisasi ulang dengan daftar-putih tag dan atribut
+     (SanitizingHtmlSerializer), bukan penghapusan berbasis daftar-hitam.
+  4. Deteksi DOM CLOBBERING: `isClobberedElement` (:225) memeriksa apakah
+     properti navigasi (nextSibling/firstChild) sudah "ditimpa" oleh elemen
+     bernama `name="nextSibling"` dan sejenisnya - serangan klasik untuk
+     menyesatkan sanitizer saat menelusuri pohon.
+  5. Hasil akhir dibungkus TrustedHTML lewat trustedHTMLFromString.
+  6. `finally` mengosongkan inert body agar tidak ada sisa node yang bocor.
+
+_sanitizeUrl
+------------
+packages/core/src/sanitization/url_sanitizer.ts:39
+Satu regex daftar-putih (SAFE_URL_PATTERN, diambil dari Closure) yang:
+  - menolak `javascript:` secara eksplisit di awal pola,
+  - hanya mengizinkan skema `[a-z0-9+.-]+:` atau URL relatif,
+  - MELARANG `&` sebelum [/?#] agar `javascript&#58;` tidak bisa menyamarkan
+    titik dua lewat entity HTML.
+Nilai yang tidak lolos tidak dilempar melainkan diberi awalan `unsafe:` -
+sehingga tautan menjadi tidak berfungsi alih-alih membuat halaman rusak.
+
+TRUSTED TYPES
+-------------
+packages/core/src/util/security/trusted_types.ts
+Policy bernama `angular` dibuat sekali (getPolicy, :38) dan dipakai untuk
+membungkus hasil sanitasi. Bila aplikasi memasang CSP
+`require-trusted-types-for 'script'`, browser menjadi lapisan pertahanan kedua:
+penulisan string mentah ke innerHTML akan ditolak browser meski lolos dari
+Angular. Ada policy terpisah untuk JIT (`newTrustedFunctionForJIT`) dan untuk
+jalur bypass (`trusted_types_bypass.ts`) agar keduanya dapat diaudit terpisah.
+
+JALUR BYPASS
+------------
+`SafeValueImpl` (bypass.ts:61) adalah kelas pembungkus dengan subclass per
+konteks. `allowSanitizationBypassAndThrow` MELEMPAR bila tipe pembungkus tidak
+cocok dengan konteks pemakaian, sehingga SafeUrl tidak bisa dipakai sebagai
+SafeHtml. `unwrapSafeValue` adalah satu-satunya pintu keluar nilai mentah, dan
+seluruh pemanggilnya sudah diverifikasi memanggil pemeriksaan tipe lebih dulu.
+
+KOMBINASI ATTRIBUTE_NO_BINDING (yang paling mudah terlewat saat audit)
+----------------------------------------------------------------------
+Konteks ATTRIBUTE_NO_BINDING tidak memasang sanitizer; ia menandai bahwa
+keputusan harus diambil runtime oleh ɵɵvalidateAttribute. Isinya 18 kombinasi:
+
+  ns=SVG   animate            attributeName, values, to, from
+           set                to, attributeName
+           animateMotion      attributeName
+           animateTransform   attributeName
+  ns=-     iframe             sandbox, allow, allowFullscreen, referrerPolicy,
+                              csp, fetchPriority, credentialless
+           unknown            gabungan keduanya (11 atribut)
+
+`unknown` adalah penampung untuk host binding pada selector generik: saat
+kompilasi, elemen host belum diketahui, sehingga compiler memakai entri ini agar
+pemeriksaan tetap terjadi di runtime. Atribut yang lupa didaftarkan di `unknown`
+akan lolos tanpa pemeriksaan apa pun lewat jalur host binding.
+
+Perilaku runtime untuk keempat tag SVG bersifat "tolak kecuali dilonggarkan":
+tabel SVG_ANIMATION_SENSITIVE_STATIC_VALUES hanya memuat animate(to/values/from)
+dan set(to) sebagai PELONGGARAN bersyarat; kombinasi lain jatuh ke throw tanpa
+syarat. Lihat TAINT-TO-SINK.txt temuan P1c.
+
+Lihat analysis/TAINT-TO-SINK.txt untuk rantai lengkap source -> sink beserta
+matriks status dan daftar titik audit prioritas.
+
+DAFTAR FUNGSI YANG SUDAH DIPAHAMI
+---------------------------------
+[x] ɵɵsanitizeHtml | packages/core/src/sanitization/sanitization.ts:51 | SINK GUARD konteks HTML: verifikasi ulang konteks tag+prop, hormati Sanitizer dari DI, hormati bypass, selain itu jalankan _sanitizeHtml.
+[x] ɵɵsanitizeStyle | packages/core/src/sanitization/sanitization.ts:85 | Guard konteks STYLE; tanpa sanitizer kustom nilai hanya di-stringify (CSS modern dianggap tidak eksekutif).
+[x] ɵɵsanitizeUrl | packages/core/src/sanitization/sanitization.ts:112 | Guard konteks URL: menolak skema berbahaya lewat _sanitizeUrl.
+[x] ɵɵsanitizeResourceUrl | packages/core/src/sanitization/sanitization.ts:134 | Guard konteks RESOURCE_URL: MELEMPAR bila nilai bukan SafeResourceUrl - resource tidak bisa disanitasi, hanya dipercaya.
+[x] ɵɵsanitizeScript | packages/core/src/sanitization/sanitization.ts:162 | Guard konteks SCRIPT: hanya menerima nilai yang di-bypass eksplisit.
+[x] ɵɵtrustConstantHtml | packages/core/src/sanitization/sanitization.ts:191 | Menaikkan literal template konstan menjadi TrustedHTML; menolak bila ada interpolasi (panjang TemplateStringsArray != 1).
+[x] ɵɵtrustConstantResourceUrl | packages/core/src/sanitization/sanitization.ts:217 | Versi RESOURCE_URL dari mekanisme yang sama.
+[x] ɵɵsanitizeUrlOrResourceUrl | packages/core/src/sanitization/sanitization.ts:263 | Untuk elemen yang belum diketahui saat kompilasi: memilih sanitizer berdasarkan tag+prop nyata di runtime.
+[x] getUrlSanitizer | packages/core/src/sanitization/sanitization.ts:237 | Memetakan pasangan tag+properti ke sanitizer URL atau RESOURCE_URL.
+[x] validateAgainstEventProperties | packages/core/src/sanitization/sanitization.ts:267 | Menolak binding ke properti on* (onclick dsb); di runtime hanya aktif pada dev mode, pertahanan produksi ada di compiler.
+[x] getSanitizer | packages/core/src/sanitization/sanitization.ts:278 | Mengambil Sanitizer kustom dari LView[ENVIRONMENT] bila aplikasi menyediakannya.
+[x] getSecurityContext | packages/core/src/sanitization/sanitization.ts:283 | Mencari konteks keamanan pasangan tag+properti dari skema DOM.
+[x] resolveElement | packages/core/src/sanitization/sanitization.ts:288 | Menentukan tag dan namespace sebenarnya, termasuk kasus DynamicHost yang membaca element.tagName/namespaceURI dari DOM nyata.
+[x] ɵɵvalidateAttribute | packages/core/src/sanitization/sanitization.ts:342 | Pemeriksaan keamanan runtime untuk atribut yang konteksnya tidak bisa ditentukan saat kompilasi; memicu netralisasi iframe.
+[x] getSecuritySensitiveSVGAnimationAttributeName | packages/core/src/sanitization/sanitization.ts:398 | Mendeteksi atribut animasi SVG (animate/set to|from|values) yang bisa menulis href - vektor serangan lewat SMIL.
+[x] enforceIframeSecurity | packages/core/src/sanitization/iframe_attrs_validation.ts:26 | Fail-closed: mengosongkan src/srcdoc lalu MENGHAPUS iframe dari DOM bila atribut sensitifnya di-bind dinamis.
+[x] _sanitizeHtml | packages/core/src/sanitization/html_sanitizer.ts:304 | Inti sanitasi HTML: parsing inert, loop anti-mXSS maksimal 5 putaran sampai stabil, serialisasi ulang daftar-putih, pembungkusan TrustedHTML.
+[x] SanitizingHtmlSerializer.sanitizeChildren | packages/core/src/sanitization/html_sanitizer.ts:129 | Menelusuri pohon inert dengan penjagaan clobbering dan menyusun ulang HTML yang aman.
+[x] SanitizingHtmlSerializer.startElement | packages/core/src/sanitization/html_sanitizer.ts:180 | Menyaring tag terhadap daftar-putih dan menyaring atribut (termasuk sanitasi href/src di dalamnya).
+[x] SanitizingHtmlSerializer.endElement | packages/core/src/sanitization/html_sanitizer.ts:206 | Menutup tag yang lolos daftar-putih.
+[x] SanitizingHtmlSerializer.chars | packages/core/src/sanitization/html_sanitizer.ts:215 | Menuliskan teks dengan encoding entity.
+[x] isClobberedElement | packages/core/src/sanitization/html_sanitizer.ts:225 | Deteksi DOM clobbering: properti navigasi yang ditimpa elemen bernama.
+[x] getNextSibling | packages/core/src/sanitization/html_sanitizer.ts:236 | Navigasi aman yang memvalidasi hasil terhadap clobbering.
+[x] getFirstChild | packages/core/src/sanitization/html_sanitizer.ts:251 | Versi anak pertama dari navigasi aman.
+[x] getNodeName | packages/core/src/sanitization/html_sanitizer.ts:260 | Pembacaan nodeName yang tahan terhadap properti yang ditimpa.
+[x] clobberedElementError | packages/core/src/sanitization/html_sanitizer.ts:266 | Error khusus saat clobbering terdeteksi.
+[x] encodeEntities | packages/core/src/sanitization/html_sanitizer.ts:283 | Meng-escape karakter khusus dan surrogate pair saat serialisasi teks.
+[x] getTemplateContent | packages/core/src/sanitization/html_sanitizer.ts:348 | Mengambil isi <template> (fragment inert) bila tersedia.
+[x] isTemplateElement | packages/core/src/sanitization/html_sanitizer.ts:353 | Deteksi elemen template.
+[x] tagSet | packages/core/src/sanitization/html_sanitizer.ts:18 | Membangun himpunan tag daftar-putih dari string.
+[x] merge | packages/core/src/sanitization/html_sanitizer.ts:24 | Menggabungkan beberapa himpunan daftar-putih.
+[x] _sanitizeUrl | packages/core/src/sanitization/url_sanitizer.ts:39 | Daftar-putih regex protokol: menolak javascript: dan penyamaran lewat entity; nilai tak aman diberi awalan `unsafe:`.
+[x] getInertBodyHelper | packages/core/src/sanitization/inert_body.ts:18 | Memilih strategi DOM inert (DOMParser atau inert document) sesuai lingkungan.
+[x] DOMParserHelper.getInertBodyElement | packages/core/src/sanitization/inert_body.ts:37 | Parsing HTML lewat DOMParser sehingga tidak ada eksekusi skrip maupun pemuatan resource.
+[x] InertDocumentHelper.getInertBodyElement | packages/core/src/sanitization/inert_body.ts:73 | Alternatif memakai <template>.innerHTML pada document inert.
+[x] isDOMParserAvailable | packages/core/src/sanitization/inert_body.ts:87 | Deteksi ketersediaan DOMParser.
+[x] unwrapSafeValue | packages/core/src/sanitization/bypass.ts:102 | SATU-SATUNYA pintu keluar nilai mentah dari pembungkus SafeValue.
+[x] allowSanitizationBypassAndThrow | packages/core/src/sanitization/bypass.ts:126 | Memvalidasi bahwa tipe pembungkus cocok dengan konteks pemakaian; melempar bila SafeUrl dipakai sebagai SafeHtml dsb.
+[x] getSanitizationBypassType | packages/core/src/sanitization/bypass.ts:136 | Membaca penanda tipe bypass sebuah nilai.
+[x] bypassSanitizationTrustHtml | packages/core/src/sanitization/bypass.ts:149 | Membungkus string sebagai SafeHtml (titik masuk taint yang disengaja).
+[x] bypassSanitizationTrustStyle | packages/core/src/sanitization/bypass.ts:161 | Membungkus string sebagai SafeStyle.
+[x] bypassSanitizationTrustScript | packages/core/src/sanitization/bypass.ts:173 | Membungkus string sebagai SafeScript.
+[x] bypassSanitizationTrustUrl | packages/core/src/sanitization/bypass.ts:185 | Membungkus string sebagai SafeUrl.
+[x] bypassSanitizationTrustResourceUrl | packages/core/src/sanitization/bypass.ts:197 | Membungkus string sebagai SafeResourceUrl - bypass paling berisiko karena RESOURCE_URL tidak punya sanitasi alternatif.
+[x] SafeValueImpl.getTypeName | packages/core/src/sanitization/bypass.ts:64 | Nama konteks pembungkus untuk pesan error.
+[x] SafeValueImpl.toString | packages/core/src/sanitization/bypass.ts:66 | Representasi debug yang mengingatkan nilai harus dilepas lewat unwrapSafeValue.
+[x] getPolicy | packages/core/src/util/security/trusted_types.ts:38 | Membuat policy Trusted Types bernama 'angular' sekali saja, tahan terhadap lingkungan tanpa dukungan Trusted Types.
+[x] trustedHTMLFromString | packages/core/src/util/security/trusted_types.ts:68 | Membungkus HTML yang SUDAH disanitasi menjadi TrustedHTML.
+[x] trustedScriptURLFromString | packages/core/src/util/security/trusted_types.ts:81 | Membungkus URL resource tepercaya menjadi TrustedScriptURL.
+[x] newTrustedFunctionForJIT | packages/compiler/src/output/output_jit_trusted_types.ts:105 | SINK eksekusi kode untuk JIT: new Function, atau eval dengan TrustedScript; indireksi global['eval'] dipakai agar modul tetap tree-shakable.
+[x] DomSanitizerImpl.sanitize | packages/platform-browser/src/security/dom_sanitization_service.ts:169 | Implementasi Sanitizer publik: per konteks memeriksa bypass lalu menjalankan sanitasi; SCRIPT dan RESOURCE_URL selalu melempar tanpa bypass.
+[x] DomSanitizerImpl.bypassSecurityTrustHtml | packages/platform-browser/src/security/dom_sanitization_service.ts:216 | API publik bypass HTML.
+[x] DomSanitizerImpl.bypassSecurityTrustStyle | packages/platform-browser/src/security/dom_sanitization_service.ts:219 | API publik bypass STYLE.
+[x] DomSanitizerImpl.bypassSecurityTrustScript | packages/platform-browser/src/security/dom_sanitization_service.ts:222 | API publik bypass SCRIPT.
+[x] DomSanitizerImpl.bypassSecurityTrustUrl | packages/platform-browser/src/security/dom_sanitization_service.ts:225 | API publik bypass URL.
+[x] DomSanitizerImpl.bypassSecurityTrustResourceUrl | packages/platform-browser/src/security/dom_sanitization_service.ts:228 | API publik bypass RESOURCE_URL.
+[x] TransferState.toJson | packages/core/src/transfer_state.ts:131 | Serialisasi state SSR dengan escape `<` dan `/` sehingga isi data tidak bisa menutup blok <script> penampungnya.
+[x] TransferState.get | packages/core/src/transfer_state.ts:89 | Membaca nilai dengan nilai bawaan bila kunci tidak ada.
+[x] TransferState.set | packages/core/src/transfer_state.ts:96 | Menulis nilai ke store dan menandai state berubah.
+[x] TransferState.remove | packages/core/src/transfer_state.ts:103 | Menghapus kunci.
+[x] TransferState.hasKey | packages/core/src/transfer_state.ts:110 | Cek keberadaan kunci.
+[x] TransferState.onSerialize | packages/core/src/transfer_state.ts:124 | Callback untuk mengisi nilai tepat sebelum serialisasi.
+[x] retrieveTransferredState | packages/core/src/transfer_state.ts:150 | Membaca dan mem-parse state dari elemen <script> di dokumen klien.
+[x] makeStateKey | packages/core/src/transfer_state.ts:47 | Membuat kunci bertipe untuk TransferState.
+[x] xsrfInterceptorFn | packages/common/http/src/xsrf.ts:94 | Guard XSRF: melewati GET/HEAD, membandingkan origin dengan new URL, dan hanya mengirim token untuk permintaan same-origin (fail-closed pada URL tidak valid).
+[x] HttpXsrfCookieExtractor.getToken | packages/common/http/src/xsrf.ts:65 | Membaca token XSRF dari cookie dengan cache berbasis string cookie.

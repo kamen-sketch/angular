@@ -1,0 +1,31 @@
+==============================================================================
+PEMINDAI ReDoS — regex terkirim Angular
+Berkas: 655   regex diekstrak: 123   berbentuk mencurigakan: 32
+==============================================================================
+Setiap kandidat DIUJI empiris (bukan hanya bentuk).
+
+⚠ packages/core/src/render3/i18n/i18n_parse.ts:667
+    /\s*(?:=)?(\w+)\s*/
+    worst 557.2 ms  (input "\t"x20000+"\u0000")
+⚠ packages/core/src/render3/i18n/i18n_postprocess.ts:17
+    /\d+\:(\d+)/
+    worst 391.7 ms  (input "1"x20000+"")
+
+==============================================================================
+ReDoS TERUKUR: 2 regex melampaui ambang.
+CATATAN: probe ini memakai karakter berulang tunggal + ekor. ReDoS yang
+butuh pola dua-token berselang (mis. "ab" berulang) belum tentu tertangkap.
+
+=== Skala pertumbuhan (kuadratik vs eksponensial) ===
+i18n_parse:667:
+  n=5000  34ms  rasio=-
+  n=10000  147ms  rasio=4.3
+  n=20000  568ms  rasio=3.8
+  n=40000  2183ms  rasio=3.8
+i18n_postprocess:17:
+  n=5000  18ms  rasio=-
+  n=10000  85ms  rasio=4.7
+  n=20000  288ms  rasio=3.4
+  n=40000  1154ms  rasio=4.0
+rasio ~4 => KUADRATIK (unanchored retry), bukan eksponensial.
+Sumber input: pesan ICU/i18n terjemahan (build-time .xlf), bukan data runtime.

@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Cross-account disclosure via Angular Service Worker cache</title>
+<style>
+ body{font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;margin:24px;max-width:900px}
+ h1{font-size:17px;margin:0 0 4px}
+ .sub{color:#555;margin-top:0}
+ table{border-collapse:collapse;width:100%;margin-top:14px}
+ td,th{border:1px solid #bbb;padding:6px 9px;text-align:left;vertical-align:top}
+ th{background:#f4f4f4}
+ .bad{background:#ffe1e1}
+ .ok{background:#e8f6e8}
+ code{background:#f2f2f2;padding:1px 4px}
+ #sw{margin-top:10px;color:#333}
+ .box{padding:9px 11px;margin-top:12px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<h1>User A's authenticated response served to user B</h1>
+<p class="sub">Angular's <code>ngsw-worker.js</code> is genuinely registered in this browser.</p>
+<div id="sw">service worker status: not registered yet</div>
+<div id="result"></div>
+
+<script>
+window.__registerSW = async function () {
+  try {
+    if (!('serviceWorker' in navigator)) {
+      return {ok: false, message: 'serviceWorker unavailable (insecure context?)'};
+    }
+    await navigator.serviceWorker.register('/ngsw-worker.js', {scope: '/'});
+    await navigator.serviceWorker.ready;
+
+    // Wait until the worker actually controls this page, otherwise the first
+    // request never reaches it and the test becomes a no-op that looks safe.
+    if (!navigator.serviceWorker.controller) {
+      await new Promise((resolve, reject) => {
+        const t = setTimeout(() => reject(new Error('never took control of the page')), 15000);
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          clearTimeout(t);
+          resolve();
+        });
+      });
+    }
+
+    for (let i = 0; i < 40; i++) {
+      const state = await fetch('/ngsw/state', {cache: 'no-store'})
+        .then((r) => r.text())
+        .catch(() => '');
+      if (/Latest manifest hash: [0-9a-f]{8}/.test(state)) {
+        document.getElementById('sw').textContent =
+          'service worker status: activated, controlling this page, manifest loaded';
+        return {ok: true};
+      }
+      await new Promise((r) => setTimeout(r, 150));
+    }
+    return {ok: false, message: 'SW activated but the manifest never loaded'};
+  } catch (e) {
+    return {ok: false, message: e.message};
+  }
+};
+
+window.__request = async function (url, token) {
+  const res = await fetch(url, {
+    mode: 'cors',
+    cache: 'no-store',
+    headers: {Authorization: 'Bearer ' + token},
+  });
+  return {status: res.status, body: await res.text()};
+};
+
+window.__varyProbe = async function (url) {
+  const bobRequest = new Request(url, {headers: {Authorization: 'Bearer BOB'}});
+  const out = {};
+  for (const name of await caches.keys()) {
+    const cache = await caches.open(name);
+    if (!(await cache.keys()).some((r) => r.url === url)) continue;
+    const ignoring = await cache.match(bobRequest, {ignoreVary: true});
+    const honouring = await cache.match(bobRequest);
+    out[name] = {
+      withIgnoreVaryTrue: ignoring ? await ignoring.text() : null,
+      withBrowserDefault: honouring ? await honouring.text() : null,
+    };
+  }
+  return out;
+};
+
+window.__report = function (alice, bob) {
+  const esc = (s) =>
+    String(s).replace(/[&<>]/g, (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'})[c]);
+  const leaked = alice.body === bob.body;
+  document.getElementById('result').innerHTML =
+    '<table>' +
+    '<tr><th>step</th><th>token sent</th><th>body the browser received</th></tr>' +
+    '<tr><td>T0 — Alice signs in</td><td><code>Bearer ALICE</code></td><td>' +
+    esc(alice.body) + '</td></tr>' +
+    '<tr class="' + (leaked ? 'bad' : 'ok') + '"><td>T2 — Bob signs in, same browser</td>' +
+    '<td><code>Bearer BOB</code></td><td>' + esc(bob.body) + '</td></tr>' +
+    '</table>' +
+    '<div class="box ' + (leaked ? 'bad' : 'ok') + '">' +
+    (leaked
+      ? 'Bob received Alice’s name, email and role. Bob’s request never reached the identity provider, so the server had no opportunity to refuse it.'
+      : 'Bob received his own data.') +
+    '</div>';
+};
+</script>
+</body>
+</html>

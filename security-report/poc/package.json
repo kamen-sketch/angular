@@ -1,0 +1,15 @@
+{
+  "name": "ngsw-ignorevary-poc",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Proof of concept: Angular Service Worker forces ignoreVary: true",
+  "scripts": {
+    "poc:ignorevary": "node poc-f13.mjs --shot ../evidence/ignore-vary.png",
+    "poc:crossorigin": "node poc-f12.mjs --shot ../evidence/cross-account.png"
+  },
+  "dependencies": {
+    "@angular/service-worker": "22.1.0",
+    "playwright": "^1.49.0"
+  }
+}

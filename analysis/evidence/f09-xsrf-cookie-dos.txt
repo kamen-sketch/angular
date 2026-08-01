@@ -1,0 +1,20 @@
+{
+ "hasil": [
+  {
+   "label": "cookie sah \"abc123\"",
+   "hasil": "BERHASIL"
+  },
+  {
+   "label": "cookie cacat \"%\"",
+   "hasil": "GAGAL",
+   "tipe": "URIError",
+   "pesan": "URI malformed"
+  },
+  {
+   "label": "kembali ke cookie sah",
+   "hasil": "BERHASIL"
+  }
+ ],
+ "cookie": "XSRF-TOKEN=abc123"
+}
+pageerror: (none)

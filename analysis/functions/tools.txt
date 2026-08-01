@@ -1,0 +1,92 @@
+INVENTORY FUNGSI :: tools
+Total simbol: 44 | file: 14
+Rincian: function=16, class=13, method=14, ctor=1
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## tools/manual_api_docs/generate_block_api_json.mts
+[ ] main  (function) :18
+
+## tools/manual_api_docs/generate_element_api_json.mts
+[ ] main  (function) :13
+
+## tools/symbol-extractor/cli.mts
+[ ] main  (function) :33
+      -- CLI main method. ```   cli javascriptFilePath.js goldenFilePath.json ```
+
+## tools/symbol-extractor/symbol_extractor.mts
+[ ] SymbolExtractor  (export class) :13
+[ ] SymbolExtractor.parse  (method) :17
+[ ] visitor  (function) :28
+[ ] SymbolExtractor.diff  (method) :88
+[ ] SymbolExtractor.constructor  (ctor) :108
+[ ] SymbolExtractor.expect  (method) :115
+[ ] SymbolExtractor.compareAndPrintError  (method) :119
+[ ] stripSuffix  (function) :140
+
+## tools/symbol-extractor/symbol_extractor_spec/es2015_class_output.ts
+[ ] HelloWorld  (class) :9
+[ ] HelloWorld.greet  (method) :10
+[ ] WithStaticMembers  (class) :17
+      -- static members.
+
+## tools/testing/browser_tests.init.mts
+[ ] TestModule  (export class) :20
+
+## tools/testing/browser_zoneless_tests.init.mts
+[ ] TestModule  (export class) :21
+
+## tools/testing/node_tests.init.mts
+[ ] TestModule  (export class) :27
+
+## tools/testing/node_zoneless_tests.init.mts
+[ ] TestModule  (export class) :24
+
+## tools/tslint/noDuplicateEnumValuesRule.ts
+[ ] Rule  (export class) :25
+      -- Rule that detects duplicate enum values. This is useful to prevent collisons on ErrorCodes. ```ts enum E {   A = 1,   B = 1, // Wrong! } ```
+[ ] Rule.applyWithProgram  (method) :26
+
+## tools/tslint/noExportedInferredCallTypeRule.ts
+[ ] Rule  (export class) :24
+      -- Rule that ensures ("best effort") that exported constants are having an explicit type if they would otherwise rely on a synthetically inserted type that is infe
+[ ] Rule.applyWithProgram  (method) :25
+
+## tools/tslint/noImplicitOverrideAbstractRule.ts
+[ ] Rule  (export class) :28
+      -- Rule which enforces that class members implementing abstract members from base classes explicitly specify the `override` modifier. This ensures we follow the be
+[ ] Rule.applyWithProgram  (method) :29
+[ ] visitNode  (function) :38
+      -- For a TypeScript AST node and each of its child nodes, check whether the node is a class element which implements an abstract member but does not have the `over
+[ ] matchesParentAbstractElement  (function) :60
+      -- Checks if the specified class element matches a parent abstract class element. i.e. whether the specified member "implements" an abstract member from a base cla
+[ ] checkClassForInheritedMatchingAbstractMember  (function) :82
+      -- Checks if the given class inherits an abstract member with the specified name.
+[ ] getBaseClass  (function) :107
+      -- Gets the base class for the given class declaration.
+[ ] getExtendsHeritageExpressions  (function) :128
+      -- Gets the `extends` base type expressions of the specified class.
+[ ] hasAbstractModifier  (function) :144
+      -- Gets whether the specified node has the `abstract` modifier applied.
+[ ] hasOverrideModifier  (function) :154
+      -- Gets whether the specified node has the `override` modifier applied.
+[ ] getPropertyNameText  (function) :161
+      -- Gets the property name text of the specified property name.
+
+## tools/tslint/requireInternalWithUnderscoreRule.ts
+[ ] Rule  (export class) :14
+[ ] Rule.apply  (method) :15
+[ ] TypedefWalker  (class) :21
+[ ] TypedefWalker.visitPropertyDeclaration  (method) :22
+[ ] TypedefWalker.visitMethodDeclaration  (method) :27
+[ ] TypedefWalker.hasInternalAnnotation  (method) :32
+[ ] TypedefWalker.assertInternalAnnotationPresent  (method) :38
+
+## tools/tslint/validateImportForEsmCjsInteropRule.ts
+[ ] Rule  (export class) :57
+      -- Rule that blocks named imports from being used for certain configured module specifiers. This is helpful for enforcing an ESM-compatible interop with CommonJS m
+[ ] Rule.apply  (method) :58
+[ ] visitNode  (function) :64
+[ ] isNamedImportToDisallowedModule  (function) :86
+[ ] isDefaultImportToDisallowedModule  (function) :94

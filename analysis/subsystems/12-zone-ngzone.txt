@@ -1,0 +1,122 @@
+SUBSISTEM 12 :: zone.js & NgZone
+Lokasi   : packages/zone.js/lib/**, packages/core/src/zone/ng_zone.ts
+Status   : DIANALISIS - mekanisme monkey-patching, model task, integrasi NgZone
+==============================================================================
+
+APA YANG SEBENARNYA DILAKUKAN ZONE.JS
+--------------------------------------
+zone.js MENAMBAL (monkey-patch) hampir semua API asinkron browser dan Node:
+setTimeout/setInterval, Promise, addEventListener, XMLHttpRequest, requestAnimationFrame,
+MutationObserver, FileReader, WebSocket, dan seterusnya. Tujuannya satu: setiap
+callback asinkron tetap "mengingat" zone tempat ia dijadwalkan, dan zone tersebut
+diberi tahu setiap kali sebuah task dijadwalkan, dijalankan, atau selesai.
+
+Alat penambalan utama di `common/utils.ts`:
+  - `patchMethod(target, name, patchFn)` - mengganti satu metode, menyimpan versi
+    asli di properti simbol (`Zone.__symbol__(name)`) supaya bisa dipanggil
+    kembali dan supaya penambalan bersifat idempoten.
+  - `patchOnProperties`/`patchProperty` - menangani properti `onclick`,
+    `onload`, dst yang bukan addEventListener.
+  - `patchClass` - membungkus konstruktor (mis. MutationObserver) agar callback-nya
+    terikat zone.
+  - `patchMacroTask` / `patchMicroTask` - membungkus API menjadi task berjenis
+    tertentu.
+  - `wrapWithCurrentZone` - mengikat sebuah callback ke zone saat ini.
+  - `bindArguments` - mengikat semua argumen fungsi yang berupa callback.
+
+TIGA JENIS TASK
+---------------
+  microTask   Promise.then, queueMicrotask
+  macroTask   setTimeout, setInterval, XHR, event yang dijadwalkan
+  eventTask   listener DOM (bisa berjalan berkali-kali, tidak "selesai")
+
+`ZoneImpl` menghitung jumlah task per jenis (`_updateTaskCount`) dan memancarkan
+`onHasTask` ketika jumlah suatu jenis berpindah dari 0 ke >0 atau sebaliknya.
+Inilah sinyal yang dipakai Angular untuk mengetahui "aplikasi sedang sibuk" vs
+"aplikasi sudah tenang".
+
+`Zone.fork(zoneSpec)` membuat zone anak dengan hook: `onFork`, `onIntercept`,
+`onInvoke`, `onHandleError`, `onScheduleTask`, `onInvokeTask`, `onCancelTask`,
+`onHasTask`. `ZoneDelegate` merantai hook zone anak ke induknya.
+
+NgZone: ZONE ANGULAR
+--------------------
+`NgZone` membuat satu zone anak bernama `angular` (`forkInnerZoneWithAngularBehavior`)
+dengan hook:
+  - `onInvokeTask`/`onInvoke`: menaikkan `_nesting` saat masuk (`onEnter`) dan
+    menurunkannya saat keluar (`onLeave`), lalu memanggil `checkStable`.
+  - `onHasTask`: memperbarui `_hasPendingMicrotasks`/`hasPendingMacrotasks`.
+  - `onHandleError`: meneruskan error ke `onError` EventEmitter.
+
+`checkStable(zone)` adalah inti integrasi: bila tidak ada microtask tertunda dan
+`_nesting == 0`, zone memancarkan `onMicrotaskEmpty` (yang secara historis
+memicu `ApplicationRef.tick`) lalu `onStable`. Ada penjagaan re-entrancy
+(`isStable`, `isCheckStableRunning`) karena listener `onMicrotaskEmpty` sendiri
+bisa menjadwalkan pekerjaan baru.
+
+COALESCING
+----------
+Dua opsi mengurangi jumlah CD:
+  - `eventCoalescing` - beberapa event dalam satu frame hanya memicu satu CD.
+  - `runCoalescing` - beberapa `ngZone.run()` berturut-turut hanya memicu satu CD.
+Keduanya diimplementasikan `delayChangeDetectionForEvents`, yang menunda
+`checkStable` ke `scheduleCallbackWithRafRace` (balapan rAF vs setTimeout).
+Komentar di kode menjelaskan mengapa `_nesting` juga harus diperiksa: dua
+`ngZone.run()` berurutan tidak boleh menghasilkan dua CD.
+
+Ada pengecualian penting: bila task yang dijalankan adalah TICK DARI SCHEDULER
+(`isSchedulerTick`), stabilitas dievaluasi SINKRON, supaya scheduler zoneless
+tidak menghasilkan `ApplicationRef.tick` ganda.
+
+ZONELESS
+--------
+`NoopNgZone` mengimplementasikan antarmuka NgZone tanpa zone sama sekali - semua
+metodenya sekadar memanggil fungsi yang diberikan. Aplikasi zoneless memakai ini
+plus `ChangeDetectionSchedulerImpl` (subsistem 03) yang mendapat notifikasi
+langsung dari signal/markForCheck/listener, bukan dari zone.
+
+TESTING
+-------
+`zone-spec/fake-async-test.ts` menyediakan `fakeAsync`/`tick` dengan mengganti
+antrean timer menjadi jam virtual; `async-test.ts` mendukung `waitForAsync`;
+`proxy.ts` dan `long-stack-trace.ts` untuk diagnostik. Adapter untuk Jasmine,
+Jest, Mocha, dan Vitest ada di direktori masing-masing.
+
+DAFTAR FUNGSI YANG SUDAH DIPAHAMI
+---------------------------------
+[x] NgZone.run | packages/core/src/zone/ng_zone.ts:234 | Menjalankan fungsi di dalam zone Angular sehingga pekerjaan asinkronnya memicu CD.
+[x] NgZone.runOutsideAngular | packages/core/src/zone/ng_zone.ts:281 | Menjalankan fungsi di zone induk agar task-nya tidak memicu CD.
+[x] NgZone.runGuarded | packages/core/src/zone/ng_zone.ts:264 | Seperti run(), tetapi error diteruskan ke handler zone.
+[x] NgZone.runTask | packages/core/src/zone/ng_zone.ts:250 | Menjalankan fungsi sebagai eventTask sehingga memicu evaluasi stabilitas.
+[x] NgZone.isInAngularZone | packages/core/src/zone/ng_zone.ts:193 | Cek apakah kode saat ini berjalan di dalam zone Angular.
+[x] NgZone.assertInAngularZone | packages/core/src/zone/ng_zone.ts:201 | Asersi berada di dalam zone Angular.
+[x] NgZone.assertNotInAngularZone | packages/core/src/zone/ng_zone.ts:213 | Asersi berada di luar zone Angular.
+[x] checkStable | packages/core/src/zone/ng_zone.ts:354 | Inti integrasi: memancarkan onMicrotaskEmpty lalu onStable saat tidak ada microtask dan nesting nol, dengan penjagaan re-entrancy.
+[x] delayChangeDetectionForEvents | packages/core/src/zone/ng_zone.ts:387 | Implementasi coalescing: menunda checkStable ke rAF-race dan mencegah penjadwalan ganda.
+[x] scheduleCheckStable | packages/core/src/zone/ng_zone.ts:405 | Menjadwalkan evaluasi stabilitas di luar zone Angular (atau di root zone).
+[x] forkInnerZoneWithAngularBehavior | packages/core/src/zone/ng_zone.ts:426 | Membuat zone 'angular' beserta seluruh hook onInvoke/onInvokeTask/onHasTask/onHandleError.
+[x] updateMicroTaskStatus | packages/core/src/zone/ng_zone.ts:526 | Menghitung ulang flag hasPendingMicrotasks termasuk kasus coalescing.
+[x] onEnter | packages/core/src/zone/ng_zone.ts:538 | Menaikkan nesting dan memancarkan onUnstable pada transisi pertama.
+[x] onLeave | packages/core/src/zone/ng_zone.ts:546 | Menurunkan nesting lalu mengevaluasi stabilitas.
+[x] NoopNgZone.run | packages/core/src/zone/ng_zone.ts:564 | Implementasi zoneless: langsung memanggil fungsi.
+[x] NoopNgZone.runOutsideAngular | packages/core/src/zone/ng_zone.ts:572 | Tidak ada zone, jadi identik dengan run.
+[x] NoopNgZone.runGuarded | packages/core/src/zone/ng_zone.ts:568 | Varian tanpa penanganan zone.
+[x] NoopNgZone.runTask | packages/core/src/zone/ng_zone.ts:576 | Varian tanpa penanganan zone.
+[x] isSchedulerTick | packages/core/src/zone/ng_zone.ts:585 | Mengenali task yang merupakan tick scheduler agar stabilitas dievaluasi sinkron.
+[x] shouldBeIgnoredByZone | packages/core/src/zone/ng_zone.ts:581 | Menandai task yang tidak boleh memengaruhi stabilitas.
+[x] hasApplyArgsData | packages/core/src/zone/ng_zone.ts:589 | Pembacaan aman terhadap metadata argumen task.
+[x] getNgZone | packages/core/src/zone/ng_zone.ts:611 | Memilih NgZone atau NoopNgZone sesuai konfigurasi bootstrap.
+[x] patchMethod | packages/zone.js/lib/common/utils.ts:424 | Penambal universal: menyimpan metode asli di properti simbol lalu menggantinya (idempoten).
+[x] patchPrototype | packages/zone.js/lib/common/utils.ts:77 | Menambal sekumpulan metode pada sebuah prototipe.
+[x] patchProperty | packages/zone.js/lib/common/utils.ts:197 | Menambal properti handler (onclick dsb) dengan getter/setter sadar-zone.
+[x] patchOnProperties | packages/zone.js/lib/common/utils.ts:302 | Menambal seluruh properti on* sebuah objek.
+[x] patchClass | packages/zone.js/lib/common/utils.ts:323 | Membungkus konstruktor kelas agar callback-nya terikat zone.
+[x] patchMacroTask | packages/zone.js/lib/common/utils.ts:471 | Membungkus API menjadi macroTask (mis. XHR send).
+[x] patchMicroTask | packages/zone.js/lib/common/utils.ts:510 | Membungkus API menjadi microTask.
+[x] wrapWithCurrentZone | packages/zone.js/lib/common/utils.ts:44 | Mengikat callback ke zone saat ini.
+[x] scheduleMacroTaskWithCurrentZone | packages/zone.js/lib/common/utils.ts:48 | Menjadwalkan macroTask pada zone aktif.
+[x] bindArguments | packages/zone.js/lib/common/utils.ts:68 | Mengikat semua argumen berupa fungsi ke zone saat ini.
+[x] copySymbolProperties | packages/zone.js/lib/common/utils.ts:394 | Menyalin properti simbol dari objek asli ke objek tertambal.
+[x] attachOriginToPatched | packages/zone.js/lib/common/utils.ts:542 | Menyimpan referensi ke implementasi asli pada fungsi tertambal.
+[x] isPropertyWritable | packages/zone.js/lib/common/utils.ts:98 | Memeriksa descriptor sebelum mencoba menambal properti.
+[x] patchTimer | packages/zone.js/lib/common/timers.ts:28 | Menambal setTimeout/setInterval beserta pembatalnya menjadi macroTask zone.

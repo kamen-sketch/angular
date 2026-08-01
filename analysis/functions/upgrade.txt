@@ -1,0 +1,170 @@
+INVENTORY FUNGSI :: upgrade
+Total simbol: 101 | file: 16
+Rincian: function=43, arrow=4, class=11, method=34, ctor=9
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## packages/upgrade/src/common/src/angular1.ts
+[ ] noNg  (function) :245
+[ ] setAngularLib  (export function) :290
+[ ] getAngularLib  (export function) :299
+[ ] setAngularJSGlobal  (export function) :310
+      -- Resets the AngularJS global. Used when AngularJS is loaded lazily, and not available on `window`.
+[ ] getAngularJSGlobal  (export function) :319
+      -- Returns the current AngularJS global.
+[ ] bootstrap  (export arrow) :323
+[ ] module_  (export arrow) :328
+      -- (see https://github.com/angular/angular/issues/30050).
+[ ] element  (export arrow) :331
+[ ] injector  (export arrow) :335
+
+## packages/upgrade/src/common/src/component_info.ts
+[ ] PropertyBinding  (export class) :15
+      -- A `PropertyBinding` represents a mapping between a property name and an attribute name. It is parsed from a string of the form `"prop: attr"`; or simply `"propA
+[ ] PropertyBinding.constructor  (ctor) :23
+
+## packages/upgrade/src/common/src/downgrade_component.ts
+[ ] downgradeComponent  (export function) :91
+      -- A helper function that allows an Angular component to be used from AngularJS. *Part of the [upgrade/static](api?query=upgrade%2Fstatic) library for hybrid upgra
+[ ] ParentInjectorPromise  (class) :261
+      -- Synchronous promise-like object to wrap parent injectors, to preserve the synchronous nature of AngularJS's `$compile`.
+[ ] ParentInjectorPromise.constructor  (ctor) :264
+[ ] ParentInjectorPromise.resolve  (method) :271
+
+## packages/upgrade/src/common/src/downgrade_component_adapter.ts
+[ ] DowngradeComponentAdapter  (export class) :46
+[ ] DowngradeComponentAdapter.constructor  (ctor) :52
+[ ] DowngradeComponentAdapter.compileContents  (method) :68
+[ ] DowngradeComponentAdapter.createComponentAndSetup  (method) :85
+[ ] DowngradeComponentAdapter.createComponent  (method) :98
+[ ] DowngradeComponentAdapter.setupInputs  (method) :131
+[ ] DowngradeComponentAdapter.setupOutputs  (method) :227
+[ ] DowngradeComponentAdapter.subscribeToOutput  (method) :256
+[ ] DowngradeComponentAdapter.registerCleanup  (method) :282
+[ ] DowngradeComponentAdapter.updateInput  (method) :319
+[ ] DowngradeComponentAdapter.groupProjectableNodes  (method) :350
+[ ] groupNodesBySelector  (export function) :359
+      -- Group a set of DOM nodes into `ngContent` groups, based on the given content selectors.
+[ ] findMatchingNgContentIndex  (function) :380
+[ ] matchesSelector  (function) :404
+
+## packages/upgrade/src/common/src/downgrade_injectable.ts
+[ ] downgradeInjectable  (export function) :75
+      -- A helper function to allow an Angular service to be accessible from AngularJS. *Part of the [upgrade/static](api?query=upgrade%2Fstatic) library for hybrid upgr
+
+## packages/upgrade/src/common/src/promise_util.ts
+[ ] isThenable  (export function) :15
+[ ] SyncPromise  (export class) :22
+      -- Synchronous, promise-like object.
+[ ] SyncPromise.all  (method) :27
+[ ] SyncPromise.resolve  (method) :48
+[ ] SyncPromise.then  (method) :60
+
+## packages/upgrade/src/common/src/security/trusted_types.ts
+[ ] getPolicy  (function) :31
+      -- Returns the Trusted Types policy, or null if Trusted Types are not enabled/supported. The first call to this function will create the policy.
+[ ] trustedHTMLFromLegacyTemplate  (export function) :59
+      -- Unsafely promote a legacy AngularJS template to a TrustedHTML, falling back to strings when Trusted Types are not available. must go through security review. In
+
+## packages/upgrade/src/common/src/upgrade_helper.ts
+[ ] UpgradeHelper  (export class) :49
+      -- Classes
+[ ] UpgradeHelper.constructor  (ctor) :58
+[ ] UpgradeHelper.getDirective  (method) :74
+[ ] UpgradeHelper.getTemplate  (method) :91
+[ ] UpgradeHelper.buildController  (method) :125
+[ ] UpgradeHelper.compileTemplate  (method) :136
+[ ] UpgradeHelper.onDestroy  (method) :146
+[ ] UpgradeHelper.prepareTransclusion  (method) :154
+[ ] UpgradeHelper.resolveAndBindRequiredControllers  (method) :239
+[ ] UpgradeHelper.compileHtml  (method) :253
+[ ] UpgradeHelper.extractChildNodes  (method) :258
+[ ] UpgradeHelper.getDirectiveRequire  (method) :270
+[ ] UpgradeHelper.resolveRequire  (method) :287
+[ ] getOrCall  (function) :326
+[ ] isMap  (function) :331
+      -- NOTE: Only works for `typeof T !== 'object'`.
+[ ] notSupported  (function) :335
+
+## packages/upgrade/src/common/src/util.ts
+[ ] onError  (export function) :28
+[ ] cleanData  (export function) :46
+      -- Clean the jqLite/jQuery data on the element and all its descendants. Equivalent to how jqLite/jQuery invoke `cleanData()` on an Element when removed:   https://
+[ ] controllerKey  (export function) :53
+[ ] destroyApp  (export function) :66
+      -- Destroy an AngularJS app given the app `$injector`. NOTE: Destroying an app is not officially supported by AngularJS, but try to do our best by       destroying
+[ ] directiveNormalize  (export function) :74
+[ ] getTypeName  (export function) :80
+[ ] getDowngradedModuleCount  (export function) :85
+[ ] getUpgradeAppType  (export function) :91
+[ ] isFunction  (export function) :97
+[ ] isNgModuleType  (export function) :101
+[ ] isParentNode  (function) :106
+[ ] validateInjectionKey  (export function) :110
+[ ] Deferred  (export class) :158
+[ ] Deferred.constructor  (ctor) :163
+[ ] supportsNgModel  (function) :195
+      --     `ControlValueAccessor` interface needed for AngularJS `ng-model`     compatibility.
+[ ] hookupNgModel  (export function) :205
+      -- Glue the AngularJS `NgModelController` (if it exists) to the component (if it implements the needed subset of the `ControlValueAccessor` interface).
+[ ] strictEquals  (export function) :220
+      -- Test two values for strict equality, accounting for the fact that `NaN !== NaN`.
+
+## packages/upgrade/static/src/angular1_providers.ts
+[ ] setTempInjectorRef  (export function) :16
+[ ] injectorFactory  (export function) :19
+[ ] rootScopeFactory  (export function) :29
+[ ] compileFactory  (export function) :33
+[ ] parseFactory  (export function) :37
+
+## packages/upgrade/static/src/downgrade_module.ts
+[ ] downgradeModule  (export function) :140
+      -- A helper function for creating an AngularJS module that can bootstrap an Angular module "on-demand" (possibly lazily) when a {@link downgradeComponent downgrade
+[ ] downgradeModule  (export function) :259
+      -- A helper function for creating an AngularJS module that can bootstrap an Angular module "on-demand" (possibly lazily) when a {@link downgradeComponent downgrade
+[ ] downgradeModule  (export function) :373
+      -- A helper function for creating an AngularJS module that can bootstrap an Angular module "on-demand" (possibly lazily) when a {@link downgradeComponent downgrade
+[ ] identity  (function) :454
+
+## packages/upgrade/static/src/upgrade_component.ts
+[ ] Bindings  (class) :28
+[ ] UpgradeComponent  (export class) :78
+      -- A helper class that allows an AngularJS component to be used from Angular. *Part of the [upgrade/static](api?query=upgrade%2Fstatic) library for hybrid upgrade 
+[ ] UpgradeComponent.constructor  (ctor) :108
+[ ] UpgradeComponent.ngOnInit  (method) :127
+      -- @docs-private
+[ ] UpgradeComponent.ngOnChanges  (method) :200
+      -- @docs-private
+[ ] UpgradeComponent.ngDoCheck  (method) :209
+      -- @docs-private
+[ ] UpgradeComponent.ngOnDestroy  (method) :229
+      -- @docs-private
+[ ] UpgradeComponent.initializeBindings  (method) :236
+[ ] UpgradeComponent.initializeOutputs  (method) :282
+[ ] UpgradeComponent.bindOutputs  (method) :292
+[ ] UpgradeComponent.forwardChanges  (method) :302
+
+## packages/upgrade/static/src/upgrade_module.ts
+[ ] UpgradeModule  (export class) :150
+      -- An `NgModule`, which you import to provide AngularJS core services, and has an instance method used to bootstrap the hybrid upgrade application. *Part of the [u
+[ ] UpgradeModule.constructor  (ctor) :159
+[ ] UpgradeModule.bootstrap  (method) :183
+      -- Bootstrap an AngularJS application from this NgModule     [angular.bootstrap()](https://docs.angularjs.org/api/ng/function/angular.bootstrap).
+
+## packages/upgrade/static/src/util.ts
+[ ] NgAdapterInjector  (export class) :14
+[ ] NgAdapterInjector.constructor  (ctor) :15
+[ ] NgAdapterInjector.get  (method) :21
+      -- AngularJS only supports a single tree and should always check the module injector.
+
+## packages/upgrade/static/testing/src/create_angular_testing_module.ts
+[ ] $injectorFactory  (export function) :17
+[ ] AngularTestingModule  (export class) :22
+[ ] AngularTestingModule.constructor  (ctor) :23
+[ ] createAngularTestingModule  (export function) :93
+      -- A helper function to use when unit testing Angular services that depend upon upgraded AngularJS services. This function returns an `NgModule` decorated class th
+
+## packages/upgrade/static/testing/src/create_angularjs_testing_module.ts
+[ ] createAngularJSTestingModule  (export function) :80
+      -- A helper function to use when unit testing AngularJS services that depend upon downgraded Angular services. This function returns an AngularJS module that is co

@@ -1,0 +1,446 @@
+INVENTORY FUNGSI :: examples
+Total simbol: 261 | file: 78
+Rincian: function=5, arrow=7, class=148, method=63, accessor=8, ctor=30
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## packages/examples/common/location/ts/hash_location_component.ts
+[ ] HashLocationComponent  (export class) :25
+[ ] HashLocationComponent.constructor  (ctor) :27
+
+## packages/examples/common/location/ts/module.ts
+[ ] AppComponent  (export class) :21
+[ ] AppModule  (export class) :28
+
+## packages/examples/common/location/ts/path_location_component.ts
+[ ] PathLocationComponent  (export class) :25
+[ ] PathLocationComponent.constructor  (ctor) :27
+
+## packages/examples/common/ngComponentOutlet/ts/module.ts
+[ ] HelloWorld  (export class) :26
+[ ] NgComponentOutletSimpleExample  (export class) :33
+[ ] Greeter  (export class) :41
+      -- #docregion CompleteExample
+[ ] CompleteComponent  (export class) :50
+[ ] CompleteComponent.constructor  (ctor) :53
+[ ] NgComponentOutletCompleteExample  (export class) :70
+[ ] NgComponentOutletCompleteExample.constructor  (ctor) :81
+[ ] AppComponent  (export class) :107
+
+## packages/examples/common/ngIf/ts/module.ts
+[ ] NgIfSimple  (export class) :24
+[ ] NgIfElse  (export class) :41
+[ ] NgIfThenElse  (export class) :61
+[ ] NgIfThenElse.switchPrimary  (method) :68
+[ ] NgIfThenElse.ngOnInit  (method) :72
+[ ] NgIfAs  (export class) :91
+[ ] NgIfAs.nextUser  (method) :98
+[ ] AppComponent  (export class) :122
+
+## packages/examples/common/ngTemplateOutlet/ts/module.ts
+[ ] NgTemplateOutletExample  (export class) :33
+[ ] AppComponent  (export class) :43
+
+## packages/examples/common/pipes/ts/async_pipe.ts
+[ ] AsyncPromisePipeComponent  (export class) :23
+[ ] AsyncPromisePipeComponent.constructor  (ctor) :29
+[ ] AsyncPromisePipeComponent.reset  (method) :33
+[ ] AsyncPromisePipeComponent.clicked  (method) :40
+[ ] AsyncObservablePipeComponent  (export class) :57
+[ ] setInterval  (function) :67
+      -- the reader.
+
+## packages/examples/common/pipes/ts/currency_pipe.ts
+[ ] CurrencyPipeComponent  (export class) :44
+
+## packages/examples/common/pipes/ts/date_pipe.ts
+[ ] DatePipeComponent  (export class) :46
+[ ] DeprecatedDatePipeComponent  (export class) :67
+
+## packages/examples/common/pipes/ts/i18n_pipe.ts
+[ ] I18nPluralPipeComponent  (export class) :18
+[ ] I18nSelectPipeComponent  (export class) :34
+
+## packages/examples/common/pipes/ts/json_pipe.ts
+[ ] JsonPipeComponent  (export class) :23
+
+## packages/examples/common/pipes/ts/keyvalue_pipe.ts
+[ ] KeyValuePipeComponent  (export class) :31
+
+## packages/examples/common/pipes/ts/locale-fr.ts
+[ ] plural  (function) :14
+
+## packages/examples/common/pipes/ts/lowerupper_pipe.ts
+[ ] LowerUpperPipeComponent  (export class) :24
+[ ] LowerUpperPipeComponent.change  (method) :26
+
+## packages/examples/common/pipes/ts/module.ts
+[ ] AppComponent  (export class) :79
+
+## packages/examples/common/pipes/ts/number_pipe.ts
+[ ] NumberPipeComponent  (export class) :40
+
+## packages/examples/common/pipes/ts/percent_pipe.ts
+[ ] PercentPipeComponent  (export class) :32
+
+## packages/examples/common/pipes/ts/slice_pipe.ts
+[ ] SlicePipeStringComponent  (export class) :25
+[ ] SlicePipeListComponent  (export class) :40
+
+## packages/examples/common/pipes/ts/titlecase_pipe.ts
+[ ] TitleCasePipeComponent  (export class) :31
+
+## packages/examples/common/test_module.ts
+[ ] TestsAppComponent  (export class) :23
+[ ] TestsAppModule  (export class) :42
+
+## packages/examples/core/animation/ts/dsl/animation_example.ts
+[ ] MyExpandoCmp  (export class) :42
+[ ] MyExpandoCmp.constructor  (ctor) :44
+[ ] MyExpandoCmp.expand  (method) :47
+[ ] MyExpandoCmp.collapse  (method) :50
+
+## packages/examples/core/di/ts/contentChild/content_child_example.ts
+[ ] Pane  (export class) :15
+[ ] Tab  (export class) :23
+[ ] ContentChildComp  (export class) :42
+[ ] ContentChildComp.toggle  (method) :45
+
+## packages/examples/core/di/ts/contentChild/content_child_howto.ts
+[ ] ChildDirective  (class) :13
+[ ] SomeDir  (class) :16
+[ ] SomeDir.ngAfterContentInit  (method) :19
+
+## packages/examples/core/di/ts/contentChildren/content_children_example.ts
+[ ] Pane  (export class) :23
+[ ] Tab  (export class) :35
+[ ] Tab.serializedPanes  (accessor) :39
+[ ] Tab.serializedNestedPanes  (accessor) :42
+[ ] ContentChildrenComp  (export class) :68
+[ ] ContentChildrenComp.show  (method) :71
+
+## packages/examples/core/di/ts/contentChildren/content_children_howto.ts
+[ ] ChildDirective  (class) :15
+[ ] SomeDir  (class) :20
+[ ] SomeDir.ngAfterContentInit  (method) :23
+
+## packages/examples/core/di/ts/viewChild/view_child_example.ts
+[ ] Pane  (export class) :15
+[ ] ViewChildComp  (export class) :34
+[ ] ViewChildComp.pane  (accessor) :36
+[ ] ViewChildComp.toggle  (method) :43
+
+## packages/examples/core/di/ts/viewChild/view_child_howto.ts
+[ ] ChildDirective  (export class) :15
+[ ] SomeCmp  (export class) :21
+[ ] SomeCmp.ngAfterViewInit  (method) :24
+
+## packages/examples/core/di/ts/viewChildren/view_children_example.ts
+[ ] Pane  (export class) :24
+[ ] ViewChildrenComp  (export class) :44
+[ ] ViewChildrenComp.show  (method) :50
+[ ] ViewChildrenComp.ngAfterViewInit  (method) :54
+[ ] ViewChildrenComp.calculateSerializedPanes  (method) :61
+
+## packages/examples/core/di/ts/viewChildren/view_children_howto.ts
+[ ] ChildDirective  (class) :15
+[ ] SomeCmp  (class) :21
+[ ] SomeCmp.ngAfterViewInit  (method) :24
+
+## packages/examples/core/test_app_component.ts
+[ ] TestsAppComponent  (export class) :25
+
+## packages/examples/core/testability/ts/whenStable/testability_example.ts
+[ ] StableTestCmp  (export class) :18
+[ ] StableTestCmp.start  (method) :20
+
+## packages/examples/core/ts/bootstrap/bootstrap.ts
+[ ] MyApp  (class) :16
+[ ] main  (export function) :20
+
+## packages/examples/core/ts/change_detect/change-detection.ts
+[ ] AppComponent  (class) :24
+[ ] AppComponent.constructor  (ctor) :27
+[ ] DataListProvider  (class) :38
+      -- #docregion detach
+[ ] DataListProvider.data  (accessor) :40
+      -- in a real application the returned data will be different every time
+[ ] GiantList  (class) :53
+[ ] GiantList.constructor  (ctor) :54
+[ ] App  (class) :71
+[ ] DataProvider  (class) :75
+      -- #docregion reattach
+[ ] DataProvider.constructor  (ctor) :77
+[ ] LiveData  (class) :88
+[ ] LiveData.constructor  (ctor) :90
+[ ] App1  (class) :113
+
+## packages/examples/core/ts/metadata/directives.ts
+[ ] BankAccountComponent  (export class) :17
+[ ] MyInputComponent  (export class) :30
+[ ] IntervalDirComponent  (export class) :37
+[ ] IntervalDirComponent.constructor  (ctor) :41
+[ ] MyOutputComponent  (export class) :54
+[ ] MyOutputComponent.onEverySecond  (method) :55
+[ ] MyOutputComponent.onEveryFiveSeconds  (method) :58
+
+## packages/examples/core/ts/metadata/encapsulation.ts
+[ ] MyApp  (export class) :34
+
+## packages/examples/core/ts/metadata/metadata.ts
+[ ] Page  (class) :16
+[ ] Page.constructor  (ctor) :18
+[ ] InputAttrDirective  (class) :28
+[ ] InputAttrDirective.constructor  (ctor) :29
+
+## packages/examples/core/ts/pipes/simple_truncate.ts
+[ ] TruncatePipe  (export class) :14
+[ ] TruncatePipe.transform  (method) :15
+
+## packages/examples/core/ts/pipes/truncate.ts
+[ ] TruncatePipe  (export class) :14
+[ ] TruncatePipe.transform  (method) :15
+
+## packages/examples/core/ts/platform/platform.ts
+[ ] ComponentOne  (export class) :17
+[ ] ComponentTwo  (export class) :24
+[ ] ComponentThree  (export class) :31
+[ ] ComponentFour  (export class) :38
+[ ] AppModule  (export class) :41
+[ ] AppModule.ngDoBootstrap  (method) :43
+      -- #docregion componentSelector
+[ ] AppModule.fetchDataFromApi  (method) :54
+[ ] AppModuleTwo  (export class) :64
+[ ] AppModuleTwo.ngDoBootstrap  (method) :66
+      -- #docregion cssSelector
+[ ] AppModuleThree  (export class) :73
+[ ] AppModuleThree.ngDoBootstrap  (method) :75
+      -- #docregion domNode
+
+## packages/examples/core/ts/prod_mode/my_component.ts
+[ ] MyComponent  (export class) :15
+
+## packages/examples/forms/test_module.ts
+[ ] TestsAppComponent  (export class) :30
+[ ] TestsAppModule  (export class) :67
+
+## packages/examples/forms/ts/formBuilder/form_builder_example.ts
+[ ] FormBuilderComp  (export class) :31
+[ ] FormBuilderComp.constructor  (ctor) :34
+[ ] DisabledFormControlComponent  (export class) :55
+[ ] DisabledFormControlComponent.constructor  (ctor) :58
+
+## packages/examples/forms/ts/formBuilder/module.ts
+[ ] AppModule  (export class) :19
+
+## packages/examples/forms/ts/nestedFormArray/module.ts
+[ ] AppModule  (export class) :19
+
+## packages/examples/forms/ts/nestedFormArray/nested_form_array_example.ts
+[ ] NestedFormArray  (export class) :31
+[ ] NestedFormArray.cities  (accessor) :36
+[ ] NestedFormArray.addCity  (method) :40
+[ ] NestedFormArray.onSubmit  (method) :44
+[ ] NestedFormArray.setPreset  (method) :49
+
+## packages/examples/forms/ts/nestedFormGroup/module.ts
+[ ] AppModule  (export class) :19
+
+## packages/examples/forms/ts/nestedFormGroup/nested_form_group_example.ts
+[ ] NestedFormGroupComp  (export class) :33
+[ ] NestedFormGroupComp.first  (accessor) :42
+[ ] NestedFormGroupComp.name  (accessor) :46
+[ ] NestedFormGroupComp.onSubmit  (method) :50
+[ ] NestedFormGroupComp.setPreset  (method) :57
+
+## packages/examples/forms/ts/ngModelGroup/module.ts
+[ ] AppModule  (export class) :19
+
+## packages/examples/forms/ts/ngModelGroup/ng_model_group_example.ts
+[ ] NgModelGroupComp  (export class) :35
+[ ] NgModelGroupComp.onSubmit  (method) :38
+[ ] NgModelGroupComp.setValue  (method) :43
+
+## packages/examples/forms/ts/radioButtons/module.ts
+[ ] AppModule  (export class) :19
+
+## packages/examples/forms/ts/radioButtons/radio_button_example.ts
+[ ] RadioButtonComp  (export class) :26
+
+## packages/examples/forms/ts/reactiveRadioButtons/module.ts
+[ ] AppModule  (export class) :19
+
+## packages/examples/forms/ts/reactiveRadioButtons/reactive_radio_button_example.ts
+[ ] ReactiveRadioButtonComp  (export class) :27
+
+## packages/examples/forms/ts/reactiveSelectControl/module.ts
+[ ] AppModule  (export class) :19
+
+## packages/examples/forms/ts/reactiveSelectControl/reactive_select_control_example.ts
+[ ] ReactiveSelectComp  (export class) :29
+
+## packages/examples/forms/ts/selectControl/module.ts
+[ ] AppModule  (export class) :19
+
+## packages/examples/forms/ts/selectControl/select_control_example.ts
+[ ] SelectControlComp  (export class) :29
+
+## packages/examples/forms/ts/simpleForm/module.ts
+[ ] AppModule  (export class) :19
+
+## packages/examples/forms/ts/simpleForm/simple_form_example.ts
+[ ] SimpleFormComp  (export class) :30
+[ ] SimpleFormComp.onSubmit  (method) :31
+
+## packages/examples/forms/ts/simpleFormControl/module.ts
+[ ] AppModule  (export class) :19
+
+## packages/examples/forms/ts/simpleFormControl/simple_form_control_example.ts
+[ ] SimpleFormControl  (export class) :25
+[ ] SimpleFormControl.setValue  (method) :28
+
+## packages/examples/forms/ts/simpleFormGroup/module.ts
+[ ] AppModule  (export class) :19
+
+## packages/examples/forms/ts/simpleFormGroup/simple_form_group_example.ts
+[ ] SimpleFormGroup  (export class) :30
+[ ] SimpleFormGroup.first  (accessor) :36
+[ ] SimpleFormGroup.onSubmit  (method) :40
+[ ] SimpleFormGroup.setValue  (method) :44
+
+## packages/examples/forms/ts/simpleNgModel/module.ts
+[ ] AppModule  (export class) :19
+
+## packages/examples/forms/ts/simpleNgModel/simple_ng_model_example.ts
+[ ] SimpleNgModelComp  (export class) :24
+[ ] SimpleNgModelComp.setValue  (method) :27
+
+## packages/examples/platform-browser/dom/debug/ts/by/by.ts
+[ ] MyDirective  (class) :13
+
+## packages/examples/router/activated-route/activated_route_component.ts
+[ ] ActivatedRouteComponent  (export class) :25
+[ ] ActivatedRouteComponent.constructor  (ctor) :26
+
+## packages/examples/router/route_functional_guards.ts
+[ ] App  (export class) :28
+[ ] TeamComponent  (export class) :33
+[ ] UserToken  (class) :37
+      -- #docregion CanActivateFn
+[ ] PermissionsService  (class) :40
+[ ] PermissionsService.canActivate  (method) :41
+[ ] PermissionsService.canMatch  (method) :44
+[ ] canActivateTeam  (arrow) :49
+[ ] canActivateChildExample  (arrow) :72
+      -- #docregion CanActivateChildFn
+[ ] UserComponent  (export class) :97
+[ ] canMatchTeam  (arrow) :115
+      -- #docregion CanMatchFn
+[ ] HeroDetailComponent  (export class) :140
+[ ] HeroDetailComponent.constructor  (ctor) :141
+[ ] HeroDetailComponent.ngOnInit  (method) :143
+[ ] HeroService  (export class) :156
+[ ] HeroService.getHero  (method) :157
+[ ] heroResolver  (export arrow) :162
+
+## packages/examples/router/utils/functional_guards.ts
+[ ] AdminGuard  (export class) :14
+      -- #docregion CanActivate
+[ ] AdminGuard.canActivate  (method) :15
+[ ] ResolveUser  (export class) :28
+      -- #docregion Resolve
+[ ] ResolveUser.resolve  (method) :29
+
+## packages/examples/service-worker/push/service_worker_component.ts
+[ ] AppComponent  (export class) :23
+      -- #docregion inject-sw-push
+[ ] AppComponent.constructor  (ctor) :24
+[ ] AppComponent.subscribeToPush  (method) :28
+      -- #docregion subscribe-to-push
+[ ] AppComponent.subscribeToNotificationClicks  (method) :40
+
+## packages/examples/service-worker/registration-options/module.ts
+[ ] AppComponent  (export class) :23
+[ ] AppComponent.constructor  (ctor) :24
+[ ] AppModule  (export class) :41
+
+## packages/examples/test-utils/index.ts
+[ ] verifyNoBrowserErrors  (export function) :15
+      -- TODO (juliemr): remove this method once this becomes a protractor plugin
+
+## packages/examples/testing/ts/testing.ts
+[ ] MyService  (class) :10
+[ ] MyMockService  (class) :11
+
+## packages/examples/upgrade/static/ts/full/module.ts
+[ ] TextFormatter  (export class) :35
+      -- #docregion ng1-text-formatter-service
+[ ] TextFormatter.titleCase  (method) :36
+[ ] Ng2HeroesComponent  (export class) :58
+[ ] HeroesService  (export class) :68
+      -- This Angular service will be "downgraded" to be used in AngularJS
+[ ] HeroesService.constructor  (ctor) :76
+[ ] HeroesService.addHero  (method) :82
+[ ] HeroesService.removeHero  (method) :88
+[ ] Ng1HeroComponentWrapper  (export class) :100
+[ ] Ng1HeroComponentWrapper.constructor  (ctor) :106
+[ ] Ng2AppModule  (export class) :128
+      -- #docregion bootstrap-ng1
+[ ] Ng2AppModule.constructor  (ctor) :130
+[ ] Ng2AppModule.ngDoBootstrap  (method) :132
+
+## packages/examples/upgrade/static/ts/lite-multi-shared/module.ts
+[ ] Ng2Service  (export class) :25
+      -- An Angular service provided in root. Each instance of the service will get a new ID.
+[ ] Ng2RootModule  (export class) :35
+[ ] Ng2RootModule.ngDoBootstrap  (method) :36
+[ ] Ng2AComponent  (export class) :46
+[ ] Ng2AComponent.constructor  (ctor) :47
+[ ] Ng2AModule  (export class) :53
+[ ] Ng2AModule.ngDoBootstrap  (method) :54
+[ ] Ng2BComponent  (export class) :63
+[ ] Ng2BComponent.constructor  (ctor) :64
+[ ] Ng2BModule  (export class) :70
+[ ] Ng2BModule.ngDoBootstrap  (method) :71
+[ ] Ng2CComponent  (export class) :80
+[ ] Ng2CComponent.constructor  (ctor) :81
+[ ] Ng2CModule  (export class) :88
+[ ] Ng2CModule.ngDoBootstrap  (method) :89
+[ ] getRootInjector  (arrow) :95
+
+## packages/examples/upgrade/static/ts/lite-multi/module.ts
+[ ] Ng2AComponent  (export class) :37
+[ ] Ng1AComponentFacade  (export class) :43
+[ ] Ng1AComponentFacade.constructor  (ctor) :44
+[ ] Ng2AService  (export class) :50
+[ ] Ng2AService.getValue  (method) :51
+[ ] Ng2AModule  (export class) :61
+[ ] Ng2AModule.ngDoBootstrap  (method) :62
+[ ] Ng2BComponent  (export class) :71
+[ ] Ng2BModule  (export class) :77
+[ ] Ng2BModule.ngDoBootstrap  (method) :78
+[ ] Ng1AController  (class) :114
+[ ] Ng1AController.constructor  (ctor) :116
+
+## packages/examples/upgrade/static/ts/lite/e2e_test/e2e_util.ts
+[ ] isTitleCased  (arrow) :20
+[ ] addCustomMatchers  (export function) :23
+
+## packages/examples/upgrade/static/ts/lite/module.ts
+[ ] HeroesService  (class) :40
+      -- This Angular service will use an "upgraded" AngularJS service.
+[ ] HeroesService.constructor  (ctor) :47
+[ ] HeroesService.addHero  (method) :52
+[ ] HeroesService.removeHero  (method) :58
+[ ] Ng2HeroesComponent  (class) :82
+[ ] Ng2HeroesComponent.constructor  (ctor) :86
+[ ] Ng2HeroesComponent.onAddHero  (method) :91
+[ ] Ng2HeroesComponent.onRemoveHero  (method) :101
+[ ] Ng1HeroComponentWrapper  (class) :112
+[ ] Ng1HeroComponentWrapper.constructor  (ctor) :118
+[ ] MyLazyAngularModule  (class) :136
+[ ] MyLazyAngularModule.ngDoBootstrap  (method) :138
+      -- Empty placeholder method to prevent the `Compiler` from complaining.
+[ ] ng2BootstrapFn  (arrow) :145
+      -- (This would be omitted if we provided an `NgModuleFactory` directly.)

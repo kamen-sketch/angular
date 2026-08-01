@@ -1,0 +1,204 @@
+SUBSISTEM 03 :: Change Detection & Penjadwalan (@angular/core)
+Lokasi   : packages/core/src/render3/instructions/change_detection.ts,
+           packages/core/src/render3/instructions/mark_view_dirty.ts,
+           packages/core/src/render3/reactive_lview_consumer.ts,
+           packages/core/src/render3/util/view_utils.ts (bagian penanda),
+           packages/core/src/application/application_ref.ts,
+           packages/core/src/change_detection/scheduling/*
+Status   : SELESAI DIANALISIS (alur utama)
+==============================================================================
+
+GAMBARAN BESAR
+--------------
+Change detection (CD) Angular modern punya tiga lapis yang harus dibedakan:
+
+  1. PENANDAAN (marking)   - siapa yang kotor. Menyalakan bit di LView[FLAGS].
+  2. PENJADWALAN (scheduling) - kapan tick dijalankan. ChangeDetectionScheduler.
+  3. PENELUSURAN (traversal) - bagaimana pohon view dikunjungi. refreshView dkk.
+
+Sinyal, event listener, `markForCheck`, `async` pipe, dan `setInput` semuanya
+hanya melakukan (1) + memberi notifikasi ke (2). Pekerjaan sesungguhnya di (3).
+
+FLAG PADA LView (LViewFlags) YANG MENGGERAKKAN SEMUANYA
+--------------------------------------------------------
+  CheckAlways            view dengan strategi Default (selalu dicek saat Global)
+  Dirty                  ditandai kotor (OnPush yang perlu dicek)
+  RefreshView            "segarkan view INI saja" - dipakai untuk view
+                         transplanted dan view yang signal-nya berubah
+  HasChildViewsToRefresh penanda jalur: ada keturunan yang perlu disegarkan
+  Attached / Destroyed / IsRoot / SignalView / HasI18n / HasEmbeddedViewInjector
+
+Perbedaan `Dirty` vs `RefreshView` adalah inti desain zoneless:
+  - `Dirty` hanya dihormati pada mode Global.
+  - `RefreshView` dihormati di SEMUA mode, termasuk Targeted.
+`markViewDirty` memilih bit mana yang dipakai berdasarkan `isRefreshingViews()`:
+saat CD sedang berjalan hanya `Dirty` (agar tidak memicu re-entrancy), saat di
+luar CD keduanya (agar bisa menjalankan ulang CD secara sinkron).
+
+Penandaan selalu berpasangan: node yang kotor + SELURUH LELUHURNYA diberi
+`HasChildViewsToRefresh` (`markAncestorsForTraversal`). Penelusuran berhenti
+lebih awal ketika menemukan leluhur yang sudah bertanda - optimasi penting agar
+menandai 1000 komponen tidak berarti 1000 kali jalan ke root.
+
+DUA MODE PENELUSURAN
+--------------------
+  ChangeDetectionMode.Global   : segarkan CheckAlways + Dirty + RefreshView
+  ChangeDetectionMode.Targeted : HANYA RefreshView / consumer signal yang kotor
+
+Aplikasi zoneless praktis selalu berjalan dalam mode Targeted. Aplikasi berbasis
+zone memakai Global (lihat `ApplicationRef.tick` yang menyalakan
+`ViewTreeGlobal` saat `!zonelessEnabled`).
+
+`detectChangesInView` adalah tempat keputusan dibuat. Perhatikan urutannya:
+flag dibersihkan SEBELUM `refreshView` dipanggil, sehingga view boleh
+menandai dirinya kotor lagi selama refresh (dan akan tertangkap oleh loop
+berikutnya). Jika view tidak perlu disegarkan tapi punya
+`HasChildViewsToRefresh`, penelusuran turun dalam mode Targeted dengan
+`setActiveConsumer(null)` agar konteks reaktif induk tidak bocor ke bawah.
+
+URUTAN BAKU DI refreshView (jangan pernah diubah tanpa alasan kuat)
+-------------------------------------------------------------------
+  1.  enterView + siapkan reactive consumer
+  2.  reset flag pre-order hook, reset bindingIndex
+  3.  jalankan template dalam RenderFlags.Update  <-- semua binding dievaluasi
+  4.  pre-order hooks: ngOnChanges, ngOnInit, ngDoCheck
+  5.  tandai transplanted views (markTransplantedViewsForRefresh)
+  6.  jalankan view effects (runEffectsInView)
+  7.  segarkan embedded views (Global)
+  8.  refresh content queries -> content hooks (AfterContentInit/Checked)
+  9.  host bindings (processHostBindingOpCodes)
+  10. segarkan komponen anak (Global)
+  11. view queries -> view hooks (AfterViewInit/Checked)
+  12. matikan firstUpdatePass, jalankan EFFECTS_TO_SCHEDULE
+  13. daftarkan afterRender sequences, bersihkan flag Dirty/FirstLViewPass
+
+Alasan urutan tertentu didokumentasikan langsung di kode:
+  - Content query harus di-refresh SEBELUM content hooks (hasil query harus
+    valid saat ngAfterContentInit).
+  - View query dieksekusi SETELAH komponen anak disegarkan, karena template di
+    view ini bisa saja disisipkan ke dalam komponen anak.
+  - `tView.firstUpdatePass = false` sengaja TIDAK di blok finally: jika terjadi
+    exception, instruksi styling belum sempat mendaftarkan diri ke linked list,
+    sehingga flag harus tetap true agar percobaan berikutnya benar.
+  - Saat error, `markAncestorsForTraversal` dipanggil ulang karena flag jalur
+    sudah terlanjur dibersihkan - tanpa ini view kotor bisa jadi tak terjangkau.
+  - Ada peringatan "PERF WARNING: do NOT extract this to a separate function"
+    di tiga blok hook - inlining disengaja demi hasil benchmark.
+
+INTEGRASI SIGNAL: REACTIVE LVIEW CONSUMER
+-----------------------------------------
+Setiap view (kecuali embedded) punya satu `ReactiveLViewConsumer` - node
+consumer dari subsistem 01 yang mewakili template. Saat template dieksekusi,
+consumer ini menjadi `activeConsumer`, sehingga setiap signal yang dibaca
+template otomatis menjadi dependensinya. Ketika signal berubah,
+`consumerMarkedDirty` -> `markAncestorsForTraversal(lView)`.
+
+Detail yang menarik:
+  - Consumer di-POOL (`freeConsumers`) dan hanya "committed" ke LView bila
+    template benar-benar membaca signal (`consumerOnSignalRead` yang memasang
+    dirinya ke `lView[REACTIVE_TEMPLATE_CONSUMER]`). Template tanpa signal tidak
+    membayar biaya alokasi apa pun.
+  - Embedded view TIDAK punya consumer sendiri; mereka berbagi dengan view
+    komponen, sehingga granularitas CD berbasis signal adalah PER KOMPONEN.
+    Komentar di `viewShouldHaveReactiveConsumer` menjelaskan bahwa granularitas
+    per-view tinggal mengubah kondisi di fungsi itu.
+  - `TEMPORARY_CONSUMER_NODE` menangani kasus langka
+    `viewContainerRef.createEmbeddedView(...).detectChanges()`, di mana CD
+    dijalankan langsung pada view yang seharusnya tidak punya consumer.
+
+PENJADWALAN (ChangeDetectionSchedulerImpl)
+------------------------------------------
+`notify(source)` memetakan sumber notifikasi menjadi bit `dirtyFlags` di
+ApplicationRef, lalu menjadwalkan satu tick jika belum ada:
+  MarkAncestorsForTraversal / DeferBlockStateUpdate -> ViewTreeTraversal
+  MarkForCheck / Listener / SetInput               -> ViewTreeCheck
+  RootEffect                                       -> RootEffects
+  RenderHook / ViewAttached / dll                  -> AfterRender saja
+
+Poin penting:
+  - Penjadwalan memakai `scheduleCallbackWithRafRace` (balapan antara
+    requestAnimationFrame dan setTimeout) supaya tetap jalan di tab background
+    maupun saat rAF tidak tersedia.
+  - Setelah satu tick, scheduler beralih sementara ke microtask
+    (`switchToMicrotaskScheduler`) agar perubahan yang dipicu `Promise.resolve`
+    (mis. NgModel) masih masuk ke frame paint yang sama.
+  - Tanpa zoneless, notifikasi dari `Listener` diabaikan (kompatibilitas mundur:
+    zone yang akan menjalankan CD).
+  - Tick didaftarkan sebagai pending task (`PendingTasksInternal`) sehingga
+    `whenStable`/SSR tahu aplikasi belum diam.
+  - `shouldScheduleTick` menolak jadwal ganda dan menolak menjadwal saat kita
+    masih di dalam Angular zone pada aplikasi berbasis zone.
+
+LOOP SINKRONISASI DI ApplicationRef
+-----------------------------------
+`_tick` -> `synchronize` -> `synchronizeOnce` berulang selama `dirtyFlags`
+belum kosong, maksimum MAXIMUM_REFRESH_RERUNS (10) sebelum melempar
+"Infinite change detection". Satu putaran `synchronizeOnce`:
+  1. flush root effects
+  2. jika ada bit ViewTree*, telusuri `allViews` (Global atau Targeted)
+  3. jika masih ada view kotor atau root effect -> return lebih awal (loop lagi)
+  4. jalankan afterRender hooks
+  5. `syncDirtyFlagsWithViews` menyelaraskan bit dengan keadaan view nyata
+
+Di dalam satu view, `detectChangesInViewWhileDirty` juga punya loop sendiri
+dengan batas MAXIMUM_REFRESH_RERUNS (100) khusus mode Targeted.
+
+Mode dev menambah `checkNoChanges` pass (asal ExpressionChangedAfterItHasBeenCheckedError).
+Mode `Exhaustive` menelusuri semua view, bukan hanya yang kotor.
+
+DAFTAR FUNGSI YANG SUDAH DIPAHAMI
+---------------------------------
+[x] detectChangesInternal | packages/core/src/render3/instructions/change_detection.ts:80 | Titik masuk CD satu pohon view; membuka/menutup rendererFactory kecuali dalam checkNoChanges.
+[x] detectChangesInViewWhileDirty | packages/core/src/render3/instructions/change_detection.ts:102 | Loop ulang mode Targeted selama view masih minta refresh, dengan batas 100 percobaan.
+[x] checkNoChangesInternal | packages/core/src/render3/instructions/change_detection.ts:141 | Pass verifikasi dev-mode (OnlyDirtyViews atau Exhaustive) tanpa efek samping.
+[x] refreshView | packages/core/src/render3/instructions/change_detection.ts:180 | Prosedur inti update satu view: template, hooks, queries, host bindings, anak, effects - dengan urutan yang sangat dijaga.
+[x] detectChangesInEmbeddedViews | packages/core/src/render3/instructions/change_detection.ts:379 | Iterasi seluruh LContainer dan view di dalamnya.
+[x] markTransplantedViewsForRefresh | packages/core/src/render3/instructions/change_detection.ts:397 | Menandai view yang dideklarasikan di sini tapi disisipkan di tempat lain agar disegarkan di titik sisipnya.
+[x] detectChangesInComponent | packages/core/src/render3/instructions/change_detection.ts:420 | Masuk ke view komponen anak dengan penanda profiler.
+[x] detectChangesInViewIfAttached | packages/core/src/render3/instructions/change_detection.ts:441 | Lewati view yang sudah dilepas dari pohon CD.
+[x] detectChangesInView | packages/core/src/render3/instructions/change_detection.ts:458 | Keputusan refresh vs sekadar telusuri; membersihkan flag sebelum refresh agar re-dirty tertangkap.
+[x] detectChangesInChildComponents | packages/core/src/render3/instructions/change_detection.ts:520 | Iterasi indeks komponen anak dari TView.components.
+[x] processHostBindingOpCodes | packages/core/src/render3/instructions/change_detection.ts:539 | Interpreter opcode host binding (angka negatif = indeks elemen, positif = tuple directive).
+[x] markViewDirty | packages/core/src/render3/instructions/mark_view_dirty.ts:26 | Menandai view + seluruh leluhur; memilih bit Dirty vs Dirty|RefreshView tergantung apakah CD sedang berjalan.
+[x] markAncestorsForTraversal | packages/core/src/render3/util/view_utils.ts:264 | Menyalakan HasChildViewsToRefresh ke atas dan berhenti di leluhur yang sudah bertanda.
+[x] markViewForRefresh | packages/core/src/render3/util/view_utils.ts:208 | Set RefreshView lalu tandai jalur leluhur (idempoten).
+[x] requiresRefreshOrTraversal | packages/core/src/render3/util/view_utils.ts:236 | Predikat: punya RefreshView/HasChildViewsToRefresh atau consumer template kotor.
+[x] updateAncestorTraversalFlagsOnAttach | packages/core/src/render3/util/view_utils.ts:247 | Menyegarkan flag jalur saat sebuah view dipasang kembali.
+[x] storeLViewOnDestroy | packages/core/src/render3/util/view_utils.ts:285 | Mendaftarkan callback destroy pada LView.
+[x] removeLViewOnDestroy | packages/core/src/render3/util/view_utils.ts:301 | Melepas callback destroy.
+[x] walkUpViews | packages/core/src/render3/util/view_utils.ts:223 | Menaiki DECLARATION_VIEW n tingkat (dipakai instruksi lintas-view).
+[x] getOrBorrowReactiveLViewConsumer | packages/core/src/render3/reactive_lview_consumer.ts:24 | Ambil consumer template milik LView atau pinjam dari pool.
+[x] borrowReactiveLViewConsumer | packages/core/src/render3/reactive_lview_consumer.ts:28 | Pop dari freeConsumers atau buat baru dari prototipe.
+[x] maybeReturnReactiveLViewConsumer | packages/core/src/render3/reactive_lview_consumer.ts:34 | Kembalikan ke pool hanya jika consumer tidak jadi dipakai (tidak ada signal yang dibaca).
+[x] getOrCreateTemporaryConsumer | packages/core/src/render3/reactive_lview_consumer.ts:67 | Consumer sementara untuk embedded view yang di-detectChanges langsung.
+[x] viewShouldHaveReactiveConsumer | packages/core/src/render3/reactive_lview_consumer.ts:109 | Aturan granularitas: semua kecuali embedded view punya consumer sendiri.
+[x] isReactiveLViewConsumer | packages/core/src/render3/reactive_lview_consumer.ts:113 | Diskriminator berdasarkan kind 'template'.
+[x] ApplicationRef.tick | packages/core/src/application/application_ref.ts:533 | API publik; menyalakan ViewTreeGlobal pada aplikasi berbasis zone lalu memanggil _tick.
+[x] ApplicationRef._tick | packages/core/src/application/application_ref.ts:541 | Membungkus tickImpl dengan snapshot tracing bila ada.
+[x] ApplicationRef.synchronize | packages/core/src/application/application_ref.ts:588 | Loop sinkronisasi sampai dirtyFlags kosong, maksimum 10 putaran.
+[x] ApplicationRef.synchronizeOnce | packages/core/src/application/application_ref.ts:617 | Satu putaran: root effects -> view tree -> afterRender hooks, dengan early return bila masih kotor.
+[x] ApplicationRef.syncDirtyFlagsWithViews | packages/core/src/application/application_ref.ts:704 | Menyelaraskan dirtyFlags dengan kondisi nyata view (menangani view yang terlepas).
+[x] ApplicationRef.attachView | packages/core/src/application/application_ref.ts:721 | Menambahkan ViewRef ke daftar view yang dicek.
+[x] ApplicationRef.detachView | packages/core/src/application/application_ref.ts:731 | Melepas view dari pengecekan.
+[x] ApplicationRef.bootstrap | packages/core/src/application/application_ref.ts:448 | API publik bootstrap komponen root.
+[x] ApplicationRef.bootstrapImpl | packages/core/src/application/application_ref.ts:452 | Validasi APP_INITIALIZER selesai, buat ComponentFactory, pasang testability, daftarkan onDestroy.
+[x] ApplicationRef._loadComponent | packages/core/src/application/application_ref.ts:738 | Attach view, tick pertama, lalu jalankan APP_BOOTSTRAP_LISTENER.
+[x] ApplicationRef.ngOnDestroy | packages/core/src/application/application_ref.ts:761 | Menjalankan destroy listener dan menghancurkan semua view.
+[x] ApplicationRef.onDestroy | packages/core/src/application/application_ref.ts:786 | Mendaftarkan listener destroy, mengembalikan fungsi pembatal.
+[x] ApplicationRef.destroy | packages/core/src/application/application_ref.ts:797 | Menghancurkan aplikasi beserta environment injector-nya.
+[x] ApplicationRef.whenStable | packages/core/src/application/application_ref.ts:338 | Promise yang selesai saat tidak ada pending task (dipakai SSR dan testing).
+[x] normalizeBootstrapOptions | packages/core/src/application/application_ref.ts:823 | Menormalkan argumen bootstrap (Element/selector/objek opsi dengan directives & bindings).
+[x] warnIfDestroyed | packages/core/src/application/application_ref.ts:849 | Peringatan dev saat memakai ApplicationRef yang sudah dihancurkan.
+[x] remove | packages/core/src/application/application_ref.ts:860 | Utilitas hapus elemen dari array berdasarkan indexOf.
+[x] optionsReducer | packages/core/src/application/application_ref.ts:155 | Menggabungkan opsi bootstrap bertingkat menjadi satu objek.
+[x] publishDefaultGlobalUtils | packages/core/src/application/application_ref.ts:66 | Memasang ng.* debug API ke global saat dev mode.
+[x] publishSignalConfiguration | packages/core/src/application/application_ref.ts:73 | Menyambungkan hook signal (pesan error tulis-ilegal, formatter DevTools) ke primitives.
+[x] ChangeDetectionSchedulerImpl.notify | packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts:138 | Memetakan NotificationSource ke dirtyFlags dan menjadwalkan tick (rAF-race atau microtask).
+[x] ChangeDetectionSchedulerImpl.shouldScheduleTick | packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts:227 | Menolak penjadwalan ganda, aplikasi yang sudah dihancurkan, dan konteks di dalam Angular zone.
+[x] ChangeDetectionSchedulerImpl.tick | packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts:257 | Menjalankan ApplicationRef._tick di dalam NgZone dengan penjagaan re-entrancy dan penanganan error.
+[x] ChangeDetectionSchedulerImpl.switchToMicrotaskScheduler | packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts:127 | Beralih sementara ke microtask agar perubahan berbasis Promise masuk paint yang sama.
+[x] ChangeDetectionSchedulerImpl.cleanup | packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts:312 | Membatalkan callback terjadwal dan melepas pending task.
+[x] ChangeDetectionSchedulerImpl.ngOnDestroy | packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts:307 | Melepas langganan dan membersihkan jadwal.
+[x] trackMicrotaskNotificationForDebugging | packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts:40 | Mendeteksi loop notifikasi microtask beruntun dan mencetak stack untuk diagnosis.
+[x] provideZonelessChangeDetection | packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts:369 | Provider publik mode zoneless (NoopNgZone + scheduler selalu aktif).
+[x] provideZonelessChangeDetectionInternal | packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts:390 | Daftar provider internal yang dipakai juga oleh jalur bootstrap lain.

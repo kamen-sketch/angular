@@ -1,0 +1,1872 @@
+INVENTORY FUNGSI :: forms
+Total simbol: 1053 | file: 103
+Rincian: function=267, arrow=7, class=108, method=448, accessor=158, ctor=65
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## packages/forms/signals/compat/src/api/compat_form.ts
+[ ] compatForm  (export function) :56
+      -- Creates a compatibility form wrapped around the given model data. `compatForm` is a version of the `form` function that is designed for backwards compatibility 
+[ ] compatForm  (export function) :92
+      -- Creates a compatibility form wrapped around the given model data. `compatForm` is a version of the `form` function that is designed for backwards compatibility 
+[ ] compatForm  (export function) :130
+      -- Creates a compatibility form wrapped around the given model data. `compatForm` is a version of the `form` function that is designed for backwards compatibility 
+[ ] compatForm  (export function) :136
+
+## packages/forms/signals/compat/src/api/extract.ts
+[ ] extractValue  (export function) :68
+      -- Utility to unwrap a {@link FieldTree} into its underlying raw value. This function is recursive, so if the field tree represents an object or an array, the resu
+[ ] extractValue  (export function) :82
+      -- Utility to unwrap a {@link FieldTree} into its underlying raw value. This function is recursive, so if the field tree represents an object or an array, the resu
+[ ] extractValue  (export function) :86
+[ ] visitFieldTree  (function) :93
+[ ] isContainerNode  (function) :113
+[ ] extractChildren  (function) :120
+[ ] isFieldTreeNode  (function) :165
+[ ] isKeyedChild  (function) :169
+[ ] matchesFilter  (function) :175
+
+## packages/forms/signals/compat/src/compat_field_adapter.ts
+[ ] CompatFieldAdapter  (export class) :31
+      -- This is a tree-shakable Field adapter that can create a compat node that proxies FormControl state and value to a field.
+[ ] CompatFieldAdapter.newRoot  (method) :41
+      -- Creates a regular or compat root node state based on whether the control is present.
+[ ] CompatFieldAdapter.createNodeState  (method) :66
+      -- Creates a regular or compat node state based on whether the control is present.
+[ ] CompatFieldAdapter.createStructure  (method) :78
+      -- Creates a regular or compat structure based on whether the control is present.
+[ ] CompatFieldAdapter.createValidationState  (method) :90
+      -- Creates a regular or compat validation state based on whether the control is present.
+[ ] CompatFieldAdapter.newChild  (method) :104
+      -- Creates a regular or compat node based on whether the control is present.
+[ ] createCompatNode  (export function) :119
+      -- Creates a CompatFieldNode from options.
+
+## packages/forms/signals/compat/src/compat_field_node.ts
+[ ] CompatFieldNode  (export class) :23
+      -- Field node with additional  control property. Compat node has no children.
+[ ] CompatFieldNode.constructor  (ctor) :26
+[ ] makeCreateDestroySubject  (function) :37
+      -- Makes a function which creates a new subject (and unsubscribes/destroys the previous one). This allows us to automatically unsubscribe from status changes of th
+[ ] extractControlPropToSignal  (export function) :59
+      -- Helper function taking options, and a callback which takes options, and a function converting reactive control to appropriate property using toSignal from rxjs 
+[ ] getControlStatusSignal  (export arrow) :90
+      -- A helper function, simplifying getting reactive control properties after status changes. Used to extract errors and statuses such as valid, pending.
+[ ] getControlEventsSignal  (export arrow) :115
+      -- A helper function, simplifying converting convert events to signals. Used to get dirty and touched signals from control.  @param options
+
+## packages/forms/signals/compat/src/compat_node_state.ts
+[ ] CompatNodeState  (export class) :18
+      -- A FieldNodeState class wrapping a FormControl and proxying it's state.
+[ ] CompatNodeState.constructor  (ctor) :24
+[ ] CompatNodeState.markAsDirty  (method) :39
+[ ] CompatNodeState.markAsTouched  (method) :43
+[ ] CompatNodeState.markAsPristine  (method) :47
+[ ] CompatNodeState.markAsUntouched  (method) :51
+
+## packages/forms/signals/compat/src/compat_structure.ts
+[ ] getParentFromOptions  (function) :53
+      -- A helper function allowing to get parent if it exists.
+[ ] getFieldManagerFromOptions  (function) :64
+      -- A helper function allowing to get fieldManager regardless of the option type.
+[ ] getControlValueSignal  (function) :80
+      -- A helper function that takes CompatFieldNodeOptions, and produce a writable signal synced to the value of contained AbstractControl. This uses toSignal, which r
+[ ] CompatStructure  (export class) :109
+      -- Compat version of FieldNodeStructure, - It has no children - It wraps FormControl and proxies its value.
+[ ] CompatStructure.constructor  (ctor) :120
+[ ] CompatStructure.getChild  (method) :148
+
+## packages/forms/signals/compat/src/compat_validation_state.ts
+[ ] CompatValidationState  (export class) :26
+      -- Compat version of a validation state that wraps a FormControl, and proxies it's validation state.
+[ ] CompatValidationState.constructor  (ctor) :38
+
+## packages/forms/signals/compat/src/signal_form_control/signal_form_control.ts
+[ ] SignalFormControl  (export class) :84
+      -- A `FormControl` that is backed by signal forms rules. This class provides a bridge between Signal Forms and Reactive Forms, allowing signal-based controls to be
+[ ] SignalFormControl.constructor  (ctor) :98
+[ ] SignalFormControl.defineCompatProperties  (method) :197
+[ ] SignalFormControl.emitControlEvent  (method) :208
+[ ] SignalFormControl.setValue  (method) :214
+[ ] SignalFormControl.patchValue  (method) :218
+[ ] SignalFormControl.updateValue  (method) :222
+[ ] SignalFormControl.registerOnChange  (method) :235
+[ ] SignalFormControl._unregisterOnChange  (method) :240
+      -- @internal
+[ ] SignalFormControl.registerOnDisabledChange  (method) :244
+[ ] SignalFormControl._unregisterOnDisabledChange  (method) :249
+      -- @internal
+[ ] SignalFormControl.getRawValue  (method) :253
+[ ] SignalFormControl.reset  (method) :257
+[ ] SignalFormControl.scheduleParentUpdate  (method) :279
+[ ] SignalFormControl.notifyParentUnlessPending  (method) :287
+[ ] SignalFormControl.updateParentValueAndValidity  (method) :298
+[ ] SignalFormControl.propagateToParent  (method) :302
+[ ] SignalFormControl.status  (accessor) :312
+[ ] SignalFormControl.valid  (accessor) :325
+[ ] SignalFormControl.invalid  (accessor) :329
+[ ] SignalFormControl.pending  (accessor) :333
+[ ] SignalFormControl.disabled  (accessor) :337
+[ ] SignalFormControl.enabled  (accessor) :341
+[ ] SignalFormControl.dirty  (accessor) :345
+[ ] SignalFormControl.dirty  (accessor) :349
+[ ] SignalFormControl.pristine  (accessor) :355
+[ ] SignalFormControl.pristine  (accessor) :359
+[ ] SignalFormControl.touched  (accessor) :365
+[ ] SignalFormControl.touched  (accessor) :369
+[ ] SignalFormControl.untouched  (accessor) :376
+[ ] SignalFormControl.untouched  (accessor) :380
+[ ] SignalFormControl.markAsTouched  (method) :386
+[ ] SignalFormControl.markAsDirty  (method) :391
+[ ] SignalFormControl.markAsPristine  (method) :396
+[ ] SignalFormControl.markAsUntouched  (method) :401
+[ ] SignalFormControl.updateValueAndValidity  (method) :406
+[ ] SignalFormControl._updateValue  (method) :410
+      -- @internal
+[ ] SignalFormControl._forEachChild  (method) :414
+      -- @internal
+[ ] SignalFormControl._anyControls  (method) :418
+      -- @internal
+[ ] SignalFormControl._allControlsDisabled  (method) :424
+      -- @internal
+[ ] SignalFormControl._syncPendingControls  (method) :430
+      -- @internal
+[ ] SignalFormControl.disable  (method) :434
+[ ] SignalFormControl.enable  (method) :438
+[ ] SignalFormControl.setValidators  (method) :442
+[ ] SignalFormControl.setAsyncValidators  (method) :446
+[ ] SignalFormControl.addValidators  (method) :450
+[ ] SignalFormControl.addAsyncValidators  (method) :454
+[ ] SignalFormControl.removeValidators  (method) :458
+[ ] SignalFormControl.removeAsyncValidators  (method) :462
+[ ] SignalFormControl.clearValidators  (method) :466
+[ ] SignalFormControl.clearAsyncValidators  (method) :470
+[ ] SignalFormControl.setErrors  (method) :474
+[ ] SignalFormControl.markAsPending  (method) :481
+[ ] CachingWeakMap  (class) :489
+[ ] CachingWeakMap.getOrCreate  (method) :492
+[ ] wrapFieldTreeForSyncUpdates  (function) :508
+      -- A FieldTree proxy that patches setters to immediately react on value changes.
+[ ] isFormControlState  (function) :552
+[ ] unsupportedFeatureError  (function) :562
+[ ] unsupportedDisableEnableError  (function) :566
+[ ] unsupportedValidatorsError  (function) :573
+[ ] removeListItem  (function) :580
+[ ] getClosureSafeProperty  (function) :585
+
+## packages/forms/signals/src/api/assertions.ts
+[ ] isFieldTree  (export function) :18
+      -- Asserts whether a value is a `FieldTree`.
+
+## packages/forms/signals/src/api/di.ts
+[ ] provideSignalFormsConfig  (export function) :34
+      -- Provides configuration options for signal forms.
+
+## packages/forms/signals/src/api/rules/debounce.ts
+[ ] debounce  (export function) :30
+      -- Configures the frequency at which a form field is updated by UI events. When this rule is applied, updates from the UI to the form model will be delayed until e
+[ ] normalizeDebouncer  (function) :41
+[ ] debounceForDuration  (function) :64
+      -- Creates a debouncer that will wait for the given duration before resolving.
+[ ] debounceUntilBlur  (function) :88
+      -- Creates a debouncer that will wait indefinitely, relying on the node to synchronize pending updates when blurred.
+[ ] immediate  (function) :96
+
+## packages/forms/signals/src/api/rules/disabled.ts
+[ ] disabled  (export function) :30
+      -- Adds logic to a field to conditionally disable it. A disabled field does not contribute to the validation, touched/dirty, or other state of its parent field.  -
+[ ] disabled  (export function) :40
+      -- Adds logic to a field to conditionally disable it.
+[ ] disabled  (export function) :45
+
+## packages/forms/signals/src/api/rules/hidden.ts
+[ ] hidden  (export function) :37
+      -- Adds logic to a field to conditionally hide it. A hidden field does not contribute to the validation, touched/dirty, or other state of its parent field. If a fi
+[ ] hidden  (export function) :47
+      -- Adds logic to a field to conditionally hide it.
+[ ] hidden  (export function) :52
+
+## packages/forms/signals/src/api/rules/metadata.ts
+[ ] metadata  (export function) :33
+      -- Sets a value for the {@link MetadataKey} for this field. This value is combined via a reduce operation defined by the particular key, since multiple rules in th
+[ ] override  (function) :127
+[ ] override  (function) :128
+[ ] override  (function) :129
+[ ] MetadataKey  (export class) :160
+      -- Represents metadata that is aggregated from multiple parts according to the key's reducer function. A value can be contributed to the aggregated value for a fie
+[ ] MetadataKey.constructor  (ctor) :167
+[ ] createMetadataKey  (export function) :233
+      -- Creates a metadata key used to contain a computed value. The last value set on a given field tree node overrides any previously set values.
+[ ] createMetadataKey  (export function) :249
+      -- Creates a metadata key used to contain a computed value.
+[ ] createMetadataKey  (export function) :252
+[ ] createManagedMetadataKey  (export function) :275
+      -- Creates a metadata key that exposes a managed value based on the accumulated result of the values written to the key. The accumulated value takes the last value
+[ ] createManagedMetadataKey  (export function) :295
+      -- Creates a metadata key that exposes a managed value based on the accumulated result of the values written to the key.   value based on it. This function runs du
+[ ] createManagedMetadataKey  (export function) :299
+[ ] createLimitSelectionKey  (export function) :316
+      -- Creates a {@link LimitSelectionKey}.
+
+## packages/forms/signals/src/api/rules/readonly.ts
+[ ] readonly  (export function) :29
+      -- Adds logic to a field to conditionally make it readonly. A readonly field does not contribute to the validation, touched/dirty, or other state of its parent fie
+[ ] readonly  (export function) :39
+      -- Adds logic to a field to conditionally make it readonly.
+[ ] readonly  (export function) :44
+
+## packages/forms/signals/src/api/rules/validation/email.ts
+[ ] email  (export function) :61
+      -- Binds a validator to the given path that requires the value to match the standard email format. This function can only be called on string paths.  - `error`: Cu
+
+## packages/forms/signals/src/api/rules/validation/max.ts
+[ ] max  (export function) :33
+      -- Binds a validator to the given path that requires the value to be less than or equal to the given `maxValue`. This function can only be called on number paths. 
+
+## packages/forms/signals/src/api/rules/validation/max_date.ts
+[ ] maxDate  (export function) :32
+      -- Binds a validator to the given path that requires the value to be less than or equal to the given `maxDate`. This function can only be called on date paths. In 
+
+## packages/forms/signals/src/api/rules/validation/max_length.ts
+[ ] maxLength  (export function) :39
+      -- Binds a validator to the given path that requires the length of the value to be less than or equal to the given `maxLength`. This function can only be called on
+
+## packages/forms/signals/src/api/rules/validation/min.ts
+[ ] min  (export function) :33
+      -- Binds a validator to the given path that requires the value to be greater than or equal to the given `minValue`. This function can only be called on number path
+
+## packages/forms/signals/src/api/rules/validation/min_date.ts
+[ ] minDate  (export function) :32
+      -- Binds a validator to the given path that requires the value to be greater than or equal to the given `minDate`. This function can only be called on date paths. 
+
+## packages/forms/signals/src/api/rules/validation/min_length.ts
+[ ] minLength  (export function) :39
+      -- Binds a validator to the given path that requires the length of the value to be greater than or equal to the given `minLength`. This function can only be called
+
+## packages/forms/signals/src/api/rules/validation/pattern.ts
+[ ] pattern  (export function) :31
+      -- Binds a validator to the given path that requires the value to match a specific regex pattern. This function can only be called on string paths. In addition to 
+
+## packages/forms/signals/src/api/rules/validation/required.ts
+[ ] required  (export function) :33
+      -- Binds a validator to the given path that requires the value to be non-empty. This function can only be called on any type of path. In addition to binding a vali
+
+## packages/forms/signals/src/api/rules/validation/standard_schema.ts
+[ ] validateStandardSchema  (export function) :70
+      -- Validates a field using a `StandardSchemaV1` compatible validator (e.g. a Zod validator). See https://github.com/standard-schema/standard-schema for more about 
+[ ] standardSchemaError  (export function) :137
+      -- Create a standard schema issue error associated with the target field
+[ ] standardSchemaError  (export function) :151
+      -- Create a standard schema issue error
+[ ] standardSchemaError  (export function) :155
+[ ] standardIssueToFormTreeError  (function) :169
+      -- Converts a `StandardSchemaV1.Issue` to a `FormTreeError`.
+[ ] StandardSchemaValidationError  (export class) :189
+      -- An error used to indicate an issue validating against a standard schema.
+[ ] StandardSchemaValidationError.constructor  (ctor) :192
+
+## packages/forms/signals/src/api/rules/validation/util.ts
+[ ] getLengthOrSize  (export function) :36
+      -- Gets the length or size of the given value.
+[ ] getOption  (export function) :49
+      -- Gets the value for an option that may be either a static value or a logic function that produces the option value.
+[ ] isEmpty  (export function) :59
+      -- Checks if the given value is considered empty. Empty values are: null, undefined, '', false, NaN.
+[ ] normalizeErrors  (export function) :70
+      -- Normalizes validation errors (which can be a single error, an array of errors, or undefined) into a list of errors.
+
+## packages/forms/signals/src/api/rules/validation/validate.ts
+[ ] validate  (export function) :33
+      -- Adds logic to a field to determine if the field has validation errors.
+
+## packages/forms/signals/src/api/rules/validation/validate_async.ts
+[ ] validateAsync  (export function) :128
+      -- Adds async validation to the field corresponding to the given path based on a resource. Async validation for a field only runs once all synchronous validation i
+
+## packages/forms/signals/src/api/rules/validation/validate_http.ts
+[ ] validateHttp  (export function) :96
+      -- Adds async validation to the field corresponding to the given path based on an httpResource. Async validation for a field only runs once all synchronous validat
+
+## packages/forms/signals/src/api/rules/validation/validate_tree.ts
+[ ] validateTree  (export function) :29
+      -- Adds logic to a field to determine if the field or any of its child fields has validation errors.   Errors returned by the validator may specify a target field 
+
+## packages/forms/signals/src/api/rules/validation/validation_errors.ts
+[ ] requiredError  (export function) :61
+      -- Create a required error associated with the target field
+[ ] requiredError  (export function) :73
+      -- Create a required error
+[ ] requiredError  (export function) :76
+[ ] minError  (export function) :92
+      -- Create a min value error associated with the target field
+[ ] minError  (export function) :106
+      -- Create a min value error
+[ ] minError  (export function) :110
+[ ] minDateError  (export function) :127
+      -- Create a minDate error associated with the target field
+[ ] minDateError  (export function) :141
+      -- Create a minDate error
+[ ] minDateError  (export function) :145
+[ ] maxError  (export function) :162
+      -- Create a max value error associated with the target field
+[ ] maxError  (export function) :176
+      -- Create a max value error
+[ ] maxError  (export function) :180
+[ ] maxDateError  (export function) :197
+      -- Create a maxDate error associated with the target field
+[ ] maxDateError  (export function) :211
+      -- Create a maxDate error
+[ ] maxDateError  (export function) :215
+[ ] minLengthError  (export function) :232
+      -- Create a minLength error associated with the target field
+[ ] minLengthError  (export function) :246
+      -- Create a minLength error
+[ ] minLengthError  (export function) :250
+[ ] maxLengthError  (export function) :267
+      -- Create a maxLength error associated with the target field
+[ ] maxLengthError  (export function) :281
+      -- Create a maxLength error
+[ ] maxLengthError  (export function) :285
+[ ] patternError  (export function) :302
+      -- Create a pattern matching error associated with the target field
+[ ] patternError  (export function) :316
+      -- Create a pattern matching error
+[ ] patternError  (export function) :320
+[ ] emailError  (export function) :336
+      -- Create an email format error associated with the target field
+[ ] emailError  (export function) :346
+      -- Create an email format error
+[ ] emailError  (export function) :349
+[ ] BaseNgValidationError  (export class) :432
+      -- Internal version of `NgValidationError`, we create this separately so we can change its type on the exported version to a type union of the possible sub-classes
+[ ] BaseNgValidationError.constructor  (ctor) :445
+[ ] RequiredValidationError  (export class) :460
+      -- An error used to indicate that a required field is empty.
+[ ] MinValidationError  (export class) :472
+      -- An error used to indicate that a value is lower than the minimum allowed.
+[ ] MinValidationError.constructor  (ctor) :475
+[ ] MinDateValidationError  (export class) :491
+      -- An error used to indicate that a date value is earlier than the minimum allowed.
+[ ] MinDateValidationError.constructor  (ctor) :494
+[ ] MaxValidationError  (export class) :510
+      -- An error used to indicate that a value is higher than the maximum allowed.
+[ ] MaxValidationError.constructor  (ctor) :513
+[ ] MaxDateValidationError  (export class) :529
+      -- An error used to indicate that a date value is later than the maximum allowed.
+[ ] MaxDateValidationError.constructor  (ctor) :532
+[ ] MinLengthValidationError  (export class) :548
+      -- An error used to indicate that a value is shorter than the minimum allowed length.
+[ ] MinLengthValidationError.constructor  (ctor) :551
+[ ] MaxLengthValidationError  (export class) :567
+      -- An error used to indicate that a value is longer than the maximum allowed length.
+[ ] MaxLengthValidationError.constructor  (ctor) :570
+[ ] PatternValidationError  (export class) :586
+      -- An error used to indicate that a value does not match the required pattern.
+[ ] PatternValidationError.constructor  (ctor) :589
+[ ] EmailValidationError  (export class) :605
+      -- An error used to indicate that a value is not a valid email.
+[ ] NativeInputParseError  (export class) :617
+      -- An error used to indicate that a value entered in a native input does not parse.
+
+## packages/forms/signals/src/api/structure.ts
+[ ] form  (export function) :106
+      -- Creates a form wrapped around the given model data. A form is represented as simply a `FieldTree` of the model data. `form` uses the given model as the source o
+[ ] form  (export function) :155
+      -- Creates a form wrapped around the given model data. A form is represented as simply a `FieldTree` of the model data. `form` uses the given model as the source o
+[ ] form  (export function) :205
+      -- Creates a form wrapped around the given model data. A form is represented as simply a `FieldTree` of the model data. `form` uses the given model as the source o
+[ ] form  (export function) :211
+[ ] applyEach  (export function) :274
+      -- Applies a schema to each item of an array. ```ts const nameSchema = schema<{first: string, last: string}>((name) => {   required(name.first);   required(name.la
+[ ] applyEach  (export function) :278
+[ ] applyEach  (export function) :282
+[ ] apply  (export function) :315
+      -- Applies a predefined schema to a given `FieldPath`. ```ts const nameSchema = schema<{first: string, last: string}>((name) => {   required(name.first);   require
+[ ] applyWhen  (export function) :338
+      -- Conditionally applies a predefined schema to a given `FieldPath`.
+[ ] applyWhenValue  (export function) :364
+      -- Conditionally applies a predefined schema to a given `FieldPath`.   `TNarrowed`.
+[ ] applyWhenValue  (export function) :384
+      -- Conditionally applies a predefined schema to a given `FieldPath`.   should be applied.
+[ ] applyWhenValue  (export function) :390
+[ ] submit  (export function) :440
+      -- Submits a given `FieldTree` using the given action function and applies any submission errors resulting from the action to the field. Submission errors returned
+[ ] submit  (export function) :444
+[ ] submit  (export function) :448
+[ ] schema  (export function) :509
+      -- Creates a `Schema` that adds logic rules to a form.
+[ ] shouldRunAction  (function) :513
+[ ] setSubmissionErrors  (function) :533
+      -- Sets a list of submission errors to their individual fields.
+
+## packages/forms/signals/src/api/transformed_value.ts
+[ ] transformedValue  (export function) :122
+      -- Creates a writable signal representing a "raw" UI value that is transformed to/from a model value via `parse` and `format` functions. This utility simplifies th
+
+## packages/forms/signals/src/compat/validation_errors.ts
+[ ] CompatValidationError  (export class) :19
+      -- An error used for compat errors.
+[ ] CompatValidationError.constructor  (ctor) :26
+[ ] signalErrorsToValidationErrors  (export function) :38
+      -- Converts signal forms validation errors to reactive forms ValidationErrors.
+[ ] reactiveErrorsToSignalErrors  (export function) :55
+      -- Converts reactive form validation error to signal forms CompatValidationError.
+[ ] extractNestedReactiveErrors  (export function) :73
+      -- Extracts all reactive errors from a control and its children.
+
+## packages/forms/signals/src/controls/interop_ng_control.ts
+[ ] InteropNgControl  (export class) :63
+      -- A fake version of `NgControl` provided by the `Field` directive. This allows interoperability with a wider range of components designed to work with reactive fo
+[ ] InteropNgControl.constructor  (ctor) :64
+[ ] InteropNgControl.value  (accessor) :68
+[ ] InteropNgControl.valid  (accessor) :73
+[ ] InteropNgControl.invalid  (accessor) :77
+[ ] InteropNgControl.pending  (accessor) :81
+[ ] InteropNgControl.disabled  (accessor) :85
+[ ] InteropNgControl.enabled  (accessor) :89
+[ ] InteropNgControl.errors  (accessor) :93
+[ ] InteropNgControl.pristine  (accessor) :97
+[ ] InteropNgControl.dirty  (accessor) :101
+[ ] InteropNgControl.touched  (accessor) :105
+[ ] InteropNgControl.untouched  (accessor) :109
+[ ] InteropNgControl.status  (accessor) :113
+[ ] InteropNgControl.hasValidator  (method) :134
+[ ] InteropNgControl.updateValueAndValidity  (method) :143
+
+## packages/forms/signals/src/directive/bindings.ts
+[ ] CONTROL_BINDING_TO_FIELD_STATE_KEY  (arrow) :48
+      -- Inverts `FIELD_STATE_KEY_TO_CONTROL_BINDING` to look up the minified name of the corresponding field state property from its control binding name.
+[ ] readFieldStateBindingValue  (export function) :58
+[ ] CONTROL_BINDING_NAMES  (export arrow) :67
+      -- The keys of {@link FIELD_STATE_KEY_TO_CONTROL_BINDING}
+[ ] createBindings  (export function) :70
+[ ] bindingUpdated  (export function) :74
+
+## packages/forms/signals/src/directive/control_custom.ts
+[ ] customControlCreate  (export function) :20
+
+## packages/forms/signals/src/directive/control_cva.ts
+[ ] isValidatorObject  (function) :30
+[ ] cvaControlCreate  (export function) :34
+
+## packages/forms/signals/src/directive/control_native.ts
+[ ] nativeControlCreate  (export function) :34
+
+## packages/forms/signals/src/directive/form_field.ts
+[ ] FormField  (export class) :117
+[ ] FormField.interopNgControl  (accessor) :180
+      -- @internal
+[ ] FormField.setParseErrors  (method) :215
+      -- @internal
+[ ] FormField.onReset  (accessor) :220
+      -- @internal
+[ ] FormField.onReset  (accessor) :225
+      -- @internal
+[ ] FormField.controlValueAccessor  (accessor) :234
+      -- A `ControlValueAccessor`, if configured, for the host component.
+[ ] FormField.installClassBindingEffect  (method) :253
+      -- Creates an `afterRenderEffect` that applies the configured class bindings to the host element if needed.
+[ ] FormField.focus  (method) :288
+      -- Focuses this field binding. By default, this will focus the host DOM element. However, custom `FormUiControl`s can implement custom focusing behavior.
+[ ] FormField.reset  (method) :295
+      -- Resets the bound control.
+[ ] FormField.registerAsBinding  (method) :306
+      -- Registers this `FormField` as a binding on its associated `FieldState`. This method should be called at most once for a given `FormField`. A `FormField` placed 
+[ ] FormField.ɵngControlCreate  (method) :382
+[ ] FormField.elementAcceptsNativeProperty  (method) :414
+      -- @internal
+
+## packages/forms/signals/src/directive/form_root.ts
+[ ] FormRoot  (export class) :42
+[ ] FormRoot.onSubmit  (method) :45
+
+## packages/forms/signals/src/directive/input_validity_monitor.ts
+[ ] InputValidityMonitor  (export class) :27
+      -- Service that monitors validity state changes on native form elements. It works by dynamically installing a CSS transition on `input, textarea` `:valid` and `:in
+[ ] InputValidityMonitor.watchValidity  (method) :28
+[ ] InputValidityMonitor.isBadInput  (method) :33
+[ ] AnimationInputValidityMonitor  (export class) :37
+[ ] AnimationInputValidityMonitor.watchValidity  (method) :43
+      -- Starts watching the given element for validity state changes.
+[ ] AnimationInputValidityMonitor.isBadInput  (method) :72
+[ ] AnimationInputValidityMonitor.createTransitionStyle  (method) :76
+[ ] AnimationInputValidityMonitor.ngOnDestroy  (method) :99
+
+## packages/forms/signals/src/directive/native.ts
+[ ] getNativeControlValue  (export function) :38
+      -- Returns the value from a native control element.   field state. The type of the returned value depends on the `type` property of the control, and will attempt t
+[ ] setNativeControlValue  (export function) :105
+      -- Sets a native control element's value.
+[ ] setNativeNumberControlValue  (export function) :168
+      -- Writes a value to a native <input type="number">.
+[ ] isInput  (export function) :177
+[ ] inputRequiresValidityTracking  (export function) :181
+[ ] formatDateForInput  (function) :191
+[ ] formatDateForMinMax  (export function) :202
+
+## packages/forms/signals/src/directive/select.ts
+[ ] observeSelectMutations  (export function) :19
+      -- Creates a `MutationObserver` to observe changes to the available `<option>`s for this select.
+[ ] isRelevantSelectMutation  (function) :53
+      -- Checks if a given mutation record is relevant for resyncing a <select>. In general its relevant if: - Non comment content of the select changed - The value attr
+
+## packages/forms/signals/src/field/context.ts
+[ ] FieldNodeContext  (export class) :37
+      -- `FieldContext` implementation, backed by a `FieldNode`.
+[ ] FieldNodeContext.constructor  (ctor) :51
+[ ] FieldNodeContext.resolve  (method) :67
+      -- Resolves a target path relative to this context.
+[ ] FieldNodeContext.fieldTree  (accessor) :115
+[ ] FieldNodeContext.state  (accessor) :119
+[ ] FieldNodeContext.value  (accessor) :123
+[ ] FieldNodeContext.key  (accessor) :127
+[ ] FieldNodeContext.pathKeys  (accessor) :131
+[ ] FieldNodeContext.fieldTreeOf  (method) :153
+      -- required by the `RootFieldContext` interface.
+[ ] FieldNodeContext.stateOf  (method) :159
+[ ] FieldNodeContext.stateOf  (method) :162
+[ ] FieldNodeContext.stateOf  (method) :165
+
+## packages/forms/signals/src/field/field_adapter.ts
+[ ] BasicFieldAdapter  (export class) :68
+      -- Basic adapter supporting standard form behavior.
+[ ] BasicFieldAdapter.newRoot  (method) :76
+      -- Creates a new Root field node.
+[ ] BasicFieldAdapter.newChild  (method) :96
+      -- Creates a new child field node.
+[ ] BasicFieldAdapter.createNodeState  (method) :104
+      -- Creates a node state.
+[ ] BasicFieldAdapter.createValidationState  (method) :112
+      -- Creates a validation state.
+[ ] BasicFieldAdapter.createStructure  (method) :121
+      -- Creates a node structure.
+
+## packages/forms/signals/src/field/manager.ts
+[ ] FormFieldManager  (export class) :20
+      -- Manages the collection of fields associated with a given `form`. Fields are created implicitly, through reactivity, and may create "owned" entities like effects
+[ ] FormFieldManager.constructor  (ctor) :25
+[ ] FormFieldManager.createFieldManagementEffect  (method) :55
+      -- Creates an effect that runs when the form's structure changes and checks for structures that have become unreachable to clean up. For example, consider a form w
+[ ] FormFieldManager.markStructuresLive  (method) :79
+      -- Collects all structures reachable from the given structure into the given set.
+
+## packages/forms/signals/src/field/metadata.ts
+[ ] FieldMetadataState  (export class) :24
+      -- Tracks custom metadata associated with a `FieldNode`.
+[ ] FieldMetadataState.constructor  (ctor) :28
+[ ] FieldMetadataState.runMetadataCreateLifecycle  (method) :34
+      -- Force eager creation of managed keys, as managed keys have a `create` function that needs to run during construction.
+[ ] FieldMetadataState.get  (method) :62
+      -- Gets the value of an `MetadataKey` for the field.
+[ ] FieldMetadataState.has  (method) :83
+      -- Checks whether the current metadata state has the given metadata key.
+
+## packages/forms/signals/src/field/node.ts
+[ ] FieldNode  (export class) :73
+      -- Internal node in the form tree for a given field. Field nodes have several responsibilities:  - They track instance state for the particular field (touched)  - 
+[ ] FieldNode.context  (accessor) :83
+[ ] FieldNode.constructor  (ctor) :93
+[ ] FieldNode.focusBoundControl  (method) :107
+[ ] FieldNode.getBindingForFocus  (method) :119
+      -- Gets the Field directive binding that should be focused when the developer calls `focusBoundControl` on this node. This will prioritize focusable bindings to th
+[ ] FieldNode.fieldTree  (accessor) :155
+[ ] FieldNode.logicNode  (accessor) :159
+[ ] FieldNode.value  (accessor) :163
+[ ] FieldNode.keyInParent  (accessor) :167
+[ ] FieldNode.errors  (accessor) :171
+[ ] FieldNode.parseErrors  (accessor) :175
+[ ] FieldNode.errorSummary  (accessor) :179
+[ ] FieldNode.pending  (accessor) :183
+[ ] FieldNode.valid  (accessor) :187
+[ ] FieldNode.invalid  (accessor) :191
+[ ] FieldNode.dirty  (accessor) :195
+[ ] FieldNode.touched  (accessor) :199
+[ ] FieldNode.disabled  (accessor) :203
+[ ] FieldNode.disabledReasons  (accessor) :207
+[ ] FieldNode.hidden  (accessor) :211
+[ ] FieldNode.readonly  (accessor) :215
+[ ] FieldNode.formFieldBindings  (accessor) :219
+[ ] FieldNode.submitting  (accessor) :223
+[ ] FieldNode.name  (accessor) :227
+[ ] FieldNode.max  (accessor) :231
+[ ] FieldNode.maxLength  (accessor) :236
+[ ] FieldNode.min  (accessor) :240
+[ ] FieldNode.minLength  (accessor) :245
+[ ] FieldNode.pattern  (accessor) :249
+[ ] FieldNode.required  (accessor) :253
+[ ] FieldNode.metadata  (method) :257
+[ ] FieldNode.getError  (method) :261
+[ ] FieldNode.getError  (method) :264
+[ ] FieldNode.getError  (method) :265
+[ ] FieldNode.hasMetadata  (method) :269
+[ ] FieldNode.markAsTouched  (method) :273
+[ ] FieldNode.markAsTouchedInternal  (method) :283
+[ ] FieldNode.markAsDirty  (method) :302
+      -- Marks this specific field as dirty.
+[ ] FieldNode.markAsPristine  (method) :309
+      -- Marks this specific field as pristine.
+[ ] FieldNode.markAsUntouched  (method) :316
+      -- Marks this specific field as untouched.
+[ ] FieldNode.reset  (method) :327
+      -- Resets the {@link touched} and {@link dirty} state of the field and its descendants. Note this does not change the data model, which can be reset directly if de
+[ ] FieldNode._reset  (method) :331
+[ ] FieldNode.reloadValidation  (method) :359
+      -- Reloads all asynchronous validators for this field and its descendants.
+[ ] FieldNode._reloadValidation  (method) :363
+[ ] FieldNode.controlValueSignal  (method) :381
+      -- Creates a linked signal that initiates a {@link debounceSync} when set.
+[ ] FieldNode.sync  (method) :407
+      -- Synchronizes the {@link controlValue} with the {@link value} signal immediately.
+[ ] FieldNode.flushSync  (method) :414
+      -- If there is a pending sync, abort it and sync immediately.
+[ ] FieldNode.debounceSync  (method) :430
+      -- Initiates a debounced {@link sync}. If a debouncer is configured, the synchronization will occur after the debouncer resolves. If no debouncer is configured, th
+[ ] FieldNode.newRoot  (method) :458
+      -- Creates a new root field node for a new form.
+[ ] FieldNode.createStructure  (method) :467
+[ ] FieldNode.newChild  (method) :486
+[ ] firstInDom  (function) :526
+      -- Given two elements, returns the one that appears earlier in the DOM.
+
+## packages/forms/signals/src/field/resolution.ts
+[ ] getBoundPathDepth  (export function) :15
+      -- The depth of the current path when evaluating a logic function. Do not set this directly, it is a context variable managed by `setBoundPathDepthForResolution`.
+[ ] setBoundPathDepthForResolution  (export function) :49
+      -- Sets the bound path depth for the duration of the given logic function. This is used to ensure that the field resolution algorithm walks far enough up the field
+
+## packages/forms/signals/src/field/state.ts
+[ ] FieldNodeState  (export class) :21
+      -- The non-validation and non-submit state associated with a `FieldNode`, such as touched and dirty status, as well as derived logical state.
+[ ] FieldNodeState.markAsTouched  (method) :41
+      -- Marks this specific field as touched.
+[ ] FieldNodeState.markAsDirty  (method) :48
+      -- Marks this specific field as dirty.
+[ ] FieldNodeState.markAsPristine  (method) :55
+      -- Marks this specific field as not dirty.
+[ ] FieldNodeState.markAsUntouched  (method) :62
+      -- Marks this specific field as not touched.
+[ ] FieldNodeState.constructor  (ctor) :69
+[ ] FieldNodeState.computed  (method) :167
+
+## packages/forms/signals/src/field/structure.ts
+[ ] FieldNodeStructure  (export class) :47
+      -- Structural component of a `FieldNode` which tracks its path, parent, and children.
+[ ] FieldNodeStructure.injector  (accessor) :96
+      -- Lazily initialized injector.
+[ ] FieldNodeStructure.constructor  (ctor) :104
+[ ] FieldNodeStructure.children  (method) :111
+      -- Gets the child fields of this field.
+[ ] FieldNodeStructure.materializedChildren  (method) :129
+      -- Gets only the child fields that have been materialized already. This is useful for iterating over children without triggering materialization of children that h
+[ ] FieldNodeStructure._areChildrenMaterialized  (method) :143
+      -- Internal method (cast to any in tests) to check if the children map has been materialized. Useful for validating that fields without logic are lazily instantiat
+[ ] FieldNodeStructure.ensureChildrenMap  (method) :147
+[ ] FieldNodeStructure.getChild  (method) :163
+      -- Retrieve a child `FieldNode` of this node by property key.
+[ ] FieldNodeStructure.reduceChildren  (method) :195
+      -- Perform a reduction over a field's children (if any) and return the result. Optionally, the reduction is short circuited based on the provided `shortCircuit` fu
+[ ] FieldNodeStructure.destroy  (method) :216
+      -- Destroys the field when it is no longer needed.
+[ ] FieldNodeStructure.createKeyOrOrphanSignals  (method) :223
+      -- Creates signals for keyInParent and isOrphaned status for a field node.
+[ ] FieldNodeStructure.createChildrenMap  (method) :291
+[ ] FieldNodeStructure.computeChildrenMap  (method) :301
+[ ] FieldNodeStructure.createReader  (method) :426
+      -- Creates a "reader" computed for the given key. A reader is a computed signal that memoizes the access of the `FieldNode` stored at this key (or returns `undefin
+[ ] RootFieldNodeStructure  (export class) :432
+      -- The structural component of a `FieldNode` that is the root of its field tree.
+[ ] RootFieldNodeStructure.parent  (accessor) :433
+[ ] RootFieldNodeStructure.root  (accessor) :437
+[ ] RootFieldNodeStructure.pathKeys  (accessor) :441
+[ ] RootFieldNodeStructure.keyInParent  (accessor) :445
+[ ] RootFieldNodeStructure.constructor  (ctor) :465
+[ ] ChildFieldNodeStructure  (export class) :479
+      -- The structural component of a child `FieldNode` within a field tree.
+[ ] ChildFieldNodeStructure.fieldManager  (accessor) :488
+[ ] ChildFieldNodeStructure.constructor  (ctor) :504
+[ ] getDebugName  (function) :584
+      -- Gets a human readable name for a field node for use in error messages.
+[ ] maybeRemoveStaleArrayFields  (function) :629
+[ ] maybeRemoveStaleObjectFields  (function) :668
+
+## packages/forms/signals/src/field/submit.ts
+[ ] FieldSubmitState  (export class) :16
+      -- State of a `FieldNode` that's associated with form submission.
+[ ] FieldSubmitState.constructor  (ctor) :26
+
+## packages/forms/signals/src/field/util.ts
+[ ] shortCircuitFalse  (export function) :12
+      -- A shortCircuit function for reduceChildren that short-circuits if the value is false.
+[ ] shortCircuitTrue  (export function) :17
+      -- A shortCircuit function for reduceChildren that short-circuits if the value is true.
+[ ] cast  (export function) :22
+      -- Recasts the given value as a new type.
+[ ] getInjectorFromOptions  (export function) :28
+      -- A helper method allowing to get injector regardless of the options type.
+
+## packages/forms/signals/src/field/validation.ts
+[ ] calculateValidationSelfStatus  (export function) :21
+      -- Helper function taking validation state, and returning own state of the node.
+[ ] FieldValidationState  (export class) :150
+      -- The validation state associated with a `FieldNode`. This class collects together various types of errors to represent the full validation state of the field. Th
+[ ] FieldValidationState.constructor  (ctor) :151
+[ ] normalizeErrors  (function) :376
+      -- Normalizes a validation result to a list of validation errors.
+[ ] addDefaultField  (export function) :394
+      -- Sets the given field on the given error(s) if it does not already have a field.
+[ ] addDefaultField  (export function) :398
+[ ] addDefaultField  (export function) :402
+[ ] getFirstBoundElement  (function) :416
+[ ] compareErrorPosition  (function) :435
+      -- Compares the position of two validation errors by the position of their corresponding field binding directive in the DOM. - For errors with multiple field bindi
+
+## packages/forms/signals/src/schema/logic.ts
+[ ] AbstractLogic  (export class) :76
+      -- Base class for all logic. It is responsible for combining the results from multiple individual logic functions registered in the schema, and using them to deriv
+[ ] AbstractLogic.constructor  (ctor) :80
+[ ] AbstractLogic.compute  (method) :92
+      -- Computes the value of the associated field state based on the logic functions and predicates registered with this logic instance.
+[ ] AbstractLogic.defaultValue  (accessor) :98
+      -- The default value that the associated field state should assume if there are no logic functions registered by the schema (or if the logic is disabled by a predi
+[ ] AbstractLogic.push  (method) :101
+      -- Registers a logic function with this logic instance.
+[ ] AbstractLogic.mergeIn  (method) :109
+      -- Merges in the logic from another logic instance, subject to the predicates of both the other instance and this instance.
+[ ] AbstractLogic.hasRules  (method) :117
+      -- Checks if any logic rules are registered in this instance.
+[ ] BooleanOrLogic  (export class) :123
+      -- Logic that combines its individual logic function results with logical OR.
+[ ] BooleanOrLogic.defaultValue  (accessor) :124
+[ ] BooleanOrLogic.compute  (method) :128
+[ ] ArrayMergeIgnoreLogic  (export class) :140
+      -- Logic that combines its individual logic function results by aggregating them in an array. Depending on its `ignore` function it may ignore certain values, omit
+[ ] ArrayMergeIgnoreLogic.ignoreNull  (method) :145
+      -- Creates an instance of this class that ignores `null` values.
+[ ] ArrayMergeIgnoreLogic.constructor  (ctor) :149
+[ ] ArrayMergeIgnoreLogic.defaultValue  (accessor) :156
+[ ] ArrayMergeIgnoreLogic.compute  (method) :160
+[ ] ArrayMergeLogic  (export class) :179
+      -- Logic that combines its individual logic function results by aggregating them in an array.
+[ ] ArrayMergeLogic.constructor  (ctor) :180
+[ ] MetadataMergeLogic  (export class) :186
+      -- Logic that combines metadata according to the keys's reduce function.
+[ ] MetadataMergeLogic.defaultValue  (accessor) :187
+[ ] MetadataMergeLogic.constructor  (ctor) :191
+[ ] MetadataMergeLogic.compute  (method) :198
+[ ] wrapWithPredicates  (function) :221
+      -- Wraps a logic function such that it returns the special `IGNORED` sentinel value if any of the given predicates evaluates to false.
+[ ] LogicContainer  (export class) :254
+[ ] LogicContainer.constructor  (ctor) :278
+[ ] LogicContainer.hasAnyLogic  (method) :294
+      -- Checks whether this container has any logic rules registered in any of its categories.
+[ ] LogicContainer.hasMetadata  (method) :307
+      -- Checks whether there is logic for the given metadata key.
+[ ] LogicContainer.hasMetadataKeys  (method) :311
+[ ] LogicContainer.getMetadataKeys  (method) :319
+      -- Gets an iterable of [metadata key, logic function] pairs.
+[ ] LogicContainer.getMetadata  (method) :328
+      -- Retrieves or creates the `AbstractLogic` for a given metadata key.
+[ ] LogicContainer.mergeIn  (method) :340
+      -- Merges logic from another `Logic` instance into this one.
+
+## packages/forms/signals/src/schema/logic_node.ts
+[ ] AbstractLogicNodeBuilder  (export class) :23
+      -- Abstract base class for building a `LogicNode`. This class defines the interface for adding various logic rules (e.g., hidden, disabled) and data factories to a
+[ ] AbstractLogicNodeBuilder.constructor  (ctor) :24
+[ ] AbstractLogicNodeBuilder.addHiddenRule  (method) :30
+      -- Adds a rule to determine if a field should be hidden.
+[ ] AbstractLogicNodeBuilder.addDisabledReasonRule  (method) :33
+      -- Adds a rule to determine if a field should be disabled, and for what reason.
+[ ] AbstractLogicNodeBuilder.addReadonlyRule  (method) :36
+      -- Adds a rule to determine if a field should be read-only.
+[ ] AbstractLogicNodeBuilder.addSyncErrorRule  (method) :39
+      -- Adds a rule for synchronous validation errors for a field.
+[ ] AbstractLogicNodeBuilder.addSyncTreeErrorRule  (method) :42
+      -- Adds a rule for synchronous validation errors that apply to a subtree.
+[ ] AbstractLogicNodeBuilder.addAsyncErrorRule  (method) :45
+      -- Adds a rule for asynchronous validation errors for a field.
+[ ] AbstractLogicNodeBuilder.addMetadataRule  (method) :48
+      -- Adds a rule to compute metadata for a field.
+[ ] AbstractLogicNodeBuilder.getChild  (method) :55
+      -- Gets a builder for a child node associated with the given property key.
+[ ] AbstractLogicNodeBuilder.hasLogic  (method) :62
+      -- Checks whether a particular `AbstractLogicNodeBuilder` has been merged into this one.
+[ ] AbstractLogicNodeBuilder.hasRules  (method) :68
+      -- Checks whether this builder or any of its children have any logic rules defined.
+[ ] AbstractLogicNodeBuilder.anyChildHasLogic  (method) :74
+      -- Checks whether any of the children of this builder have any logic rules defined.
+[ ] AbstractLogicNodeBuilder.build  (method) :80
+      -- Builds the `LogicNode` from the accumulated rules and child builders.
+[ ] LogicNodeBuilder  (export class) :90
+      -- A builder for `LogicNode`. Used to add logic to the final `LogicNode` tree. This builder supports merging multiple sources of logic, potentially with predicates
+[ ] LogicNodeBuilder.constructor  (ctor) :91
+[ ] LogicNodeBuilder.addHiddenRule  (method) :107
+[ ] LogicNodeBuilder.addDisabledReasonRule  (method) :111
+[ ] LogicNodeBuilder.addReadonlyRule  (method) :115
+[ ] LogicNodeBuilder.addSyncErrorRule  (method) :119
+[ ] LogicNodeBuilder.addSyncTreeErrorRule  (method) :125
+[ ] LogicNodeBuilder.addAsyncErrorRule  (method) :131
+[ ] LogicNodeBuilder.addMetadataRule  (method) :137
+[ ] LogicNodeBuilder.getChild  (method) :141
+[ ] LogicNodeBuilder.hasLogic  (method) :163
+[ ] LogicNodeBuilder.hasRules  (method) :170
+[ ] LogicNodeBuilder.anyChildHasLogic  (method) :174
+[ ] LogicNodeBuilder.mergeIn  (method) :185
+      -- Merges logic from another `LogicNodeBuilder` into this one. If a `predicate` is provided, all logic from the `other` builder will only apply when the predicate 
+[ ] LogicNodeBuilder.getCurrent  (method) :211
+      -- Gets the current `NonMergeableLogicNodeBuilder` for adding rules directly to this `LogicNodeBuilder`. If no current builder exists, a new one is created. The cu
+[ ] LogicNodeBuilder.newRoot  (method) :223
+      -- Creates a new root `LogicNodeBuilder`.
+[ ] NonMergeableLogicNodeBuilder  (class) :232
+      -- A type of `AbstractLogicNodeBuilder` used internally by the `LogicNodeBuilder` to record "pure" chunks of logic that do not require merging in other builders.
+[ ] NonMergeableLogicNodeBuilder.constructor  (ctor) :241
+[ ] NonMergeableLogicNodeBuilder.addHiddenRule  (method) :245
+[ ] NonMergeableLogicNodeBuilder.addDisabledReasonRule  (method) :249
+[ ] NonMergeableLogicNodeBuilder.addReadonlyRule  (method) :253
+[ ] NonMergeableLogicNodeBuilder.addSyncErrorRule  (method) :257
+[ ] NonMergeableLogicNodeBuilder.addSyncTreeErrorRule  (method) :263
+[ ] NonMergeableLogicNodeBuilder.addAsyncErrorRule  (method) :269
+[ ] NonMergeableLogicNodeBuilder.addMetadataRule  (method) :275
+[ ] NonMergeableLogicNodeBuilder.getChild  (method) :279
+[ ] NonMergeableLogicNodeBuilder.hasLogic  (method) :286
+[ ] NonMergeableLogicNodeBuilder.hasRules  (method) :290
+[ ] NonMergeableLogicNodeBuilder.anyChildHasLogic  (method) :294
+[ ] LeafLogicNode  (class) :346
+      -- A tree structure of `Logic` corresponding to a tree of fields. This implementation represents a leaf in the sense that its logic is derived from a single builde
+[ ] LeafLogicNode.constructor  (ctor) :356
+[ ] LeafLogicNode.getChild  (method) :371
+      -- Retrieves the `LogicNode` for a child identified by the given property key.
+[ ] LeafLogicNode.hasLogic  (method) :397
+[ ] LeafLogicNode.hasRules  (method) :404
+[ ] LeafLogicNode.anyChildHasLogic  (method) :408
+[ ] CompositeLogicNode  (class) :418
+      -- A `LogicNode` that represents the composition of multiple `LogicNode` instances. This is used when logic for a particular path is contributed by several distinc
+[ ] CompositeLogicNode.constructor  (ctor) :426
+[ ] CompositeLogicNode.getChild  (method) :439
+      -- Retrieves the child `LogicNode` by composing the results of `getChild` from all underlying `LogicNode` instances.
+[ ] CompositeLogicNode.hasLogic  (method) :449
+      -- Checks whether the logic from a particular `AbstractLogicNodeBuilder` has been merged into this node.
+[ ] CompositeLogicNode.hasRules  (method) :453
+[ ] CompositeLogicNode.anyChildHasLogic  (method) :457
+[ ] getAllChildBuilders  (function) :469
+      -- Gets all of the builders that contribute logic to the given child of the parent builder. This function recursively traverses the builder hierarchy.
+[ ] createLogic  (function) :512
+      -- Creates the full `Logic` for a given builder. This function handles different types of builders (`LogicNodeBuilder`, `NonMergeableLogicNodeBuilder`) and applies
+[ ] bindLevel  (function) :553
+      -- Create a bound version of the given predicate to a specific depth in the field tree. This allows us to unambiguously know which `FieldContext` the predicate fun
+
+## packages/forms/signals/src/schema/path_node.ts
+[ ] FieldPathNode  (export class) :22
+      -- A path in the schema on which logic is stored so that it can be added to the corresponding field when the field is created.
+[ ] FieldPathNode.constructor  (ctor) :46
+[ ] FieldPathNode.builder  (accessor) :62
+      -- The logic builder used to accumulate logic on this path node.
+[ ] FieldPathNode.getChild  (method) :73
+      -- Gets the path node for the given child property key. Child paths are created automatically on first access if they do not exist already.
+[ ] FieldPathNode.mergeIn  (method) :85
+      -- Merges in logic from another schema to this one.
+[ ] FieldPathNode.unwrapFieldPath  (method) :91
+      -- Extracts the underlying path node from the given path proxy.
+[ ] FieldPathNode.newRoot  (method) :96
+      -- Creates a new root path node to be passed in to a schema function.
+
+## packages/forms/signals/src/schema/schema.ts
+[ ] SchemaImpl  (export class) :45
+      -- Implements the `Schema` concept.
+[ ] SchemaImpl.constructor  (ctor) :46
+[ ] SchemaImpl.compile  (method) :53
+      -- Compiles this schema within the current root compilation context. If the schema was previously compiled within this context, we reuse the cached FieldPathNode, 
+[ ] SchemaImpl.create  (method) :74
+      -- Creates a SchemaImpl from the given SchemaOrSchemaFn.
+[ ] SchemaImpl.rootCompile  (method) :85
+      -- Compiles the given schema in a fresh compilation context. This clears the cached results of any previous compilations.
+[ ] isSchemaOrSchemaFn  (export function) :104
+      -- Checks if the given value is a schema or schema function.
+[ ] assertPathIsCurrent  (export function) :109
+      -- Checks that a path node belongs to the schema function currently being compiled.
+
+## packages/forms/signals/src/util/array.ts
+[ ] shallowArrayEquals  (export function) :13
+      -- Checks shallow equality of two arrays. Returns true if both are arrays and have the same elements in the same order.
+
+## packages/forms/signals/src/util/deep_signal.ts
+[ ] deepSignal  (export function) :21
+      -- Creates a writable signal for a specific property on a source writeable signal.
+[ ] valueForWrite  (function) :51
+      -- Gets an updated root value to use when setting a value on a deepSignal with the given path.
+
+## packages/forms/signals/src/util/normalize_form_args.ts
+[ ] normalizeFormArgs  (export function) :18
+      -- Extracts the model, schema, and options from the arguments passed to `form()`.
+
+## packages/forms/signals/src/util/parser.ts
+[ ] createParser  (export function) :41
+      -- Creates a {@link Parser} that synchronizes a raw value with an underlying model value.
+
+## packages/forms/signals/src/util/type_guards.ts
+[ ] isArray  (export function) :12
+      -- A version of `Array.isArray` that handles narrowing of readonly arrays properly.
+[ ] isObject  (export function) :19
+      -- Checks if a value is an object.
+
+## packages/forms/signals/src/webmcp/registration.ts
+[ ] registerWebMcpForm  (arrow) :24
+[ ] initWebMcpForm  (function) :38
+[ ] inferSchemaFromFieldNode  (function) :85
+      -- Infers the JSON schema from a specific form field.
+[ ] provideExperimentalWebMcpForms  (export function) :146
+      -- Creates a provider that configures all signal forms with `experimentalWebMcpTool` to be registered as WebMCP tools.
+
+## packages/forms/src/directives.ts
+[ ] ɵInternalFormsSharedModule  (export class) :115
+
+## packages/forms/src/directives/abstract_control_directive.ts
+[ ] AbstractControlDirective  (export class) :30
+      -- Base class for control directives. This class is only used internally in the `ReactiveFormsModule` and the `FormsModule`.
+[ ] AbstractControlDirective.control  (accessor) :37
+      -- A reference to the underlying control.
+[ ] AbstractControlDirective.value  (accessor) :43
+      -- Reports the value of the control if it is present, otherwise null.
+[ ] AbstractControlDirective.valid  (accessor) :53
+      -- Reports whether the control is valid. A control is considered valid if no validation errors exist with the current value. If the control is not present, null is
+[ ] AbstractControlDirective.invalid  (accessor) :62
+      -- Reports whether the control is invalid, meaning that an error exists in the input value. If the control is not present, null is returned.
+[ ] AbstractControlDirective.pending  (accessor) :72
+      -- Reports whether a control is pending, meaning that async validation is occurring and errors are not yet available for the input value. If the control is not pre
+[ ] AbstractControlDirective.disabled  (accessor) :82
+      -- Reports whether the control is disabled, meaning that the control is disabled in the UI and is exempt from validation checks and excluded from aggregate values 
+[ ] AbstractControlDirective.enabled  (accessor) :91
+      -- Reports whether the control is enabled, meaning that the control is included in ancestor calculations of validity or value. If the control is not present, null 
+[ ] AbstractControlDirective.errors  (accessor) :99
+      -- Reports the control's validation errors. If the control is not present, null is returned.
+[ ] AbstractControlDirective.pristine  (accessor) :108
+      -- Reports whether the control is pristine, meaning that the user has not yet changed the value in the UI. If the control is not present, null is returned.
+[ ] AbstractControlDirective.dirty  (accessor) :117
+      -- Reports whether the control is dirty, meaning that the user has changed the value in the UI. If the control is not present, null is returned.
+[ ] AbstractControlDirective.touched  (accessor) :126
+      -- Reports whether the control is touched, meaning that the user has triggered a `blur` event on it. If the control is not present, null is returned.
+[ ] AbstractControlDirective.status  (accessor) :136
+      -- Reports the validation status of the control. Possible values include: 'VALID', 'INVALID', 'DISABLED', and 'PENDING'. If the control is not present, null is ret
+[ ] AbstractControlDirective.untouched  (accessor) :145
+      -- Reports whether the control is untouched, meaning that the user has not yet triggered a `blur` event on it. If the control is not present, null is returned.
+[ ] AbstractControlDirective.statusChanges  (accessor) :154
+      -- Returns a multicasting observable that emits a validation status whenever it is calculated for the control. If the control is not present, null is returned.
+[ ] AbstractControlDirective.valueChanges  (accessor) :164
+      -- Returns a multicasting observable of value changes for the control that emits every time the value of the control changes in the UI or programmatically. If the 
+[ ] AbstractControlDirective.path  (accessor) :173
+      -- Returns an array that represents the path from the top-level form to this control. Each index is the string name of the control on that level.
+[ ] AbstractControlDirective._setValidators  (method) :206
+      -- Sets synchronous validators for this directive.
+[ ] AbstractControlDirective._setAsyncValidators  (method) :215
+      -- Sets asynchronous validators for this directive.
+[ ] AbstractControlDirective.validator  (accessor) :225
+      -- Synchronous validator function composed of all the synchronous validators registered with this directive.
+[ ] AbstractControlDirective.asyncValidator  (accessor) :234
+      -- Asynchronous validator function composed of all the asynchronous validators registered with this directive.
+[ ] AbstractControlDirective._registerOnDestroy  (method) :248
+      -- Internal function to register callbacks that should be invoked when directive instance is being destroyed.
+[ ] AbstractControlDirective._invokeOnDestroyCallbacks  (method) :257
+      -- Internal function to invoke all registered "on destroy" callbacks. Note: calling this function also clears the list of callbacks.
+[ ] AbstractControlDirective.reset  (method) :266
+      -- Resets the control with the provided value if the control is present.
+[ ] AbstractControlDirective.hasError  (method) :300
+      -- Reports whether the control with the given path has the error specified. to the control that should be queried for errors. For example, for the following `FormG
+[ ] AbstractControlDirective.getError  (method) :331
+      -- Reports error data for the control with the given path. to the control that should be queried for errors. For example, for the following `FormGroup`: ```ts form
+
+## packages/forms/src/directives/abstract_form_group_directive.ts
+[ ] AbstractFormGroupDirective  (export class) :26
+[ ] AbstractFormGroupDirective.ngOnInit  (method) :36
+      -- @docs-private
+[ ] AbstractFormGroupDirective.ngOnDestroy  (method) :43
+      -- @docs-private
+[ ] AbstractFormGroupDirective.control  (accessor) :52
+      -- The `FormGroup` bound to this directive.
+[ ] AbstractFormGroupDirective.path  (accessor) :60
+      -- The path to this group from the top-level directive.
+[ ] AbstractFormGroupDirective.formDirective  (accessor) :68
+      -- The top-level directive for this group if present, otherwise null.
+[ ] AbstractFormGroupDirective._checkParentType  (method) :73
+      -- @internal
+
+## packages/forms/src/directives/checkbox_value_accessor.ts
+[ ] CheckboxControlValueAccessor  (export class) :53
+[ ] CheckboxControlValueAccessor.writeValue  (method) :61
+      -- Sets the "checked" property on the input element.
+
+## packages/forms/src/directives/control_container.ts
+[ ] ControlContainer  (export class) :19
+      -- A base class for directives that contain multiple registered instances of `NgControl`. Only used by the forms module.
+[ ] ControlContainer.formDirective  (accessor) :30
+      -- The top-level form directive for the control.
+[ ] ControlContainer.path  (accessor) :38
+      -- The path to this group.
+
+## packages/forms/src/directives/control_value_accessor.ts
+[ ] BaseControlValueAccessor  (export class) :142
+      -- Base class for all ControlValueAccessor classes defined in Forms package. Contains common logic and utility functions. Note: this is an *internal-only* class an
+[ ] BaseControlValueAccessor.constructor  (ctor) :156
+[ ] BaseControlValueAccessor.setProperty  (method) :166
+      -- Helper method that sets a property on a target element using the current Renderer implementation.
+[ ] BaseControlValueAccessor.registerOnTouched  (method) :174
+      -- Registers a function called when the control is touched.
+[ ] BaseControlValueAccessor.registerOnChange  (method) :182
+      -- Registers a function called when the control value changes.
+[ ] BaseControlValueAccessor.setDisabledState  (method) :190
+      -- Sets the "disabled" property on the range input element.
+[ ] BuiltInControlValueAccessor  (export class) :205
+      -- Base class for all built-in ControlValueAccessor classes (except DefaultValueAccessor, which is used in case no other CVAs can be found). We use this class to d
+
+## packages/forms/src/directives/default_value_accessor.ts
+[ ] _isAndroid  (function) :37
+      -- We must check whether the agent is Android because composition events behave differently between iOS and Android.
+[ ] DefaultValueAccessor  (export class) :101
+[ ] DefaultValueAccessor.constructor  (ctor) :105
+[ ] DefaultValueAccessor.writeValue  (method) :120
+      -- Sets the "value" property on the input element.
+[ ] DefaultValueAccessor._handleInput  (method) :126
+      -- @internal
+[ ] DefaultValueAccessor._compositionStart  (method) :133
+      -- @internal
+[ ] DefaultValueAccessor._compositionEnd  (method) :138
+      -- @internal
+
+## packages/forms/src/directives/native.ts
+[ ] isNativeFormElement  (export function) :24
+[ ] elementAcceptsMinMax  (export function) :30
+[ ] isTextualFormElement  (export function) :39
+[ ] setNativeDomProperty  (export function) :51
+      -- Updates the native DOM property on the given node.
+
+## packages/forms/src/directives/ng_control.ts
+[ ] NgControl  (export class) :58
+      -- A base class that all `FormControl`-based directives extend. It binds a `FormControl` object to a DOM element.
+[ ] NgControl.onReset  (accessor) :85
+      -- @internal
+[ ] NgControl.selectedValueAccessor  (accessor) :109
+[ ] NgControl.viewToModelUpdate  (method) :119
+      -- The callback method to update the model from the view when requested
+[ ] NgControl.constructor  (ctor) :160
+[ ] NgControl.setupCustomControl  (method) :175
+[ ] NgControl.ngControlCreate  (method) :215
+      -- Internal control directive creation lifecycle hook. The presence of this method tells the compiler to install `ɵɵControlFeature`, which will cause this directiv
+[ ] NgControl.ngControlUpdate  (method) :250
+[ ] NgControl.isRequired  (accessor) :291
+      -- Returns true if the control is currently considered required, false otherwise. A control can be required either via `NG_VALIDATORS` including the `RequiredValid
+[ ] NgControl.shouldBindRequired  (accessor) :300
+      -- Whether the control should bind the `required` property (in custom control mode). Can be overridden by subclasses that handle `required` in a different way.
+[ ] NgControl.bindControlProperty  (method) :307
+      -- Binds a status property to FVC, falling back to native DOM if FVC lacks the input.
+[ ] NgControl._convertErrors  (method) :335
+      -- Converts Reactive Forms errors to Signal Forms error format.
+[ ] NgControl.setParseErrorSource  (method) :346
+      -- @internal
+[ ] NgControl.removeParseErrorsValidator  (method) :380
+
+## packages/forms/src/directives/ng_control_status.ts
+[ ] AbstractControlStatus  (export class) :21
+      -- can work correctly.
+[ ] AbstractControlStatus.constructor  (ctor) :24
+[ ] AbstractControlStatus.isTouched  (accessor) :28
+[ ] AbstractControlStatus.isUntouched  (accessor) :34
+[ ] AbstractControlStatus.isPristine  (accessor) :38
+[ ] AbstractControlStatus.isDirty  (accessor) :44
+[ ] AbstractControlStatus.isValid  (accessor) :49
+[ ] AbstractControlStatus.isInvalid  (accessor) :55
+[ ] AbstractControlStatus.isPending  (accessor) :60
+[ ] AbstractControlStatus.isSubmitted  (accessor) :65
+[ ] NgControlStatus  (export class) :112
+[ ] NgControlStatus.constructor  (ctor) :113
+[ ] NgControlStatusGroup  (export class) :142
+[ ] NgControlStatusGroup.constructor  (ctor) :143
+
+## packages/forms/src/directives/ng_form.ts
+[ ] NgForm  (export class) :127
+[ ] NgForm.submitted  (accessor) :132
+      -- Returns whether the form submission has been triggered.
+[ ] NgForm.constructor  (ctor) :164
+[ ] NgForm.ngAfterViewInit  (method) :183
+      -- @docs-private
+[ ] NgForm.formDirective  (accessor) :191
+      -- The directive instance.
+[ ] NgForm.control  (accessor) :199
+      -- The internal `FormGroup` instance.
+[ ] NgForm.path  (accessor) :208
+      -- Returns an array representing the path to this group. Because this directive always lives at the top level of a form, it is always an empty array.
+[ ] NgForm.controls  (accessor) :216
+      -- Returns a map of the controls in this group.
+[ ] NgForm.addControl  (method) :227
+      -- Method that sets up the control directive in this group, re-calculates its value and validity, and adds the instance to the internal list of directives.
+[ ] NgForm.getControl  (method) :245
+      -- Retrieves the `FormControl` instance from the provided `NgModel` directive.
+[ ] NgForm.removeControl  (method) :255
+      -- Removes the `NgModel` instance from the internal list of directives
+[ ] NgForm.addFormGroup  (method) :271
+      -- Adds a new `NgModelGroup` directive instance to the form.
+[ ] NgForm.removeFormGroup  (method) :287
+      -- Removes the `NgModelGroup` directive instance from the form.
+[ ] NgForm.getFormGroup  (method) :300
+      -- Retrieves the `FormGroup` for a provided `NgModelGroup` directive instance
+[ ] NgForm.updateModel  (method) :310
+      -- Sets the new value for the provided `NgControl` directive.
+[ ] NgForm.setValue  (method) :323
+      -- Sets the value for this `FormGroup`.
+[ ] NgForm.onSubmit  (method) :334
+      -- Method called when the "submit" event is triggered on the form. Triggers the `ngSubmit` emitter to emit the "submit" event as its payload.
+[ ] NgForm.onReset  (method) :348
+      -- Method called when the "reset" event is triggered on the form.
+[ ] NgForm.resetForm  (method) :358
+      -- Resets the form to an initial value and resets its submitted status.
+[ ] NgForm._setUpdateStrategy  (method) :363
+[ ] NgForm._findContainer  (method) :369
+
+## packages/forms/src/directives/ng_model.ts
+[ ] NgModel  (export class) :170
+[ ] NgModel.constructor  (ctor) :235
+[ ] NgModel.ngOnChanges  (method) :257
+      -- @docs-private
+[ ] NgModel.ngOnDestroy  (method) :284
+      -- @docs-private
+[ ] NgModel.ɵngControlCreate  (method) :292
+      -- Internal control directive creation lifecycle hook.
+[ ] NgModel.ɵngControlUpdate  (method) :300
+      -- Internal control directive update lifecycle hook.
+[ ] NgModel.shouldBindRequired  (accessor) :310
+      -- Template-driven forms handle `required` via the `RequiredValidator` directive. This directive has a `required` input and a host binding to `[attr.required]`. It
+[ ] NgModel.path  (accessor) :319
+      -- Returns an array that represents the path from the top-level form to this control. Each index is the string name of the control on that level.
+[ ] NgModel.formDirective  (accessor) :327
+      -- The top-level directive for this control if present, otherwise null.
+[ ] NgModel.viewToModelUpdate  (method) :337
+      -- Sets the new value for the view model and emits an `ngModelChange` event.
+[ ] NgModel._setUpControl  (method) :342
+[ ] NgModel._setUpdateStrategy  (method) :348
+[ ] NgModel._isStandalone  (method) :354
+[ ] NgModel._setUpStandalone  (method) :358
+[ ] NgModel._setupWithForm  (method) :374
+      -- Sets up the control with the form, handling FVC vs CVA branching. Called by NgForm.addControl.
+[ ] NgModel._checkForErrors  (method) :383
+[ ] NgModel._checkName  (method) :390
+[ ] NgModel._updateValue  (method) :398
+[ ] NgModel._updateDisabled  (method) :405
+[ ] NgModel._getPath  (method) :421
+[ ] checkParentType  (function) :426
+
+## packages/forms/src/directives/ng_model_group.ts
+[ ] NgModelGroup  (export class) :67
+[ ] NgModelGroup.constructor  (ctor) :75
+[ ] NgModelGroup._checkParentType  (method) :90
+      -- @internal
+
+## packages/forms/src/directives/ng_no_validate_directive.ts
+[ ] ɵNgNoValidate  (export class) :33
+
+## packages/forms/src/directives/number_value_accessor.ts
+[ ] NumberValueAccessor  (export class) :54
+[ ] NumberValueAccessor.writeValue  (method) :62
+      -- Sets the "value" property on the input element.
+[ ] NumberValueAccessor.registerOnChange  (method) :72
+      -- Registers a function called when the control value changes.
+
+## packages/forms/src/directives/radio_control_value_accessor.ts
+[ ] throwNameError  (function) :40
+[ ] RadioControlRegistry  (export class) :55
+      -- Class used by Angular to track radio buttons. For internal use only.
+[ ] RadioControlRegistry.add  (method) :62
+      -- Adds a control to the internal registry. For internal use only.
+[ ] RadioControlRegistry.remove  (method) :70
+      -- Removes a control from the internal registry. For internal use only.
+[ ] RadioControlRegistry.select  (method) :83
+      -- Selects a radio button. For internal use only.
+[ ] RadioControlRegistry._isSameGroup  (method) :91
+[ ] RadioControlValueAccessor  (export class) :129
+[ ] RadioControlValueAccessor.inject  (method) :171
+[ ] RadioControlValueAccessor.constructor  (ctor) :173
+[ ] RadioControlValueAccessor.ngOnInit  (method) :183
+      -- @docs-private
+[ ] RadioControlValueAccessor.ngOnDestroy  (method) :190
+      -- @docs-private
+[ ] RadioControlValueAccessor.writeValue  (method) :198
+      -- Sets the "checked" property value on the radio input element.
+[ ] RadioControlValueAccessor.registerOnChange  (method) :207
+      -- Registers a function called when the control value changes.
+[ ] RadioControlValueAccessor.setDisabledState  (method) :216
+      -- @docs-private
+[ ] RadioControlValueAccessor.fireUncheck  (method) :250
+      -- Sets the "value" on the radio input element and unchecks it.
+[ ] RadioControlValueAccessor._checkName  (method) :254
+
+## packages/forms/src/directives/range_value_accessor.ts
+[ ] RangeValueAccessor  (export class) :58
+[ ] RangeValueAccessor.writeValue  (method) :66
+      -- Sets the "value" property on the input element.
+[ ] RangeValueAccessor.registerOnChange  (method) :74
+      -- Registers a function called when the control value changes.
+
+## packages/forms/src/directives/reactive_directives/abstract_form.directive.ts
+[ ] AbstractFormDirective  (export class) :56
+      -- Abstract class for top-level form directives (FormArrayDirective, FormGroupDirective) who bind an existing `Form` to a DOM element.
+[ ] AbstractFormDirective.submitted  (accessor) :64
+      -- Reports whether the form submission has been triggered.
+[ ] AbstractFormDirective.submitted  (accessor) :68
+      -- TODO(atscott): Remove once invalid API usage is cleaned up internally
+[ ] AbstractFormDirective.constructor  (ctor) :105
+[ ] AbstractFormDirective.ngOnChanges  (method) :121
+      -- @nodoc
+[ ] AbstractFormDirective.ngOnDestroy  (method) :126
+      -- @nodoc
+[ ] AbstractFormDirective.onChanges  (method) :131
+      -- @nodoc
+[ ] AbstractFormDirective.onDestroy  (method) :142
+      -- @nodoc
+[ ] AbstractFormDirective.formDirective  (accessor) :162
+      -- Returns this directive's instance.
+[ ] AbstractFormDirective.path  (accessor) :177
+      -- Returns an array representing the path to this group. Because this directive always lives at the top level of a form, it always an empty array.
+[ ] AbstractFormDirective.addControl  (method) :188
+      -- Method that sets up the control directive in this group, re-calculates its value and validity, and adds the instance to the internal list of directives.
+[ ] AbstractFormDirective.getControl  (method) :202
+      -- Retrieves the `FormControl` instance from the provided `FormControlName` directive
+[ ] AbstractFormDirective.removeControl  (method) :212
+      -- Removes the `FormControlName` instance from the internal list of directives
+[ ] AbstractFormDirective.addFormGroup  (method) :222
+      -- Adds a new `FormGroupName` directive instance to the form.
+[ ] AbstractFormDirective.removeFormGroup  (method) :232
+      -- Performs the necessary cleanup when a `FormGroupName` directive instance is removed from the view.
+[ ] AbstractFormDirective.getFormGroup  (method) :242
+      -- Retrieves the `FormGroup` for a provided `FormGroupName` directive instance
+[ ] AbstractFormDirective.getFormArray  (method) :252
+      -- Retrieves the `FormArray` for a provided `FormArrayName` directive instance.
+[ ] AbstractFormDirective.addFormArray  (method) :261
+      -- Performs the necessary setup when a `FormArrayName` directive instance is added to the view.
+[ ] AbstractFormDirective.removeFormArray  (method) :271
+      -- Performs the necessary cleanup when a `FormArrayName` directive instance is removed from the view.
+[ ] AbstractFormDirective.updateModel  (method) :281
+      -- Sets the new value for the provided `FormControlName` directive.
+[ ] AbstractFormDirective.onReset  (method) :290
+      -- Method called when the "reset" event is triggered on the form.
+[ ] AbstractFormDirective.resetForm  (method) :300
+      -- Resets the form to an initial value and resets its submitted status.
+[ ] AbstractFormDirective.onSubmit  (method) :312
+      -- Method called with the "submit" event is triggered on the form. Triggers the `ngSubmit` emitter to emit the "submit" event as its payload.
+[ ] AbstractFormDirective._updateDomValue  (method) :325
+      -- @internal
+[ ] AbstractFormDirective._setUpFormContainer  (method) :348
+[ ] AbstractFormDirective._cleanUpFormContainer  (method) :357
+[ ] AbstractFormDirective._updateRegistrations  (method) :369
+[ ] AbstractFormDirective._updateValidators  (method) :374
+[ ] AbstractFormDirective._checkFormPresent  (method) :381
+
+## packages/forms/src/directives/reactive_directives/form_array_directive.ts
+[ ] FormArrayDirective  (export class) :50
+[ ] FormArrayDirective.control  (accessor) :67
+      -- Returns the `FormArray` bound to this directive.
+
+## packages/forms/src/directives/reactive_directives/form_control_directive.ts
+[ ] FormControlDirective  (export class) :83
+[ ] FormControlDirective.isDisabled  (accessor) :101
+      -- Triggers a warning in dev mode that this input should not be used with reactive forms.
+[ ] FormControlDirective.constructor  (ctor) :133
+[ ] FormControlDirective.ngOnChanges  (method) :155
+      -- @docs-private
+[ ] FormControlDirective.ngOnDestroy  (method) :184
+      -- @docs-private
+[ ] FormControlDirective.path  (accessor) :195
+      -- Returns an array that represents the path from the top-level form to this control. Each index is the string name of the control on that level.
+[ ] FormControlDirective.control  (accessor) :203
+      -- The `FormControl` bound to this directive.
+[ ] FormControlDirective.viewToModelUpdate  (method) :213
+      -- Sets the new value for the view model and emits an `ngModelChange` event.
+[ ] FormControlDirective._isControlChanged  (method) :218
+[ ] FormControlDirective.ɵngControlCreate  (method) :231
+      -- Internal control directive creation lifecycle hook. The presence of this method tells the compiler to install `ɵɵControlFeature`, which will cause this directiv
+[ ] FormControlDirective.ɵngControlUpdate  (method) :240
+      -- Internal control directive update lifecycle hook.
+
+## packages/forms/src/directives/reactive_directives/form_control_name.ts
+[ ] FormControlName  (export class) :96
+[ ] FormControlName.isDisabled  (accessor) :126
+      -- Triggers a warning in dev mode that this input should not be used with reactive forms.
+[ ] FormControlName.constructor  (ctor) :158
+[ ] FormControlName._setupWithForm  (method) :183
+      -- Sets up the control with the form, handling FVC vs CVA branching. Called by AbstractFormDirective.addControl.
+[ ] FormControlName.ngOnChanges  (method) :194
+      -- @docs-private
+[ ] FormControlName.ngOnDestroy  (method) :206
+      -- @docs-private
+[ ] FormControlName.viewToModelUpdate  (method) :216
+      -- Sets the new value for the view model and emits an `ngModelChange` event.
+[ ] FormControlName.path  (accessor) :226
+      -- Returns an array that represents the path from the top-level form to this control. Each index is the string name of the control on that level.
+[ ] FormControlName.formDirective  (accessor) :234
+      -- The top-level directive for this group if present, otherwise null.
+[ ] FormControlName._setUpControl  (method) :238
+[ ] FormControlName.ɵngControlCreate  (method) :255
+      -- Internal control directive creation lifecycle hook. The presence of this method tells the compiler to install `ɵɵControlFeature`, which will cause this directiv
+[ ] FormControlName.ɵngControlUpdate  (method) :264
+      -- Internal control directive update lifecycle hook.
+[ ] checkParentType  (function) :277
+
+## packages/forms/src/directives/reactive_directives/form_group_directive.ts
+[ ] FormGroupDirective  (export class) :52
+[ ] FormGroupDirective.control  (accessor) :69
+      -- Returns the `FormGroup` bound to this directive.
+
+## packages/forms/src/directives/reactive_directives/form_group_name.ts
+[ ] FormGroupName  (export class) :90
+[ ] FormGroupName.constructor  (ctor) :102
+[ ] FormGroupName._checkParentType  (method) :117
+      -- @internal
+[ ] FormArrayName  (export class) :158
+[ ] FormArrayName.constructor  (ctor) :173
+[ ] FormArrayName.ngOnInit  (method) :192
+      -- A lifecycle method called when the directive's inputs are initialized. For internal use only.
+[ ] FormArrayName.ngOnDestroy  (method) :203
+      -- A lifecycle method called before the directive's instance is destroyed. For internal use only.
+[ ] FormArrayName.control  (accessor) :211
+      -- The `FormArray` bound to this directive.
+[ ] FormArrayName.formDirective  (accessor) :219
+      -- The top-level directive for this group if present, otherwise null.
+[ ] FormArrayName.path  (accessor) :228
+      -- Returns an array that represents the path from the top-level form to this control. Each index is the string name of the control on that level.
+[ ] hasInvalidParent  (function) :233
+
+## packages/forms/src/directives/reactive_errors.ts
+[ ] controlParentException  (export function) :20
+[ ] describeFormControl  (function) :34
+[ ] ngModelGroupException  (export function) :44
+[ ] missingFormException  (export function) :60
+[ ] groupParentException  (export function) :71
+[ ] arrayParentException  (export function) :83
+[ ] ngModelWarning  (export function) :128
+[ ] describeKey  (function) :144
+[ ] noControlsError  (export function) :148
+[ ] missingControlError  (export function) :157
+[ ] missingControlValueError  (export function) :161
+
+## packages/forms/src/directives/reactive_validation_error.ts
+[ ] ReactiveValidationError  (export class) :16
+      -- A validation error used when propagating Reactive Forms errors to FVC components.
+[ ] ReactiveValidationError.constructor  (ctor) :22
+
+## packages/forms/src/directives/select_control_value_accessor.ts
+[ ] _buildValueString  (function) :41
+[ ] _extractId  (function) :47
+[ ] SelectControlValueAccessor  (export class) :114
+[ ] SelectControlValueAccessor.compareWith  (accessor) :133
+      -- Tracks the option comparison algorithm for tracking identities when checking for changes.
+[ ] SelectControlValueAccessor._writeValueAfterRender  (method) :173
+      -- This is needed to efficiently set the select value when adding/removing options. If writeValue is instead called for every added/removed option, this results in
+[ ] SelectControlValueAccessor.writeValue  (method) :198
+      -- Sets the "value" property on the select element.
+[ ] SelectControlValueAccessor.registerOnChange  (method) :212
+      -- Registers a function called when the control value changes.
+[ ] SelectControlValueAccessor._registerOption  (method) :220
+      -- @internal
+[ ] SelectControlValueAccessor._getOptionId  (method) :225
+      -- @internal
+[ ] SelectControlValueAccessor._getOptionValue  (method) :233
+      -- @internal
+[ ] NgSelectOption  (export class) :253
+[ ] NgSelectOption.constructor  (ctor) :260
+[ ] NgSelectOption.ngValue  (accessor) :274
+      -- Tracks the value bound to the option element. Unlike the value binding, ngValue supports binding to objects.
+[ ] NgSelectOption.value  (accessor) :287
+      -- Tracks simple string values bound to the option element. For objects, use the `ngValue` input binding.
+[ ] NgSelectOption._setElementValue  (method) :293
+      -- @internal
+[ ] NgSelectOption.ngOnDestroy  (method) :298
+      -- @docs-private
+
+## packages/forms/src/directives/select_multiple_control_value_accessor.ts
+[ ] _buildValueString  (function) :36
+[ ] _extractId  (function) :43
+[ ] SelectMultipleControlValueAccessor  (export class) :89
+[ ] SelectMultipleControlValueAccessor.compareWith  (accessor) :111
+      -- Tracks the option comparison algorithm for tracking identities when checking for changes.
+[ ] SelectMultipleControlValueAccessor.writeValue  (method) :127
+      -- Sets the "value" property on one or of more of the select's options.
+[ ] SelectMultipleControlValueAccessor.registerOnChange  (method) :149
+      -- Registers a function called when the control value changes and writes an array of the selected options.
+[ ] SelectMultipleControlValueAccessor._registerOption  (method) :180
+      -- @internal
+[ ] SelectMultipleControlValueAccessor._getOptionId  (method) :187
+      -- @internal
+[ ] SelectMultipleControlValueAccessor._getOptionValue  (method) :195
+      -- @internal
+[ ] ɵNgSelectMultipleOption  (export class) :215
+[ ] ɵNgSelectMultipleOption.constructor  (ctor) :220
+[ ] ɵNgSelectMultipleOption.ngValue  (accessor) :236
+      -- Tracks the value bound to the option element. Unlike the value binding, ngValue supports binding to objects.
+[ ] ɵNgSelectMultipleOption.value  (accessor) :249
+      -- Tracks simple string values bound to the option element. For objects, use the `ngValue` input binding.
+[ ] ɵNgSelectMultipleOption._setElementValue  (method) :260
+      -- @internal
+[ ] ɵNgSelectMultipleOption._setSelected  (method) :265
+      -- @internal
+[ ] ɵNgSelectMultipleOption.ngOnDestroy  (method) :270
+      -- @docs-private
+
+## packages/forms/src/directives/shared.ts
+[ ] controlPath  (export function) :71
+[ ] setUpControlValueAccessor  (export function) :82
+      -- Links a Form control and a Form directive by setting up callbacks (such as `onChange`) on both instances. This function is typically invoked when form directive
+[ ] cleanUpControl  (export function) :122
+      -- Reverts configuration performed by the `setUpControl` control function. Effectively disconnects form control with a given form directive. This function is typic
+[ ] registerOnValidatorChange  (function) :150
+[ ] setUpDisabledChangeHandler  (export function) :164
+      -- Sets up disabled change handler function on a given form control if ControlValueAccessor associated with a given directive instance supports the `setDisabledSta
+[ ] setUpValidators  (export function) :186
+      -- Sets up sync and async directive validators on provided form control. This function merges validators from the directive into the validators of the control.
+[ ] cleanUpValidators  (export function) :225
+      -- Cleans up sync and async directive validators on provided form control. This function reverts the setup performed by the `setUpValidators` function, i.e. remove
+[ ] setUpViewChangePipeline  (function) :266
+[ ] setUpBlurPipeline  (function) :276
+[ ] updateControl  (function) :285
+[ ] setUpModelChangePipeline  (function) :292
+[ ] setUpFormContainer  (export function) :316
+      -- Links a FormGroup or FormArray instance and corresponding Form directive by setting up validators present in the view.
+[ ] cleanUpFormContainer  (export function) :332
+      -- Reverts the setup performed by the `setUpFormContainer` function.
+[ ] _noControlError  (function) :339
+[ ] _throwError  (function) :343
+[ ] _describeControlLocation  (function) :348
+[ ] _throwMissingValueAccessorError  (function) :355
+[ ] _throwInvalidValueAccessorError  (function) :363
+[ ] isPropertyUpdated  (export function) :372
+[ ] isBuiltInAccessor  (export function) :380
+[ ] syncPendingControls  (export function) :386
+[ ] selectValueAccessor  (export function) :401
+      -- TODO: vsavkin remove it once https://github.com/angular/angular/issues/3011 is implemented
+[ ] removeListItem  (export function) :438
+[ ] _ngModelWarning  (export function) :444
+      -- TODO(kara): remove after deprecation period
+
+## packages/forms/src/directives/template_driven_errors.ts
+[ ] modelParentException  (export function) :20
+[ ] formGroupNameException  (export function) :37
+[ ] missingNameException  (export function) :53
+[ ] modelGroupParentException  (export function) :64
+
+## packages/forms/src/directives/validators.ts
+[ ] toInteger  (function) :40
+      -- Method that updates string to integer if not already a number
+[ ] toFloat  (function) :50
+      -- Method that ensures that provided value is a float (and converts it to float if needed).
+[ ] AbstractValidatorDirective  (class) :119
+      -- A base class for Validator-based Directives. The class contains common logic shared across such Directives. For internal use only, this class is not intended fo
+[ ] AbstractValidatorDirective.createValidator  (method) :147
+      -- Creates an instance of a validator (specific to a directive that extends this base class).
+[ ] AbstractValidatorDirective.normalizeInput  (method) :157
+      -- Performs the necessary input normalization based on a specific logic of a Directive. For example, the function might be used to convert string-based representat
+[ ] AbstractValidatorDirective.ngOnChanges  (method) :160
+      -- @docs-private
+[ ] AbstractValidatorDirective.validate  (method) :170
+      -- @docs-private
+[ ] AbstractValidatorDirective.registerOnValidatorChange  (method) :175
+      -- @docs-private
+[ ] AbstractValidatorDirective.enabled  (method) :186
+      -- Determines whether this validator should be active or not based on an input. Base class implementation checks whether an input is defined (if the value is diffe
+[ ] MaxValidator  (export class) :229
+[ ] MinValidator  (export class) :281
+[ ] RequiredValidator  (export class) :386
+[ ] RequiredValidator.enabled  (method) :403
+      -- @docs-private
+[ ] CheckboxRequiredValidator  (export class) :436
+[ ] EmailValidator  (export class) :483
+[ ] EmailValidator.enabled  (method) :500
+      -- @docs-private
+[ ] MinLengthValidator  (export class) :570
+[ ] MaxLengthValidator  (export class) :624
+[ ] PatternValidator  (export class) :680
+
+## packages/forms/src/form_builder.ts
+[ ] isAbstractControlOptions  (function) :22
+[ ] FormBuilder  (export class) :140
+      -- Creates an `AbstractControl` from a user-specified configuration. The `FormBuilder` provides syntactic sugar that shortens creating instances of a `FormControl`
+[ ] FormBuilder.nonNullable  (accessor) :185
+      -- Returns a FormBuilder in which automatically constructed `FormControl` elements have `{nonNullable: true}` and are non-nullable. **Constructing non-nullable con
+[ ] FormBuilder.group  (method) :242
+      -- Constructs a new `FormGroup` instance. Accepts a single generic argument, which is an object containing all the keys and corresponding inner control types. unde
+[ ] FormBuilder.group  (method) :270
+      -- Constructs a new `FormGroup` instance. Use the `FormBuilder#group` overload with `AbstractControlOptions` instead. Note that `AbstractControlOptions` expects `v
+[ ] FormBuilder.group  (method) :272
+[ ] FormBuilder.record  (method) :304
+      -- Constructs a new `FormRecord` instance. Accepts a single generic argument, which is an object containing all the keys and corresponding inner control types. und
+[ ] FormBuilder.control  (method) :314
+      -- @deprecated Use `nonNullable` instead.
+[ ] FormBuilder.control  (method) :321
+[ ] FormBuilder.control  (method) :329
+[ ] FormBuilder.control  (method) :335
+[ ] FormBuilder.control  (method) :366
+      -- Constructs a new `FormControl` with the given state, validators and options. Sets `{nonNullable: true}` in the options to get a non-nullable control. Otherwise,
+[ ] FormBuilder.array  (method) :400
+      -- Constructs a new `FormArray` from the given array of configurations, validators and options. Accepts a single generic argument, which is the type of each contro
+[ ] FormBuilder._reduceControls  (method) :411
+      -- @internal
+[ ] FormBuilder._createControl  (method) :422
+      -- @internal
+[ ] NonNullableFormBuilder  (export class) :455
+      -- `NonNullableFormBuilder` is similar to {@link FormBuilder}, but automatically constructed {@link FormControl} elements have `{nonNullable: true}` and are non-nu
+[ ] NonNullableFormBuilder.group  (method) :461
+      -- Similar to `FormBuilder#group`, except any implicitly constructed `FormControl` will be non-nullable (i.e. it will have `nonNullable` set to true). Note that al
+[ ] NonNullableFormBuilder.record  (method) :471
+      -- Similar to `FormBuilder#record`, except any implicitly constructed `FormControl` will be non-nullable (i.e. it will have `nonNullable` set to true). Note that a
+[ ] NonNullableFormBuilder.array  (method) :481
+      -- Similar to `FormBuilder#array`, except any implicitly constructed `FormControl` will be non-nullable (i.e. it will have `nonNullable` set to true). Note that al
+[ ] NonNullableFormBuilder.control  (method) :491
+      -- Similar to `FormBuilder#control`, except this overridden version of `control` forces `nonNullable` to be `true`, resulting in the control always being non-nulla
+[ ] UntypedFormBuilder  (export class) :502
+      -- UntypedFormBuilder is the same as `FormBuilder`, but it provides untyped controls.
+[ ] UntypedFormBuilder.group  (method) :506
+      -- Like `FormBuilder#group`, except the resulting group is untyped.
+[ ] UntypedFormBuilder.group  (method) :515
+      -- Use the `FormBuilder#group` overload with `AbstractControlOptions` instead.
+[ ] UntypedFormBuilder.group  (method) :520
+[ ] UntypedFormBuilder.control  (method) :530
+      -- Like `FormBuilder#control`, except the resulting control is untyped.
+[ ] UntypedFormBuilder.array  (method) :541
+      -- Like `FormBuilder#array`, except the resulting array is untyped.
+
+## packages/forms/src/form_providers.ts
+[ ] FormsModule  (export class) :36
+[ ] FormsModule.withConfig  (method) :45
+      -- Provides options for configuring the forms module. * `callSetDisabledState` Configures whether to `always` call `setDisabledState`, which is more correct, or to
+[ ] ReactiveFormsModule  (export class) :73
+[ ] ReactiveFormsModule.withConfig  (method) :84
+      -- Provides options for configuring the reactive forms module. * `warnOnNgModelWithFormControl` Configures when to emit a warning when an `ngModel` binding is used
+
+## packages/forms/src/model/abstract_model.ts
+[ ] ControlEvent  (export class) :93
+      -- Base class for every event sent by `AbstractControl.events()`
+[ ] ValueChangeEvent  (export class) :109
+      -- Event fired when the value of a control changes.
+[x] ValueChangeEvent.constructor  (ctor) :110
+[ ] PristineChangeEvent  (export class) :124
+[x] PristineChangeEvent.constructor  (ctor) :125
+[ ] TouchedChangeEvent  (export class) :140
+      -- Event fired when the control's touched status changes (touched <=> untouched).
+[x] TouchedChangeEvent.constructor  (ctor) :141
+[ ] StatusChangeEvent  (export class) :156
+      -- Event fired when the control's status changes.
+[x] StatusChangeEvent.constructor  (ctor) :157
+[ ] FormSubmittedEvent  (export class) :172
+      -- Event fired when a form is submitted
+[x] FormSubmittedEvent.constructor  (ctor) :173
+[ ] FormResetEvent  (export class) :184
+      -- Event fired when a form is reset.
+[x] FormResetEvent.constructor  (ctor) :185
+[x] pickValidators  (export function) :193
+      -- Gets validators from either an options object or given validators.
+[x] coerceToValidator  (function) :202
+      -- Creates validator function by combining provided validators.
+[x] pickAsyncValidators  (export function) :209
+      -- Gets async validators from either an options object or given validators.
+[x] coerceToAsyncValidator  (function) :224
+      -- Creates async validator function by combining provided async validators.
+[x] isOptionsObj  (export function) :257
+[x] assertControlPresent  (export function) :267
+[x] assertAllValuesPresent  (export function) :284
+[ ] AbstractControl  (export class) :481
+      -- This is the base class for `FormControl`, `FormGroup`, and `FormArray`. It provides some of the shared behavior that all controls and groups of controls have, l
+[ ] AbstractControl.constructor  (ctor) :571
+[ ] AbstractControl.validator  (accessor) :584
+      -- Returns the function that is used to determine the validity of this control synchronously. If multiple validators have been added, this will be a single compose
+[ ] AbstractControl.validator  (accessor) :587
+[ ] AbstractControl.asyncValidator  (accessor) :597
+      -- Returns the function that is used to determine the validity of this control asynchronously. If multiple validators have been added, this will be a single compos
+[ ] AbstractControl.asyncValidator  (accessor) :600
+[ ] AbstractControl.parent  (accessor) :607
+      -- The parent control.
+[ ] AbstractControl.status  (accessor) :619
+      -- The validation status of the control. These status values are mutually exclusive, so a control cannot be both valid AND invalid or invalid AND disabled.
+[ ] AbstractControl.status  (accessor) :622
+[ ] AbstractControl.valid  (accessor) :637
+      -- A control is `valid` when its `status` is `VALID`. false otherwise.
+[ ] AbstractControl.invalid  (accessor) :649
+      -- A control is `invalid` when its `status` is `INVALID`. false otherwise.
+[ ] AbstractControl.pending  (accessor) :661
+      -- A control is `pending` when its `status` is `PENDING`. false otherwise.
+[ ] AbstractControl.disabled  (accessor) :676
+      -- A control is `disabled` when its `status` is `DISABLED`. Disabled controls are exempt from validation checks and are not included in the aggregate value of thei
+[ ] AbstractControl.enabled  (accessor) :689
+      -- A control is `enabled` as long as its `status` is not `DISABLED`. false if the status is 'DISABLED'.
+[ ] AbstractControl.pristine  (accessor) :706
+      -- A control is `pristine` if the user has not yet changed the value in the UI. Programmatic changes to a control's value do not mark it dirty.
+[ ] AbstractControl.pristine  (accessor) :709
+[ ] AbstractControl.dirty  (accessor) :723
+      -- A control is `dirty` if the user has changed the value in the UI. Programmatic changes to a control's value do not mark it dirty.
+[ ] AbstractControl.touched  (accessor) :733
+      -- True if the control is marked as `touched`. A control is marked `touched` once the user has triggered a `blur` event on it.
+[ ] AbstractControl.touched  (accessor) :736
+[ ] AbstractControl.untouched  (accessor) :749
+      -- True if the control has not been marked as touched A control is `untouched` if the user has not yet triggered a `blur` event on it.
+[ ] AbstractControl.updateOn  (accessor) :803
+      -- Reports the update strategy of the `AbstractControl` (meaning the event on which the control updates itself). Possible values: `'change'` | `'blur'` | `'submit'
+[x] AbstractControl.setValidators  (method) :817
+      -- Sets the synchronous validators that are active on this control.  Calling this overwrites any existing synchronous validators. When you add or remove a validato
+[x] AbstractControl.setAsyncValidators  (method) :831
+      -- Sets the asynchronous validators that are active on this control. Calling this overwrites any existing asynchronous validators. When you add or remove a validat
+[x] AbstractControl.addValidators  (method) :847
+      -- Add a synchronous validator or validators to this control, without affecting other validators. When you add or remove a validator at run time, you must call `up
+[ ] AbstractControl.addAsyncValidators  (method) :862
+      -- Add an asynchronous validator or validators to this control, without affecting other validators. When you add or remove a validator at run time, you must call `
+[x] AbstractControl.removeValidators  (method) :893
+      -- Remove a synchronous validator from this control, without affecting other validators. Validators are compared by function reference; you must pass a reference t
+[ ] AbstractControl.removeAsyncValidators  (method) :908
+      -- Remove an asynchronous validator from this control, without affecting other validators. Validators are compared by function reference; you must pass a reference
+[x] AbstractControl.hasValidator  (method) :933
+      -- Check whether a synchronous validator function is present on this control. The provided validator must be a reference to the exact same function that was provid
+[ ] AbstractControl.hasAsyncValidator  (method) :945
+      -- Check whether an asynchronous validator function is present on this control. The provided validator must be a reference to the exact same function that was prov
+[x] AbstractControl.clearValidators  (method) :956
+      -- Empties out the synchronous validator list. When you add or remove a validator at run time, you must call `updateValueAndValidity()` for the new validation to t
+[x] AbstractControl.clearAsyncValidators  (method) :967
+      -- Empties out the async validator list. When you add or remove a validator at run time, you must call `updateValueAndValidity()` for the new validation to take ef
+[ ] AbstractControl.markAsTouched  (method) :990
+      -- Marks the control as `touched`. A control is touched by focus and blur events that do not change the value. and emits events after marking is applied. * `onlySe
+[ ] AbstractControl.markAsTouched  (method) :994
+[x] AbstractControl.markAsTouched  (method) :999
+[x] AbstractControl.markAllAsDirty  (method) :1028
+      -- Marks the control and all its descendant controls as `dirty`. and emits events after marking is applied. * `emitEvent`: When true or not supplied (the default),
+[x] AbstractControl.markAllAsTouched  (method) :1047
+      -- Marks the control and all its descendant controls as `touched`. and emits events after marking is applied. * `emitEvent`: When true or not supplied (the default
+[ ] AbstractControl.markAsUntouched  (method) :1074
+      -- Marks the control as `untouched`. If the control has any children, also marks all children as `untouched` and recalculates the `touched` status of all parent co
+[ ] AbstractControl.markAsUntouched  (method) :1079
+[x] AbstractControl.markAsUntouched  (method) :1084
+[ ] AbstractControl.markAsDirty  (method) :1124
+      -- Marks the control as `dirty`. A control becomes dirty when the control's value is changed through the UI; compare `markAsTouched`. and emits events after markin
+[ ] AbstractControl.markAsDirty  (method) :1128
+[x] AbstractControl.markAsDirty  (method) :1133
+[ ] AbstractControl.markAsPristine  (method) :1171
+      -- Marks the control as `pristine`. If the control has any children, marks all children as `pristine`, and recalculates the `pristine` status of all parent control
+[ ] AbstractControl.markAsPristine  (method) :1175
+[x] AbstractControl.markAsPristine  (method) :1180
+[ ] AbstractControl.markAsPending  (method) :1219
+      -- Marks the control as `pending`. A control is pending while the control performs async validation. emits events after marking is applied. * `onlySelf`: When true
+[ ] AbstractControl.markAsPending  (method) :1223
+[x] AbstractControl.markAsPending  (method) :1228
+[ ] AbstractControl.disable  (method) :1261
+      -- Disables the control. This means the control is exempt from validation checks and excluded from the aggregate value of any parent. Its status is `DISABLED`. If 
+[ ] AbstractControl.disable  (method) :1265
+[x] AbstractControl.disable  (method) :1266
+[x] AbstractControl.enable  (method) :1311
+      -- Enables the control. This means the control is included in validation checks and the aggregate value of its parent. Its status recalculates based on its value a
+[x] AbstractControl._updateAncestors  (method) :1326
+[x] AbstractControl.setParent  (method) :1344
+      -- Sets the parent of the control
+[ ] AbstractControl.setValue  (method) :1351
+      -- Sets the value of the control. Abstract method (implemented in sub-classes).
+[ ] AbstractControl.patchValue  (method) :1356
+      -- Patches the value of the control. Abstract method (implemented in sub-classes).
+[ ] AbstractControl.reset  (method) :1361
+      -- Resets the control. Abstract method (implemented in sub-classes).
+[x] AbstractControl.getRawValue  (method) :1367
+      -- The raw value of this control. For most control implementations, the raw value will include disabled children.
+[ ] AbstractControl.updateValueAndValidity  (method) :1388
+      -- Recalculates the value and validation status of the control. By default, it also updates the value and validity of its ancestors. after updates and validity che
+[ ] AbstractControl.updateValueAndValidity  (method) :1392
+[x] AbstractControl.updateValueAndValidity  (method) :1397
+[x] AbstractControl._updateTreeValidity  (method) :1430
+      -- @internal
+[x] AbstractControl._setInitialStatus  (method) :1435
+[x] AbstractControl._runValidator  (method) :1439
+[x] AbstractControl._runAsyncValidator  (method) :1443
+[x] AbstractControl._cancelExistingSubscription  (method) :1461
+[ ] AbstractControl.setErrors  (method) :1507
+      -- Sets errors on a form control when running validations manually, rather than automatically. Calling `setErrors` also updates the validity of the parent control.
+[ ] AbstractControl.setErrors  (method) :1510
+      -- @internal
+[x] AbstractControl.setErrors  (method) :1514
+[ ] AbstractControl.get  (method) :1527
+      -- Retrieves a child control given the control's name or path. This signature for get supports strings and `const` arrays (`.get(['foo', 'bar'] as const)`).
+[ ] AbstractControl.get  (method) :1537
+      -- Retrieves a child control given the control's name or path. This signature for `get` supports non-const (mutable) arrays. Inferred type information will not be 
+[ ] AbstractControl.get  (method) :1571
+      -- Retrieves a child control given the control's name or path. control. If a string is provided, passing it as a string literal will result in improved type inform
+[ ] AbstractControl.getError  (method) :1611
+      -- Reports error data for the control with the given path. to the control that should be queried for errors. For example, for the following `FormGroup`: ```ts form
+[ ] AbstractControl.hasError  (method) :1646
+      -- Reports whether the control with the given path has the error specified. to the control that should be queried for errors. For example, for the following `FormG
+[ ] AbstractControl.root  (accessor) :1653
+      -- Retrieves the top-level ancestor of this control.
+[ ] AbstractControl._updateControlsErrors  (method) :1664
+      -- @internal
+[ ] AbstractControl._initObservables  (method) :1688
+      -- @internal
+[ ] AbstractControl._calculateStatus  (method) :1694
+[ ] AbstractControl._updateValue  (method) :1703
+      -- @internal
+[ ] AbstractControl._forEachChild  (method) :1706
+      -- @internal
+[ ] AbstractControl._anyControls  (method) :1709
+      -- @internal
+[ ] AbstractControl._allControlsDisabled  (method) :1712
+      -- @internal
+[ ] AbstractControl._syncPendingControls  (method) :1715
+      -- @internal
+[ ] AbstractControl._anyControlsHaveStatus  (method) :1718
+      -- @internal
+[ ] AbstractControl._anyControlsDirty  (method) :1723
+      -- @internal
+[ ] AbstractControl._anyControlsTouched  (method) :1728
+      -- @internal
+[ ] AbstractControl._updatePristine  (method) :1733
+      -- @internal
+[ ] AbstractControl._updateTouched  (method) :1748
+      -- @internal
+[ ] AbstractControl._registerOnCollectionChange  (method) :1761
+      -- @internal
+[ ] AbstractControl._setUpdateStrategy  (method) :1766
+      -- @internal
+[ ] AbstractControl._parentMarkedDirty  (method) :1776
+      -- Check to see if parent has been marked artificially dirty.
+[ ] AbstractControl._find  (method) :1781
+      -- @internal
+[ ] AbstractControl._assignValidators  (method) :1790
+      -- Internal implementation of the `setValidators` method. Needs to be separated out into a different method, because it is called in the constructor and it can bre
+[ ] AbstractControl._assignAsyncValidators  (method) :1801
+      -- Internal implementation of the `setAsyncValidators` method. Needs to be separated out into a different method, because it is called in the constructor and it ca
+[ ] AbstractControl._updateHasRequiredValidator  (method) :1806
+[x] hasOwnControl  (export function) :1811
+
+## packages/forms/src/model/form_array.ts
+[ ] FormArray  (export class) :122
+      -- Tracks the value and validity state of an array of `FormControl`, `FormGroup` or `FormArray` instances. A `FormArray` aggregates the values of each child `FormC
+[ ] FormArray.constructor  (ctor) :139
+[ ] FormArray.at  (method) :168
+      -- Get the `AbstractControl` at the given `index` in the array.     around from the back, and if index is greatly negative (less than `-length`), the result is und
+[ ] FormArray.push  (method) :184
+      -- Insert a new `AbstractControl` at the end of the array.     control is added. * `emitEvent`: When true or not supplied (the default), both the `statusChanges` a
+[ ] FormArray.insert  (method) :213
+      -- Insert a new `AbstractControl` at the given `index` in the array.     from the back. If `index` is greatly negative (less than `-length`), prepends to the array
+[ ] FormArray.removeAt  (method) :234
+      -- Remove the control at the given `index` in the array.     from the back. If `index` is greatly negative (less than `-length`), removes the first     element. Th
+[ ] FormArray.setControl  (method) :258
+      -- Replace an existing control.     from the back. If `index` is greatly negative (less than `-length`), replaces the first     element. This behavior is the same 
+[ ] FormArray.length  (accessor) :279
+      -- Length of the control array.
+[ ] FormArray.setValue  (method) :318
+      -- Sets the value of the `FormArray`. It accepts an array that matches the structure of the control. This method performs strict checks, and throws an error if you
+[ ] FormArray.patchValue  (method) :367
+      -- Patches the value of the `FormArray`. It accepts an array that matches the structure of the control, and does its best to match the values to the correct contro
+[ ] FormArray.reset  (method) :434
+      -- Resets the `FormArray` and all descendants are marked `pristine` and `untouched`, and the value of all descendants to null or null maps. You reset to a specific
+[ ] FormArray.getRawValue  (method) :458
+      -- The aggregate value of the array, including any disabled controls. Reports all values regardless of disabled status.
+[ ] FormArray.clear  (method) :498
+      -- Remove all controls in the `FormArray`.     controls are removed. * `emitEvent`: When true or not supplied (the default), both the `statusChanges` and `valueCha
+[ ] FormArray._adjustIndex  (method) :510
+      -- Adjusts a negative index by summing it with the length of the array. For very negative indices, the result may remain negative.
+[ ] FormArray._syncPendingControls  (method) :515
+      -- @internal
+[ ] FormArray._forEachChild  (method) :524
+      -- @internal
+[ ] FormArray._updateValue  (method) :531
+      -- @internal
+[ ] FormArray._anyControls  (method) :538
+      -- @internal
+[ ] FormArray._setUpControls  (method) :543
+      -- @internal
+[ ] FormArray._allControlsDisabled  (method) :548
+      -- @internal
+[ ] FormArray._registerControl  (method) :555
+[ ] FormArray._find  (method) :561
+      -- @internal
+
+## packages/forms/src/model/form_control.ts
+[ ] isFormControlState  (function) :443
+[ ] isFormControl  (export arrow) :638
+      -- Asserts that the given control is an instance of `FormControl`
+
+## packages/forms/src/model/form_group.ts
+[ ] FormGroup  (export class) :189
+      -- Tracks the value and validity state of a group of `FormControl` instances. A `FormGroup` aggregates the values of each child `FormControl` into one object, with
+[ ] validateFormGroupControls  (function) :678
+      -- Will validate that none of the controls has a key with a dot Throws other wise
+[ ] FormRecord  (export class) :742
+      -- Tracks the value and validity state of a collection of `FormControl` instances, each of which has the same value type. `FormRecord` is very similar to {@link Fo
+[ ] isFormRecord  (export arrow) :841
+      -- Asserts that the given control is an instance of `FormRecord`
+
+## packages/forms/src/util.ts
+[ ] removeListItem  (export function) :9
+
+## packages/forms/src/validators.ts
+[ ] isEmptyInputValue  (function) :28
+[ ] lengthOrSize  (function) :38
+      -- Extract the length property in case it's an array or a string. Extract the size property in case it's a set. Return null else.
+[ ] Validators  (export class) :164
+      -- Provides a set of built-in validators that can be used by form controls. A validator is a function that processes a `FormControl` or collection of controls and 
+[ ] Validators.min  (method) :185
+      -- Validator that requires the control's value to be greater than or equal to the provided number. ### Validate against a minimum of 3 ```ts const control = new Fo
+[ ] Validators.max  (method) :209
+      -- Validator that requires the control's value to be less than or equal to the provided number. ### Validate against a maximum of 15 ```ts const control = new Form
+[ ] Validators.required  (method) :233
+      -- Validator that requires the control have a non-empty value. ### Validate that the field is non-empty ```ts const control = new FormControl('', Validators.requir
+[ ] Validators.requiredTrue  (method) :258
+      -- Validator that requires the control's value be true. This validator is commonly used for required checkboxes. ### Validate that the field value is true ```ts co
+[ ] Validators.email  (method) :298
+      -- Validator that requires the control's value pass an email validation test. Tests the value using a [regular expression](https://developer.mozilla.org/en-US/docs
+[ ] Validators.minLength  (method) :333
+      -- Validator that requires the number of items in the control's value to be greater than or equal to the provided minimum length. This validator is also provided b
+[ ] Validators.maxLength  (method) :365
+      -- Validator that requires the number of items in the control's value to be less than or equal to the provided maximum length. This validator is also provided by d
+[ ] Validators.pattern  (method) :418
+      -- Validator that requires the control's value to match a regex pattern. This validator is also provided by default if you use the HTML5 `pattern` attribute. ### V
+[ ] Validators.nullValidator  (method) :429
+      -- Validator that performs no operation.
+[ ] Validators.compose  (method) :444
+      -- Compose multiple validators into a single function that returns the union of the individual error maps for the provided control. merged error maps of the valida
+[ ] Validators.compose  (method) :445
+[ ] Validators.compose  (method) :446
+[ ] Validators.composeAsync  (method) :461
+      -- Compose multiple async validators into a single function that returns the union of the individual error objects for the provided control. merged error objects o
+[ ] minValidator  (export function) :470
+      -- Validator that requires the control's value to be greater than or equal to the provided number. See `Validators.min` for additional information.
+[ ] maxValidator  (export function) :486
+      -- Validator that requires the control's value to be less than or equal to the provided number. See `Validators.max` for additional information.
+[ ] requiredValidator  (export function) :502
+      -- Validator that requires the control have a non-empty value. See `Validators.required` for additional information.
+[ ] requiredTrueValidator  (export function) :511
+      -- Validator that requires the control's value be true. This validator is commonly used for required checkboxes. See `Validators.requiredTrue` for additional infor
+[ ] emailValidator  (export function) :519
+      -- Validator that requires the control's value pass an email validation test. See `Validators.email` for additional information.
+[ ] minLengthValidator  (export function) :533
+      -- Validator that requires the number of items in the control's value to be greater than or equal to the provided minimum length. See `Validators.minLength` for ad
+[ ] maxLengthValidator  (export function) :555
+      -- Validator that requires the number of items in the control's value to be less than or equal to the provided maximum length. See `Validators.maxLength` for addit
+[ ] patternValidator  (export function) :569
+      -- Validator that requires the control's value to match a regex pattern. See `Validators.pattern` for additional information.
+[ ] nullValidator  (export function) :601
+      -- Function that has `ValidatorFn` shape, but performs no operation.
+[ ] isPresent  (function) :605
+[ ] toObservable  (export function) :609
+[ ] mergeErrors  (function) :623
+[ ] executeValidators  (function) :634
+[ ] isValidatorFn  (function) :641
+[ ] normalizeValidators  (export function) :653
+      -- Given the list of validators that may contain both functions as well as classes, return the list of validator functions (convert validator classes into validato
+[ ] compose  (function) :665
+      -- Merges synchronous validators into a single validator function. See `Validators.compose` for additional information.
+[ ] composeValidators  (export function) :680
+      -- Accepts a list of validators of different possible shapes (`Validator` and `ValidatorFn`), normalizes the list (converts everything to `ValidatorFn`) and merges
+[ ] composeAsync  (function) :688
+      -- Merges asynchronous validators into a single validator function. See `Validators.composeAsync` for additional information.
+[ ] composeAsyncValidators  (export function) :706
+      -- Accepts a list of async validators of different possible shapes (`AsyncValidator` and `AsyncValidatorFn`), normalizes the list (converts everything to `AsyncVal
+[ ] mergeValidators  (export function) :718
+      -- Merges raw control validators with a given directive validator and returns the combined list of validators as an array.
+[ ] getControlValidators  (export function) :728
+      -- Retrieves the list of raw synchronous validators attached to a given control.
+[ ] getControlAsyncValidators  (export function) :735
+      -- Retrieves the list of raw asynchronous validators attached to a given control.
+[ ] makeValidatorsArray  (export function) :748
+      -- Accepts a singleton validator, an array, or null, and returns an array type with the provided validators.
+[ ] hasValidator  (export function) :762
+      -- Determines whether a validator or validators array has a given validator.
+[ ] addValidators  (export function) :776
+      -- Combines two arrays of validators into one. If duplicates are provided, only one will be added.
+[ ] removeValidators  (export function) :794

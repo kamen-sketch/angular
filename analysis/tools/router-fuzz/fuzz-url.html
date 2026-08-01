@@ -1,0 +1,152 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Fuzzer round-trip UrlSerializer Router</title>
+<style>
+ body{font:13px/1.55 ui-monospace,Menlo,Consolas,monospace;margin:0;padding:16px;background:#0b0e14;color:#c9d1d9}
+ h1{font-size:16px;margin:0 0 6px} h3{font-size:14px;margin:16px 0 4px;color:#e6edf3}
+ .box{border:1px solid #30363d;border-radius:6px;padding:8px 12px;margin:8px 0;background:#0d1117}
+ .ok{color:#3fb950}.bad{color:#f85149}.warn{color:#d29922}
+ code{color:#79c0ff;word-break:break-all}
+ .v{font-size:14px;font-weight:700;padding:10px 12px;border-radius:6px;margin:10px 0}
+ .v.hit{background:#26120f;border:1px solid #da3633;color:#f85149}
+ .v.clean{background:#12261a;border:1px solid #238636;color:#3fb950}
+</style>
+<script type="importmap">
+{"imports":{
+ "@angular/compiler":"/router-fuzz/node_modules/@angular/compiler/fesm2022/compiler.mjs",
+ "@angular/router":"/router-fuzz/node_modules/@angular/router/fesm2022/router.mjs",
+ "@angular/common/http":"/router-fuzz/node_modules/@angular/common/fesm2022/http.mjs",
+ "@angular/common":"/router-fuzz/node_modules/@angular/common/fesm2022/common.mjs",
+ "@angular/core":"/router-fuzz/node_modules/@angular/core/fesm2022/core.mjs",
+ "@angular/core/primitives/signals":"/router-fuzz/node_modules/@angular/core/fesm2022/primitives-signals.mjs",
+ "@angular/core/primitives/di":"/router-fuzz/node_modules/@angular/core/fesm2022/primitives-di.mjs",
+ "@angular/core/primitives/event-dispatch":"/router-fuzz/node_modules/@angular/core/fesm2022/primitives-event-dispatch.mjs",
+ "@angular/platform-browser":"/router-fuzz/node_modules/@angular/platform-browser/fesm2022/platform-browser.mjs",
+ "tslib":"/npm-validate/node_modules/tslib/tslib.es6.mjs",
+ "rxjs":"/router-fuzz/node_modules/rxjs/dist/esm/index.js",
+ "rxjs/operators":"/router-fuzz/node_modules/rxjs/dist/esm/operators/index.js"
+}}
+</script>
+</head>
+<body>
+<h1>Fuzzer round-trip — <code>DefaultUrlSerializer</code> (@angular/router)</h1>
+<p>Properti yang diuji: <code>serialize(parse(u))</code> harus STABIL. Bila
+<code>parse(serialize(parse(u)))</code> berbeda dari <code>parse(u)</code>, satu URL punya
+dua tafsir — guard bisa dievaluasi pada tafsir pertama sementara navigasi memakai yang kedua.</p>
+<div id="out">menjalankan…</div>
+
+<script type="module">
+import '@angular/compiler';
+import {DefaultUrlSerializer} from '@angular/router';
+
+const E=(s)=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const S=new DefaultUrlSerializer();
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+// Potongan dicondongkan ke titik ambigu parser URL: pemisah segmen, parameter
+// matriks, outlet bernama, encoding persen, dan karakter yang punya makna khusus.
+const POTONGAN = [
+  '/','//','a','b','..','.', ';x=1',';x=',';=v',';;','(','(a:b)',')','?q=1','&r=2','#f',
+  '%2F','%2f','%3B','%3F','%23','%25','%2528','+',' ','=','&',':','@','!','~',"'",'*',
+  'a%2Fb','x=%3D','%00','%E4%B8%AD','\\','|','[',']','<','>','"',
+];
+function buatUrl(rnd){
+  const n=1+Math.floor(rnd()*7);
+  let s='';
+  for(let i=0;i<n;i++) s+=POTONGAN[Math.floor(rnd()*POTONGAN.length)];
+  return s;
+}
+
+// Perbandingan struktural UrlTree: bentuk pohon, BUKAN string.
+function bentuk(t){
+  const seg=(g)=>({
+    s:g.segments.map(x=>({p:x.path,m:{...x.parameters}})),
+    c:Object.fromEntries(Object.entries(g.children).map(([k,v])=>[k,seg(v)])),
+  });
+  return JSON.stringify({root:seg(t.root),q:t.queryParams,f:t.fragment});
+}
+
+const N=20000, BENIH=20260731;
+const rnd=mulberry32(BENIH);
+let ok=0, lempar=0;
+const tidakStabil=[], serialGagal=[];
+
+for(let i=0;i<N;i++){
+  const u=buatUrl(rnd);
+  let t1,s1,t2,s2;
+  try{ t1=S.parse(u); s1=S.serialize(t1); }
+  catch(e){ lempar++; continue; }
+  try{ t2=S.parse(s1); s2=S.serialize(t2); }
+  catch(e){ serialGagal.push({u,s1,pesan:e.message}); continue; }
+
+  // Orakel A: keluaran serialisasi harus mencapai titik tetap.
+  // Orakel B: pohon hasil parse ulang harus identik secara struktural.
+  const stabilStr = s1===s2;
+  const stabilPohon = bentuk(t1)===bentuk(t2);
+  if(stabilStr && stabilPohon){ ok++; }
+  else if(tidakStabil.length<40){
+    tidakStabil.push({u,s1,s2,b1:bentuk(t1),b2:bentuk(t2),stabilStr,stabilPohon});
+  }
+}
+
+// Minimisasi: buang karakter selama ketidakstabilan bertahan.
+function kecilkan(u){
+  let cur=u;
+  for(let putaran=0;putaran<200;putaran++){
+    let maju=false;
+    for(let p=0;p<cur.length;p++){
+      const k=cur.slice(0,p)+cur.slice(p+1);
+      if(!k) continue;
+      try{
+        const a=S.parse(k), sa=S.serialize(a);
+        const b=S.parse(sa), sb=S.serialize(b);
+        if(sa!==sb || bentuk(a)!==bentuk(b)){ cur=k; maju=true; break; }
+      }catch{}
+    }
+    if(!maju) break;
+  }
+  return cur;
+}
+const unik=new Map();
+for(const x of tidakStabil){
+  const m=kecilkan(x.u);
+  if(!unik.has(m)) unik.set(m,x);
+}
+
+let h='';
+h+=`<div class="box">Kasus: <b>${N}</b> &nbsp; benih: <b>${BENIH}</b> &nbsp; @angular/router 22.x<br>`;
+h+=`stabil: <b class="ok">${ok}</b> &nbsp; TIDAK stabil: <b class="${tidakStabil.length?'bad':'ok'}">${tidakStabil.length}</b> &nbsp; parse awal melempar: ${lempar} &nbsp; re-parse melempar: <b class="${serialGagal.length?'bad':'ok'}">${serialGagal.length}</b></div>`;
+
+if(serialGagal.length){
+  h+=`<h3 class="bad">Serialisasi menghasilkan URL yang TIDAK BISA diparse ulang</h3>`;
+  for(const x of serialGagal.slice(0,8)){
+    h+=`<div class="box"><small>asli:</small> <code>${E(x.u)}</code><br><small>serialize:</small> <code class="bad">${E(x.s1)}</code><br><small>galat:</small> <code>${E(x.pesan)}</code></div>`;
+  }
+}
+
+if(unik.size){
+  h+=`<h3 class="bad">Round-trip tidak stabil (${unik.size} bentuk minimal unik)</h3>`;
+  for(const [min,x] of [...unik].slice(0,12)){
+    h+=`<div class="box"><small>minimal:</small> <code class="bad">${E(min)}</code>`;
+    h+=`<br><small>contoh asli:</small> <code>${E(x.u)}</code>`;
+    h+=`<br><small>serialize ke-1:</small> <code>${E(x.s1)}</code>`;
+    h+=`<br><small>serialize ke-2:</small> <code class="warn">${E(x.s2)}</code>`;
+    if(!x.stabilPohon){
+      h+=`<br><small>pohon ke-1:</small> <code>${E(x.b1).slice(0,300)}</code>`;
+      h+=`<br><small>pohon ke-2:</small> <code class="bad">${E(x.b2).slice(0,300)}</code>`;
+    }
+    h+=`<br><small>beda string:</small> ${x.stabilStr?'tidak':'<b class="bad">YA</b>'} &nbsp; <small>beda pohon:</small> ${x.stabilPohon?'tidak':'<b class="bad">YA</b>'}`;
+    h+=`</div>`;
+  }
+}
+
+const adaTemuan = unik.size>0 || serialGagal.length>0;
+h+= adaTemuan
+ ? `<div class="v hit">ROUND-TRIP TIDAK STABIL — satu URL menghasilkan dua tafsir berbeda. Perlu ditriase: apakah selisihnya menyentuh pencocokan rute/guard.</div>`
+ : `<div class="v clean">STABIL pada ${N} kasus acak — tidak ditemukan ketidakstabilan round-trip.</div>`;
+
+document.getElementById('out').innerHTML=h;
+window.__URLFUZZ__={N,BENIH,ok,tidakStabil:tidakStabil.length,serialGagal:serialGagal.length,
+  minimal:[...unik.keys()].slice(0,20)};
+</script>
+</body></html>

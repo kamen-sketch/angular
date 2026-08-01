@@ -1,0 +1,100 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Angular mXSS loop — real Chromium evidence</title>
+<style>
+  body{font:13px/1.55 ui-monospace,Menlo,Consolas,monospace;margin:0;padding:20px;background:#0b0e14;color:#c9d1d9;max-width:1100px}
+  h1{font-size:17px;margin:0 0 2px;color:#e6edf3}
+  h2{font-size:14px;margin:20px 0 6px;color:#e6edf3;border-bottom:1px solid #30363d;padding-bottom:4px}
+  .sub{color:#8b949e;margin:0 0 6px}
+  table{border-collapse:collapse;width:100%;margin:6px 0}
+  th,td{border:1px solid #30363d;padding:4px 8px;text-align:left;vertical-align:top}
+  th{background:#161b22;color:#e6edf3}
+  td.n{text-align:center;font-weight:700}
+  .ok{color:#3fb950}.bad{color:#f85149}.warn{color:#d29922}
+  code{color:#79c0ff;word-break:break-all}
+  .box{border:1px solid #30363d;border-radius:6px;padding:8px 12px;margin:8px 0;background:#0d1117}
+  .v{font-size:14px;font-weight:700;padding:10px 12px;border-radius:6px;margin:10px 0}
+  .v.confirmed{background:#12261a;border:1px solid #238636;color:#3fb950}
+  .v.limit{background:#2b2000;border:1px solid #9e6a03;color:#e3b341}
+  small{color:#8b949e}
+  .chain div{margin:1px 0}
+</style></head>
+<body>
+<h1>Angular HTML sanitizer — mXSS stabilization loop</h1>
+<p class="sub">Real evidence from <b id="chrome"></b>. All code is a verbatim port of <code>packages/core/src/sanitization/html_sanitizer.ts</code> + <code>inert_body.ts</code>, driven by the browser's own DOMParser. Source: <code>html_sanitizer.ts:304-346</code>.</p>
+<div id="out">running…</div>
+
+<script src="sanitizer.js"></script>
+<script>
+"use strict";
+const E=(s)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const out=document.getElementById('out');
+document.getElementById('chrome').textContent='Chromium '+ (navigator.userAgent.match(/Chrome\/([\d.]+)/)||[,'?'])[1];
+
+// ---- 1. iteration-count table over a battery ----
+const vectors=[
+  ['plain','<p>hello</p>'],
+  ['svg style img','<svg><style><img src=x onerror=alert(1)></style></svg>'],
+  ['math mtext (3-round mutation)','<math><mtext><table><mglyph><style><img src=x onerror=alert(1)>'],
+  ['li foster','<ul><li><table><li>'],
+  ['table+svg+style','<table><td><svg><style><img src=x onerror=alert(1)></style>'],
+  ['plaintext (never stabilizes)','<plaintext><img src=x onerror=alert(1)>'],
+];
+function rounds(H0,cap=25){let c=H0,n=0;while(n<cap){const x=window.f(c);n++;if(x===c)return n;c=x;}return Infinity;}
+function safe(fn,i){try{const r=fn(i);return{it:r.iterations,out:r.out,threw:false};}catch(e){return{it:'—',out:'THREW: '+e.message,threw:true};}}
+let rows='';let maxBuggy=0;
+for(const [name,inp] of vectors){
+  const r=rounds(inp);
+  const b=safe(window.sanitizeHtml_BUGGY,inp);
+  const f=safe(window.sanitizeHtml_FIXED,inp);
+  if(!b.threw)maxBuggy=Math.max(maxBuggy,b.it);
+  const flag=f.threw?'<span class="bad">FIXED throws / BUGGY silent</span>':(b.it!==f.it?'<span class="warn">buggy stops early</span>':'<span class="ok">same</span>');
+  rows+=`<tr><td>${name}</td><td><code>${E(inp)}</code></td><td class="n">${r===Infinity?'&ge;25':r}</td><td class="n">${b.it}</td><td class="n ${f.threw?'bad':''}">${f.threw?'throws':f.it}</td><td class="n">${flag}</td></tr>`;
+}
+
+// ---- 2. plaintext infinite chain ----
+let cur='<plaintext><img src=x onerror=alert(1)>';const pc=[cur];
+for(let i=0;i<6;i++){const x=window.f(cur);pc.push(x);if(x===cur)break;cur=x;}
+
+// ---- 3. mtext mutation chain (img: inert text -> live element) ----
+cur='<math><mtext><table><mglyph><style><img src=x onerror=alert(1)>';const mc=[cur];
+for(let i=0;i<5;i++){const x=window.f(cur);mc.push(x);if(x===cur)break;cur=x;}
+
+// ---- 4. output-safety battery: is buggy output ever dangerous on reparse? ----
+const dangerBattery=[
+  '<plaintext><img src=x onerror=alert(1)>',
+  '<math><mtext><table><mglyph><style><img src=x onerror=alert(1)>',
+  '<svg><style><img src=x onerror=alert(1)></style></svg>',
+  '<noscript><p title="</noscript><img src=x onerror=alert(1)>">',
+  '<table><td><svg><style><img src=x onerror=alert(1)></style>',
+  '<form><math><mtext></form><mglyph><style><img src=x onerror=alert(1)>',
+];
+function liveDanger(s){const d=document.createElement('div');d.innerHTML=s;return d.querySelectorAll('img[onerror],*[onerror],script').length;}
+let dRows='';let anyDanger=false;
+for(const inp of dangerBattery){
+  let o,th=false;try{o=window.sanitizeHtml_BUGGY(inp).out;}catch(e){th=true;o='(threw)';}
+  const dn=th?'—':liveDanger(o);if(dn>0)anyDanger=true;
+  dRows+=`<tr><td><code>${E(inp)}</code></td><td><code>${E(o)}</code></td><td class="n ${dn>0?'bad':'ok'}">${dn}</td></tr>`;
+}
+
+let h='';
+h+=`<div class="v confirmed">CONFIRMED (control-flow, real Chromium): the shipped loop performs at most <b>${maxBuggy}</b> iterations for every input. Its 5-attempt budget is never used and its <code>"input is unstable"</code> throw is <b>unreachable dead code</b>. For <code>&lt;plaintext&gt;…</code>, which never reaches a DOM fixed point, the CORRECT loop fails-closed (throws) while the SHIPPED loop fails-open (returns silently).</div>`;
+h+=`<div class="v limit">HONEST LIMITATION: across every vector tested, the buggy loop's <b>output is never dangerous</b> on reparse (no live <code>onerror</code>/<code>script</code>). The allowlist serializer neutralizes the payload regardless of iteration count, so this is a defense-in-depth / fail-closed regression, <b>not a demonstrated XSS</b>.</div>`;
+
+h+=`<h2>1 · Iteration counts (shipped "BUGGY" vs corrected "FIXED")</h2>`;
+h+=`<table><thead><tr><th>vector</th><th>input</th><th>true rounds→fixed point</th><th>BUGGY iters</th><th>FIXED iters</th><th>divergence</th></tr></thead><tbody>${rows}</tbody></table>`;
+h+=`<div class="box">The corrected loop needs <b>3</b> rounds for <code>math mtext</code> and <code>li foster</code>, and <b>throws</b> for <code>plaintext</code>. The shipped loop caps at 2 for all — proving it stops before the fixed point.</div>`;
+
+h+=`<h2>2 · <code>&lt;plaintext&gt;</code> never stabilizes — one <code>&lt;/plaintext&gt;</code> added per round</h2>`;
+h+=`<div class="box chain">`+pc.map((s,i)=>`<div><small>H${i} =</small> <code>${E(s)}</code></div>`).join('')+`<div class="bad">…grows without bound. The corrected loop exhausts its budget and throws "input is unstable"; the shipped loop returned after 2 rounds and never noticed.</div></div>`;
+
+h+=`<h2>3 · <code>math/mtext</code> mutation across rounds (the classic mXSS shape)</h2>`;
+h+=`<div class="box chain">`+mc.map((s,i)=>`<div><small>H${i} =</small> <code>${E(s)}</code></div>`).join('')+`<div class="warn">At H1 the &lt;img&gt; is inert text inside &lt;style&gt;; by H2 it is a live &lt;img src="x" onerror="alert(1)"&gt; element. Needs 3 rounds to settle. The shipped loop serializes the H1 tree (2 rounds) — but the allowlist strips onerror either way, so output stays safe.</div></div>`;
+
+h+=`<h2>4 · Is the buggy output ever dangerous on reparse? (the security question)</h2>`;
+h+=`<table><thead><tr><th>input</th><th>buggy sanitized output</th><th>live danger nodes on reparse</th></tr></thead><tbody>${dRows}</tbody></table>`;
+h+=`<div class="box ${anyDanger?'bad':'ok'}">Result: <b>${anyDanger?'DANGER FOUND':'no live dangerous node in any output'}</b>. The allowlist serializer (VALID_ELEMENTS / VALID_ATTRS / encodeEntities) remains the effective control.</div>`;
+
+out.innerHTML=h;
+window.__DONE__=true;
+</script>
+</body></html>

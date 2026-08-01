@@ -1,0 +1,10 @@
+cookie terlihat di evil.contoh.test : "XSRF-TOKEN=%"
+
+1. sebelum serangan (tanpa cookie)
+   cookie dilihat app : ""
+   POST               : BERHASIL 
+
+3. sesudah serangan (cookie ditanam evil)
+   cookie dilihat app : "XSRF-TOKEN=%"
+   POST               : GAGAL -> URIError: URI malformed
+

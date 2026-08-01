@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Angular Service Worker forces ignoreVary: true</title>
+<style>
+ body{font:13.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;margin:22px;max-width:980px}
+ h1{font-size:17px;margin:0 0 2px}
+ .sub{color:#555;margin:0 0 14px}
+ table{border-collapse:collapse;width:100%;margin-top:10px}
+ td,th{border:1px solid #bbb;padding:6px 9px;text-align:left;vertical-align:top}
+ th{background:#f4f4f4}
+ .bad{background:#ffe1e1}
+ .ok{background:#e8f6e8}
+ .box{padding:9px 11px;margin-top:12px;white-space:pre-wrap}
+ code{background:#f2f2f2;padding:1px 4px}
+ h2{font-size:14px;margin:18px 0 2px}
+ #sw{color:#333;margin-bottom:6px}
+</style>
+</head>
+<body>
+<h1>Angular Service Worker forces <code>ignoreVary: true</code></h1>
+<p class="sub">Same-origin. The endpoint below is <b>deliberately</b> covered by the application's own <code>dataGroups</code>.</p>
+<div id="sw">service worker status: not registered yet</div>
+<div id="result"></div>
+
+<script>
+window.__registerSW = async function () {
+  try {
+    if (!('serviceWorker' in navigator)) {
+      return {ok: false, message: 'serviceWorker unavailable (insecure context?)'};
+    }
+    await navigator.serviceWorker.register('/ngsw-worker.js', {scope: '/'});
+    await navigator.serviceWorker.ready;
+
+    // Wait until the worker actually controls this page. Without this the first
+    // request never reaches the SW and the whole test becomes a no-op that
+    // looks "safe".
+    if (!navigator.serviceWorker.controller) {
+      await new Promise((resolve, reject) => {
+        const t = setTimeout(() => reject(new Error('never took control of the page')), 15000);
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          clearTimeout(t);
+          resolve();
+        });
+      });
+    }
+
+    // The ngsw driver initialises asynchronously (fetch ngsw.json, build
+    // AppVersion). Wait until the manifest is really loaded.
+    for (let i = 0; i < 40; i++) {
+      const state = await fetch('/ngsw/state', {cache: 'no-store'})
+        .then((r) => r.text())
+        .catch(() => '');
+      if (/Latest manifest hash: [0-9a-f]{8}/.test(state)) {
+        document.getElementById('sw').textContent =
+          'service worker status: activated, controlling this page, manifest loaded';
+        return {ok: true};
+      }
+      await new Promise((r) => setTimeout(r, 150));
+    }
+    return {ok: false, message: 'SW activated but the manifest never loaded'};
+  } catch (e) {
+    return {ok: false, message: e.message};
+  }
+};
+
+window.__request = async function (url, token) {
+  const res = await fetch(url, {
+    cache: 'no-store',
+    headers: {Authorization: 'Bearer ' + token},
+  });
+  return {status: res.status, body: await res.text(), vary: res.headers.get('Vary')};
+};
+
+/**
+ * Pins the cause to the very same cache entry: the entry ngsw just wrote is
+ * matched twice against Bob's request — once with {ignoreVary: true} (what
+ * Angular uses) and once with the browser default, which honours Vary.
+ */
+window.__varyProbe = async function (url) {
+  const bobRequest = new Request(url, {headers: {Authorization: 'Bearer BOB'}});
+  for (const name of await caches.keys()) {
+    const cache = await caches.open(name);
+    if (!(await cache.keys()).some((r) => r.url === url)) continue;
+    const ignoring = await cache.match(bobRequest, {ignoreVary: true});
+    const honouring = await cache.match(bobRequest);
+    return {
+      cache: name,
+      withIgnoreVaryTrue: ignoring ? await ignoring.text() : null,
+      withBrowserDefault: honouring ? await honouring.text() : null,
+    };
+  }
+  return null;
+};
+
+window.__report = function (d) {
+  const esc = (s) =>
+    String(s).replace(/[&<>]/g, (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'})[c]);
+  const leaked = d.bob.body === d.alice.body;
+  document.getElementById('result').innerHTML =
+    '<h2>Requests</h2><table>' +
+    '<tr><th></th><th>Authorization</th><th>URL</th><th>body received</th></tr>' +
+    '<tr><td>T0 Alice</td><td><code>Bearer ALICE</code></td><td><code>' +
+    esc(d.url) + '</code></td><td>' + esc(d.alice.body) + '</td></tr>' +
+    '<tr class="' + (leaked ? 'bad' : 'ok') + '"><td>T2 Bob</td><td><code>Bearer BOB</code></td>' +
+    '<td><code>' + esc(d.url) + '</code></td><td>' + esc(d.bob.body) + '</td></tr>' +
+    '</table>' +
+    '<div class="box ' + (leaked ? 'bad' : 'ok') + '">' +
+    'Server response header        : Vary: ' + esc(d.alice.vary) + '\n' +
+    'Requests that reached server  : ' + d.serverHits + '   (2 = normal, 1 = Bob served from cache)\n' +
+    'Generated ngsw.json           : "cacheQueryOptions": ' + esc(d.cacheQueryOptions) + '\n' +
+    'Public config type            : Pick&lt;CacheQueryOptions, \'ignoreSearch\'&gt;' +
+    '   (ignoreVary cannot be selected)' +
+    '</div>' +
+    '<h2>Matching against the SAME cache entry</h2><div class="box">' +
+    'cache.match(bobRequest)                      -> ' +
+    esc(d.probe ? (d.probe.withBrowserDefault ?? 'undefined   (browser default enforces Vary)') : '-') +
+    '\n' +
+    'cache.match(bobRequest, {ignoreVary: true})  -> ' +
+    esc(d.probe ? (d.probe.withIgnoreVaryTrue ?? 'undefined') : '-') +
+    '   <-- what Angular uses' +
+    '</div>' +
+    '<div class="box ' + (leaked ? 'bad' : 'ok') + '">' +
+    (leaked
+      ? 'The server correctly declares that this representation varies by the Authorization request header. The browser’s default cache matching therefore rejects Alice’s response for Bob’s request. Angular overrides that decision with ignoreVary: true, and Bob’s request never reaches the server.'
+      : 'Bob’s request reached the server and he received his own data.') +
+    '</div>';
+};
+</script>
+</body>
+</html>

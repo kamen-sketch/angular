@@ -1,0 +1,128 @@
+INVENTORY FUNGSI :: platform-server
+Total simbol: 67 | file: 12
+Rincian: function=32, class=7, method=24, accessor=1, ctor=3
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## packages/platform-server/init/src/shims.ts
+[ ] applyShims  (export function) :15
+      -- Apply the necessary shims to make DOM globals (such as `Element`, `HTMLElement`, etc.) available on the environment.
+
+## packages/platform-server/src/domino_adapter.ts
+[ ] setDomTypes  (export function) :18
+[ ] parseDocument  (export function) :28
+      -- Parses a document string to a Document object.
+[ ] serializeDocument  (export function) :37
+      -- Serializes a document to string.
+[ ] DominoAdapter  (export class) :44
+      -- DOM Adapter for the server platform based on https://github.com/fgnass/domino.
+[ ] DominoAdapter.createHtmlDocument  (method) :53
+[ ] DominoAdapter.getDefaultDocument  (method) :57
+[ ] DominoAdapter.isElementNode  (method) :64
+[ ] DominoAdapter.isShadowRoot  (method) :67
+[ ] DominoAdapter.getGlobalEventTarget  (method) :72
+      -- @deprecated No longer being used in Ivy code. To be removed in version 14.
+[ ] DominoAdapter.getBaseHref  (method) :85
+[ ] DominoAdapter.dispatchEvent  (method) :106
+[ ] DominoAdapter.getUserAgent  (method) :117
+[ ] DominoAdapter.getCookie  (method) :121
+
+## packages/platform-server/src/http.ts
+[ ] ServerXhr  (export class) :29
+      -- XHR support in `@angular/platform-server` is deprecated because the underlying `xhr2` library does not safely handle redirects (e.g. it can forward `Authorizati
+[ ] ServerXhr.ɵloadImpl  (method) :36
+      -- server platform (via shims, etc).
+[ ] ServerXhr.build  (method) :53
+[ ] relativeUrlsTransformerInterceptorFn  (function) :72
+
+## packages/platform-server/src/location.ts
+[ ] ServerPlatformLocation  (export class) :27
+      -- Server-side implementation of URL state. Implements `pathname`, `search`, and `hash` but not the state stack.
+[ ] ServerPlatformLocation.constructor  (ctor) :39
+[ ] ServerPlatformLocation.getBaseHrefFromDOM  (method) :60
+[ ] ServerPlatformLocation.onPopState  (method) :64
+[ ] ServerPlatformLocation.onHashChange  (method) :70
+[ ] ServerPlatformLocation.url  (accessor) :75
+[ ] ServerPlatformLocation.setHash  (method) :79
+[ ] ServerPlatformLocation.replaceState  (method) :96
+[ ] ServerPlatformLocation.pushState  (method) :109
+[ ] ServerPlatformLocation.forward  (method) :113
+[ ] ServerPlatformLocation.back  (method) :117
+[ ] ServerPlatformLocation.getState  (method) :122
+      -- History API isn't available on server, therefore return undefined
+
+## packages/platform-server/src/platform_state.ts
+[ ] PlatformState  (export class) :30
+      -- Representation of the current platform state.
+[ ] PlatformState.constructor  (ctor) :34
+[ ] PlatformState.renderToString  (method) :39
+      -- Renders the current state of the platform to string.
+[ ] PlatformState.getDocument  (method) :61
+      -- Returns the current DOM state.
+[ ] enableDomEmulation  (export function) :66
+
+## packages/platform-server/src/provide_server.ts
+[ ] provideServerRendering  (export function) :32
+      -- Sets up providers necessary to enable server rendering functionality for the application. - `maxResponseBodySize`: The maximum allowed response body size when u
+
+## packages/platform-server/src/server.ts
+[ ] initDominoAdapter  (function) :59
+[ ] ServerModule  (export class) :93
+[ ] _document  (function) :95
+[ ] platformServer  (export function) :130
+      -- Creates a server-side instance of an Angular platform. This platform should be used when performing server-side rendering of an Angular application. Standalone 
+
+## packages/platform-server/src/server_events.ts
+[ ] ServerEventManagerPlugin  (export class) :14
+[ ] ServerEventManagerPlugin.constructor  (ctor) :15
+[ ] ServerEventManagerPlugin.supports  (method) :20
+      -- Handle all events on the server.
+[ ] ServerEventManagerPlugin.addEventListener  (method) :24
+
+## packages/platform-server/src/transfer_state.ts
+[ ] createScript  (export function) :40
+      -- TODO: Move this to a utils folder and convert to use SafeValues.
+[ ] warnIfStateTransferHappened  (function) :54
+[ ] serializeTransferStateFactory  (function) :70
+
+## packages/platform-server/src/url.ts
+[ ] resolveUrl  (export function) :43
+      -- Resolves a URL string. If an origin is provided, the URL is resolved against it. Otherwise, the URL is parsed as-is.
+[ ] resolveUrl  (export function) :44
+[ ] resolveUrl  (export function) :49
+[ ] throwSuspiciousUrlError  (function) :120
+      -- Throws a suspicious URL error indicating a security bypass attempt.
+[ ] isSafeOriginChange  (function) :138
+      -- Checks if the origin has changed in a safe way.
+
+## packages/platform-server/src/utils.ts
+[ ] createServerPlatform  (function) :55
+      -- Creates an instance of a server platform (with or without JIT compiler support depending on the `ngJitMode` global const value), using provided options.
+[ ] findEventDispatchScript  (function) :80
+      -- Finds and returns inlined event dispatch script if it exists. See the `EVENT_DISPATCH_SCRIPT_ID` const docs for additional info.
+[ ] removeEventDispatchScript  (function) :88
+      -- Removes inlined event dispatch script if it exists. See the `EVENT_DISPATCH_SCRIPT_ID` const docs for additional info.
+[ ] prepareForHydration  (function) :95
+      -- Annotate nodes for hydration and remove event dispatch script when not needed.
+[ ] appendSsrContentIntegrityMarker  (function) :133
+      -- Creates a marker comment node and append it into the `<body>`. Some CDNs have mechanisms to remove all comment node from HTML. This behaviour breaks hydration, 
+[ ] appendServerContextInfo  (function) :145
+      -- Adds the `ng-server-context` attribute to host elements of all bootstrapped components within a given application.
+[ ] insertEventRecordScript  (function) :157
+[ ] renderInternal  (export function) :197
+      -- Renders an Angular application to a string.
+[ ] asyncDestroyPlatform  (function) :240
+      -- Destroy the application in a macrotask, this allows pending promises to be settled and errors to be surfaced to the users.
+[ ] sanitizeServerContext  (function) :266
+      -- Sanitizes provided server context: - removes all characters other than a-z, A-Z, 0-9 and `-` - returns `other` if nothing is provided or the string is empty aft
+[ ] renderModule  (export function) :283
+      -- Bootstraps an application using provided NgModule and serializes the page content to string.  - `document` - the document of the page to render, either as an HT
+[ ] renderApplication  (export function) :342
+      -- Bootstraps an instance of an Angular application and renders it to a string. ```ts import { BootstrapContext, bootstrapApplication } from '@angular/platform-bro
+[ ] validateAllowedHosts  (function) :382
+[ ] isHostAllowed  (export function) :408
+      -- Checks if the hostname is allowed.
+
+## packages/platform-server/testing/src/server.ts
+[ ] ServerTestingModule  (export class) :49

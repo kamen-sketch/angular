@@ -1,0 +1,1725 @@
+DAFTAR FUNGSI YANG SUDAH DIANALISIS
+Dihasilkan otomatis oleh analysis/tools/sync-checklist.mjs -- jangan diedit manual.
+Sumber: analysis/subsystems/*.txt
+Total fungsi tercentang: 845
+==============================================================================
+
+### 01-core-signals-primitives
+[x] createComputed  --  packages/core/primitives/signals/src/computed.ts:59
+      Membuat getter computed: memutakhirkan versi, mendaftar sebagai producer, melempar ulang error yang di-cache.
+[x] COMPUTED_NODE  --  packages/core/primitives/signals/src/computed.ts:117
+      Prototipe computed: dirty awal true, plus implementasi producerMustRecompute/producerRecomputeValue dengan deteksi siklus dan caching error.
+[x] BASE_EFFECT_NODE  --  packages/core/primitives/signals/src/effect.ts:36
+      Prototipe effect: selalu live, boleh menulis signal, dirty awal true.
+[x] runEffect  --  packages/core/primitives/signals/src/effect.ts:45
+      Runner effect generik: bersihkan dirty, polling perubahan, cleanup lalu jalankan fn di konteks consumer.
+[x] defaultEquals  --  packages/core/primitives/signals/src/equality.ts:17
+      Kesetaraan default memakai Object.is (referensial, NaN-safe).
+[x] defaultThrowError  --  packages/core/primitives/signals/src/errors.ts:11
+      Pelempar error minimal sebelum core memasang pesan detail.
+[x] throwInvalidWriteToSignalError  --  packages/core/primitives/signals/src/errors.ts:17
+      Indireksi agar primitives tidak bergantung pada infrastruktur error core.
+[x] setThrowInvalidWriteToSignalError  --  packages/core/primitives/signals/src/errors.ts:21
+      Titik injeksi pesan error kaya dari @angular/core.
+[x] prettifyPreview  --  packages/core/primitives/signals/src/formatter.ts:112
+      Meringkas nilai menjadi label pendek untuk pratinjau custom formatter DevTools.
+[x] isSignal  --  packages/core/primitives/signals/src/formatter.ts:145
+      Cek keberadaan simbol SIGNAL (versi lokal formatter).
+[x] installDevToolsSignalFormatter  --  packages/core/primitives/signals/src/formatter.ts:156
+      Mendaftarkan custom formatter ke globalThis.devtoolsFormatters (Chrome/Firefox), idempoten.
+[x] setActiveConsumer  --  packages/core/primitives/signals/src/graph.ts:42
+      Memasang consumer aktif, mengembalikan yang sebelumnya (pola save/restore).
+[x] getActiveConsumer  --  packages/core/primitives/signals/src/graph.ts:48
+      Membaca consumer aktif; dipakai core untuk cek konteks reaktif.
+[x] isInNotificationPhase  --  packages/core/primitives/signals/src/graph.ts:52
+      True saat propagasi dirty berlangsung; dipakai untuk melarang baca/schedule.
+[x] isReactive  --  packages/core/primitives/signals/src/graph.ts:60
+      Type guard: nilai punya properti simbol SIGNAL.
+[x] producerAccessed  --  packages/core/primitives/signals/src/graph.ts:212
+      Inti pelacakan dependensi: mencatat edge producer->consumer aktif, dengan tiga fast-path reuse link.
+[x] producerIncrementEpoch  --  packages/core/primitives/signals/src/graph.ts:302
+      Menaikkan epoch global; dipanggil source signal saat nilainya berubah.
+[x] producerUpdateValueVersion  --  packages/core/primitives/signals/src/graph.ts:309
+      Memastikan version node mutakhir: skip jika live+bersih atau bersih pada epoch ini, jika tidak polling lalu recompute.
+[x] producerNotifyConsumers  --  packages/core/primitives/signals/src/graph.ts:339
+      Menyebarkan notifikasi kotor ke semua live consumer dalam fase notifikasi.
+[x] producerUpdatesAllowed  --  packages/core/primitives/signals/src/graph.ts:367
+      Guard: apakah menulis signal diizinkan pada konteks consumer saat ini.
+[x] consumerMarkDirty  --  packages/core/primitives/signals/src/graph.ts:371
+      Menandai node kotor, meneruskan notifikasi ke hilir, lalu memanggil hook consumerMarkedDirty (yang menjadwalkan effect).
+[x] producerMarkClean  --  packages/core/primitives/signals/src/graph.ts:377
+      Reset dirty dan catat lastCleanEpoch untuk fast-path polling.
+[x] consumerBeforeComputation  --  packages/core/primitives/signals/src/graph.ts:389
+      Reset state dependensi lalu jadikan node consumer aktif.
+[x] resetConsumerBeforeComputation  --  packages/core/primitives/signals/src/graph.ts:403
+      Membatalkan knownValidAtEpoch link lama dan membuka mode recomputing.
+[x] consumerAfterComputation  --  packages/core/primitives/signals/src/graph.ts:427
+      Kembalikan consumer sebelumnya lalu finalisasi daftar dependensi.
+[x] finalizeConsumerAfterComputation  --  packages/core/primitives/signals/src/graph.ts:444
+      Memotong dan melepas link dependensi basi setelah rekonsiliasi inkremental.
+[x] consumerPollProducersForChange  --  packages/core/primitives/signals/src/graph.ts:472
+      Model PULL: bandingkan lastReadVersion dengan version producer (memaksa producer memutakhirkan diri lebih dulu).
+[x] consumerDestroy  --  packages/core/primitives/signals/src/graph.ts:501
+      Memutus node dari graf dua arah dan mengosongkan seluruh rantai link.
+[x] producerAddLiveConsumer  --  packages/core/primitives/signals/src/graph.ts:523
+      Menyisipkan link ke rantai consumer; jika node baru menjadi live, merekursi ke seluruh producernya.
+[x] producerRemoveLiveConsumerLink  --  packages/core/primitives/signals/src/graph.ts:546
+      Melepas satu edge O(1) dari rantai dua arah; merekursi turun bila producer berhenti live.
+[x] consumerIsLive  --  packages/core/primitives/signals/src/graph.ts:572
+      Live = selalu-live (effect) atau punya minimal satu consumer.
+[x] runPostProducerCreatedFn  --  packages/core/primitives/signals/src/graph.ts:576
+      Hook pembuatan producer; dipakai DevTools untuk merekam graf signal.
+[x] setPostProducerCreatedFn  --  packages/core/primitives/signals/src/graph.ts:580
+      Memasang hook di atas (save/restore).
+[x] createLinkedSignal  --  packages/core/primitives/signals/src/linked_signal.ts:67
+      Computed yang menyimpan sourceValue sehingga computation bisa melihat pasangan (source, value) sebelumnya.
+[x] linkedSignalSetFn  --  packages/core/primitives/signals/src/linked_signal.ts:106
+      Tulis manual ke linkedSignal lalu tandai bersih agar tidak langsung ditimpa komputasi.
+[x] linkedSignalUpdateFn  --  packages/core/primitives/signals/src/linked_signal.ts:112
+      Sama seperti di atas untuk updater; menolak update saat state ERRORED.
+[x] LINKED_SIGNAL_NODE  --  packages/core/primitives/signals/src/linked_signal.ts:127
+      Prototipe linkedSignal; producerRecomputeValue memanggil source() lalu computation(source, prev).
+[x] createSignal  --  packages/core/primitives/signals/src/signal.ts:53
+      Membuat tuple [getter, set, update]; getter membawa node lewat properti SIGNAL, plus toString ramah-debug di dev mode.
+[x] setPostSignalSetFn  --  packages/core/primitives/signals/src/signal.ts:75
+      Memasang hook pasca-set; dipakai core untuk effect sinkron/penjadwalan CD.
+[x] signalGetFn  --  packages/core/primitives/signals/src/signal.ts:81
+      Baca nilai + daftarkan dependensi via producerAccessed.
+[x] signalSetFn  --  packages/core/primitives/signals/src/signal.ts:86
+      Tulis nilai bila tidak equal, setelah lolos guard producerUpdatesAllowed.
+[x] signalUpdateFn  --  packages/core/primitives/signals/src/signal.ts:97
+      Varian set berbasis fungsi updater terhadap nilai saat ini.
+[x] runPostSignalSetFn  --  packages/core/primitives/signals/src/signal.ts:105
+      Memanggil hook pasca-set secara manual (dipakai node turunan seperti input signal).
+[x] SIGNAL_NODE  --  packages/core/primitives/signals/src/signal.ts:111
+      Prototipe node signal (kind 'signal', equal default Object.is); dibuat via IIFE @__PURE__ agar tree-shakable.
+[x] signalValueChanged  --  packages/core/primitives/signals/src/signal.ts:120
+      Urutan wajib saat nilai berubah: version++, epoch++, notifikasi consumer, hook pasca-set.
+[x] untracked  --  packages/core/primitives/signals/src/untracked.ts:15
+      Jalankan fungsi dengan activeConsumer=null sehingga pembacaan tidak terlacak.
+[x] createWatch  --  packages/core/primitives/signals/src/watch.ts:65
+      Membangun consumer selalu-live dengan siklus hidup notify/run/cleanup/destroy; run melewati eksekusi jika polling menyatakan tidak ada perubahan.
+[x] isWatchNodeDestroyed  --  packages/core/primitives/signals/src/watch.ts:82
+      Node dianggap mati jika fn dan schedule sudah di-null-kan.
+[x] destroyWatchNode  --  packages/core/primitives/signals/src/watch.ts:86
+      Putuskan dari graf, jalankan cleanup terakhir, null-kan referensi (idempoten).
+[x] WATCH_NODE  --  packages/core/primitives/signals/src/watch.ts:143
+      Prototipe watch: consumerIsAlwaysLive, consumerMarkedDirty meneruskan ke scheduler pengguna.
+[x] setAlternateWeakRefImpl  --  packages/core/primitives/signals/src/weak_ref.ts:9
+      Stub kosong bersisa TODO penghapusan; tidak lagi berefek.
+
+### 02-core-dependency-injection
+[x] defineInjectable  --  packages/core/primitives/di/src/injection_token.ts:70
+      Membuat struktur ɵprov (token, providedIn, factory) untuk provider tree-shakable.
+[x] registerInjectable  --  packages/core/primitives/di/src/injection_token.ts:85
+      Menempelkan ɵprov ke tipe/token.
+[x] getCurrentInjector  --  packages/core/primitives/di/src/injector.ts:24
+      Membaca injector aktif dari variabel modul (dasar konteks injeksi).
+[x] setCurrentInjector  --  packages/core/primitives/di/src/injector.ts:28
+      Memasang injector aktif, mengembalikan yang lama (pola save/restore).
+[x] inject  --  packages/core/primitives/di/src/injector.ts:36
+      Deklarasi overload inject versi primitives.
+[x] inject  --  packages/core/primitives/di/src/injector.ts:37
+      Implementasi primitives: retrieve token dari injector aktif, hormati opsi optional.
+[x] NotFoundError  --  packages/core/primitives/di/src/not_found.ts:19
+      Error khusus "token tidak ditemukan" yang bisa dibedakan dari error lain.
+[x] isNotFound  --  packages/core/primitives/di/src/not_found.ts:29
+      Type guard NotFound; dipakai agar error not-found tidak tertukar dengan error factory.
+[x] isType  --  packages/core/primitives/di/src/type.ts:21
+      Cek nilai berupa fungsi konstruktor.
+[x] runInInjectionContext  --  packages/core/src/di/contextual.ts:37
+      Menjalankan fungsi dalam konteks injector tertentu; membungkus injector non-R3 dengan RetrievingInjector.
+[x] isInInjectionContext  --  packages/core/src/di/contextual.ts:64
+      True bila ada implementasi inject atau injector aktif.
+[x] assertInInjectionContext  --  packages/core/src/di/contextual.ts:77
+      Guard untuk API seperti effect()/toSignal(); menerima Function agar nama tidak tertahan di bundle.
+[x] createInjector  --  packages/core/src/di/create_injector.ts:21
+      Membuat R3Injector lalu langsung menjalankan ENVIRONMENT_INITIALIZER.
+[x] createInjectorWithoutInjectorInstances  --  packages/core/src/di/create_injector.ts:42
+      Varian yang menunda inisialisasi untuk menghindari loop saat bootstrap.
+[x] forwardRef  --  packages/core/src/di/forward_ref.ts:69
+      Menandai fungsi sebagai referensi tertunda untuk memecah siklus deklarasi.
+[x] resolveForwardRef  --  packages/core/src/di/forward_ref.ts:93
+      Membuka forward ref bila ada, selain itu identity.
+[x] isForwardRef  --  packages/core/src/di/forward_ref.ts:98
+      Deteksi penanda __forward_ref__ yang closure-safe.
+[x] getInjectImplementation  --  packages/core/src/di/inject_switch.ts:28
+      Membaca implementasi inject aktif (undefined = hanya module injector).
+[x] setInjectImplementation  --  packages/core/src/di/inject_switch.ts:35
+      Menukar implementasi inject (dipakai render3 untuk mengaktifkan directiveInject).
+[x] injectRootLimpMode  --  packages/core/src/di/inject_switch.ts:50
+      Limp mode: instansiasi provider providedIn:'root' tanpa injector, nilai di-cache di ɵprov.
+[x] assertInjectImplementationNotEqual  --  packages/core/src/di/inject_switch.ts:76
+      Guard dev-mode pencegah rekursi tak hingga saat menukar implementasi.
+[x] RetrievingInjector.retrieve  --  packages/core/src/di/injector_compatibility.ts:51
+      Adapter Injector lama ke antarmuka primitives; mengubah error NotFound menjadi nilai balik.
+[x] injectInjectorOnly  --  packages/core/src/di/injector_compatibility.ts:93
+      Jalur "hanya EnvironmentInjector": lempar NG0203 jika di luar konteks injeksi, limp mode jika injector null.
+[x] inject  --  packages/core/src/di/injector_compatibility.ts:293
+      API publik inject(): konversi InjectOptions ke bit flags lalu delegasi ke ɵɵinject.
+[x] convertToBitFlags  --  packages/core/src/di/injector_compatibility.ts:300
+      Konversi hemat-ukuran dari objek opsi ke bitmask (memanfaatkan OR dengan falsy).
+[x] convertToInjectOptions  --  packages/core/src/di/injector_compatibility.ts:318
+      Konversi balik bitmask ke objek opsi untuk API primitives.
+[x] injectArgs  --  packages/core/src/di/injector_compatibility.ts:327
+      Resolusi array `deps` provider, termasuk bentuk bersarang [new Optional(), Token].
+[x] attachInjectFlag  --  packages/core/src/di/injector_compatibility.ts:374
+      Menempelkan flag DI ke dekorator (static + prototype) agar tree-shakable tanpa referensi langsung.
+[x] getInjectFlag  --  packages/core/src/di/injector_compatibility.ts:385
+      Membaca flag yang ditempel di atas.
+[x] getInjectableDef  --  packages/core/src/di/interface/defs.ts:207
+      Membaca ɵprov milik token (tanpa warisan).
+[x] isInjectable  --  packages/core/src/di/interface/defs.ts:211
+      Cek keberadaan ɵprov.
+[x] getOwnDefinition  --  packages/core/src/di/interface/defs.ts:219
+      Memastikan definisi milik tipe itu sendiri, bukan warisan prototipe.
+[x] getInheritedInjectableDef  --  packages/core/src/di/interface/defs.ts:232
+      Menaiki rantai prototipe mencari ɵprov leluhur; memperingatkan pemakaian yang salah di dev mode.
+[x] getInjectorDef  --  packages/core/src/di/interface/defs.ts:253
+      Membaca ɵinj (definisi injector NgModule).
+[x] isEnvironmentProviders  --  packages/core/src/di/interface/provider.ts:375
+      Deteksi pembungkus EnvironmentProviders.
+[x] compileInjectable  --  packages/core/src/di/jit/injectable.ts:34
+      Jalur JIT: menyusun ɵprov dan ɵfac dari metadata @Injectable saat runtime.
+[x] getInjectableMetadata  --  packages/core/src/di/jit/injectable.ts:108
+      Menerjemahkan opsi @Injectable ke metadata compiler (useClass/useValue/useFactory/useExisting).
+[x] compileService  --  packages/core/src/di/jit/service.ts:25
+      Titik masuk kompilasi JIT untuk service.
+[x] makeEnvironmentProviders  --  packages/core/src/di/provider_collection.ts:46
+      Membungkus provider agar hanya sah dipakai di level environment (mis. provideRouter).
+[x] provideEnvironmentInitializer  --  packages/core/src/di/provider_collection.ts:81
+      Gula sintaks multi-provider ENVIRONMENT_INITIALIZER.
+[x] importProvidersFrom  --  packages/core/src/di/provider_collection.ts:144
+      API publik untuk mengambil provider dari NgModule ke dalam konfigurasi standalone.
+[x] internalImportProvidersFrom  --  packages/core/src/di/provider_collection.ts:151
+      Versi internal dengan opsi validasi.
+[x] processInjectorTypesWithProviders  --  packages/core/src/di/provider_collection.ts:195
+      Menangani bentuk {ngModule, providers} pada imports.
+[x] walkProviderTree  --  packages/core/src/di/provider_collection.ts:232
+      Menelusuri NgModule imports dan dependensi komponen standalone dengan dedup + deteksi siklus.
+[x] validateProvider  --  packages/core/src/di/provider_collection.ts:365
+      Validasi bentuk provider di dev mode.
+[x] deepForEachProvider  --  packages/core/src/di/provider_collection.ts:388
+      Iterasi rekursif array provider bersarang.
+[x] isValueProvider  --  packages/core/src/di/provider_collection.ts:409
+      Diskriminator bentuk provider useValue.
+[x] isExistingProvider  --  packages/core/src/di/provider_collection.ts:413
+      Diskriminator useExisting (alias token).
+[x] isFactoryProvider  --  packages/core/src/di/provider_collection.ts:417
+      Diskriminator useFactory.
+[x] isTypeProvider  --  packages/core/src/di/provider_collection.ts:421
+      Provider berupa kelas telanjang.
+[x] isClassProvider  --  packages/core/src/di/provider_collection.ts:425
+      Diskriminator useClass.
+[x] getNullInjector  --  packages/core/src/di/r3_injector.ts:105
+      NullInjector singleton lazy sebagai ujung rantai pencarian.
+[x] R3Injector.constructor  --  packages/core/src/di/r3_injector.ts:216
+      Memproses semua provider menjadi record, mendaftarkan token INJECTOR/EnvironmentInjector, menentukan scope.
+[x] R3Injector.retrieve  --  packages/core/src/di/r3_injector.ts:246
+      Adapter ke antarmuka primitives; NotFound dikembalikan sebagai nilai, bukan dilempar.
+[x] R3Injector.destroy  --  packages/core/src/di/r3_injector.ts:270
+      Menjalankan ngOnDestroy semua instance + hook onDestroy, lalu melepas seluruh referensi.
+[x] R3Injector.onDestroy  --  packages/core/src/di/r3_injector.ts:297
+      Mendaftarkan callback destroy dan mengembalikan fungsi pembatalan.
+[x] R3Injector.runInContext  --  packages/core/src/di/r3_injector.ts:303
+      Versi lama runInInjectionContext yang terikat pada injector ini.
+[x] R3Injector.get  --  packages/core/src/di/r3_injector.ts:323
+      Inti resolusi: hormati SkipSelf/Self/Optional, cari record, fallback ke providedIn scope, lalu delegasi ke parent; menyusun jalur error DI.
+[x] R3Injector.resolveInjectorInitializers  --  packages/core/src/di/r3_injector.ts:426
+      Menjalankan multi-provider ENVIRONMENT_INITIALIZER dalam konteks injector ini.
+[x] R3Injector.toString  --  packages/core/src/di/r3_injector.ts:457
+      Debug: daftar token (hanya dev mode).
+[x] R3Injector.processProvider  --  packages/core/src/di/r3_injector.ts:473
+      Mengubah satu provider jadi record; menangani multi-provider dan melarang campuran multi/non-multi.
+[x] R3Injector.hydrate  --  packages/core/src/di/r3_injector.ts:524
+      Instansiasi malas dengan penanda CIRCULAR, pendaftaran ngOnDestroy, dan setActiveConsumer(null).
+[x] R3Injector.injectableDefInScope  --  packages/core/src/di/r3_injector.ts:551
+      Mencocokkan providedIn dengan scope injector atau daftar tipe injector.
+[x] R3Injector.removeOnDestroy  --  packages/core/src/di/r3_injector.ts:563
+      Melepas satu callback destroy.
+[x] injectableDefOrInjectorDefFactory  --  packages/core/src/di/r3_injector.ts:571
+      Menentukan factory dari ɵprov/ɵfac; error jelas untuk token tanpa definisi.
+[x] getUndecoratedInjectableFactory  --  packages/core/src/di/r3_injector.ts:598
+      Menangani kelas tanpa dekorator: pakai factory warisan atau konstruktor tanpa argumen.
+[x] providerToRecord  --  packages/core/src/di/r3_injector.ts:624
+      ValueProvider langsung berisi nilai; sisanya menyimpan factory dengan penanda NOT_YET.
+[x] providerToFactory  --  packages/core/src/di/r3_injector.ts:639
+      Peta bentuk provider (useValue/useFactory/useExisting/useClass/Type) ke fungsi pembuat instance.
+[x] assertNotDestroyed  --  packages/core/src/di/r3_injector.ts:683
+      Guard pemakaian injector setelah destroy.
+[x] makeRecord  --  packages/core/src/di/r3_injector.ts:692
+      Konstruktor record internal (factory, value, slot multi).
+[x] hasDeps  --  packages/core/src/di/r3_injector.ts:704
+      Cek provider punya array deps eksplisit.
+[x] hasOnDestroy  --  packages/core/src/di/r3_injector.ts:710
+      Deteksi instance dengan ngOnDestroy untuk didaftarkan ke hook destroy.
+[x] couldBeInjectableType  --  packages/core/src/di/r3_injector.ts:718
+      Filter cepat sebelum membaca ɵprov (fungsi atau InjectionToken).
+[x] forEachSingleProvider  --  packages/core/src/di/r3_injector.ts:725
+      Meratakan array bersarang dan EnvironmentProviders menjadi provider tunggal.
+[x] setIncludeViewProviders  --  packages/core/src/render3/di.ts:117
+      Menyalakan/mematikan visibilitas viewProviders selama satu resolusi.
+[x] bloomAdd  --  packages/core/src/render3/di.ts:152
+      Menyalakan bit token pada bloom filter node (ID unik per tipe, mask 256 bit, bucket 32 bit).
+[x] getOrCreateNodeInjectorForNode  --  packages/core/src/render3/di.ts:193
+      Mengalokasikan 9 slot injector di LView/TView dan membangun bloom kumulatif dari leluhur.
+[x] insertBloom  --  packages/core/src/render3/di.ts:230
+      Menambahkan 8 slot bloom + 1 slot footer ke array.
+[x] getInjectorIndex  --  packages/core/src/render3/di.ts:234
+      Mengembalikan indeks injector node ini, -1 bila sebenarnya milik parent atau belum siap.
+[x] getParentInjectorLocation  --  packages/core/src/render3/di.ts:258
+      Menghitung lokasi injector induk terkemas (indeks + jumlah view yang dinaiki lewat DECLARATION_VIEW).
+[x] diPublicInInjector  --  packages/core/src/render3/di.ts:304
+      Mempublikasikan token directive ke bloom filter node.
+[x] injectAttributeImpl  --  packages/core/src/render3/di.ts:343
+      Implementasi @Attribute: membaca atribut statis dari array tNode.attrs dengan penanda AttributeMarker.
+[x] notFoundValueOrThrow  --  packages/core/src/render3/di.ts:386
+      Menghormati Optional/notFoundValue atau melempar NG0201.
+[x] lookupTokenUsingModuleInjector  --  packages/core/src/render3/di.ts:407
+      Fallback ke EnvironmentInjector; mematikan directiveInject agar module injector tidak melihat scope directive.
+[x] getOrCreateInjectable  --  packages/core/src/render3/di.ts:457
+      Orkestrator pencarian: embedded view injector -> node injector -> module injector.
+[x] lookupTokenUsingNodeInjector  --  packages/core/src/render3/di.ts:506
+      Penelusuran pohon node injector berbasis bloom, termasuk penanganan token khusus berbasis factory.
+[x] searchTokensOnInjector  --  packages/core/src/render3/di.ts:627
+      Menentukan hak akses viewProviders dan kasus khusus @Host sebelum mencari token nyata.
+[x] locateDirectiveOrProvider  --  packages/core/src/render3/di.ts:685
+      Pemindaian linear rentang provider/directive pada TNode untuk memverifikasi kandidat bloom.
+[x] getNodeInjectable  --  packages/core/src/render3/di.ts:735
+      Instansiasi malas isi slot LView; deteksi siklus via flag resolving, daftarkan pre-order hooks untuk directive.
+[x] bloomHashBitOrFactory  --  packages/core/src/render3/di.ts:825
+      Memetakan token ke bit bloom, atau ke factory untuk token khusus (Injector, ElementRef, TemplateRef).
+[x] bloomHasToken  --  packages/core/src/render3/di.ts:849
+      Uji satu bit bloom (false = pasti tidak ada; true = mungkin ada).
+[x] shouldSearchParent  --  packages/core/src/render3/di.ts:870
+      Menerjemahkan flag Self/Host menjadi keputusan lanjut/berhenti menaiki pohon.
+[x] getNodeInjectorLView  --  packages/core/src/render3/di.ts:879
+      Akses internal ke LView milik NodeInjector (dipakai DevTools/testing).
+[x] getNodeInjectorTNode  --  packages/core/src/render3/di.ts:883
+      Akses internal ke TNode milik NodeInjector.
+[x] NodeInjector.get  --  packages/core/src/render3/di.ts:899
+      Antarmuka Injector publik di atas getOrCreateInjectable.
+[x] createNodeInjector  --  packages/core/src/render3/di.ts:911
+      Membuat NodeInjector untuk node yang sedang diproses (token khusus `Injector`).
+[x] ɵɵgetInheritedFactory  --  packages/core/src/render3/di.ts:918
+      Menaiki rantai prototipe mencari ɵfac induk; dibungkus noSideEffects demi tree-shaking.
+[x] getFactoryOf  --  packages/core/src/render3/di.ts:951
+      Membaca ɵfac sebuah tipe, transparan terhadap forwardRef.
+[x] lookupTokenUsingEmbeddedInjector  --  packages/core/src/render3/di.ts:971
+      Menelusuri injector embedded view node-demi-node (tidak punya bloom filter) dengan flag Self.
+[x] getTNodeFromLView  --  packages/core/src/render3/di.ts:1044
+      Mengambil TNode induk sesuai tipe view (Embedded pakai declTNode, Component pakai T_HOST).
+
+### 03-core-change-detection
+[x] publishDefaultGlobalUtils  --  packages/core/src/application/application_ref.ts:66
+      Memasang ng.* debug API ke global saat dev mode.
+[x] publishSignalConfiguration  --  packages/core/src/application/application_ref.ts:73
+      Menyambungkan hook signal (pesan error tulis-ilegal, formatter DevTools) ke primitives.
+[x] optionsReducer  --  packages/core/src/application/application_ref.ts:155
+      Menggabungkan opsi bootstrap bertingkat menjadi satu objek.
+[x] ApplicationRef.whenStable  --  packages/core/src/application/application_ref.ts:338
+      Promise yang selesai saat tidak ada pending task (dipakai SSR dan testing).
+[x] ApplicationRef.bootstrap  --  packages/core/src/application/application_ref.ts:448
+      API publik bootstrap komponen root.
+[x] ApplicationRef.bootstrapImpl  --  packages/core/src/application/application_ref.ts:452
+      Validasi APP_INITIALIZER selesai, buat ComponentFactory, pasang testability, daftarkan onDestroy.
+[x] ApplicationRef.tick  --  packages/core/src/application/application_ref.ts:533
+      API publik; menyalakan ViewTreeGlobal pada aplikasi berbasis zone lalu memanggil _tick.
+[x] ApplicationRef._tick  --  packages/core/src/application/application_ref.ts:541
+      Membungkus tickImpl dengan snapshot tracing bila ada.
+[x] ApplicationRef.synchronize  --  packages/core/src/application/application_ref.ts:588
+      Loop sinkronisasi sampai dirtyFlags kosong, maksimum 10 putaran.
+[x] ApplicationRef.synchronizeOnce  --  packages/core/src/application/application_ref.ts:617
+      Satu putaran: root effects -> view tree -> afterRender hooks, dengan early return bila masih kotor.
+[x] ApplicationRef.syncDirtyFlagsWithViews  --  packages/core/src/application/application_ref.ts:704
+      Menyelaraskan dirtyFlags dengan kondisi nyata view (menangani view yang terlepas).
+[x] ApplicationRef.attachView  --  packages/core/src/application/application_ref.ts:721
+      Menambahkan ViewRef ke daftar view yang dicek.
+[x] ApplicationRef.detachView  --  packages/core/src/application/application_ref.ts:731
+      Melepas view dari pengecekan.
+[x] ApplicationRef._loadComponent  --  packages/core/src/application/application_ref.ts:738
+      Attach view, tick pertama, lalu jalankan APP_BOOTSTRAP_LISTENER.
+[x] ApplicationRef.ngOnDestroy  --  packages/core/src/application/application_ref.ts:761
+      Menjalankan destroy listener dan menghancurkan semua view.
+[x] ApplicationRef.onDestroy  --  packages/core/src/application/application_ref.ts:786
+      Mendaftarkan listener destroy, mengembalikan fungsi pembatal.
+[x] ApplicationRef.destroy  --  packages/core/src/application/application_ref.ts:797
+      Menghancurkan aplikasi beserta environment injector-nya.
+[x] normalizeBootstrapOptions  --  packages/core/src/application/application_ref.ts:823
+      Menormalkan argumen bootstrap (Element/selector/objek opsi dengan directives & bindings).
+[x] warnIfDestroyed  --  packages/core/src/application/application_ref.ts:849
+      Peringatan dev saat memakai ApplicationRef yang sudah dihancurkan.
+[x] remove  --  packages/core/src/application/application_ref.ts:860
+      Utilitas hapus elemen dari array berdasarkan indexOf.
+[x] trackMicrotaskNotificationForDebugging  --  packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts:40
+      Mendeteksi loop notifikasi microtask beruntun dan mencetak stack untuk diagnosis.
+[x] ChangeDetectionSchedulerImpl.switchToMicrotaskScheduler  --  packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts:127
+      Beralih sementara ke microtask agar perubahan berbasis Promise masuk paint yang sama.
+[x] ChangeDetectionSchedulerImpl.notify  --  packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts:138
+      Memetakan NotificationSource ke dirtyFlags dan menjadwalkan tick (rAF-race atau microtask).
+[x] ChangeDetectionSchedulerImpl.shouldScheduleTick  --  packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts:227
+      Menolak penjadwalan ganda, aplikasi yang sudah dihancurkan, dan konteks di dalam Angular zone.
+[x] ChangeDetectionSchedulerImpl.tick  --  packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts:257
+      Menjalankan ApplicationRef._tick di dalam NgZone dengan penjagaan re-entrancy dan penanganan error.
+[x] ChangeDetectionSchedulerImpl.ngOnDestroy  --  packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts:307
+      Melepas langganan dan membersihkan jadwal.
+[x] ChangeDetectionSchedulerImpl.cleanup  --  packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts:312
+      Membatalkan callback terjadwal dan melepas pending task.
+[x] provideZonelessChangeDetection  --  packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts:369
+      Provider publik mode zoneless (NoopNgZone + scheduler selalu aktif).
+[x] provideZonelessChangeDetectionInternal  --  packages/core/src/change_detection/scheduling/zoneless_scheduling_impl.ts:390
+      Daftar provider internal yang dipakai juga oleh jalur bootstrap lain.
+[x] detectChangesInternal  --  packages/core/src/render3/instructions/change_detection.ts:80
+      Titik masuk CD satu pohon view; membuka/menutup rendererFactory kecuali dalam checkNoChanges.
+[x] detectChangesInViewWhileDirty  --  packages/core/src/render3/instructions/change_detection.ts:102
+      Loop ulang mode Targeted selama view masih minta refresh, dengan batas 100 percobaan.
+[x] checkNoChangesInternal  --  packages/core/src/render3/instructions/change_detection.ts:141
+      Pass verifikasi dev-mode (OnlyDirtyViews atau Exhaustive) tanpa efek samping.
+[x] refreshView  --  packages/core/src/render3/instructions/change_detection.ts:180
+      Prosedur inti update satu view: template, hooks, queries, host bindings, anak, effects - dengan urutan yang sangat dijaga.
+[x] detectChangesInEmbeddedViews  --  packages/core/src/render3/instructions/change_detection.ts:379
+      Iterasi seluruh LContainer dan view di dalamnya.
+[x] markTransplantedViewsForRefresh  --  packages/core/src/render3/instructions/change_detection.ts:397
+      Menandai view yang dideklarasikan di sini tapi disisipkan di tempat lain agar disegarkan di titik sisipnya.
+[x] detectChangesInComponent  --  packages/core/src/render3/instructions/change_detection.ts:420
+      Masuk ke view komponen anak dengan penanda profiler.
+[x] detectChangesInViewIfAttached  --  packages/core/src/render3/instructions/change_detection.ts:441
+      Lewati view yang sudah dilepas dari pohon CD.
+[x] detectChangesInView  --  packages/core/src/render3/instructions/change_detection.ts:458
+      Keputusan refresh vs sekadar telusuri; membersihkan flag sebelum refresh agar re-dirty tertangkap.
+[x] detectChangesInChildComponents  --  packages/core/src/render3/instructions/change_detection.ts:520
+      Iterasi indeks komponen anak dari TView.components.
+[x] processHostBindingOpCodes  --  packages/core/src/render3/instructions/change_detection.ts:539
+      Interpreter opcode host binding (angka negatif = indeks elemen, positif = tuple directive).
+[x] markViewDirty  --  packages/core/src/render3/instructions/mark_view_dirty.ts:26
+      Menandai view + seluruh leluhur; memilih bit Dirty vs Dirty|RefreshView tergantung apakah CD sedang berjalan.
+[x] getOrBorrowReactiveLViewConsumer  --  packages/core/src/render3/reactive_lview_consumer.ts:24
+      Ambil consumer template milik LView atau pinjam dari pool.
+[x] borrowReactiveLViewConsumer  --  packages/core/src/render3/reactive_lview_consumer.ts:28
+      Pop dari freeConsumers atau buat baru dari prototipe.
+[x] maybeReturnReactiveLViewConsumer  --  packages/core/src/render3/reactive_lview_consumer.ts:34
+      Kembalikan ke pool hanya jika consumer tidak jadi dipakai (tidak ada signal yang dibaca).
+[x] getOrCreateTemporaryConsumer  --  packages/core/src/render3/reactive_lview_consumer.ts:67
+      Consumer sementara untuk embedded view yang di-detectChanges langsung.
+[x] viewShouldHaveReactiveConsumer  --  packages/core/src/render3/reactive_lview_consumer.ts:109
+      Aturan granularitas: semua kecuali embedded view punya consumer sendiri.
+[x] isReactiveLViewConsumer  --  packages/core/src/render3/reactive_lview_consumer.ts:113
+      Diskriminator berdasarkan kind 'template'.
+[x] markViewForRefresh  --  packages/core/src/render3/util/view_utils.ts:208
+      Set RefreshView lalu tandai jalur leluhur (idempoten).
+[x] walkUpViews  --  packages/core/src/render3/util/view_utils.ts:223
+      Menaiki DECLARATION_VIEW n tingkat (dipakai instruksi lintas-view).
+[x] requiresRefreshOrTraversal  --  packages/core/src/render3/util/view_utils.ts:236
+      Predikat: punya RefreshView/HasChildViewsToRefresh atau consumer template kotor.
+[x] updateAncestorTraversalFlagsOnAttach  --  packages/core/src/render3/util/view_utils.ts:247
+      Menyegarkan flag jalur saat sebuah view dipasang kembali.
+[x] markAncestorsForTraversal  --  packages/core/src/render3/util/view_utils.ts:264
+      Menyalakan HasChildViewsToRefresh ke atas dan berhenti di leluhur yang sudah bertanda.
+[x] storeLViewOnDestroy  --  packages/core/src/render3/util/view_utils.ts:285
+      Mendaftarkan callback destroy pada LView.
+[x] removeLViewOnDestroy  --  packages/core/src/render3/util/view_utils.ts:301
+      Melepas callback destroy.
+
+### 04-core-render3-runtime
+[x] updateBinding  --  packages/core/src/render3/bindings.ts:19
+      Menyimpan nilai binding ke slot LView.
+[x] getBinding  --  packages/core/src/render3/bindings.ts:24
+      Membaca nilai binding tersimpan.
+[x] bindingUpdated  --  packages/core/src/render3/bindings.ts:44
+      Primitif deteksi perubahan per-binding (Object.is), termasuk pelaporan ExpressionChanged di checkNoChanges.
+[x] bindingUpdated2  --  packages/core/src/render3/bindings.ts:88
+      Versi dua ekspresi untuk interpolasi.
+[x] bindingUpdated3  --  packages/core/src/render3/bindings.ts:94
+      Versi tiga ekspresi.
+[x] bindingUpdated4  --  packages/core/src/render3/bindings.ts:106
+      Versi empat ekspresi.
+[x] ɵɵadvance  --  packages/core/src/render3/instructions/advance.ts:43
+      Memajukan elemen terpilih sekaligus titik flush pre-order hooks.
+[x] selectIndexInternal  --  packages/core/src/render3/instructions/advance.ts:53
+      Menjalankan hook init/check yang tertunda lalu memasang selected index (urutan ini disengaja).
+[x] ɵɵconditionalCreate  --  packages/core/src/render3/instructions/control_flow.ts:74
+      Membuat container + template cabang utama pada fase creation.
+[x] ɵɵconditionalBranchCreate  --  packages/core/src/render3/instructions/control_flow.ts:122
+      Mendaftarkan template cabang tambahan (@else if/@else, @case).
+[x] ɵɵconditional  --  packages/core/src/render3/instructions/control_flow.ts:163
+      Implementasi @if/@switch: mengganti view cabang saat indeks cabang berubah.
+[x] RepeaterContext.$count  --  packages/core/src/render3/instructions/control_flow.ts:228
+      Variabel kontekstual $count untuk template @for.
+[x] ɵɵrepeaterTrackByIndex  --  packages/core/src/render3/instructions/control_flow.ts:240
+      Fungsi track bawaan berbasis indeks.
+[x] ɵɵrepeaterTrackByIdentity  --  packages/core/src/render3/instructions/control_flow.ts:252
+      Fungsi track bawaan berbasis identitas item.
+[x] ɵɵrepeaterCreate  --  packages/core/src/render3/instructions/control_flow.ts:290
+      Menyiapkan metadata @for: trackByFn, template item, template @empty.
+[x] isViewExpensiveToRecreate  --  packages/core/src/render3/instructions/control_flow.ts:357
+      Heuristik: apakah view berisi komponen/container sehingga pembuatan ulang mahal.
+[x] OperationsCounter.reset  --  packages/core/src/render3/instructions/control_flow.ts:366
+      Reset penghitung operasi tiap putaran rekonsiliasi.
+[x] OperationsCounter.recordCreate  --  packages/core/src/render3/instructions/control_flow.ts:371
+      Mencatat pembuatan view.
+[x] OperationsCounter.recordDestroy  --  packages/core/src/render3/instructions/control_flow.ts:375
+      Mencatat penghancuran view.
+[x] OperationsCounter.wasReCreated  --  packages/core/src/render3/instructions/control_flow.ts:386
+      Deteksi seluruh koleksi dibuat ulang (create==destroy==panjang koleksi).
+[x] LiveCollectionLContainerImpl.at  --  packages/core/src/render3/instructions/control_flow.ts:414
+      Membaca nilai item pada posisi tertentu dari LContainer.
+[x] LiveCollectionLContainerImpl.attach  --  packages/core/src/render3/instructions/control_flow.ts:417
+      Menyisipkan kembali view pada indeks tertentu.
+[x] LiveCollectionLContainerImpl.detach  --  packages/core/src/render3/instructions/control_flow.ts:428
+      Melepas view untuk dipindahkan.
+[x] LiveCollectionLContainerImpl.create  --  packages/core/src/render3/instructions/control_flow.ts:433
+      Membuat embedded view baru (memakai view dehidrasi bila ada).
+[x] LiveCollectionLContainerImpl.destroy  --  packages/core/src/render3/instructions/control_flow.ts:448
+      Menghancurkan view yang tidak lagi dipakai.
+[x] LiveCollectionLContainerImpl.updateValue  --  packages/core/src/render3/instructions/control_flow.ts:452
+      Memperbarui $implicit pada konteks item yang dipakai ulang.
+[x] LiveCollectionLContainerImpl.updateIndexes  --  packages/core/src/render3/instructions/control_flow.ts:461
+      Menyelaraskan variabel $index setelah pemindahan.
+[x] ɵɵrepeater  --  packages/core/src/render3/instructions/control_flow.ts:481
+      Menjalankan rekonsiliasi koleksi terhadap LContainer, memperbarui indeks, menangani blok @empty; berjalan di luar konteks reaktif.
+[x] getLContainer  --  packages/core/src/render3/instructions/control_flow.ts:571
+      Ambil LContainer pada slot tertentu dengan asersi.
+[x] getExistingLViewFromLContainer  --  packages/core/src/render3/instructions/control_flow.ts:621
+      Ambil LView anak dari container pada indeks tertentu.
+[x] getExistingTNode  --  packages/core/src/render3/instructions/control_flow.ts:628
+      Ambil TNode template yang sudah dibuat.
+[x] ɵɵelementStart  --  packages/core/src/render3/instructions/element.ts:88
+      Membuat TNode+elemen DOM, mencocokkan directive pada firstCreatePass, membungkus init komponen dengan tracing.
+[x] renderComponent  --  packages/core/src/render3/instructions/render.ts:32
+      Fase creation satu komponen anak: sinkronkan blueprint, ambil info hidrasi, jalankan renderView.
+[x] syncViewWithBlueprint  --  packages/core/src/render3/instructions/render.ts:80
+      Menambal LView yang dibuat sebelum blueprint bertambah (kasus dua komponen bersebelahan).
+[x] renderView  --  packages/core/src/render3/instructions/render.ts:93
+      Fase creation: view query create, template create, matikan firstCreatePass, query statis, render komponen anak; menandai incompleteFirstPass bila error.
+[x] renderChildComponents  --  packages/core/src/render3/instructions/render.ts:158
+      Iterasi indeks komponen anak pada fase creation.
+[x] executeTemplate  --  packages/core/src/render3/instructions/shared.ts:86
+      Membungkus pemanggilan fungsi template: atur selected index, tanda profiler, pulihkan indeks lama.
+[x] createDirectivesInstances  --  packages/core/src/render3/instructions/shared.ts:121
+      Instansiasi semua directive node lalu jalankan host bindings bila ada.
+[x] saveResolvedLocalsInData  --  packages/core/src/render3/instructions/shared.ts:132
+      Mengisi slot local ref (#ref) dengan elemen DOM atau instance directive.
+[x] locateHostElement  --  packages/core/src/render3/instructions/shared.ts:162
+      Menemukan elemen host saat bootstrap; mempertahankan isi untuk ShadowDom/hidrasi.
+[x] applyRootElementTransform  --  packages/core/src/render3/instructions/shared.ts:193
+      Indireksi tree-shakable ke transformasi root element.
+[x] applyRootElementTransformImpl  --  packages/core/src/render3/instructions/shared.ts:213
+      Memulihkan penanda text node sebelum hidrasi, atau mengosongkan root bila ngSkipHydration.
+[x] enableApplyRootElementTransformImpl  --  packages/core/src/render3/instructions/shared.ts:227
+      Mengaktifkan implementasi di atas saat hidrasi dinyalakan.
+[x] mapPropName  --  packages/core/src/render3/instructions/shared.ts:240
+      Peta nama atribut ke nama properti DOM (class->className dst); sengaja rantai if demi performa.
+[x] setPropertyAndInputs  --  packages/core/src/render3/instructions/shared.ts:250
+      Jalur utama [prop]: tulis ke input directive bila ada, selain itu ke properti DOM.
+[x] setDomProperty  --  packages/core/src/render3/instructions/shared.ts:285
+      Menulis properti DOM dengan sanitasi dan validasi nama properti (schema).
+[x] markDirtyIfOnPush  --  packages/core/src/render3/instructions/shared.ts:319
+      Menandai komponen anak OnPush kotor saat input berubah.
+[x] setNgReflectProperty  --  packages/core/src/render3/instructions/shared.ts:327
+      Menulis atribut ng-reflect-* untuk debugging.
+[x] setNgReflectProperties  --  packages/core/src/render3/instructions/shared.ts:350
+      Versi jamak untuk seluruh input yang cocok.
+[x] instantiateAllDirectives  --  packages/core/src/render3/instructions/shared.ts:386
+      Membuat instance seluruh directive node lewat NodeInjector, termasuk komponen host.
+[x] invokeDirectivesHostBindings  --  packages/core/src/render3/instructions/shared.ts:422
+      Menjalankan hostBindings semua directive pada fase creation.
+[x] invokeHostBindingsInCreationMode  --  packages/core/src/render3/instructions/shared.ts:449
+      Memanggil satu hostBindings dengan RenderFlags.Create.
+[x] findDirectiveDefMatches  --  packages/core/src/render3/instructions/shared.ts:459
+      Pencocokan selector directive terhadap TNode memakai registry TView.
+[x] elementAttributeInternal  --  packages/core/src/render3/instructions/shared.ts:499
+      Set/hapus atribut dengan sanitasi dan dukungan namespace.
+[x] setElementAttribute  --  packages/core/src/render3/instructions/shared.ts:521
+      Pemanggilan renderer setAttribute/removeAttribute tingkat rendah.
+[x] setInputsFromAttrs  --  packages/core/src/render3/instructions/shared.ts:553
+      Mengisi input directive dari atribut statis saat pembuatan.
+[x] elementLikeStartShared  --  packages/core/src/render3/instructions/shared.ts:577
+      Logika bersama pembuatan elemen/ng-container: TNode, DOM node, directive, local refs.
+[x] elementLikeEndShared  --  packages/core/src/render3/instructions/shared.ts:622
+      Penutup: kembalikan currentTNode ke induk, jalankan content queries, tangani skip-hydration.
+[x] storePropertyBindingMetadata  --  packages/core/src/render3/instructions/shared.ts:661
+      Menyimpan metadata binding untuk DevTools/pesan error.
+[x] loadComponentRenderer  --  packages/core/src/render3/instructions/shared.ts:689
+      Memilih renderer sesuai encapsulation komponen.
+[x] handleUncaughtError  --  packages/core/src/render3/instructions/shared.ts:707
+      Meneruskan error runtime ke ErrorHandler aplikasi.
+[x] setAllInputsForProperty  --  packages/core/src/render3/instructions/shared.ts:730
+      Menulis satu nilai ke semua directive yang punya input dengan nama tersebut.
+[x] setDirectiveInput  --  packages/core/src/render3/instructions/shared.ts:774
+      Menulis satu input directive (signal input atau properti biasa) lalu menandai OnPush kotor.
+[x] createTView  --  packages/core/src/render3/view/construction.ts:67
+      Membuat cetak biru statis satu template (blueprint, data, registry, slot hook) dan menyegelnya di dev mode agar monomorfik.
+[x] createViewBlueprint  --  packages/core/src/render3/view/construction.ts:129
+      Menyusun array blueprint: header + slot decl + slot binding berisi NO_CHANGE.
+[x] getOrCreateComponentTView  --  packages/core/src/render3/view/construction.ts:146
+      Cache TView per definisi komponen (dibuat sekali per kelas komponen).
+[x] createLView  --  packages/core/src/render3/view/construction.ts:173
+      Instansiasi view: salin blueprint, set flag awal (CreationMode|Attached|Dirty|RefreshView), turunkan renderer/environment/injector dari induk, tentukan DECLARATION_COMPONENT_VIEW.
+[x] createComponentLView  --  packages/core/src/render3/view/construction.ts:226
+      Membuat view komponen anak beserta renderer khusus (encapsulation) dan menautkannya ke pohon view.
+[x] getInitialLViewFlagsFromDef  --  packages/core/src/render3/view/construction.ts:263
+      Menerjemahkan strategi komponen ke flag: signals -> SignalView, onPush -> Dirty, selain itu CheckAlways.
+[x] allocExpando  --  packages/core/src/render3/view/construction.ts:282
+      Menambah slot ke LView, blueprint, dan TView.data secara sinkron untuk node yang dibuat dinamis.
+[x] addToEndOfViewTree  --  packages/core/src/render3/view/construction.ts:320
+      Merangkai LView/LContainer anak sebagai linked list CHILD_HEAD/CHILD_TAIL/NEXT.
+
+### 05-core-signals-api-authoring
+[x] createInputSignal  --  packages/core/src/authoring/input/input_signal.ts:115
+      Membuat node input: transformFn selalu di-set demi monomorfisme, sentinel REQUIRED_UNSET_VALUE untuk input wajib.
+[x] inputValueFn  --  packages/core/src/authoring/input/input_signal.ts:127
+      Getter input: mendaftar sebagai producer dan melempar NG0950 bila input wajib belum terisi.
+[x] inputFunction  --  packages/core/src/authoring/input/input.ts:21
+      Implementasi input() opsional dengan nilai awal dan opsi.
+[x] inputRequiredFunction  --  packages/core/src/authoring/input/input.ts:29
+      Implementasi input.required() memakai sentinel nilai belum-terisi.
+[x] createModelSignal  --  packages/core/src/authoring/model/model_signal.ts:64
+      Menggabungkan InputSignalNode dengan OutputEmitterRef sehingga set/update sekaligus meng-emit perubahan (dasar two-way binding).
+[x] getter  --  packages/core/src/authoring/model/model_signal.ts:70
+      Getter model signal dengan asersi nilai wajib.
+[x] assertModelSet  --  packages/core/src/authoring/model/model_signal.ts:110
+      Melempar NG0952 bila model wajib dibaca sebelum terisi.
+[x] modelFunction  --  packages/core/src/authoring/model/model.ts:14
+      Implementasi model() dengan nilai awal.
+[x] modelRequiredFunction  --  packages/core/src/authoring/model/model.ts:23
+      Implementasi model.required().
+[x] OutputEmitterRef.constructor  --  packages/core/src/authoring/output/output_emitter_ref.ts:43
+      Mengaitkan diri ke DestroyRef konteks saat ini bila ada.
+[x] OutputEmitterRef.subscribe  --  packages/core/src/authoring/output/output_emitter_ref.ts:51
+      Mendaftarkan listener dan mengembalikan objek unsubscribe; menolak setelah destroy.
+[x] OutputEmitterRef.emit  --  packages/core/src/authoring/output/output_emitter_ref.ts:83
+      Memanggil seluruh listener; memperingatkan/menolak emit pada emitter yang sudah dihancurkan.
+[x] removeNullValues  --  packages/core/src/authoring/output/output_emitter_ref.ts:123
+      Memadatkan daftar listener setelah unsubscribe.
+[x] getOutputDestroyRef  --  packages/core/src/authoring/output/output_emitter_ref.ts:135
+      Mengambil DestroyRef milik sebuah OutputRef (dipakai interop RxJS).
+[x] output  --  packages/core/src/authoring/output/output.ts:69
+      API output(): membuat OutputEmitterRef terikat konteks injeksi saat ini.
+[x] viewChildFn  --  packages/core/src/authoring/queries.ts:18
+      Implementasi viewChild() opsional.
+[x] viewChildRequiredFn  --  packages/core/src/authoring/queries.ts:26
+      Implementasi viewChild.required().
+[x] viewChildren  --  packages/core/src/authoring/queries.ts:155
+      Implementasi viewChildren() dengan opsi read/descendants.
+[x] contentChildFn  --  packages/core/src/authoring/queries.ts:166
+      Implementasi contentChild() opsional.
+[x] contentChildRequiredFn  --  packages/core/src/authoring/queries.ts:178
+      Implementasi contentChild.required().
+[x] contentChildren  --  packages/core/src/authoring/queries.ts:322
+      Implementasi contentChildren() dengan opsi read/descendants.
+[x] createQuerySignalFn  --  packages/core/src/render3/queries/query_reactive.ts:43
+      Inti query berbasis signal: computed yang membaca dirty counter lalu menghitung ulang hasil query.
+[x] createSingleResultOptionalQuerySignalFn  --  packages/core/src/render3/queries/query_reactive.ts:81
+      Pabrik untuk viewChild/contentChild opsional.
+[x] createSingleResultRequiredQuerySignalFn  --  packages/core/src/render3/queries/query_reactive.ts:89
+      Pabrik varian required yang melempar bila hasil kosong.
+[x] createMultiResultQuerySignalFn  --  packages/core/src/render3/queries/query_reactive.ts:95
+      Pabrik untuk viewChildren/contentChildren (hasil array read-only).
+[x] bindQueryToSignal  --  packages/core/src/render3/queries/query_reactive.ts:103
+      Menautkan node signal query ke slot QueryList pada LView.
+[x] refreshSignalQuery  --  packages/core/src/render3/queries/query_reactive.ts:111
+      Menghitung hasil query terkini dan memakai _flatValue agar hasil identik tidak dianggap berubah.
+[x] assertNotInReactiveContext  --  packages/core/src/render3/reactivity/asserts.ts:22
+      Guard: melarang pemanggilan API tertentu (mis. effect) dari dalam konteks reaktif.
+[x] computed  --  packages/core/src/render3/reactivity/computed.ts:32
+      API publik computed(): createComputed + debugName + hook DevTools.
+[x] EffectRefImpl.constructor  --  packages/core/src/render3/reactivity/effect.ts:52
+      Menyimpan node di properti simbol SIGNAL.
+[x] EffectRefImpl.destroy  --  packages/core/src/render3/reactivity/effect.ts:56
+      Meneruskan destroy ke node effect.
+[x] effect  --  packages/core/src/render3/reactivity/effect.ts:137
+      Titik masuk publik: validasi konteks, pilih view effect vs root effect berdasarkan ViewContext, daftarkan cleanup ke DestroyRef.
+[x] EFFECT_NODE  --  packages/core/src/render3/reactivity/effect.ts:215
+      Prototipe effect bersama: run() mematikan isRefreshingViews agar markForCheck di dalam effect efektif; cleanup() menjalankan dan mengosongkan daftar cleanup.
+[x] ROOT_EFFECT_NODE  --  packages/core/src/render3/reactivity/effect.ts:254
+      Varian root: saat kotor menjadwal ke EffectScheduler dan memberi notifikasi RootEffect.
+[x] VIEW_EFFECT_NODE  --  packages/core/src/render3/reactivity/effect.ts:275
+      Varian view: saat kotor menandai view + leluhur untuk traversal; destroy melepas diri dari lView[EFFECTS].
+[x] createViewEffect  --  packages/core/src/render3/reactivity/effect.ts:297
+      Membuat node effect terikat LView, menyimpan zone pembuat, langsung menandai kotor agar berjalan pada CD berikutnya.
+[x] createRootEffect  --  packages/core/src/render3/reactivity/effect.ts:315
+      Membuat node effect independen dan mendaftarkannya ke scheduler global.
+[x] createEffectFn  --  packages/core/src/render3/reactivity/effect.ts:330
+      Membungkus fungsi pengguna dengan registrar onCleanup.
+[x] linkedSignal  --  packages/core/src/render3/reactivity/linked_signal.ts:55
+      API publik linkedSignal(): bentuk ringkas (source saja) maupun bentuk {source, computation}.
+[x] upgradeLinkedSignalGetter  --  packages/core/src/render3/reactivity/linked_signal.ts:92
+      Menambahkan set/update/asReadonly ke getter linkedSignal.
+[x] EffectScheduler.add  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:26
+      Kontrak abstrak pendaftaran effect.
+[x] EffectScheduler.schedule  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:33
+      Kontrak abstrak penjadwalan effect kotor.
+[x] EffectScheduler.flush  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:38
+      Kontrak abstrak eksekusi effect terjadwal.
+[x] EffectScheduler.remove  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:41
+      Kontrak abstrak pelepasan effect.
+[x] ZoneAwareEffectScheduler.add  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:59
+      Masukkan ke antrean zone lalu tandai perlu dijalankan.
+[x] ZoneAwareEffectScheduler.schedule  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:64
+      Menaikkan penghitung effect kotor (tanpa alokasi antrean baru).
+[x] ZoneAwareEffectScheduler.remove  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:71
+      Melepas effect dari antrean zone-nya dan menyesuaikan penghitung.
+[x] ZoneAwareEffectScheduler.enqueue  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:84
+      Menempatkan effect ke Set milik zone tempat ia dibuat.
+[x] ZoneAwareEffectScheduler.flush  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:103
+      Menjalankan seluruh antrean per zone sampai penghitung kotor habis, dengan pengaman anti-loop.
+[x] ZoneAwareEffectScheduler.flushQueue  --  packages/core/src/render3/reactivity/root_effect_scheduler.ts:123
+      Menjalankan satu antrean; melewati effect yang sudah bersih.
+[x] ɵunwrapWritableSignal  --  packages/core/src/render3/reactivity/signal.ts:47
+      Utilitas kompilasi untuk two-way binding: membuka signal writable menjadi nilainya.
+[x] signal  --  packages/core/src/render3/reactivity/signal.ts:72
+      API publik signal(): membungkus createSignal dan memasang set/update/asReadonly serta debugName.
+[x] signalAsReadonlyFn  --  packages/core/src/render3/reactivity/signal.ts:91
+      Menghasilkan tampilan read-only yang berbagi node yang sama (di-cache pada node).
+[x] untracked  --  packages/core/src/render3/reactivity/untracked.ts:16
+      Re-ekspor publik dari primitives untuk membaca signal tanpa melacak dependensi.
+[x] runEffectsInView  --  packages/core/src/render3/reactivity/view_effect_runner.ts:11
+      Flush berulang effect view sampai tidak ada lagi yang kotor, menghormati zone asal tiap effect.
+
+### 06-compiler-template-pipeline
+[x] tokenize  --  packages/compiler/src/ml_parser/lexer.ts:109
+      Lexer HTML: mengubah string template menjadi token, menangani interpolasi, blok (@if), dan ICU.
+[x] htmlAstToRender3Ast  --  packages/compiler/src/render3/r3_template_transform.ts:92
+      Titik masuk transformasi AST HTML menjadi AST R3 (t.Node) yang dipakai compiler dan type-checker.
+[x] HtmlAstToIvyAst.visitElement  --  packages/compiler/src/render3/r3_template_transform.ts:137
+      Mengelompokkan atribut menjadi input/output/reference/variable, membungkus elemen ber-*ngIf ke dalam template.
+[x] HtmlAstToIvyAst.visitAttribute  --  packages/compiler/src/render3/r3_template_transform.ts:291
+      Mengurai satu atribut menjadi bentuk terikat atau statis.
+[x] HtmlAstToIvyAst.visitText  --  packages/compiler/src/render3/r3_template_transform.ts:302
+      Teks statis atau teks dengan interpolasi.
+[x] HtmlAstToIvyAst.visitExpansion  --  packages/compiler/src/render3/r3_template_transform.ts:308
+      Menangani ekspansi ICU (plural/select) i18n.
+[x] HtmlAstToIvyAst.visitLetDeclaration  --  packages/compiler/src/render3/r3_template_transform.ts:365
+      Menangani deklarasi @let dalam template.
+[x] HtmlAstToIvyAst.visitBlock  --  packages/compiler/src/render3/r3_template_transform.ts:478
+      Menerjemahkan blok kontrol (@if/@for/@switch/@defer) beserta blok terhubungnya.
+[x] HtmlAstToIvyAst.findConnectedBlocks  --  packages/compiler/src/render3/r3_template_transform.ts:557
+      Menemukan @else/@empty/@placeholder yang mengikuti sebuah blok.
+[x] HtmlAstToIvyAst.categorizePropertyAttributes  --  packages/compiler/src/render3/r3_template_transform.ts:593
+      Memilah atribut menjadi properti, atribut biasa, dan animasi.
+[x] HtmlAstToIvyAst.parseAttribute  --  packages/compiler/src/render3/r3_template_transform.ts:723
+      Mengurai sintaks [x], (y), [(z)], #ref, *dir menjadi struktur AST.
+[x] HtmlAstToIvyAst.extractDirectives  --  packages/compiler/src/render3/r3_template_transform.ts:929
+      Mengumpulkan directive selectorless (@Directive pada tag komponen).
+[x] HtmlAstToIvyAst.wrapInTemplate  --  packages/compiler/src/render3/r3_template_transform.ts:1013
+      Membungkus elemen dengan template implisit untuk directive struktural.
+[x] HtmlAstToIvyAst.parseVariable  --  packages/compiler/src/render3/r3_template_transform.ts:1090
+      Mengurai deklarasi variabel template (let-x).
+[x] HtmlAstToIvyAst.parseReference  --  packages/compiler/src/render3/r3_template_transform.ts:1107
+      Mengurai referensi lokal #ref (opsional dengan target directive).
+[x] HtmlAstToIvyAst.parseAssignmentEvent  --  packages/compiler/src/render3/r3_template_transform.ts:1126
+      Menghasilkan listener xChange untuk two-way binding.
+[x] HtmlAstToIvyAst.reportError  --  packages/compiler/src/render3/r3_template_transform.ts:1171
+      Mengumpulkan ParseError dengan span sumber untuk pelaporan diagnostik.
+[x] baseDirectiveFields  --  packages/compiler/src/render3/view/compiler.ts:39
+      Bagian definisi yang sama untuk directive dan komponen (type, selectors, queries, hostBindings, inputs/outputs).
+[x] addFeatures  --  packages/compiler/src/render3/view/compiler.ts:108
+      Menambahkan feature runtime (Inherit, NgOnChanges, Providers, HostDirectives) ke definisi.
+[x] compileDirectiveFromMetadata  --  packages/compiler/src/render3/view/compiler.ts:160
+      Menyusun objek ɵdir dari metadata directive.
+[x] compileComponentFromMetadata  --  packages/compiler/src/render3/view/compiler.ts:178
+      Menyusun objek ɵcmp lengkap: definisi dasar, features, fungsi template, styles, dependensi, konfigurasi defer.
+[x] createComponentType  --  packages/compiler/src/render3/view/compiler.ts:335
+      Menghasilkan tipe deklarasi ɵcmp untuk berkas .d.ts.
+[x] createDirectiveType  --  packages/compiler/src/render3/view/compiler.ts:435
+      Menghasilkan tipe deklarasi ɵdir untuk berkas .d.ts.
+[x] createHostBindingsFunction  --  packages/compiler/src/render3/view/compiler.ts:452
+      Mengompilasi host bindings menjadi fungsi lewat pipeline job Host.
+[x] parseHostBindings  --  packages/compiler/src/render3/view/compiler.ts:521
+      Memilah objek host: {...} menjadi attributes, properties, dan listeners.
+[x] verifyHostBindings  --  packages/compiler/src/render3/view/compiler.ts:584
+      Memvalidasi ekspresi host binding dan mengembalikan diagnostik.
+[x] validateNoEventBindings  --  packages/compiler/src/render3/view/compiler.ts:605
+      Melarang binding event pada posisi yang tidak mendukungnya.
+[x] compileStyles  --  packages/compiler/src/render3/view/compiler.ts:628
+      Memroses styles komponen sesuai mode encapsulation.
+[x] encapsulateStyle  --  packages/compiler/src/render3/view/compiler.ts:644
+      Menerapkan shadow CSS (emulated encapsulation) pada satu style.
+[x] createHostDirectivesFeatureArg  --  packages/compiler/src/render3/view/compiler.ts:681
+      Menyusun argumen ɵɵHostDirectivesFeature termasuk pemetaan input/output.
+[x] createHostDirectivesMappingArray  --  packages/compiler/src/render3/view/compiler.ts:732
+      Meratakan pemetaan alias input/output host directive menjadi array.
+[x] compileDeferResolverFunction  --  packages/compiler/src/render3/view/compiler.ts:749
+      Menghasilkan fungsi resolver dependensi untuk blok @defer (dynamic import).
+[x] transform  --  packages/compiler/src/template/pipeline/src/emit.ts:189
+      Menjalankan seluruh 72 phase sesuai jenis job (template/host/keduanya).
+[x] emitTemplateFn  --  packages/compiler/src/template/pipeline/src/emit.ts:203
+      Menghasilkan fungsi template akhir untuk view root beserta seluruh view anak.
+[x] emitChildViews  --  packages/compiler/src/template/pipeline/src/emit.ts:209
+      Emisi view anak secara depth-first ke dalam ConstantPool.
+[x] emitView  --  packages/compiler/src/template/pipeline/src/emit.ts:227
+      Menyusun badan fungsi template dari operasi create/update; memastikan semua operasi sudah ter-reify.
+[x] maybeGenerateRfBlock  --  packages/compiler/src/template/pipeline/src/emit.ts:266
+      Membungkus statement dalam `if (rf & 1)` / `if (rf & 2)`.
+[x] emitHostBindingFunction  --  packages/compiler/src/template/pipeline/src/emit.ts:283
+      Menghasilkan fungsi hostBindings, atau null bila tidak ada operasi.
+[x] ingestComponent  --  packages/compiler/src/template/pipeline/src/ingest.ts:60
+      Membuat ComponentCompilationJob dan mengisi operasi IR dari AST R3.
+[x] ingestHostBinding  --  packages/compiler/src/template/pipeline/src/ingest.ts:104
+      Membuat job terpisah untuk host bindings sebuah directive.
+[x] calcHostBindingSecurityContexts  --  packages/compiler/src/template/pipeline/src/ingest.ts:151
+      Menentukan konteks keamanan (sanitasi) untuk properti host.
+[x] ingestDomProperty  --  packages/compiler/src/template/pipeline/src/ingest.ts:189
+      Menangani binding properti DOM pada host binding.
+[x] ingestHostAttribute  --  packages/compiler/src/template/pipeline/src/ingest.ts:223
+      Menangani atribut statis pada host binding.
+[x] ingestHostEvent  --  packages/compiler/src/template/pipeline/src/ingest.ts:247
+      Menangani listener pada host binding.
+[x] ingestNodes  --  packages/compiler/src/template/pipeline/src/ingest.ts:285
+      Dispatcher: memilih fungsi ingest sesuai jenis node AST.
+[x] ingestElement  --  packages/compiler/src/template/pipeline/src/ingest.ts:320
+      Menghasilkan operasi elementStart/elementEnd beserta binding dan referensi lokal.
+[x] ingestTemplate  --  packages/compiler/src/template/pipeline/src/ingest.ts:448
+      Membuat ViewCompilationUnit baru untuk embedded view.
+[x] ingestContent  --  packages/compiler/src/template/pipeline/src/ingest.ts:510
+      Menangani <ng-content> dan selektor proyeksi.
+[x] ingestText  --  packages/compiler/src/template/pipeline/src/ingest.ts:563
+      Teks statis menjadi operasi text.
+[x] ingestBoundText  --  packages/compiler/src/template/pipeline/src/ingest.ts:572
+      Teks terinterpolasi menjadi operasi text + update interpolate.
+[x] ingestIfBlock  --  packages/compiler/src/template/pipeline/src/ingest.ts:622
+      @if beserta cabang @else if/@else menjadi satu operasi conditional multi-cabang.
+[x] ingestSwitchBlock  --  packages/compiler/src/template/pipeline/src/ingest.ts:676
+      @switch/@case/@default menjadi conditional dengan ekspresi pembanding.
+[x] ingestDeferView  --  packages/compiler/src/template/pipeline/src/ingest.ts:739
+      Membuat view terpisah untuk tiap sub-blok @defer.
+[x] ingestDeferBlock  --  packages/compiler/src/template/pipeline/src/ingest.ts:768
+      @defer beserta blok @placeholder/@loading/@error dan konfigurasinya.
+[x] calcDeferBlockFlags  --  packages/compiler/src/template/pipeline/src/ingest.ts:884
+      Menghitung bendera blok defer (mis. hidrasi inkremental).
+[x] ingestDeferTriggers  --  packages/compiler/src/template/pipeline/src/ingest.ts:891
+      Menerjemahkan trigger (on idle/hover/viewport/interaction/timer, when) menjadi operasi.
+[x] ingestIcu  --  packages/compiler/src/template/pipeline/src/ingest.ts:1002
+      Menangani pesan ICU dalam blok i18n.
+[x] ingestForBlock  --  packages/compiler/src/template/pipeline/src/ingest.ts:1022
+      @for menjadi repeaterCreate + repeater, termasuk blok @empty dan variabel $index/$count dll.
+[x] getComputedForLoopVariableExpression  --  packages/compiler/src/template/pipeline/src/ingest.ts:1131
+      Menurunkan variabel kontekstual @for ($first/$last/$even/$odd) dari $index dan $count.
+[x] ingestLetDeclaration  --  packages/compiler/src/template/pipeline/src/ingest.ts:1162
+      @let menjadi operasi deklarasi variabel lokal.
+[x] convertAst  --  packages/compiler/src/template/pipeline/src/ingest.ts:1179
+      Penerjemah AST ekspresi Angular ke ekspresi IR (property read, call, pipe, safe navigation, dll).
+[x] convertTemplateLiteral  --  packages/compiler/src/template/pipeline/src/ingest.ts:1354
+      Menerjemahkan template literal dalam ekspresi template.
+[x] convertAstWithInterpolation  --  packages/compiler/src/template/pipeline/src/ingest.ts:1368
+      Menangani nilai yang bisa berupa interpolasi maupun ekspresi tunggal.
+[x] isPlainTemplate  --  packages/compiler/src/template/pipeline/src/ingest.ts:1417
+      Membedakan <ng-template> asli dari template hasil pembungkusan directive struktural.
+
+### 07-compiler-cli-ngtsc
+[x] ComponentDecoratorHandler.detect  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:344
+      Mengenali dekorator @Component pada sebuah kelas.
+[x] ComponentDecoratorHandler.preanalyze  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:363
+      Memuat templateUrl/styleUrls secara asinkron sebelum analisis.
+[x] ComponentDecoratorHandler.analyze  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:483
+      Ekstraksi metadata komponen: evaluasi objek dekorator, parse template, kumpulkan style, deteksi blok defer.
+[x] ComponentDecoratorHandler.register  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1088
+      Mendaftarkan metadata komponen ke registry (tahap berefek samping).
+[x] ComponentDecoratorHandler.index  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1132
+      Mengindeks penggunaan directive/pipe dalam template.
+[x] ComponentDecoratorHandler.typeCheck  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1197
+      Menyumbangkan Type Check Block template komponen.
+[x] ComponentDecoratorHandler.resolve  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1268
+      Menyelesaikan scope directive/pipe, dependensi defer, dan siklus impor.
+[x] ComponentDecoratorHandler.updateResources  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1440
+      Memuat ulang template/style saat resource berubah.
+[x] ComponentDecoratorHandler.compileFull  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1485
+      Menghasilkan ɵcmp lengkap lewat compileComponentFromMetadata.
+[x] ComponentDecoratorHandler.compilePartial  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1552
+      Menghasilkan ɵɵngDeclareComponent untuk distribusi pustaka.
+[x] ComponentDecoratorHandler.compileLocal  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1619
+      Kompilasi mode lokal tanpa informasi lintas-berkas.
+[x] ComponentDecoratorHandler.resolveComponentDependencies  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1737
+      Menentukan directive/pipe yang benar-benar dipakai template (basis tree-shaking dependensi).
+[x] ComponentDecoratorHandler.handleDependencyCycles  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1988
+      Menangani siklus impor dengan mengalihkan ke referensi tak-langsung.
+[x] ComponentDecoratorHandler.resolveDeferBlocks  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2361
+      Menentukan dependensi yang bisa di-defer beserta fungsi dynamic import-nya.
+[x] ComponentDecoratorHandler.registerDeferrableCandidate  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2471
+      Menandai impor yang memenuhi syarat untuk pemuatan tertunda.
+[x] ComponentDecoratorHandler.compileDeferBlocks  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2544
+      Menghasilkan kode konfigurasi blok @defer.
+[x] createMatcherFromScope  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2595
+      Membangun SelectorMatcher dari scope komponen untuk pencocokan directive di template.
+[x] removeDeferrableTypesFromComponentDecorator  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2630
+      Menghapus tipe yang di-defer dari dekorator agar tidak menjadi impor eager.
+[x] validateNoImportOverlap  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2648
+      Melarang simbol yang sama muncul di imports dan deferredImports.
+[x] validateStandaloneImports  --  packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2676
+      Memvalidasi bahwa `imports:` komponen standalone berisi hal yang sah.
+[x] freshCompilationTicket  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:222
+      Tiket kompilasi dari nol (tanpa state sebelumnya).
+[x] incrementalFromCompilerTicket  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:247
+      Tiket inkremental yang mewarisi state dari NgCompiler sebelumnya.
+[x] incrementalFromStateTicket  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:301
+      Tiket inkremental dari state yang diserialisasi (dipakai build system).
+[x] resourceChangeTicket  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:337
+      Jalur cepat ketika hanya template/style yang berubah.
+[x] NgCompiler.fromTicket  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:417
+      Pabrik NgCompiler sesuai jenis tiket.
+[x] NgCompiler.updateWithChangedResources  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:539
+      Memperbarui hasil kompilasi ketika hanya resource (HTML/CSS) berubah.
+[x] NgCompiler.getDiagnostics  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:591
+      Gabungan diagnostik non-template dan template untuk seluruh program.
+[x] NgCompiler.getDiagnosticsForFile  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:616
+      Diagnostik untuk satu berkas (dipakai language service).
+[x] NgCompiler.getDiagnosticsForComponent  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:644
+      Diagnostik untuk satu kelas komponen.
+[x] NgCompiler.getTemplateTypeChecker  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:717
+      Akses TemplateTypeChecker untuk language service.
+[x] NgCompiler.getComponentsWithTemplateFile  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:729
+      Peta balik dari berkas template ke komponen pemakainya.
+[x] NgCompiler.getComponentsWithStyleFile  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:737
+      Peta balik dari berkas style ke komponen pemakainya.
+[x] NgCompiler.getMeta  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:756
+      Metadata directive/pipe sebuah kelas (untuk tooling).
+[x] NgCompiler.analyzeAsync  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:778
+      Varian asinkron yang menunggu preanalyze (resource eksternal).
+[x] NgCompiler.prepareEmit  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:809
+      Menyiapkan transformer emit dan daftar berkas yang boleh dilewati.
+[x] NgCompiler.emitHmrUpdateModule  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:984
+      Menghasilkan modul pembaruan HMR untuk satu komponen.
+[x] NgCompiler.ensureAnalyzed  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1016
+      Memastikan analisis sudah berjalan sebelum operasi lain.
+[x] NgCompiler.analyzeSync  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1023
+      Analisis seluruh berkas sumber lalu resolve; diinstrumentasi PerfPhase.
+[x] NgCompiler.resolveCompilation  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1039
+      Menjalankan tahap resolve dan mencatat hasil analisis ke state inkremental.
+[x] NgCompiler.getTypeCheckingConfig  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1059
+      Menerjemahkan opsi strictness menjadi konfigurasi pembangkitan Type Check Block.
+[x] NgCompiler.getTemplateDiagnostics  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1202
+      Menjalankan TemplateTypeChecker untuk seluruh program.
+[x] NgCompiler.getTemplateDiagnosticsForFile  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1224
+      Versi per-berkas untuk pemeriksaan template.
+[x] NgCompiler.getNonTemplateDiagnostics  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1243
+      Diagnostik dari handler (metadata tidak valid, scope salah, dll).
+[x] NgCompiler.runAdditionalChecks  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1260
+      Menjalankan extended template checks (mis. pemakaian pipe/binding mencurigakan).
+[x] NgCompiler.makeCompilation  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1293
+      Merakit seluruh subsistem: mode kompilasi, reflector, ReferenceEmitter, evaluator, registry metadata, scope registry, daftar handler.
+[x] isAngularCorePackage  --  packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1724
+      Deteksi bahwa program yang dikompilasi adalah @angular/core itu sendiri.
+[x] NgtscProgram.constructor  --  packages/compiler-cli/src/ngtsc/program.ts:50
+      Membangun ts.Program + adapter + NgCompiler dari opsi dan daftar berkas.
+[x] NgtscProgram.getTsProgram  --  packages/compiler-cli/src/ngtsc/program.ts:138
+      Mengembalikan ts.Program terkini (dipakai tooling).
+[x] NgtscProgram.getTsSemanticDiagnostics  --  packages/compiler-cli/src/ngtsc/program.ts:180
+      Diagnostik semantik TS untuk berkas non-shim.
+[x] NgtscProgram.getNgStructuralDiagnostics  --  packages/compiler-cli/src/ngtsc/program.ts:218
+      Diagnostik struktural (selalu kosong pada ngtsc modern).
+[x] NgtscProgram.getNgSemanticDiagnostics  --  packages/compiler-cli/src/ngtsc/program.ts:224
+      Diagnostik Angular (termasuk hasil pemeriksaan template).
+[x] NgtscProgram.loadNgStructureAsync  --  packages/compiler-cli/src/ngtsc/program.ts:252
+      Menjalankan analisis asinkron (memuat templateUrl/styleUrls).
+[x] NgtscProgram.emitXi18n  --  packages/compiler-cli/src/ngtsc/program.ts:260
+      Ekstraksi pesan i18n ke berkas terjemahan.
+[x] NgtscProgram.emit  --  packages/compiler-cli/src/ngtsc/program.ts:279
+      Emit dengan transformer Angular tersisip; menyaring berkas yang tidak perlu di-emit ulang.
+[x] NgtscProgram.getIndexedComponents  --  packages/compiler-cli/src/ngtsc/program.ts:390
+      Indeks komponen untuk tooling (language service, docs).
+[x] NgtscProgram.getApiDocumentation  --  packages/compiler-cli/src/ngtsc/program.ts:402
+      Ekstraksi dokumentasi API untuk adev.
+[x] mergeEmitResults  --  packages/compiler-cli/src/ngtsc/program.ts:430
+      Menggabungkan beberapa hasil emit menjadi satu.
+[x] TraitCompiler.analyzeSync  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:129
+      Analisis satu berkas secara sinkron.
+[x] TraitCompiler.analyzeAsync  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:133
+      Analisis dengan menunggu preanalyze asinkron.
+[x] TraitCompiler.recordFor  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:198
+      Mengambil ClassRecord milik sebuah kelas.
+[x] TraitCompiler.getAnalyzedRecords  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:206
+      Seluruh record hasil analisis (dipakai state inkremental).
+[x] TraitCompiler.adopt  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:230
+      Mengambil alih hasil analisis berkas lama pada build inkremental.
+[x] TraitCompiler.scanClassForTraits  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:267
+      Memindai kelas dan membuat trait untuk setiap handler yang cocok.
+[x] TraitCompiler.detectTraits  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:275
+      Menjalankan detect() semua handler dengan aturan precedence.
+[x] TraitCompiler.makeSymbolForTrait  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:392
+      Membuat simbol semantik untuk perbandingan perubahan inkremental.
+[x] TraitCompiler.analyzeClass  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:414
+      Menganalisis seluruh trait pada satu kelas.
+[x] TraitCompiler.analyzeTrait  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:448
+      Menjalankan analyze() lalu register(); menyimpan diagnostik bila gagal.
+[x] TraitCompiler.resolve  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:492
+      Tahap resolve lintas-berkas untuk semua trait yang sudah dianalisis.
+[x] TraitCompiler.typeCheck  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:552
+      Mengumpulkan Type Check Block dari seluruh trait.
+[x] TraitCompiler.index  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:603
+      Mengisi indeks komponen/template untuk tooling.
+[x] TraitCompiler.xi18n  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:622
+      Mengumpulkan pesan i18n dari seluruh trait.
+[x] TraitCompiler.updateResources  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:641
+      Memperbarui template/style yang berubah tanpa analisis ulang penuh.
+[x] TraitCompiler.compile  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:660
+      Menghasilkan hasil kompilasi (full/partial/local) untuk satu kelas.
+[x] TraitCompiler.compileHmrUpdateCallback  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:737
+      Menghasilkan callback pembaruan HMR.
+[x] TraitCompiler.decoratorsFor  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:765
+      Dekorator Angular pada sebuah kelas (dipakai transformer untuk menghapusnya).
+[x] containsErrors  --  packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:815
+      Predikat diagnostik: ada error (bukan sekadar warning).
+
+### 08-common-package
+[x] addBody  --  packages/common/http/src/client.ts:43
+      Menyisipkan body ke dalam objek opsi untuk metode POST/PUT/PATCH.
+[x] HttpClient.request  --  packages/common/http/src/client.ts:457
+      Implementasi tunggal di balik puluhan overload: menyusun HttpRequest, menjalankan rantai handler, memetakan hasil sesuai opsi observe/responseType.
+[x] interceptorChainEndFn  --  packages/common/http/src/interceptor.ts:149
+      Ujung rantai interceptor: memanggil handler backend sebenarnya.
+[x] adaptLegacyInterceptorToChain  --  packages/common/http/src/interceptor.ts:160
+      Membungkus HttpInterceptor berbasis kelas menjadi fungsi rantai.
+[x] chainedInterceptorFn  --  packages/common/http/src/interceptor.ts:174
+      Membungkus interceptor fungsional dan menjalankannya dalam konteks injeksi.
+[x] legacyInterceptorFnFactory  --  packages/common/http/src/interceptor.ts:227
+      Membangun rantai dari multi-provider HTTP_INTERCEPTORS dan mendaftarkan pending task per request.
+[x] NgForOfContext.first  --  packages/common/src/directives/ng_for_of.ts:53
+      Variabel kontekstual `first`.
+[x] NgForOfContext.last  --  packages/common/src/directives/ng_for_of.ts:58
+      Variabel kontekstual `last`.
+[x] NgForOfContext.even  --  packages/common/src/directives/ng_for_of.ts:63
+      Variabel kontekstual `even`.
+[x] NgForOfContext.odd  --  packages/common/src/directives/ng_for_of.ts:68
+      Variabel kontekstual `odd`.
+[x] NgForOf.ngForTrackBy  --  packages/common/src/directives/ng_for_of.ts:208
+      Setter fungsi trackBy dengan peringatan dev bila bukan fungsi.
+[x] NgForOf.ngDoCheck  --  packages/common/src/directives/ng_for_of.ts:253
+      Membuat differ saat pertama kali, menjalankan diff, dan menerapkan perubahan.
+[x] NgForOf._applyChanges  --  packages/common/src/directives/ng_for_of.ts:286
+      Menerjemahkan operasi differ menjadi create/remove/move pada ViewContainerRef dan menyegarkan index/count semua view.
+[x] NgForOf.ngTemplateContextGuard  --  packages/common/src/directives/ng_for_of.ts:333
+      Penanda tipe konteks NgForOfContext untuk type-checker.
+[x] applyViewChange  --  packages/common/src/directives/ng_for_of.ts:346
+      Memperbarui $implicit pada view yang dipakai ulang.
+[x] getTypeName  --  packages/common/src/directives/ng_for_of.ts:353
+      Nama tipe nilai untuk pesan error differ.
+[x] NgIf.ngIf  --  packages/common/src/directives/ng_if.ts:185
+      Setter kondisi yang menyimpan nilai ke konteks ($implicit) lalu memperbarui view.
+[x] NgIf.ngIfThen  --  packages/common/src/directives/ng_if.ts:195
+      Setter template "then" dinamis, mereset view yang ada.
+[x] NgIf.ngIfElse  --  packages/common/src/directives/ng_if.ts:207
+      Setter template "else" dinamis.
+[x] NgIf._updateView  --  packages/common/src/directives/ng_if.ts:214
+      Membuat/menukar view then-else hanya bila cabang berganti; membersihkan container lebih dulu.
+[x] NgIf.ngTemplateContextGuard  --  packages/common/src/directives/ng_if.ts:259
+      Penanda bagi type-checker tentang tipe konteks template NgIf.
+[x] assertTemplate  --  packages/common/src/directives/ng_if.ts:278
+      Validasi bahwa nilai yang diberikan benar-benar TemplateRef.
+[x] SubscribableStrategy.createSubscription  --  packages/common/src/pipes/async_pipe.ts:35
+      Berlangganan Observable/Subscribable dengan penerusan error ke ErrorHandler.
+[x] SubscribableStrategy.dispose  --  packages/common/src/pipes/async_pipe.ts:55
+      Unsubscribe.
+[x] PromiseStrategy.createSubscription  --  packages/common/src/pipes/async_pipe.ts:62
+      Menyambungkan then/catch Promise ke callback pipe.
+[x] PromiseStrategy.dispose  --  packages/common/src/pipes/async_pipe.ts:102
+      Promise tidak bisa dibatalkan - dispose adalah no-op.
+[x] AsyncPipe.ngOnDestroy  --  packages/common/src/pipes/async_pipe.ts:160
+      Melepas langganan saat pipe dihancurkan.
+[x] AsyncPipe.transform  --  packages/common/src/pipes/async_pipe.ts:178
+      Berlangganan sumber async, mengembalikan nilai terakhir, dan berganti langganan bila objeknya berubah.
+[x] AsyncPipe._subscribe  --  packages/common/src/pipes/async_pipe.ts:202
+      Memilih strategi lalu membuat langganan yang memanggil _updateLatestValue.
+[x] AsyncPipe._selectStrategy  --  packages/common/src/pipes/async_pipe.ts:212
+      Membedakan Promise dari Subscribable/Observable.
+[x] AsyncPipe._dispose  --  packages/common/src/pipes/async_pipe.ts:226
+      Melepas langganan dan mereset state pipe.
+[x] AsyncPipe._updateLatestValue  --  packages/common/src/pipes/async_pipe.ts:235
+      Menyimpan nilai baru dan memanggil markForCheck hanya untuk emisi asinkron.
+
+### 09-router
+[x] namedOutletsRedirect  --  packages/router/src/apply_redirects.ts:45
+      Error: redirectTo tidak didukung untuk outlet bernama.
+[x] canLoadFails  --  packages/router/src/apply_redirects.ts:53
+      Error/pembatalan ketika guard canLoad menolak.
+[x] ApplyRedirects.lineralizeSegments  --  packages/router/src/apply_redirects.ts:67
+      Meratakan grup segmen hasil redirect menjadi daftar linear.
+[x] ApplyRedirects.applyRedirectCommands  --  packages/router/src/apply_redirects.ts:84
+      Menerapkan perintah redirectTo, mempertahankan parameter posisi.
+[x] ApplyRedirects.createSegmentGroup  --  packages/router/src/apply_redirects.ts:137
+      Membangun grup segmen baru dari pola redirect.
+[x] ApplyRedirects.findPosParam  --  packages/router/src/apply_redirects.ts:167
+      Mencari nilai parameter posisi (:id) untuk disisipkan ke redirect.
+[x] createRouterState  --  packages/router/src/create_router_state.ts:20
+      Membangun pohon ActivatedRoute baru dengan memakai ulang simpul lama sesuai RouteReuseStrategy.
+[x] createNode  --  packages/router/src/create_router_state.ts:35
+      Membuat atau memakai ulang satu simpul ActivatedRoute.
+[x] createOrReuseChildren  --  packages/router/src/create_router_state.ts:70
+      Mencocokkan anak lama dengan anak baru untuk menentukan reuse.
+[x] createActivatedRoute  --  packages/router/src/create_router_state.ts:86
+      Membuat ActivatedRoute baru dari snapshot.
+[x] createUrlTreeFromSnapshot  --  packages/router/src/create_url_tree.ts:79
+      Membangun UrlTree dari snapshot rute + perintah navigasi relatif.
+[x] createSegmentGroupFromRoute  --  packages/router/src/create_url_tree.ts:96
+      Merekonstruksi grup segmen dari sebuah ActivatedRoute.
+[x] createUrlTreeFromSegmentGroup  --  packages/router/src/create_url_tree.ts:119
+      Menerapkan perintah navigasi pada grup segmen dan menghasilkan UrlTree.
+[x] isMatrixParams  --  packages/router/src/create_url_tree.ts:150
+      Mendeteksi perintah berupa matrix params.
+[x] isCommandWithOutlets  --  packages/router/src/create_url_tree.ts:158
+      Mendeteksi perintah berbentuk {outlets: {...}}.
+[x] normalizeQueryParams  --  packages/router/src/create_url_tree.ts:172
+      Menormalkan query params sebelum serialisasi.
+[x] replaceSegment  --  packages/router/src/create_url_tree.ts:223
+      Mengganti satu segmen dalam pohon secara immutable.
+[x] computeNavigation  --  packages/router/src/create_url_tree.ts:270
+      Menghitung sifat perintah: absolut/relatif, jumlah '..', dan pemisahan outlet.
+[x] findStartingPositionForTargetGroup  --  packages/router/src/create_url_tree.ts:329
+      Menentukan grup segmen awal tempat perintah diterapkan.
+[x] createPositionApplyingDoubleDots  --  packages/router/src/create_url_tree.ts:354
+      Menaiki pohon segmen sesuai jumlah '..'.
+[x] NavigationTransitions.complete  --  packages/router/src/navigation_transition.ts:403
+      Menutup subject transisi saat router dihancurkan.
+[x] NavigationTransitions.handleNavigationRequest  --  packages/router/src/navigation_transition.ts:407
+      Menambahkan permintaan navigasi baru ke subject transisi (menaikkan navigationId).
+[x] NavigationTransitions.setupNavigations  --  packages/router/src/navigation_transition.ts:444
+      Rantai RxJS lengkap satu navigasi: recognize -> guards -> resolve -> createRouterState -> view transition -> aktivasi, dengan pembatalan lewat switchMap.
+[x] NavigationTransitions.cancelNavigationTransition  --  packages/router/src/navigation_transition.ts:990
+      Membatalkan navigasi dengan kode alasan dan memancarkan NavigationCancel.
+[x] NavigationTransitions.isUpdatingInternalState  --  packages/router/src/navigation_transition.ts:1010
+      Menentukan apakah transisi mengubah state internal router (dipakai state manager).
+[x] NavigationTransitions.isUpdatedBrowserUrl  --  packages/router/src/navigation_transition.ts:1028
+      Menentukan apakah URL browser perlu diperbarui.
+[x] isBrowserTriggeredNavigation  --  packages/router/src/navigation_transition.ts:1045
+      Membedakan navigasi dari tombol back/forward browser dengan navigasi imperatif.
+[x] discardNewActivatedRoutes  --  packages/router/src/navigation_transition.ts:1049
+      Membuang ActivatedRoute yang terlanjur dibuat saat navigasi dibatalkan.
+[x] checkGuards  --  packages/router/src/operators/check_guards.ts:56
+      Operator yang menjalankan canDeactivate, canActivateChild, dan canActivate berurutan.
+[x] runCanDeactivateChecks  --  packages/router/src/operators/check_guards.ts:80
+      Menjalankan canDeactivate dari rute terdalam ke terluar.
+[x] runCanActivateChecks  --  packages/router/src/operators/check_guards.ts:93
+      Menjalankan canActivateChild lalu canActivate dari terluar ke terdalam.
+[x] fireActivationStart  --  packages/router/src/operators/check_guards.ts:121
+      Memancarkan event ActivationStart.
+[x] fireChildActivationStart  --  packages/router/src/operators/check_guards.ts:139
+      Memancarkan event ChildActivationStart.
+[x] runCanActivate  --  packages/router/src/operators/check_guards.ts:149
+      Menjalankan satu set guard canActivate dalam konteks injeksi rute.
+[x] runCanActivateChild  --  packages/router/src/operators/check_guards.ts:174
+      Menjalankan guard canActivateChild milik leluhur.
+[x] runCanDeactivate  --  packages/router/src/operators/check_guards.ts:209
+      Menjalankan guard canDeactivate dengan komponen yang akan dilepas.
+[x] runCanLoadGuards  --  packages/router/src/operators/check_guards.ts:230
+      Guard canLoad sebelum memuat modul lazy.
+[x] redirectIfUrlTree  --  packages/router/src/operators/check_guards.ts:254
+      Menerjemahkan UrlTree yang dikembalikan guard menjadi redirect navigasi.
+[x] runCanMatchGuards  --  packages/router/src/operators/check_guards.ts:265
+      Guard canMatch saat pencocokan rute.
+[x] resolveData  --  packages/router/src/operators/resolve_data.ts:28
+      Operator yang menjalankan resolver semua rute dan menyimpan hasilnya ke snapshot.
+[x] flattenRouteTree  --  packages/router/src/operators/resolve_data.ts:74
+      Meratakan pohon rute menjadi daftar untuk pemrosesan berurutan.
+[x] runResolve  --  packages/router/src/operators/resolve_data.ts:79
+      Menjalankan resolver satu simpul dengan menghormati runGuardsAndResolvers.
+[x] resolveNode  --  packages/router/src/operators/resolve_data.ts:101
+      Menjalankan seluruh resolver satu rute dan menggabungkan hasilnya.
+[x] getResolver  --  packages/router/src/operators/resolve_data.ts:129
+      Menyelesaikan resolver berbasis kelas maupun fungsi dalam konteks injeksi.
+[x] recognize  --  packages/router/src/recognize.ts:46
+      Operator yang menjalankan Recognizer atas UrlTree dan menghasilkan RouterStateSnapshot.
+[x] Recognizer.noMatchError  --  packages/router/src/recognize.ts:88
+      Menyusun error NG04002 "Cannot match any routes".
+[x] Recognizer.recognize  --  packages/router/src/recognize.ts:97
+      Titik masuk pencocokan: proses grup segmen root lalu bangun snapshot.
+[x] Recognizer.match  --  packages/router/src/recognize.ts:117
+      Mencocokkan UrlTree dengan konfigurasi dan memvalidasi tidak ada sisa segmen.
+[x] Recognizer.processSegmentGroup  --  packages/router/src/recognize.ts:157
+      Memroses satu UrlSegmentGroup terhadap daftar Route.
+[x] Recognizer.processChildren  --  packages/router/src/recognize.ts:188
+      Memroses anak per outlet (termasuk outlet bernama).
+[x] Recognizer.processSegment  --  packages/router/src/recognize.ts:235
+      Mencoba setiap Route terhadap segmen saat ini.
+[x] Recognizer.processSegmentAgainstRoute  --  packages/router/src/recognize.ts:270
+      Menjalankan canMatch, menangani redirectTo, dan menurunkan ke anak.
+[x] Recognizer.expandSegmentAgainstRouteUsingRedirect  --  packages/router/src/recognize.ts:324
+      Menerapkan redirect (relatif maupun absolut) lalu mencocokkan ulang.
+[x] Recognizer.createSnapshot  --  packages/router/src/recognize.ts:377
+      Membuat ActivatedRouteSnapshot lengkap dengan params, data, dan resolve.
+[x] Recognizer.matchSegmentAgainstRoute  --  packages/router/src/recognize.ts:402
+      Pencocokan path aktual termasuk parameter dan wildcard, serta pemuatan loadChildren.
+[x] Recognizer.getChildConfig  --  packages/router/src/recognize.ts:494
+      Mengambil konfigurasi anak, memuat modul lazy bila perlu.
+[x] sortActivatedRouteSnapshots  --  packages/router/src/recognize.ts:534
+      Mengurutkan hasil agar outlet primary lebih dulu (hasil deterministik).
+[x] hasEmptyPathConfig  --  packages/router/src/recognize.ts:542
+      Deteksi rute berpath kosong yang perlu perlakuan khusus.
+
+### 10-forms
+[x] ValueChangeEvent.constructor  --  packages/forms/src/model/abstract_model.ts:110
+      Event terpadu perubahan nilai pada aliran `events`.
+[x] PristineChangeEvent.constructor  --  packages/forms/src/model/abstract_model.ts:125
+      Event terpadu perubahan pristine.
+[x] TouchedChangeEvent.constructor  --  packages/forms/src/model/abstract_model.ts:141
+      Event terpadu perubahan touched.
+[x] StatusChangeEvent.constructor  --  packages/forms/src/model/abstract_model.ts:157
+      Event terpadu perubahan status.
+[x] FormSubmittedEvent.constructor  --  packages/forms/src/model/abstract_model.ts:173
+      Event submit form pada aliran `events`.
+[x] FormResetEvent.constructor  --  packages/forms/src/model/abstract_model.ts:185
+      Event reset form pada aliran `events`.
+[x] pickValidators  --  packages/forms/src/model/abstract_model.ts:193
+      Mengambil validator dari argumen berbentuk array atau objek opsi.
+[x] coerceToValidator  --  packages/forms/src/model/abstract_model.ts:202
+      Menggabungkan array validator menjadi satu fungsi (Validators.compose).
+[x] pickAsyncValidators  --  packages/forms/src/model/abstract_model.ts:209
+      Versi async dari pickValidators.
+[x] coerceToAsyncValidator  --  packages/forms/src/model/abstract_model.ts:224
+      Menggabungkan validator async menjadi satu.
+[x] isOptionsObj  --  packages/forms/src/model/abstract_model.ts:257
+      Membedakan argumen opsi ({validators, updateOn}) dari array validator.
+[x] assertControlPresent  --  packages/forms/src/model/abstract_model.ts:267
+      Error jelas saat setValue/patchValue menyebut kontrol yang tidak ada.
+[x] assertAllValuesPresent  --  packages/forms/src/model/abstract_model.ts:284
+      Memastikan setValue menyertakan seluruh kunci grup.
+[x] AbstractControl.setValidators  --  packages/forms/src/model/abstract_model.ts:817
+      Mengganti seluruh validator sinkron (tanpa menjalankan ulang validasi).
+[x] AbstractControl.setAsyncValidators  --  packages/forms/src/model/abstract_model.ts:831
+      Mengganti seluruh validator async.
+[x] AbstractControl.addValidators  --  packages/forms/src/model/abstract_model.ts:847
+      Menambahkan validator tanpa menghapus yang lama.
+[x] AbstractControl.removeValidators  --  packages/forms/src/model/abstract_model.ts:893
+      Menghapus validator berdasarkan identitas fungsi.
+[x] AbstractControl.hasValidator  --  packages/forms/src/model/abstract_model.ts:933
+      Cek keberadaan validator tertentu.
+[x] AbstractControl.clearValidators  --  packages/forms/src/model/abstract_model.ts:956
+      Menghapus semua validator sinkron.
+[x] AbstractControl.clearAsyncValidators  --  packages/forms/src/model/abstract_model.ts:967
+      Menghapus semua validator async.
+[x] AbstractControl.markAsTouched  --  packages/forms/src/model/abstract_model.ts:999
+      Menandai kontrol tersentuh dan menyebarkannya ke leluhur.
+[x] AbstractControl.markAllAsDirty  --  packages/forms/src/model/abstract_model.ts:1028
+      Menandai seluruh pohon kotor.
+[x] AbstractControl.markAllAsTouched  --  packages/forms/src/model/abstract_model.ts:1047
+      Menandai seluruh pohon tersentuh (pola umum saat submit).
+[x] AbstractControl.markAsUntouched  --  packages/forms/src/model/abstract_model.ts:1084
+      Mereset status touched pada kontrol dan seluruh anaknya.
+[x] AbstractControl.markAsDirty  --  packages/forms/src/model/abstract_model.ts:1133
+      Menandai kontrol kotor dan menyebarkannya ke leluhur.
+[x] AbstractControl.markAsPristine  --  packages/forms/src/model/abstract_model.ts:1180
+      Mereset status dirty pada kontrol dan seluruh anaknya.
+[x] AbstractControl.markAsPending  --  packages/forms/src/model/abstract_model.ts:1228
+      Menyetel status PENDING secara eksplisit.
+[x] AbstractControl.disable  --  packages/forms/src/model/abstract_model.ts:1266
+      Menonaktifkan kontrol beserta anaknya dan mengeluarkan nilainya dari agregat induk.
+[x] AbstractControl.enable  --  packages/forms/src/model/abstract_model.ts:1311
+      Mengaktifkan kembali kontrol dan menghitung ulang leluhur.
+[x] AbstractControl._updateAncestors  --  packages/forms/src/model/abstract_model.ts:1326
+      Menghitung ulang nilai, validitas, dan status pristine leluhur.
+[x] AbstractControl.setParent  --  packages/forms/src/model/abstract_model.ts:1344
+      Menautkan kontrol ke induknya.
+[x] AbstractControl.getRawValue  --  packages/forms/src/model/abstract_model.ts:1367
+      Nilai termasuk kontrol yang disabled.
+[x] AbstractControl.updateValueAndValidity  --  packages/forms/src/model/abstract_model.ts:1397
+      Inti siklus validasi: hitung nilai, jalankan validator sinkron lalu async, emit event, dan propagasi ke leluhur.
+[x] AbstractControl._updateTreeValidity  --  packages/forms/src/model/abstract_model.ts:1430
+      Validasi ulang seluruh pohon dari daun ke akar (dipakai saat form dipasang).
+[x] AbstractControl._setInitialStatus  --  packages/forms/src/model/abstract_model.ts:1435
+      Status awal DISABLED bila semua anak disabled, selain itu VALID.
+[x] AbstractControl._runValidator  --  packages/forms/src/model/abstract_model.ts:1439
+      Menjalankan validator sinkron gabungan dan mengembalikan objek error.
+[x] AbstractControl._runAsyncValidator  --  packages/forms/src/model/abstract_model.ts:1443
+      Menyetel status PENDING dan berlangganan hasil validator async.
+[x] AbstractControl._cancelExistingSubscription  --  packages/forms/src/model/abstract_model.ts:1461
+      Membatalkan validator async yang masih berjalan, mengembalikan apakah emisi seharusnya terjadi.
+[x] AbstractControl.setErrors  --  packages/forms/src/model/abstract_model.ts:1514
+      Menulis error secara manual dan menyebarkan perubahan status ke leluhur.
+[x] hasOwnControl  --  packages/forms/src/model/abstract_model.ts:1811
+      Cek kepemilikan kontrol anak (aman terhadap prototipe).
+
+### 11-hydration-ssr
+[x] getSsrId  --  packages/core/src/hydration/annotate.ts:133
+      Mengambil/menghasilkan id TView untuk mencocokkan template di klien.
+[x] calcNumRootNodes  --  packages/core/src/hydration/annotate.ts:161
+      Menghitung jumlah node akar sebuah view untuk dicatat pada data hidrasi.
+[x] calcNumRootNodesInLContainer  --  packages/core/src/hydration/annotate.ts:170
+      Versi untuk container.
+[x] annotateComponentLViewForHydration  --  packages/core/src/hydration/annotate.ts:180
+      Menyerialisasi view komponen dan menuliskan atribut ngh pada host-nya.
+[x] annotateLContainerForHydration  --  packages/core/src/hydration/annotate.ts:199
+      Varian untuk ViewRef yang merupakan embedded view.
+[x] annotateForHydration  --  packages/core/src/hydration/annotate.ts:243
+      Titik masuk serialisasi server: menelusuri seluruh view aplikasi, menyerialisasi struktur, dan menyimpannya ke TransferState.
+[x] serializeLContainer  --  packages/core/src/hydration/annotate.ts:314
+      Menyerialisasi view-view di dalam container beserta ssrId template-nya.
+[x] serializeHydrateTriggers  --  packages/core/src/hydration/annotate.ts:482
+      Menyerialisasi trigger hidrasi blok @defer.
+[x] appendSerializedNodePath  --  packages/core/src/hydration/annotate.ts:511
+      Menyimpan jalur navigasi DOM untuk node yang tidak bisa ditemukan secara berurutan.
+[x] appendDisconnectedNodeIndex  --  packages/core/src/hydration/annotate.ts:528
+      Mencatat node yang tidak terhubung ke DOM saat serialisasi.
+[x] serializeLView  --  packages/core/src/hydration/annotate.ts:548
+      Menyerialisasi satu view: jumlah node akar, node terputus, penanda teks, jalur node, referensi blok defer.
+[x] conditionallyAnnotateNodePath  --  packages/core/src/hydration/annotate.ts:757
+      Memutuskan kapan jalur node perlu disimpan eksplisit.
+[x] componentUsesShadowDomEncapsulation  --  packages/core/src/hydration/annotate.ts:796
+      Deteksi komponen ShadowDom yang tidak bisa dihidrasi.
+[x] annotateHostElementForHydration  --  packages/core/src/hydration/annotate.ts:819
+      Menempelkan atribut ngh berisi indeks data hidrasi.
+[x] annotateDeferBlockAnchorForHydration  --  packages/core/src/hydration/annotate.ts:851
+      Menandai komentar jangkar blok @defer dengan id blok.
+[x] insertCorruptedTextNodeMarkers  --  packages/core/src/hydration/annotate.ts:864
+      Menyisipkan komentar penanda untuk teks kosong/berdampingan yang hilang saat parsing HTML.
+[x] isContentProjectedNode  --  packages/core/src/hydration/annotate.ts:877
+      Deteksi node hasil proyeksi konten (butuh jalur eksplisit).
+[x] annotateDeferBlockRootNodesWithJsAction  --  packages/core/src/hydration/annotate.ts:897
+      Menambahkan atribut jsaction pada node akar blok defer untuk trigger hidrasi.
+[x] enableHydrationRuntimeSupport  --  packages/core/src/hydration/api.ts:97
+      Menukar implementasi fungsi runtime ke versi sadar-hidrasi (pola tree-shaking).
+[x] enableI18nHydrationRuntimeSupport  --  packages/core/src/hydration/api.ts:116
+      Versi i18n dari penukaran implementasi di atas.
+[x] printHydrationStats  --  packages/core/src/hydration/api.ts:128
+      Statistik dev-mode: jumlah node yang dihidrasi vs dilewati.
+[x] whenStableWithTimeout  --  packages/core/src/hydration/api.ts:145
+      Menunggu aplikasi stabil dengan batas waktu sebelum membersihkan view dehidrasi.
+[x] isClientRenderModeEnabled  --  packages/core/src/hydration/api.ts:175
+      Deteksi mode render-klien penuh (menekan peringatan hidrasi).
+[x] withDomHydration  --  packages/core/src/hydration/api.ts:192
+      Provider hidrasi DOM: verifikasi data server, aktifkan implementasi runtime, pertahankan konten host di browser.
+[x] withI18nSupport  --  packages/core/src/hydration/api.ts:313
+      Mengaktifkan hidrasi untuk blok i18n.
+[x] withIncrementalHydration  --  packages/core/src/hydration/api.ts:342
+      Mengaktifkan hidrasi bertahap untuk blok @defer beserta event replay-nya.
+[x] logWarningOnStableTimedout  --  packages/core/src/hydration/api.ts:380
+      Peringatan bila aplikasi tak kunjung stabil (biasanya karena timer/langganan berjalan terus).
+[x] removeDehydratedViews  --  packages/core/src/hydration/cleanup.ts:33
+      Membuang view sisa server yang tidak diklaim dari sebuah container.
+[x] removeDehydratedViewList  --  packages/core/src/hydration/cleanup.ts:56
+      Membuang seluruh daftar view dehidrasi.
+[x] cleanupLContainer  --  packages/core/src/hydration/cleanup.ts:90
+      Membersihkan container beserta seluruh view di dalamnya.
+[x] cleanupLView  --  packages/core/src/hydration/cleanup.ts:110
+      Menelusuri view dan membersihkan sisa hidrasi di seluruh keturunannya.
+[x] cleanupDehydratedViews  --  packages/core/src/hydration/cleanup.ts:129
+      Titik masuk pembersihan setelah aplikasi stabil.
+[x] cleanupHydratedDeferBlocks  --  packages/core/src/hydration/cleanup.ts:152
+      Membersihkan sisa data blok defer yang sudah dihidrasi.
+[x] isDisconnectedRNode  --  packages/core/src/hydration/node_lookup_utils.ts:69
+      Cek node DOM yang tidak terpasang di dokumen.
+[x] locateI18nRNodeByIndex  --  packages/core/src/hydration/node_lookup_utils.ts:80
+      Pencarian node untuk blok i18n yang strukturnya dibentuk opcode.
+[x] tryLocateRNodeByPath  --  packages/core/src/hydration/node_lookup_utils.ts:99
+      Menemukan node DOM lewat jalur navigasi tersimpan (untuk node yang tidak berurutan).
+[x] retrieveHydrationInfoImpl  --  packages/core/src/hydration/utils.ts:121
+      Membaca atribut ngh sebuah host element dan mengambil data serialisasi dari TransferState.
+[x] enableRetrieveHydrationInfoImpl  --  packages/core/src/hydration/utils.ts:209
+      Mengaktifkan implementasi pengambilan data hidrasi.
+[x] retrieveHydrationInfo  --  packages/core/src/hydration/utils.ts:217
+      Indireksi tree-shakable ke implementasi di atas.
+[x] getLNodeForHydration  --  packages/core/src/hydration/utils.ts:231
+      Mengambil LView/LContainer dari sebuah ViewRef untuk diserialisasi.
+[x] processTextNodeMarkersBeforeHydration  --  packages/core/src/hydration/utils.ts:262
+      Mengembalikan komentar penanda menjadi text node kosong sebelum hidrasi dimulai.
+[x] markRNodeAsClaimedByHydration  --  packages/core/src/hydration/utils.ts:330
+      Menandai node DOM sebagai sudah diklaim (dan mendeteksi klaim ganda di dev mode).
+[x] markRNodeAsSkippedByHydration  --  packages/core/src/hydration/utils.ts:344
+      Menandai node yang sengaja dilewati (ngSkipHydration).
+[x] markRNodeAsHavingHydrationMismatch  --  packages/core/src/hydration/utils.ts:363
+      Menandai node yang menyebabkan ketidakcocokan untuk pesan error.
+[x] isRNodeClaimedForHydration  --  packages/core/src/hydration/utils.ts:391
+      Cek status klaim sebuah node.
+[x] setSegmentHead  --  packages/core/src/hydration/utils.ts:395
+      Menyimpan node awal segmen sebuah container.
+[x] getSegmentHead  --  packages/core/src/hydration/utils.ts:404
+      Membaca node awal segmen.
+[x] isIncrementalHydrationEnabled  --  packages/core/src/hydration/utils.ts:408
+      Cek konfigurasi hidrasi inkremental.
+[x] warnIncrementalHydrationNotConfigured  --  packages/core/src/hydration/utils.ts:420
+      Peringatan bila template memakai hydrate trigger tanpa withIncrementalHydration.
+[x] getNgContainerSize  --  packages/core/src/hydration/utils.ts:450
+      Jumlah node akar sebuah ng-container terserialisasi.
+[x] getSerializedContainerViews  --  packages/core/src/hydration/utils.ts:470
+      Data view dehidrasi milik sebuah container.
+[x] calcSerializedContainerSize  --  packages/core/src/hydration/utils.ts:481
+      Total jumlah node yang ditempati view-view dalam container.
+[x] initDisconnectedNodes  --  packages/core/src/hydration/utils.ts:494
+      Menyiapkan himpunan indeks node terputus dari data serialisasi.
+[x] isDisconnectedNode  --  packages/core/src/hydration/utils.ts:508
+      Cek apakah sebuah node ditandai terputus saat serialisasi.
+[x] canHydrateNode  --  packages/core/src/hydration/utils.ts:522
+      Predikat utama yang dipanggil instruksi pembuatan node sebelum membuat DOM baru.
+[x] processTextNodeBeforeSerialization  --  packages/core/src/hydration/utils.ts:538
+      Menyiapkan text node bermasalah agar bisa direkonstruksi klien.
+[x] convertHydrateTriggersToJsAction  --  packages/core/src/hydration/utils.ts:578
+      Menerjemahkan hydrate trigger menjadi daftar event jsaction.
+[x] getParentBlockHydrationQueue  --  packages/core/src/hydration/utils.ts:600
+      Menyusun antrean blok defer induk yang harus dihidrasi lebih dulu.
+[x] appendDeferBlocksToJSActionMap  --  packages/core/src/hydration/utils.ts:647
+      Mendaftarkan blok defer ke peta jsaction untuk penangkapan event dini.
+[x] retrieveDeferBlockData  --  packages/core/src/hydration/utils.ts:689
+      Mengambil data serialisasi satu blok defer.
+[x] createBlockSummary  --  packages/core/src/hydration/utils.ts:726
+      Ringkasan satu blok defer (trigger, induk, jumlah node akar).
+[x] processBlockData  --  packages/core/src/hydration/utils.ts:741
+      Mengubah data blok defer terserialisasi menjadi ringkasan siap pakai.
+[x] verifySsrContentsIntegrity  --  packages/core/src/hydration/utils.ts:776
+      Memastikan HTML server tidak dipotong/diubah sebelum hidrasi dimulai.
+
+### 12-zone-ngzone
+[x] NgZone.isInAngularZone  --  packages/core/src/zone/ng_zone.ts:193
+      Cek apakah kode saat ini berjalan di dalam zone Angular.
+[x] NgZone.assertInAngularZone  --  packages/core/src/zone/ng_zone.ts:201
+      Asersi berada di dalam zone Angular.
+[x] NgZone.assertNotInAngularZone  --  packages/core/src/zone/ng_zone.ts:213
+      Asersi berada di luar zone Angular.
+[x] NgZone.run  --  packages/core/src/zone/ng_zone.ts:234
+      Menjalankan fungsi di dalam zone Angular sehingga pekerjaan asinkronnya memicu CD.
+[x] NgZone.runTask  --  packages/core/src/zone/ng_zone.ts:250
+      Menjalankan fungsi sebagai eventTask sehingga memicu evaluasi stabilitas.
+[x] NgZone.runGuarded  --  packages/core/src/zone/ng_zone.ts:264
+      Seperti run(), tetapi error diteruskan ke handler zone.
+[x] NgZone.runOutsideAngular  --  packages/core/src/zone/ng_zone.ts:281
+      Menjalankan fungsi di zone induk agar task-nya tidak memicu CD.
+[x] checkStable  --  packages/core/src/zone/ng_zone.ts:354
+      Inti integrasi: memancarkan onMicrotaskEmpty lalu onStable saat tidak ada microtask dan nesting nol, dengan penjagaan re-entrancy.
+[x] delayChangeDetectionForEvents  --  packages/core/src/zone/ng_zone.ts:387
+      Implementasi coalescing: menunda checkStable ke rAF-race dan mencegah penjadwalan ganda.
+[x] scheduleCheckStable  --  packages/core/src/zone/ng_zone.ts:405
+      Menjadwalkan evaluasi stabilitas di luar zone Angular (atau di root zone).
+[x] forkInnerZoneWithAngularBehavior  --  packages/core/src/zone/ng_zone.ts:426
+      Membuat zone 'angular' beserta seluruh hook onInvoke/onInvokeTask/onHasTask/onHandleError.
+[x] updateMicroTaskStatus  --  packages/core/src/zone/ng_zone.ts:526
+      Menghitung ulang flag hasPendingMicrotasks termasuk kasus coalescing.
+[x] onEnter  --  packages/core/src/zone/ng_zone.ts:538
+      Menaikkan nesting dan memancarkan onUnstable pada transisi pertama.
+[x] onLeave  --  packages/core/src/zone/ng_zone.ts:546
+      Menurunkan nesting lalu mengevaluasi stabilitas.
+[x] NoopNgZone.run  --  packages/core/src/zone/ng_zone.ts:564
+      Implementasi zoneless: langsung memanggil fungsi.
+[x] NoopNgZone.runGuarded  --  packages/core/src/zone/ng_zone.ts:568
+      Varian tanpa penanganan zone.
+[x] NoopNgZone.runOutsideAngular  --  packages/core/src/zone/ng_zone.ts:572
+      Tidak ada zone, jadi identik dengan run.
+[x] NoopNgZone.runTask  --  packages/core/src/zone/ng_zone.ts:576
+      Varian tanpa penanganan zone.
+[x] shouldBeIgnoredByZone  --  packages/core/src/zone/ng_zone.ts:581
+      Menandai task yang tidak boleh memengaruhi stabilitas.
+[x] isSchedulerTick  --  packages/core/src/zone/ng_zone.ts:585
+      Mengenali task yang merupakan tick scheduler agar stabilitas dievaluasi sinkron.
+[x] hasApplyArgsData  --  packages/core/src/zone/ng_zone.ts:589
+      Pembacaan aman terhadap metadata argumen task.
+[x] getNgZone  --  packages/core/src/zone/ng_zone.ts:611
+      Memilih NgZone atau NoopNgZone sesuai konfigurasi bootstrap.
+[x] patchTimer  --  packages/zone.js/lib/common/timers.ts:28
+      Menambal setTimeout/setInterval beserta pembatalnya menjadi macroTask zone.
+[x] wrapWithCurrentZone  --  packages/zone.js/lib/common/utils.ts:44
+      Mengikat callback ke zone saat ini.
+[x] scheduleMacroTaskWithCurrentZone  --  packages/zone.js/lib/common/utils.ts:48
+      Menjadwalkan macroTask pada zone aktif.
+[x] bindArguments  --  packages/zone.js/lib/common/utils.ts:68
+      Mengikat semua argumen berupa fungsi ke zone saat ini.
+[x] patchPrototype  --  packages/zone.js/lib/common/utils.ts:77
+      Menambal sekumpulan metode pada sebuah prototipe.
+[x] isPropertyWritable  --  packages/zone.js/lib/common/utils.ts:98
+      Memeriksa descriptor sebelum mencoba menambal properti.
+[x] patchProperty  --  packages/zone.js/lib/common/utils.ts:197
+      Menambal properti handler (onclick dsb) dengan getter/setter sadar-zone.
+[x] patchOnProperties  --  packages/zone.js/lib/common/utils.ts:302
+      Menambal seluruh properti on* sebuah objek.
+[x] patchClass  --  packages/zone.js/lib/common/utils.ts:323
+      Membungkus konstruktor kelas agar callback-nya terikat zone.
+[x] copySymbolProperties  --  packages/zone.js/lib/common/utils.ts:394
+      Menyalin properti simbol dari objek asli ke objek tertambal.
+[x] patchMethod  --  packages/zone.js/lib/common/utils.ts:424
+      Penambal universal: menyimpan metode asli di properti simbol lalu menggantinya (idempoten).
+[x] patchMacroTask  --  packages/zone.js/lib/common/utils.ts:471
+      Membungkus API menjadi macroTask (mis. XHR send).
+[x] patchMicroTask  --  packages/zone.js/lib/common/utils.ts:510
+      Membungkus API menjadi microTask.
+[x] attachOriginToPatched  --  packages/zone.js/lib/common/utils.ts:542
+      Menyimpan referensi ke implementasi asli pada fungsi tertambal.
+
+### 13-security-sanitization
+[x] HttpXsrfCookieExtractor.getToken  --  packages/common/http/src/xsrf.ts:65
+      Membaca token XSRF dari cookie dengan cache berbasis string cookie.
+[x] xsrfInterceptorFn  --  packages/common/http/src/xsrf.ts:94
+      Guard XSRF: melewati GET/HEAD, membandingkan origin dengan new URL, dan hanya mengirim token untuk permintaan same-origin (fail-closed pada URL tidak valid).
+[x] newTrustedFunctionForJIT  --  packages/compiler/src/output/output_jit_trusted_types.ts:105
+      SINK eksekusi kode untuk JIT: new Function, atau eval dengan TrustedScript; indireksi global['eval'] dipakai agar modul tetap tree-shakable.
+[x] SafeValueImpl.getTypeName  --  packages/core/src/sanitization/bypass.ts:64
+      Nama konteks pembungkus untuk pesan error.
+[x] SafeValueImpl.toString  --  packages/core/src/sanitization/bypass.ts:66
+      Representasi debug yang mengingatkan nilai harus dilepas lewat unwrapSafeValue.
+[x] unwrapSafeValue  --  packages/core/src/sanitization/bypass.ts:102
+      SATU-SATUNYA pintu keluar nilai mentah dari pembungkus SafeValue.
+[x] allowSanitizationBypassAndThrow  --  packages/core/src/sanitization/bypass.ts:126
+      Memvalidasi bahwa tipe pembungkus cocok dengan konteks pemakaian; melempar bila SafeUrl dipakai sebagai SafeHtml dsb.
+[x] getSanitizationBypassType  --  packages/core/src/sanitization/bypass.ts:136
+      Membaca penanda tipe bypass sebuah nilai.
+[x] bypassSanitizationTrustHtml  --  packages/core/src/sanitization/bypass.ts:149
+      Membungkus string sebagai SafeHtml (titik masuk taint yang disengaja).
+[x] bypassSanitizationTrustStyle  --  packages/core/src/sanitization/bypass.ts:161
+      Membungkus string sebagai SafeStyle.
+[x] bypassSanitizationTrustScript  --  packages/core/src/sanitization/bypass.ts:173
+      Membungkus string sebagai SafeScript.
+[x] bypassSanitizationTrustUrl  --  packages/core/src/sanitization/bypass.ts:185
+      Membungkus string sebagai SafeUrl.
+[x] bypassSanitizationTrustResourceUrl  --  packages/core/src/sanitization/bypass.ts:197
+      Membungkus string sebagai SafeResourceUrl - bypass paling berisiko karena RESOURCE_URL tidak punya sanitasi alternatif.
+[x] tagSet  --  packages/core/src/sanitization/html_sanitizer.ts:18
+      Membangun himpunan tag daftar-putih dari string.
+[x] merge  --  packages/core/src/sanitization/html_sanitizer.ts:24
+      Menggabungkan beberapa himpunan daftar-putih.
+[x] SanitizingHtmlSerializer.sanitizeChildren  --  packages/core/src/sanitization/html_sanitizer.ts:129
+      Menelusuri pohon inert dengan penjagaan clobbering dan menyusun ulang HTML yang aman.
+[x] SanitizingHtmlSerializer.startElement  --  packages/core/src/sanitization/html_sanitizer.ts:180
+      Menyaring tag terhadap daftar-putih dan menyaring atribut (termasuk sanitasi href/src di dalamnya).
+[x] SanitizingHtmlSerializer.endElement  --  packages/core/src/sanitization/html_sanitizer.ts:206
+      Menutup tag yang lolos daftar-putih.
+[x] SanitizingHtmlSerializer.chars  --  packages/core/src/sanitization/html_sanitizer.ts:215
+      Menuliskan teks dengan encoding entity.
+[x] isClobberedElement  --  packages/core/src/sanitization/html_sanitizer.ts:225
+      Deteksi DOM clobbering: properti navigasi yang ditimpa elemen bernama.
+[x] getNextSibling  --  packages/core/src/sanitization/html_sanitizer.ts:236
+      Navigasi aman yang memvalidasi hasil terhadap clobbering.
+[x] getFirstChild  --  packages/core/src/sanitization/html_sanitizer.ts:251
+      Versi anak pertama dari navigasi aman.
+[x] getNodeName  --  packages/core/src/sanitization/html_sanitizer.ts:260
+      Pembacaan nodeName yang tahan terhadap properti yang ditimpa.
+[x] clobberedElementError  --  packages/core/src/sanitization/html_sanitizer.ts:266
+      Error khusus saat clobbering terdeteksi.
+[x] encodeEntities  --  packages/core/src/sanitization/html_sanitizer.ts:283
+      Meng-escape karakter khusus dan surrogate pair saat serialisasi teks.
+[x] _sanitizeHtml  --  packages/core/src/sanitization/html_sanitizer.ts:304
+      Inti sanitasi HTML: parsing inert, loop anti-mXSS maksimal 5 putaran sampai stabil, serialisasi ulang daftar-putih, pembungkusan TrustedHTML.
+[x] getTemplateContent  --  packages/core/src/sanitization/html_sanitizer.ts:348
+      Mengambil isi <template> (fragment inert) bila tersedia.
+[x] isTemplateElement  --  packages/core/src/sanitization/html_sanitizer.ts:353
+      Deteksi elemen template.
+[x] enforceIframeSecurity  --  packages/core/src/sanitization/iframe_attrs_validation.ts:26
+      Fail-closed: mengosongkan src/srcdoc lalu MENGHAPUS iframe dari DOM bila atribut sensitifnya di-bind dinamis.
+[x] getInertBodyHelper  --  packages/core/src/sanitization/inert_body.ts:18
+      Memilih strategi DOM inert (DOMParser atau inert document) sesuai lingkungan.
+[x] DOMParserHelper.getInertBodyElement  --  packages/core/src/sanitization/inert_body.ts:37
+      Parsing HTML lewat DOMParser sehingga tidak ada eksekusi skrip maupun pemuatan resource.
+[x] InertDocumentHelper.getInertBodyElement  --  packages/core/src/sanitization/inert_body.ts:73
+      Alternatif memakai <template>.innerHTML pada document inert.
+[x] isDOMParserAvailable  --  packages/core/src/sanitization/inert_body.ts:87
+      Deteksi ketersediaan DOMParser.
+[x] ɵɵsanitizeHtml  --  packages/core/src/sanitization/sanitization.ts:51
+      SINK GUARD konteks HTML: verifikasi ulang konteks tag+prop, hormati Sanitizer dari DI, hormati bypass, selain itu jalankan _sanitizeHtml.
+[x] ɵɵsanitizeStyle  --  packages/core/src/sanitization/sanitization.ts:85
+      Guard konteks STYLE; tanpa sanitizer kustom nilai hanya di-stringify (CSS modern dianggap tidak eksekutif).
+[x] ɵɵsanitizeUrl  --  packages/core/src/sanitization/sanitization.ts:112
+      Guard konteks URL: menolak skema berbahaya lewat _sanitizeUrl.
+[x] ɵɵsanitizeResourceUrl  --  packages/core/src/sanitization/sanitization.ts:134
+      Guard konteks RESOURCE_URL: MELEMPAR bila nilai bukan SafeResourceUrl - resource tidak bisa disanitasi, hanya dipercaya.
+[x] ɵɵsanitizeScript  --  packages/core/src/sanitization/sanitization.ts:162
+      Guard konteks SCRIPT: hanya menerima nilai yang di-bypass eksplisit.
+[x] ɵɵtrustConstantHtml  --  packages/core/src/sanitization/sanitization.ts:191
+      Menaikkan literal template konstan menjadi TrustedHTML; menolak bila ada interpolasi (panjang TemplateStringsArray != 1).
+[x] ɵɵtrustConstantResourceUrl  --  packages/core/src/sanitization/sanitization.ts:217
+      Versi RESOURCE_URL dari mekanisme yang sama.
+[x] getUrlSanitizer  --  packages/core/src/sanitization/sanitization.ts:237
+      Memetakan pasangan tag+properti ke sanitizer URL atau RESOURCE_URL.
+[x] ɵɵsanitizeUrlOrResourceUrl  --  packages/core/src/sanitization/sanitization.ts:263
+      Untuk elemen yang belum diketahui saat kompilasi: memilih sanitizer berdasarkan tag+prop nyata di runtime.
+[x] validateAgainstEventProperties  --  packages/core/src/sanitization/sanitization.ts:267
+      Menolak binding ke properti on* (onclick dsb); di runtime hanya aktif pada dev mode, pertahanan produksi ada di compiler.
+[x] getSanitizer  --  packages/core/src/sanitization/sanitization.ts:278
+      Mengambil Sanitizer kustom dari LView[ENVIRONMENT] bila aplikasi menyediakannya.
+[x] getSecurityContext  --  packages/core/src/sanitization/sanitization.ts:283
+      Mencari konteks keamanan pasangan tag+properti dari skema DOM.
+[x] resolveElement  --  packages/core/src/sanitization/sanitization.ts:288
+      Menentukan tag dan namespace sebenarnya, termasuk kasus DynamicHost yang membaca element.tagName/namespaceURI dari DOM nyata.
+[x] ɵɵvalidateAttribute  --  packages/core/src/sanitization/sanitization.ts:342
+      Pemeriksaan keamanan runtime untuk atribut yang konteksnya tidak bisa ditentukan saat kompilasi; memicu netralisasi iframe.
+[x] getSecuritySensitiveSVGAnimationAttributeName  --  packages/core/src/sanitization/sanitization.ts:398
+      Mendeteksi atribut animasi SVG (animate/set to|from|values) yang bisa menulis href - vektor serangan lewat SMIL.
+[x] _sanitizeUrl  --  packages/core/src/sanitization/url_sanitizer.ts:39
+      Daftar-putih regex protokol: menolak javascript: dan penyamaran lewat entity; nilai tak aman diberi awalan `unsafe:`.
+[x] makeStateKey  --  packages/core/src/transfer_state.ts:47
+      Membuat kunci bertipe untuk TransferState.
+[x] TransferState.get  --  packages/core/src/transfer_state.ts:89
+      Membaca nilai dengan nilai bawaan bila kunci tidak ada.
+[x] TransferState.set  --  packages/core/src/transfer_state.ts:96
+      Menulis nilai ke store dan menandai state berubah.
+[x] TransferState.remove  --  packages/core/src/transfer_state.ts:103
+      Menghapus kunci.
+[x] TransferState.hasKey  --  packages/core/src/transfer_state.ts:110
+      Cek keberadaan kunci.
+[x] TransferState.onSerialize  --  packages/core/src/transfer_state.ts:124
+      Callback untuk mengisi nilai tepat sebelum serialisasi.
+[x] TransferState.toJson  --  packages/core/src/transfer_state.ts:131
+      Serialisasi state SSR dengan escape `<` dan `/` sehingga isi data tidak bisa menutup blok <script> penampungnya.
+[x] retrieveTransferredState  --  packages/core/src/transfer_state.ts:150
+      Membaca dan mem-parse state dari elemen <script> di dokumen klien.
+[x] getPolicy  --  packages/core/src/util/security/trusted_types.ts:38
+      Membuat policy Trusted Types bernama 'angular' sekali saja, tahan terhadap lingkungan tanpa dukungan Trusted Types.
+[x] trustedHTMLFromString  --  packages/core/src/util/security/trusted_types.ts:68
+      Membungkus HTML yang SUDAH disanitasi menjadi TrustedHTML.
+[x] trustedScriptURLFromString  --  packages/core/src/util/security/trusted_types.ts:81
+      Membungkus URL resource tepercaya menjadi TrustedScriptURL.
+[x] DomSanitizerImpl.sanitize  --  packages/platform-browser/src/security/dom_sanitization_service.ts:169
+      Implementasi Sanitizer publik: per konteks memeriksa bypass lalu menjalankan sanitasi; SCRIPT dan RESOURCE_URL selalu melempar tanpa bypass.
+[x] DomSanitizerImpl.bypassSecurityTrustHtml  --  packages/platform-browser/src/security/dom_sanitization_service.ts:216
+      API publik bypass HTML.
+[x] DomSanitizerImpl.bypassSecurityTrustStyle  --  packages/platform-browser/src/security/dom_sanitization_service.ts:219
+      API publik bypass STYLE.
+[x] DomSanitizerImpl.bypassSecurityTrustScript  --  packages/platform-browser/src/security/dom_sanitization_service.ts:222
+      API publik bypass SCRIPT.
+[x] DomSanitizerImpl.bypassSecurityTrustUrl  --  packages/platform-browser/src/security/dom_sanitization_service.ts:225
+      API publik bypass URL.
+[x] DomSanitizerImpl.bypassSecurityTrustResourceUrl  --  packages/platform-browser/src/security/dom_sanitization_service.ts:228
+      API publik bypass RESOURCE_URL.
+
+### 14-core-styling
+[x] ɵɵstyleProp  --  packages/core/src/render3/instructions/styling.ts:83
+      Instruksi [style.prop]; meneruskan ke checkStylingProperty dengan sufiks opsional (mis. 'px').
+[x] ɵɵclassProp  --  packages/core/src/render3/instructions/styling.ts:107
+      Instruksi [class.name]; nilai boolean menentukan tambah/hapus kelas.
+[x] ɵɵstyleMap  --  packages/core/src/render3/instructions/styling.ts:134
+      Instruksi [style] untuk objek/string; memakai parser style yang bisa di-tree-shake.
+[x] styleStringParser  --  packages/core/src/render3/instructions/styling.ts:149
+      Mem-parse string style menjadi KeyValueArray; dipisah agar tree-shakable.
+[x] ɵɵclassMap  --  packages/core/src/render3/instructions/styling.ts:173
+      Instruksi [class] untuk objek/string/array/Set.
+[x] classStringParser  --  packages/core/src/render3/instructions/styling.ts:195
+      Mem-parse string kelas menjadi KeyValueArray.
+[x] checkStylingProperty  --  packages/core/src/render3/instructions/styling.ts:209
+      Alokasi 2 slot binding, bangun rantai prioritas pada firstUpdatePass, lalu updateStyling bila nilai berubah.
+[x] warnInvalidStylePropValue  --  packages/core/src/render3/instructions/styling.ts:242
+      Peringatan dev untuk nilai style bertipe aneh; secara eksplisit menerima SafeStyle sebagai nilai sah.
+[x] stringifyInvalidStylePropValue  --  packages/core/src/render3/instructions/styling.ts:262
+      Stringify defensif untuk pesan peringatan (nilai bisa punya getter yang melempar).
+[x] checkStylingMap  --  packages/core/src/render3/instructions/styling.ts:282
+      Versi map; mendeteksi input shadowing dan menggabungkan bagian statis sebelum menyerahkan nilai ke directive.
+[x] isInHostBindings  --  packages/core/src/render3/instructions/styling.ts:349
+      Membedakan binding host dari binding template lewat expandoStartIndex.
+[x] stylingFirstUpdatePass  --  packages/core/src/render3/instructions/styling.ts:363
+      Membangun linked list prioritas TStylingRange sekali per template.
+[x] wrapInStaticStylingKey  --  packages/core/src/render3/instructions/styling.ts:406
+      Menyisipkan bagian statis ke dalam TStylingKey agar bisa menjadi nilai fallback.
+[x] getTemplateHeadTStylingKey  --  packages/core/src/render3/instructions/styling.ts:499
+      Mengambil kunci kepala rantai milik template.
+[x] setTemplateHeadTStylingKey  --  packages/core/src/render3/instructions/styling.ts:564
+      Memperbarui kunci kepala saat host binding menyisip di depan.
+[x] collectResidual  --  packages/core/src/render3/instructions/styling.ts:590
+      Mengumpulkan nilai statis yang tidak ikut rantai menjadi residualStyles/residualClasses.
+[x] collectStylingFromDirectives  --  packages/core/src/render3/instructions/styling.ts:624
+      Menyapu host binding seluruh directive pada node untuk nilai statis.
+[x] collectStylingFromTAttrs  --  packages/core/src/render3/instructions/styling.ts:664
+      Membaca atribut statis template (class/style) dari TAttributes.
+[x] toStylingKeyValueArray  --  packages/core/src/render3/instructions/styling.ts:721
+      Menormalkan nilai map (string/array/Set/objek) menjadi KeyValueArray terurut; melepas pembungkus SafeValue.
+[x] styleKeyValueArraySet  --  packages/core/src/render3/instructions/styling.ts:764
+      Menyisipkan satu pasangan style ke KeyValueArray, melepas SafeValue.
+[x] classKeyValueArraySet  --  packages/core/src/render3/instructions/styling.ts:778
+      Menyisipkan satu kelas ke KeyValueArray.
+[x] updateStylingMap  --  packages/core/src/render3/instructions/styling.ts:808
+      Membandingkan KeyValueArray lama dan baru lalu menerapkan hanya selisihnya.
+[x] updateStyling  --  packages/core/src/render3/instructions/styling.ts:884
+      Resolusi prioritas satu properti: cek penimpa berprioritas lebih tinggi, cari fallback bila nilai hilang, lalu tulis ke DOM.
+[x] findStylingValue  --  packages/core/src/render3/instructions/styling.ts:946
+      Penelusuran rantai dua arah (next = cari penimpa, prev = cari fallback) termasuk konsultasi nilai residual.
+[x] isStylingValuePresent  --  packages/core/src/render3/instructions/styling.ts:1012
+      Satu tempat yang mendefinisikan bahwa hanya `undefined` yang berarti "tidak berpendapat".
+[x] normalizeSuffix  --  packages/core/src/render3/instructions/styling.ts:1027
+      Menambahkan satuan (px/em) dan melepas SafeValue; sengaja tidak menambah sufiks pada nilai kosong agar CSS tetap valid.
+[x] hasStylingInputShadow  --  packages/core/src/render3/instructions/styling.ts:1053
+      Cek flag TNode: apakah ada directive yang mengambil alih input class/style.
+[x] applyStyling  --  packages/core/src/render3/node_manipulation.ts:1110
+      Titik tulis DOM tunggal: addClass/removeClass atau setStyle/removeStyle, dengan penanganan !important dan DashCase.
+
+### 15-common-ng-optimized-image
+[x] resetImagePriorityCount  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:156
+      Mereset penghitung gambar priority (dipakai pengujian).
+[x] NgOptimizedImage.ngOnInit  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:422
+      Menjalankan seluruh asersi dev, mendaftarkan gambar ke LCPImageObserver, memeriksa preconnect untuk gambar priority, lalu memasang atribut host.
+[x] NgOptimizedImage.setHostAttributes  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:486
+      Menetapkan width/height/loading/fetchpriority/decoding dan memanggil updateSrcAndSrcset.
+[x] NgOptimizedImage.ngOnChanges  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:537
+      Menolak perubahan input pasca-init dan menghitung ulang src/srcset bila ngSrc berubah.
+[x] NgOptimizedImage.getAspectRatio  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:580
+      Rasio width/height bila keduanya ada.
+[x] NgOptimizedImage.callImageLoader  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:587
+      Memanggil IMAGE_LOADER dengan {src,width,loaderParams}; menghitung height dari rasio aspek bila memungkinkan.
+[x] NgOptimizedImage.getLoadingBehavior  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:602
+      priority -> eager, selain itu lazy atau nilai eksplisit.
+[x] NgOptimizedImage.getFetchPriority  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:609
+      priority -> high, selain itu auto.
+[x] NgOptimizedImage.getDecoding  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:613
+      priority -> sync agar dekode lebih awal; selain itu mengikuti input atau auto.
+[x] NgOptimizedImage.getRewrittenSrc  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:627
+      URL src hasil loader, di-cache di _renderedSrc agar tidak dihitung ulang.
+[x] NgOptimizedImage.getRewrittenSrcset  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:639
+      Mem-parse ngSrcset per deskriptor (w atau x) dan memanggil loader untuk tiap lebar.
+[x] NgOptimizedImage.getAutomaticSrcset  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:652
+      Memilih srcset responsif (bila ada `sizes`) atau srcset kepadatan tetap.
+[x] NgOptimizedImage.getResponsiveSrcset  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:660
+      Menghasilkan kandidat dari daftar breakpoint; menyaring breakpoint kecil bila sizes=100vw.
+[x] NgOptimizedImage.updateSrcAndSrcset  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:676
+      Menulis atribut src dan srcset; dapat memaksa perhitungan ulang dengan mereset cache.
+[x] NgOptimizedImage.getFixedSrcset  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:699
+      Menghasilkan kandidat 1x/2x dari pengali kepadatan.
+[x] NgOptimizedImage.shouldGenerateAutomaticSrcset  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:710
+      Memutuskan apakah srcset otomatis layak dibuat (mempertimbangkan fill, sizes, dan loader).
+[x] NgOptimizedImage.generatePlaceholder  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:729
+      Menyusun CSS background placeholder (data URL atau hasil loader beresolusi rendah).
+[x] NgOptimizedImage.shouldBlurPlaceholder  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:749
+      Menentukan efek blur pada placeholder sesuai konfigurasi.
+[x] NgOptimizedImage.removePlaceholderOnLoad  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:756
+      Melepas placeholder setelah event load/error, dengan pembersihan lewat DestroyRef.
+[x] NgOptimizedImage.setHostAttribute  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:779
+      Penulisan atribut melalui Renderer (titik tulis DOM tunggal directive ini).
+[x] processConfig  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:789
+      Menggabungkan IMAGE_CONFIG dengan default dan mengurutkan breakpoint.
+[x] assertNoConflictingSrc  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:802
+      Melarang `src` dipakai bersamaan dengan `ngSrc`.
+[x] assertNoConflictingSrcset  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:817
+      Melarang `srcset` dipakai bersamaan dengan `ngSrcset`.
+[x] assertNotBase64Image  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:832
+      Menolak ngSrc berupa data URL, dengan pemotongan pesan agar error tetap terbaca.
+[x] assertNoComplexSizes  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:851
+      Menolak `sizes` bernilai piksel karena srcset otomatis butuh nilai responsif.
+[x] assertValidPlaceholder  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:864
+      Validasi gabungan untuk konfigurasi placeholder.
+[x] assertNoPlaceholderConfigWithoutPlaceholder  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:873
+      Melarang placeholderConfig tanpa placeholder.
+[x] assertNoRelativePlaceholderWithoutLoader  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:890
+      Placeholder relatif memerlukan loader untuk bisa di-rewrite.
+[x] assertNoOversizedDataUrl  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:905
+      Membatasi ukuran data URL placeholder agar tidak membengkakkan HTML.
+[x] assertNotBlobUrl  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:941
+      Menolak ngSrc berupa blob URL.
+[x] assertNonEmptyInput  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:957
+      Input string wajib tidak kosong.
+[x] assertValidNgSrcset  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:972
+      Validasi format ngSrcset (deskriptor w atau x) sebelum di-parse.
+[x] assertUnderDensityCap  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:994
+      Membatasi pengali kepadatan maksimum pada srcset.
+[x] postInitInputChangeError  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1016
+      Menyusun pesan error untuk perubahan input pasca-init.
+[x] assertNoPostInitInputChange  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1039
+      Menegakkan bahwa input yang memengaruhi src/LCP tidak berubah setelah init.
+[x] assertGreaterThanZero  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1062
+      width/height harus positif.
+[x] assertNoImageDistortion  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1080
+      Membandingkan rasio aspek atribut dengan rasio natural gambar setelah dimuat; berjalan di luar zone.
+[x] assertNonEmptyWidthAndHeight  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1206
+      Mode non-fill wajib punya width dan height (pencegahan CLS).
+[x] assertEmptyWidthAndHeight  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1226
+      Mode fill justru melarang width/height.
+[x] assertNonZeroRenderedHeight  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1241
+      Mode fill memerlukan induk dengan tinggi bukan nol.
+[x] assertValidLoadingInput  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1288
+      Nilai `loading` harus lazy/eager/auto dan tidak boleh dipakai bersama priority.
+[x] assertValidDecodingInput  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1313
+      Nilai `decoding` harus sync/async/auto.
+[x] assertNotMissingBuiltInLoader  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1334
+      Memberi saran bila URL terlihat memakai CDN yang sudah punya loader bawaan.
+[x] assertNoNgSrcsetWithoutLoader  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1363
+      ngSrcset tidak berguna tanpa loader.
+[x] assertNoLoaderParamsWithoutLoader  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1381
+      loaderParams tidak berguna tanpa loader.
+[x] assetPriorityCountBelowThreshold  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1398
+      Memperingatkan bila terlalu banyak gambar ditandai priority.
+[x] assertPlaceholderDimensions  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1422
+      Memperingatkan placeholder yang dimensinya tidak masuk akal.
+[x] callOnLoadIfImageIsLoaded  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1439
+      Menangani gambar yang sudah selesai dimuat sebelum listener terpasang (kasus cache).
+[x] round  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1455
+      Pembulatan dua desimal untuk perbandingan rasio aspek.
+[x] unwrapSafeUrl  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1461
+      Transform input yang melepas SafeValue tanpa sanitasi; sah karena img.src/srcset bukan konteks eksekusi kode.
+[x] booleanOrUrlAttribute  --  packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1470
+      Transform input placeholder yang menerima boolean maupun string URL.

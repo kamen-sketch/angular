@@ -1,0 +1,124 @@
+SUBSISTEM 10 :: @angular/forms
+Lokasi   : packages/forms/src/**
+Status   : DIANALISIS - model kontrol, siklus validasi, jembatan directive-model
+==============================================================================
+
+DUA API, SATU MODEL
+-------------------
+Reactive forms dan template-driven forms memakai MODEL YANG SAMA
+(`AbstractControl`, `FormControl`, `FormGroup`, `FormArray`). Perbedaannya hanya
+siapa yang membuat model:
+  - Reactive: pengembang membuat model, directive (`formControl`,
+    `formControlName`, `formGroup`) menempel padanya.
+  - Template-driven: directive `ngModel`/`ngForm` MEMBUAT model secara implisit,
+    secara asinkron (lewat `resolvedPromise` microtask) agar struktur grup
+    sempat terbentuk.
+
+Jembatan ke elemen DOM adalah `ControlValueAccessor` - antarmuka empat metode
+(`writeValue`, `registerOnChange`, `registerOnTouched`, `setDisabledState`)
+dengan implementasi bawaan per jenis input (default/text, checkbox, number,
+radio, range, select, select-multiple). `selectValueAccessor` memilih accessor
+mana yang dipakai ketika beberapa cocok, dengan prioritas: custom > bawaan
+khusus > default.
+
+SIKLUS VALIDASI (updateValueAndValidity)
+-----------------------------------------
+Ini jantung paket forms. Urutannya:
+
+  1. `_setInitialStatus()`  -> DISABLED bila semua anak disabled, selain itu VALID
+  2. `_updateValue()`       -> hitung ulang nilai agregat (khusus grup/array)
+  3. bila enabled:
+       - batalkan langganan validator async yang masih berjalan
+       - jalankan validator sinkron -> `errors`
+       - `_calculateStatus()` -> VALID | INVALID | PENDING | DISABLED
+       - bila hasilnya VALID/PENDING, jalankan validator async (status PENDING)
+  4. emit `ValueChangeEvent` + `StatusChangeEvent` ke `_events`, dan
+     `valueChanges` + `statusChanges` (EventEmitter lama) - kecuali
+     `emitEvent: false`
+  5. bila bukan `onlySelf`, PROPAGASI KE ATAS: `parent.updateValueAndValidity()`
+
+Poin yang sering menjadi sumber bug aplikasi:
+  - Perubahan menyebar KE ATAS, tidak ke bawah. Untuk memvalidasi ulang seluruh
+    pohon ke bawah ada `_updateTreeValidity` (dipakai saat form di-setup).
+  - `emitEvent: false` hanya menekan emisi, TIDAK menekan perhitungan.
+  - Status DISABLED bukan bagian dari valid/invalid: kontrol disabled tidak ikut
+    dalam nilai `value` (hanya muncul di `getRawValue()`).
+  - `setErrors()` menulis error secara manual lalu memanggil
+    `_updateControlsErrors`, yang menyebarkan status ke leluhur tanpa menjalankan
+    ulang validator.
+  - Validator async yang lama dibatalkan setiap kali `updateValueAndValidity`
+    berjalan (`_cancelExistingSubscription`), dengan penanda `shouldHaveEmitted`
+    agar emisi status tetap konsisten.
+
+`updateOn: 'change' | 'blur' | 'submit'` diselesaikan lewat `_updateOn` yang
+diwarisi dari leluhur bila tidak diset; directive value accessor memutuskan kapan
+memanggil `setValue` berdasarkan nilai ini.
+
+STRUKTUR KONTROL
+----------------
+  FormControl  - nilai tunggal; menyimpan `_pendingValue`, `_pendingChange`,
+                 `_pendingDirty`, `_pendingTouched` untuk mode updateOn non-change.
+  FormGroup    - Map nama->kontrol; `_updateValue` menyusun objek dari anak yang
+                 enabled; `assertControlPresent` memberi error jelas bila
+                 setValue tidak menyertakan semua kunci.
+  FormArray    - array kontrol dengan API push/insert/removeAt/clear.
+  FormRecord   - FormGroup dengan kunci dinamis dan tipe seragam.
+
+`FormBuilder` (dan `NonNullableFormBuilder`) hanyalah pabrik ergonomis di atas
+konstruktor tersebut; `UntypedFormBuilder` mempertahankan perilaku pra-typed-forms.
+
+VALIDATOR
+---------
+`Validators` menyediakan validator statis (required, min, max, minLength,
+maxLength, pattern, email, nullValidator) plus `compose`/`composeAsync` yang
+menggabungkan beberapa validator menjadi satu dan menggabungkan objek error.
+Versi directive-nya (`RequiredValidator`, `MinLengthValidator`, dst) ada di
+`directives/validators.ts` dan mendaftarkan diri lewat multi-provider
+NG_VALIDATORS/NG_ASYNC_VALIDATORS.
+
+`ng_control_status.ts` memetakan status model ke kelas CSS
+(ng-valid/ng-invalid/ng-pending/ng-pristine/ng-dirty/ng-touched/ng-untouched)
+lewat host bindings.
+
+DAFTAR FUNGSI YANG SUDAH DIPAHAMI
+---------------------------------
+[x] AbstractControl.updateValueAndValidity | packages/forms/src/model/abstract_model.ts:1397 | Inti siklus validasi: hitung nilai, jalankan validator sinkron lalu async, emit event, dan propagasi ke leluhur.
+[x] AbstractControl._updateTreeValidity | packages/forms/src/model/abstract_model.ts:1430 | Validasi ulang seluruh pohon dari daun ke akar (dipakai saat form dipasang).
+[x] AbstractControl._setInitialStatus | packages/forms/src/model/abstract_model.ts:1435 | Status awal DISABLED bila semua anak disabled, selain itu VALID.
+[x] AbstractControl._runValidator | packages/forms/src/model/abstract_model.ts:1439 | Menjalankan validator sinkron gabungan dan mengembalikan objek error.
+[x] AbstractControl._runAsyncValidator | packages/forms/src/model/abstract_model.ts:1443 | Menyetel status PENDING dan berlangganan hasil validator async.
+[x] AbstractControl._cancelExistingSubscription | packages/forms/src/model/abstract_model.ts:1461 | Membatalkan validator async yang masih berjalan, mengembalikan apakah emisi seharusnya terjadi.
+[x] AbstractControl.setErrors | packages/forms/src/model/abstract_model.ts:1514 | Menulis error secara manual dan menyebarkan perubahan status ke leluhur.
+[x] AbstractControl.markAsTouched | packages/forms/src/model/abstract_model.ts:999 | Menandai kontrol tersentuh dan menyebarkannya ke leluhur.
+[x] AbstractControl.markAsUntouched | packages/forms/src/model/abstract_model.ts:1084 | Mereset status touched pada kontrol dan seluruh anaknya.
+[x] AbstractControl.markAsDirty | packages/forms/src/model/abstract_model.ts:1133 | Menandai kontrol kotor dan menyebarkannya ke leluhur.
+[x] AbstractControl.markAsPristine | packages/forms/src/model/abstract_model.ts:1180 | Mereset status dirty pada kontrol dan seluruh anaknya.
+[x] AbstractControl.markAllAsTouched | packages/forms/src/model/abstract_model.ts:1047 | Menandai seluruh pohon tersentuh (pola umum saat submit).
+[x] AbstractControl.markAllAsDirty | packages/forms/src/model/abstract_model.ts:1028 | Menandai seluruh pohon kotor.
+[x] AbstractControl.markAsPending | packages/forms/src/model/abstract_model.ts:1228 | Menyetel status PENDING secara eksplisit.
+[x] AbstractControl.disable | packages/forms/src/model/abstract_model.ts:1266 | Menonaktifkan kontrol beserta anaknya dan mengeluarkan nilainya dari agregat induk.
+[x] AbstractControl.enable | packages/forms/src/model/abstract_model.ts:1311 | Mengaktifkan kembali kontrol dan menghitung ulang leluhur.
+[x] AbstractControl._updateAncestors | packages/forms/src/model/abstract_model.ts:1326 | Menghitung ulang nilai, validitas, dan status pristine leluhur.
+[x] AbstractControl.setParent | packages/forms/src/model/abstract_model.ts:1344 | Menautkan kontrol ke induknya.
+[x] AbstractControl.getRawValue | packages/forms/src/model/abstract_model.ts:1367 | Nilai termasuk kontrol yang disabled.
+[x] AbstractControl.setValidators | packages/forms/src/model/abstract_model.ts:817 | Mengganti seluruh validator sinkron (tanpa menjalankan ulang validasi).
+[x] AbstractControl.setAsyncValidators | packages/forms/src/model/abstract_model.ts:831 | Mengganti seluruh validator async.
+[x] AbstractControl.addValidators | packages/forms/src/model/abstract_model.ts:847 | Menambahkan validator tanpa menghapus yang lama.
+[x] AbstractControl.removeValidators | packages/forms/src/model/abstract_model.ts:893 | Menghapus validator berdasarkan identitas fungsi.
+[x] AbstractControl.hasValidator | packages/forms/src/model/abstract_model.ts:933 | Cek keberadaan validator tertentu.
+[x] AbstractControl.clearValidators | packages/forms/src/model/abstract_model.ts:956 | Menghapus semua validator sinkron.
+[x] AbstractControl.clearAsyncValidators | packages/forms/src/model/abstract_model.ts:967 | Menghapus semua validator async.
+[x] pickValidators | packages/forms/src/model/abstract_model.ts:193 | Mengambil validator dari argumen berbentuk array atau objek opsi.
+[x] coerceToValidator | packages/forms/src/model/abstract_model.ts:202 | Menggabungkan array validator menjadi satu fungsi (Validators.compose).
+[x] pickAsyncValidators | packages/forms/src/model/abstract_model.ts:209 | Versi async dari pickValidators.
+[x] coerceToAsyncValidator | packages/forms/src/model/abstract_model.ts:224 | Menggabungkan validator async menjadi satu.
+[x] isOptionsObj | packages/forms/src/model/abstract_model.ts:257 | Membedakan argumen opsi ({validators, updateOn}) dari array validator.
+[x] assertControlPresent | packages/forms/src/model/abstract_model.ts:267 | Error jelas saat setValue/patchValue menyebut kontrol yang tidak ada.
+[x] assertAllValuesPresent | packages/forms/src/model/abstract_model.ts:284 | Memastikan setValue menyertakan seluruh kunci grup.
+[x] hasOwnControl | packages/forms/src/model/abstract_model.ts:1811 | Cek kepemilikan kontrol anak (aman terhadap prototipe).
+[x] ValueChangeEvent.constructor | packages/forms/src/model/abstract_model.ts:110 | Event terpadu perubahan nilai pada aliran `events`.
+[x] StatusChangeEvent.constructor | packages/forms/src/model/abstract_model.ts:157 | Event terpadu perubahan status.
+[x] TouchedChangeEvent.constructor | packages/forms/src/model/abstract_model.ts:141 | Event terpadu perubahan touched.
+[x] PristineChangeEvent.constructor | packages/forms/src/model/abstract_model.ts:125 | Event terpadu perubahan pristine.
+[x] FormSubmittedEvent.constructor | packages/forms/src/model/abstract_model.ts:173 | Event submit form pada aliran `events`.
+[x] FormResetEvent.constructor | packages/forms/src/model/abstract_model.ts:185 | Event reset form pada aliran `events`.

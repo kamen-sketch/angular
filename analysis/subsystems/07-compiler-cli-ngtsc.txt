@@ -1,0 +1,179 @@
+SUBSISTEM 07 :: compiler-cli / ngtsc (integrasi dengan TypeScript)
+Lokasi   : packages/compiler-cli/src/ngtsc/**
+Status   : DIANALISIS PADA TINGKAT ARSITEKTUR + ORKESTRATOR UTAMA
+==============================================================================
+
+APA ITU ngtsc
+-------------
+ngtsc adalah "TypeScript compiler plugin" Angular. Ia TIDAK mem-parse
+TypeScript sendiri - ia memakai `ts.Program` milik TypeScript, membaca metadata
+dekorator lewat refleksi AST, memanggil `packages/compiler` untuk menghasilkan
+kode, lalu menyuntikkan hasilnya sebagai transformer saat emit.
+
+Alur besar (NgtscProgram):
+
+  ts.Program  ->  NgCompiler.analyze  ->  resolve  ->  typeCheck  ->  emit
+                        |                    |            |            |
+                   TraitCompiler        scope/registry  TemplateTypeChecker
+                                                             |
+                                              berkas .ngtypecheck.ts bayangan
+
+DIREKTORI PENTING
+-----------------
+  annotations/     handler per dekorator (component, directive, ngModule, pipe,
+                   injectable) - inti logika "baca metadata lalu kompilasi"
+  transform/       TraitCompiler + transformer TypeScript yang menyuntik ɵcmp dll
+  scope/           LocalModuleScopeRegistry: directive/pipe apa yang terlihat
+                   oleh sebuah komponen (NgModule maupun standalone imports)
+  metadata/        registry metadata directive/pipe/NgModule (lokal dan dari .d.ts)
+  reflection/      abstraksi pembacaan kelas/dekorator dari AST TypeScript
+  partial_evaluator/ evaluator statis untuk nilai dekorator (mengeksekusi
+                   ekspresi TS secara simbolik: objek, array, enum, spread, dll)
+  typecheck/       pembuatan Type Check Block (TCB) untuk memeriksa template
+  incremental/     graf dependensi + penentuan berkas mana yang perlu di-emit ulang
+  imports/         strategi penulisan import (relatif, absolut, unified modules)
+  cycles/          deteksi impor melingkar antar berkas hasil generate
+  shims/           berkas bayangan (.ngfactory, .ngsummary, .ngtypecheck)
+  perf/            instrumentasi fase kompilasi
+  docs/, indexer/, xi18n/, hmr/, sourcemaps/, validation/, entry_point/
+
+MODEL "TRAIT" (inti yang perlu dipahami)
+----------------------------------------
+Setiap kelas yang cocok dengan sebuah handler menjadi TRAIT dengan status yang
+berpindah maju: Pending -> Analyzed -> Resolved -> (Skipped bila error).
+`TraitCompiler` menyimpan `ClassRecord` per kelas dan menjalankan tahap-tahap
+`DecoratorHandler`:
+
+  detect      apakah handler ini menangani kelas tsb (baca dekorator)
+  preanalyze  opsional & asinkron - dipakai untuk memuat templateUrl/styleUrls
+  analyze     ekstraksi metadata; WAJIB MURNI/TANPA EFEK SAMPING karena pada
+              build inkremental tahap ini boleh dilewati untuk berkas yang tidak
+              berubah (hasilnya diambil dari cache)
+  register    efek samping (mendaftarkan metadata ke registry) - selalu dijalankan
+  resolve     penyelesaian lintas-berkas (scope directive/pipe, cek siklus)
+  typeCheck   menyumbang Type Check Block untuk template
+  compileFull/compilePartial/compileLocal  menghasilkan ekspresi definisi
+
+Pemisahan analyze (murni) vs register (efek samping) inilah yang membuat build
+inkremental benar; komentar di `transform/src/api.ts` menyatakannya eksplisit.
+
+`HandlerPrecedence` mengatur interaksi bila beberapa handler cocok pada kelas
+yang sama (mis. `@Component` PRIMARY mengalahkan `@Injectable` SHARED).
+
+MODE KOMPILASI
+--------------
+`makeCompilation` menentukan mode:
+  FULL     - aplikasi biasa; definisi lengkap dengan referensi langsung.
+  PARTIAL  - untuk publikasi pustaka; menghasilkan `ɵɵngDeclare*` yang stabil
+             antar versi, diterjemahkan kemudian oleh linker.
+  LOCAL    - "experimental-local"/emitDeclarationOnly; kompilasi per berkas tanpa
+             informasi lintas-berkas (untuk build paralel cepat).
+Catatan menarik: kompilasi `@angular/core` SELALU FULL, karena core tidak perlu
+indireksi kompatibilitas terhadap dirinya sendiri.
+
+STRATEGI IMPOR (ReferenceEmitter)
+---------------------------------
+Saat compiler harus menulis referensi ke kelas lain (mis. daftar dependensi
+komponen), ia memilih cara menulis import lewat rantai strategi:
+  LocalIdentifierStrategy (sudah ada di berkas ini) ->
+  AbsoluteModuleStrategy (import dari paket npm) ->
+  LogicalProjectStrategy / RelativePathStrategy (import relatif dalam proyek)
+Bila host mendukung `fileNameToModuleName` (Bazel/google3), dipakai
+UnifiedModulesStrategy. Ini juga tempat penanganan `rootDirs`.
+
+TYPE CHECKING TEMPLATE
+----------------------
+Template diperiksa dengan cara menghasilkan berkas TypeScript bayangan berisi
+"Type Check Block": kode TS palsu yang mereplikasi ekspresi template beserta
+tipe konteksnya, lalu dibiarkan TypeScript sendiri yang melaporkan error.
+Diagnostik hasilnya dipetakan kembali ke posisi asli di template lewat
+sourcemap internal. `getTypeCheckingConfig` menerjemahkan opsi
+(`strictTemplates`, `strictNullInputTypes`, `strictDomLocalRefTypes`, ...)
+menjadi konfigurasi pembangkitan TCB.
+
+INKREMENTAL
+-----------
+`IncrementalCompilation` menyimpan graf dependensi berkas (termasuk dependensi
+resource seperti templateUrl/styleUrls) dan hasil analisis sebelumnya. Empat
+fungsi "ticket" di compiler.ts menentukan bagaimana kompilasi baru dimulai:
+dari nol, dari compiler sebelumnya, dari state tersimpan, atau hanya karena
+resource berubah (jalur cepat untuk perubahan HTML/CSS saja).
+
+DAFTAR FUNGSI YANG SUDAH DIPAHAMI
+---------------------------------
+[x] NgtscProgram.constructor | packages/compiler-cli/src/ngtsc/program.ts:50 | Membangun ts.Program + adapter + NgCompiler dari opsi dan daftar berkas.
+[x] NgtscProgram.getTsProgram | packages/compiler-cli/src/ngtsc/program.ts:138 | Mengembalikan ts.Program terkini (dipakai tooling).
+[x] NgtscProgram.getTsSemanticDiagnostics | packages/compiler-cli/src/ngtsc/program.ts:180 | Diagnostik semantik TS untuk berkas non-shim.
+[x] NgtscProgram.getNgSemanticDiagnostics | packages/compiler-cli/src/ngtsc/program.ts:224 | Diagnostik Angular (termasuk hasil pemeriksaan template).
+[x] NgtscProgram.getNgStructuralDiagnostics | packages/compiler-cli/src/ngtsc/program.ts:218 | Diagnostik struktural (selalu kosong pada ngtsc modern).
+[x] NgtscProgram.loadNgStructureAsync | packages/compiler-cli/src/ngtsc/program.ts:252 | Menjalankan analisis asinkron (memuat templateUrl/styleUrls).
+[x] NgtscProgram.emit | packages/compiler-cli/src/ngtsc/program.ts:279 | Emit dengan transformer Angular tersisip; menyaring berkas yang tidak perlu di-emit ulang.
+[x] NgtscProgram.emitXi18n | packages/compiler-cli/src/ngtsc/program.ts:260 | Ekstraksi pesan i18n ke berkas terjemahan.
+[x] NgtscProgram.getIndexedComponents | packages/compiler-cli/src/ngtsc/program.ts:390 | Indeks komponen untuk tooling (language service, docs).
+[x] NgtscProgram.getApiDocumentation | packages/compiler-cli/src/ngtsc/program.ts:402 | Ekstraksi dokumentasi API untuk adev.
+[x] mergeEmitResults | packages/compiler-cli/src/ngtsc/program.ts:430 | Menggabungkan beberapa hasil emit menjadi satu.
+[x] freshCompilationTicket | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:222 | Tiket kompilasi dari nol (tanpa state sebelumnya).
+[x] incrementalFromCompilerTicket | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:247 | Tiket inkremental yang mewarisi state dari NgCompiler sebelumnya.
+[x] incrementalFromStateTicket | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:301 | Tiket inkremental dari state yang diserialisasi (dipakai build system).
+[x] resourceChangeTicket | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:337 | Jalur cepat ketika hanya template/style yang berubah.
+[x] NgCompiler.fromTicket | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:417 | Pabrik NgCompiler sesuai jenis tiket.
+[x] NgCompiler.analyzeSync | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1023 | Analisis seluruh berkas sumber lalu resolve; diinstrumentasi PerfPhase.
+[x] NgCompiler.analyzeAsync | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:778 | Varian asinkron yang menunggu preanalyze (resource eksternal).
+[x] NgCompiler.ensureAnalyzed | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1016 | Memastikan analisis sudah berjalan sebelum operasi lain.
+[x] NgCompiler.resolveCompilation | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1039 | Menjalankan tahap resolve dan mencatat hasil analisis ke state inkremental.
+[x] NgCompiler.makeCompilation | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1293 | Merakit seluruh subsistem: mode kompilasi, reflector, ReferenceEmitter, evaluator, registry metadata, scope registry, daftar handler.
+[x] NgCompiler.getDiagnostics | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:591 | Gabungan diagnostik non-template dan template untuk seluruh program.
+[x] NgCompiler.getDiagnosticsForFile | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:616 | Diagnostik untuk satu berkas (dipakai language service).
+[x] NgCompiler.getDiagnosticsForComponent | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:644 | Diagnostik untuk satu kelas komponen.
+[x] NgCompiler.getTemplateDiagnostics | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1202 | Menjalankan TemplateTypeChecker untuk seluruh program.
+[x] NgCompiler.getTemplateDiagnosticsForFile | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1224 | Versi per-berkas untuk pemeriksaan template.
+[x] NgCompiler.getNonTemplateDiagnostics | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1243 | Diagnostik dari handler (metadata tidak valid, scope salah, dll).
+[x] NgCompiler.runAdditionalChecks | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1260 | Menjalankan extended template checks (mis. pemakaian pipe/binding mencurigakan).
+[x] NgCompiler.getTypeCheckingConfig | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1059 | Menerjemahkan opsi strictness menjadi konfigurasi pembangkitan Type Check Block.
+[x] NgCompiler.prepareEmit | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:809 | Menyiapkan transformer emit dan daftar berkas yang boleh dilewati.
+[x] NgCompiler.getTemplateTypeChecker | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:717 | Akses TemplateTypeChecker untuk language service.
+[x] NgCompiler.updateWithChangedResources | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:539 | Memperbarui hasil kompilasi ketika hanya resource (HTML/CSS) berubah.
+[x] NgCompiler.getComponentsWithTemplateFile | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:729 | Peta balik dari berkas template ke komponen pemakainya.
+[x] NgCompiler.getComponentsWithStyleFile | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:737 | Peta balik dari berkas style ke komponen pemakainya.
+[x] NgCompiler.getMeta | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:756 | Metadata directive/pipe sebuah kelas (untuk tooling).
+[x] NgCompiler.emitHmrUpdateModule | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:984 | Menghasilkan modul pembaruan HMR untuk satu komponen.
+[x] isAngularCorePackage | packages/compiler-cli/src/ngtsc/core/src/compiler.ts:1724 | Deteksi bahwa program yang dikompilasi adalah @angular/core itu sendiri.
+[x] TraitCompiler.analyzeSync | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:129 | Analisis satu berkas secara sinkron.
+[x] TraitCompiler.analyzeAsync | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:133 | Analisis dengan menunggu preanalyze asinkron.
+[x] TraitCompiler.scanClassForTraits | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:267 | Memindai kelas dan membuat trait untuk setiap handler yang cocok.
+[x] TraitCompiler.detectTraits | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:275 | Menjalankan detect() semua handler dengan aturan precedence.
+[x] TraitCompiler.analyzeClass | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:414 | Menganalisis seluruh trait pada satu kelas.
+[x] TraitCompiler.analyzeTrait | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:448 | Menjalankan analyze() lalu register(); menyimpan diagnostik bila gagal.
+[x] TraitCompiler.resolve | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:492 | Tahap resolve lintas-berkas untuk semua trait yang sudah dianalisis.
+[x] TraitCompiler.typeCheck | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:552 | Mengumpulkan Type Check Block dari seluruh trait.
+[x] TraitCompiler.compile | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:660 | Menghasilkan hasil kompilasi (full/partial/local) untuk satu kelas.
+[x] TraitCompiler.adopt | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:230 | Mengambil alih hasil analisis berkas lama pada build inkremental.
+[x] TraitCompiler.recordFor | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:198 | Mengambil ClassRecord milik sebuah kelas.
+[x] TraitCompiler.getAnalyzedRecords | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:206 | Seluruh record hasil analisis (dipakai state inkremental).
+[x] TraitCompiler.makeSymbolForTrait | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:392 | Membuat simbol semantik untuk perbandingan perubahan inkremental.
+[x] TraitCompiler.index | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:603 | Mengisi indeks komponen/template untuk tooling.
+[x] TraitCompiler.xi18n | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:622 | Mengumpulkan pesan i18n dari seluruh trait.
+[x] TraitCompiler.updateResources | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:641 | Memperbarui template/style yang berubah tanpa analisis ulang penuh.
+[x] TraitCompiler.decoratorsFor | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:765 | Dekorator Angular pada sebuah kelas (dipakai transformer untuk menghapusnya).
+[x] TraitCompiler.compileHmrUpdateCallback | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:737 | Menghasilkan callback pembaruan HMR.
+[x] containsErrors | packages/compiler-cli/src/ngtsc/transform/src/compilation.ts:815 | Predikat diagnostik: ada error (bukan sekadar warning).
+[x] ComponentDecoratorHandler.detect | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:344 | Mengenali dekorator @Component pada sebuah kelas.
+[x] ComponentDecoratorHandler.preanalyze | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:363 | Memuat templateUrl/styleUrls secara asinkron sebelum analisis.
+[x] ComponentDecoratorHandler.analyze | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:483 | Ekstraksi metadata komponen: evaluasi objek dekorator, parse template, kumpulkan style, deteksi blok defer.
+[x] ComponentDecoratorHandler.register | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1088 | Mendaftarkan metadata komponen ke registry (tahap berefek samping).
+[x] ComponentDecoratorHandler.resolve | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1268 | Menyelesaikan scope directive/pipe, dependensi defer, dan siklus impor.
+[x] ComponentDecoratorHandler.typeCheck | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1197 | Menyumbangkan Type Check Block template komponen.
+[x] ComponentDecoratorHandler.compileFull | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1485 | Menghasilkan ɵcmp lengkap lewat compileComponentFromMetadata.
+[x] ComponentDecoratorHandler.compilePartial | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1552 | Menghasilkan ɵɵngDeclareComponent untuk distribusi pustaka.
+[x] ComponentDecoratorHandler.compileLocal | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1619 | Kompilasi mode lokal tanpa informasi lintas-berkas.
+[x] ComponentDecoratorHandler.index | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1132 | Mengindeks penggunaan directive/pipe dalam template.
+[x] ComponentDecoratorHandler.updateResources | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1440 | Memuat ulang template/style saat resource berubah.
+[x] ComponentDecoratorHandler.resolveComponentDependencies | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1737 | Menentukan directive/pipe yang benar-benar dipakai template (basis tree-shaking dependensi).
+[x] ComponentDecoratorHandler.handleDependencyCycles | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:1988 | Menangani siklus impor dengan mengalihkan ke referensi tak-langsung.
+[x] ComponentDecoratorHandler.resolveDeferBlocks | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2361 | Menentukan dependensi yang bisa di-defer beserta fungsi dynamic import-nya.
+[x] ComponentDecoratorHandler.registerDeferrableCandidate | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2471 | Menandai impor yang memenuhi syarat untuk pemuatan tertunda.
+[x] ComponentDecoratorHandler.compileDeferBlocks | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2544 | Menghasilkan kode konfigurasi blok @defer.
+[x] createMatcherFromScope | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2595 | Membangun SelectorMatcher dari scope komponen untuk pencocokan directive di template.
+[x] validateStandaloneImports | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2676 | Memvalidasi bahwa `imports:` komponen standalone berisi hal yang sah.
+[x] validateNoImportOverlap | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2648 | Melarang simbol yang sama muncul di imports dan deferredImports.
+[x] removeDeferrableTypesFromComponentDecorator | packages/compiler-cli/src/ngtsc/annotations/component/src/handler.ts:2630 | Menghapus tipe yang di-defer dari dekorator agar tidak menjadi impor eager.

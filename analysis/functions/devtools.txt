@@ -1,0 +1,1576 @@
+INVENTORY FUNGSI :: devtools
+Total simbol: 1051 | file: 179
+Rincian: function=212, arrow=124, class=142, method=490, accessor=35, ctor=48
+Legenda: [ ] belum dianalisis  |  [x] sudah dianalisis (lihat analysis/CHECKED-FUNCTIONS.txt)
+Format: [ ] Nama  (export|kind) :baris
+==============================================================================
+
+## devtools/projects/demo-no-zone/src/app/app.component.ts
+[ ] AppComponent  (export class) :15
+[ ] AppComponent.constructor  (ctor) :18
+[ ] AppComponent.increment  (method) :20
+
+## devtools/projects/ng-devtools-backend/src/lib/client-event-subscribers.ts
+[ ] subscribeToClientEvents  (export arrow) :81
+[ ] shutdownCallback  (arrow) :153
+[ ] devtoolsShutdownCallback  (arrow) :157
+[ ] getLatestComponentExplorerViewCallback  (arrow) :162
+[ ] checkForAngularCallback  (arrow) :190
+[ ] navigateRouteCallback  (arrow) :195
+[ ] viewSourceFromRouter  (export arrow) :212
+      -- Opens the source code of a component or a directive in the editor. or other callable to view source for.
+[ ] startProfilingCallback  (arrow) :221
+[ ] stopProfilingCallback  (arrow) :226
+[ ] selectedComponentCallback  (arrow) :230
+[ ] getNestedPropertiesCallback  (arrow) :239
+[ ] getSignalNestedPropertiesCallback  (arrow) :269
+[ ] getRoutes  (arrow) :332
+      -- todo: parse router tree with framework APIs after they are developed
+[ ] getRouterConfigFromRoot  (arrow) :341
+[ ] checkForAngular  (arrow) :350
+[ ] setupInspector  (arrow) :375
+[ ] getRouterInstance  (function) :420
+[ ] prepareForestForSerialization  (arrow) :440
+      -- and leave the component name.
+[ ] getNodeDIResolutionPath  (function) :479
+[ ] getInjectorProvidersCallback  (arrow) :507
+[ ] logProvider  (arrow) :561
+[ ] getTransferStateCallback  (arrow) :600
+[ ] getSignalGraphCallback  (arrow) :629
+[ ] sanitizeRouteData  (export function) :670
+      -- Route data needs to be serializable to be sent over the message bus.
+
+## devtools/projects/ng-devtools-backend/src/lib/component-inspector/component-inspector.ts
+[ ] ComponentInspector  (export class) :27
+[ ] ComponentInspector.constructor  (ctor) :34
+[ ] ComponentInspector.startInspecting  (method) :47
+[ ] ComponentInspector.stopInspecting  (method) :53
+[ ] ComponentInspector.elementClick  (method) :60
+[ ] ComponentInspector.elementMouseOver  (method) :71
+[ ] ComponentInspector.cancelEvent  (method) :88
+[ ] ComponentInspector.bindMethods  (method) :94
+[ ] ComponentInspector.highlightByPosition  (method) :102
+[ ] ComponentInspector.unhighlight  (method) :110
+[ ] ComponentInspector.highlightElement  (method) :115
+
+## devtools/projects/ng-devtools-backend/src/lib/console/set-console-reference.ts
+[ ] setConsoleReference  (export arrow) :24
+[ ] _setConsoleReference  (arrow) :31
+[ ] prepareCurrentReferencesForInsertion  (arrow) :37
+[ ] assignConsoleReferencesFrom  (arrow) :48
+[ ] setDirectiveKey  (arrow) :54
+[ ] getConsoleReferenceWithIndexOf  (arrow) :69
+
+## devtools/projects/ng-devtools-backend/src/lib/directive-forest/component-tree/component-tree.ts
+[ ] getInjectorId  (export function) :64
+[ ] getOrCreateInjectorId  (function) :68
+[ ] getInjectorMetadata  (export function) :87
+[ ] getInjectorResolutionPath  (export function) :93
+[ ] getInjectorFromElementNode  (export function) :102
+[ ] getDirectivesFromElement  (function) :110
+[ ] getLatestComponentState  (export arrow) :126
+[ ] serializeElementInjectorWithId  (function) :188
+[ ] serializeInjectorWithId  (function) :200
+[ ] serializeEnvironmentInjectorWithId  (function) :208
+[ ] getDirectiveMetadata  (arrow) :229
+      -- the method directly interacts with the directive/component definition.
+[ ] getDirectiveCdStrategy  (export function) :290
+[ ] getInjectorProviders  (export function) :318
+[ ] getDependenciesForDirective  (arrow) :326
+[ ] valueToLabel  (arrow) :413
+[ ] stripUnderscore  (function) :440
+[ ] serializeInjector  (export function) :448
+[ ] serializeProviderRecord  (export function) :487
+[ ] elementToDirectiveNames  (function) :539
+[ ] getElementInjectorElement  (export function) :546
+[ ] isInjectionToken  (function) :554
+[ ] isElementInjector  (export function) :558
+[ ] isNullInjector  (function) :563
+[ ] getRootLViewsHelper  (arrow) :568
+[ ] getRootElements  (export function) :584
+      -- Gets the all the root components in the Dom, including those outside the application root
+[ ] discoverNonApplicationRootComponents  (function) :662
+      -- Warning: This function mutates the `roots` arg! Recursively traverse the DOM tree to find all Angular component root elements. This function starts from the giv
+[ ] buildDirectiveForest  (export arrow) :683
+[ ] queryDirectiveForest  (export arrow) :704
+      -- If we can't find any, we return null.
+[ ] findNodeInForest  (export arrow) :725
+[ ] findNodeFromSerializedPosition  (export arrow) :734
+[ ] updateState  (export arrow) :741
+[ ] logValue  (export function) :768
+[ ] logToConsole  (function) :805
+[ ] serializeResolutionPath  (export function) :810
+[ ] findDirectiveAndHost  (export function) :832
+[ ] getDirectiveName  (export function) :860
+      -- Note(hawkgs): Duplicate in directive-forest due ot cyclic dependency.
+
+## devtools/projects/ng-devtools-backend/src/lib/directive-forest/component-tree/get-roots.ts
+[ ] getAppRoots  (export function) :10
+      -- Returns all app roots.
+
+## devtools/projects/ng-devtools-backend/src/lib/directive-forest/identity-tracker/identity-tracker.ts
+[ ] IdentityTracker  (export class) :53
+      -- Indexes the directive forest by adding IDs and node positions.
+[ ] IdentityTracker.constructor  (ctor) :67
+[ ] IdentityTracker.getInstance  (method) :69
+[ ] IdentityTracker.getDirectivePosition  (method) :76
+[ ] IdentityTracker.getDirectiveId  (method) :80
+[ ] IdentityTracker.hasDirective  (method) :84
+[ ] IdentityTracker.selectMode  (method) :94
+      -- Change/select the operating mode of the `IdentityTracker`. Refer to `IdentityTrackerOpMode` for detailed information about the different modes.
+[ ] IdentityTracker.index  (method) :101
+[ ] IdentityTracker.indexInternal  (method) :121
+[ ] IdentityTracker.indexNode  (method) :143
+[ ] IdentityTracker.cleanupDirective  (method) :155
+[ ] IdentityTracker.flushPendingRemovals  (method) :161
+[ ] IdentityTracker.destroy  (method) :168
+[ ] indexTree  (arrow) :182
+[ ] indexForest  (export arrow) :202
+
+## devtools/projects/ng-devtools-backend/src/lib/directive-forest/index.ts
+[ ] buildDirectiveForestWithStrategy  (export arrow) :11
+
+## devtools/projects/ng-devtools-backend/src/lib/directive-forest/manager.ts
+[ ] DirectiveForestManager  (export class) :21
+      -- Exposes latest directive forest state. Delegates forest indexing to IdentityTracker Singleton.
+[ ] DirectiveForestManager.getDirectivePosition  (method) :27
+[ ] DirectiveForestManager.getDirectiveId  (method) :35
+[ ] DirectiveForestManager.getIndexedDirectiveForest  (method) :43
+[ ] DirectiveForestManager.getDirectiveForest  (method) :47
+[ ] DirectiveForestManager.initialize  (method) :51
+[ ] DirectiveForestManager.indexForest  (method) :55
+[ ] DirectiveForestManager.onIndexForest  (method) :71
+      -- Listen to forest indexing event.
+[ ] getDirectiveForestManager  (export function) :87
+      -- Get the directive forest manager. Initializes the manager if it wasn't requested before.
+
+## devtools/projects/ng-devtools-backend/src/lib/directive-forest/property-mutation/property-mutation.ts
+[ ] mutateNestedProp  (export function) :78
+      -- Mutates the nested property under the provided object and assigns the new value. Supports both plain objects/arrays as well deep mutations within a signal.     
+[ ] getNestedProps  (function) :117
+      -- Walk the object properties and generate {@link PropertyAccess} objects.
+[ ] immutableUpdate  (function) :154
+      -- Apply an immutable update assigning `newValue` to the list of properties provided. Generates new objects and retains existing properties while overwriting the s
+[ ] getInheritedPropertyDescriptor  (function) :183
+      -- Gets the {@link PropertyDescriptor} for the given name, even if inherited from the prototype. This is effectively equivalent to {@link Object.getOwnPropertyDesc
+[ ] isWritableSignal  (function) :196
+      -- Assert that a given signal is writable.
+[ ] assertSafeToImmutablyUpdate  (function) :210
+      -- Assert that the given object may be safely updated in an immutable fashion. Objects with user-defined prototypes may not be immutably updated because they would
+
+## devtools/projects/ng-devtools-backend/src/lib/directive-forest/tree-strategies/index.ts
+[ ] selectTreeStrategy  (export function) :17
+
+## devtools/projects/ng-devtools-backend/src/lib/directive-forest/tree-strategies/ltree.ts
+[ ] latest  (arrow) :22
+[ ] isLContainer  (export arrow) :42
+[ ] isLView  (arrow) :46
+[ ] getLViewFromDirectiveOrElementInstance  (export function) :51
+[ ] getDirectiveHostElement  (export arrow) :65
+[ ] LTreeStrategy  (export class) :83
+[ ] LTreeStrategy.supports  (method) :84
+[ ] LTreeStrategy._getNode  (method) :88
+[ ] LTreeStrategy._extract  (method) :132
+[ ] LTreeStrategy.build  (method) :158
+[ ] getDirectiveName  (function) :166
+      -- Note(hawkgs): Duplicate due to cyclic dependency.
+
+## devtools/projects/ng-devtools-backend/src/lib/directive-forest/tree-strategies/render-tree.ts
+[ ] extractViewTree  (function) :32
+[ ] groupControlFlowBlocksChildren  (function) :103
+      -- Groups nodes under a @defer block if the given node is the first child of one.
+[ ] hydrationStatus  (function) :153
+[ ] RTreeStrategy  (export class) :179
+[ ] RTreeStrategy.supports  (method) :180
+[ ] RTreeStrategy.build  (method) :186
+
+## devtools/projects/ng-devtools-backend/src/lib/directive-forest/utils/control-flow.ts
+[ ] isControlFlowBlock  (export function) :29
+[ ] mapToDevtoolsControlFlowModel  (export function) :37
+[ ] createControlFlowTreeNode  (export function) :73
+      -- Creates a synthetic ComponentTreeNode for control flow blocks (@defer, @for).
+[ ] ControlFlowBlocksIterator  (export class) :90
+[ ] ControlFlowBlocksIterator.constructor  (ctor) :96
+[ ] ControlFlowBlocksIterator.advance  (method) :100
+[ ] ControlFlowBlocksIterator.currentBlock  (accessor) :104
+[ ] groupTriggers  (function) :109
+[ ] getRenderedBlock  (function) :126
+
+## devtools/projects/ng-devtools-backend/src/lib/hydration/hydration-highlighting.ts
+[ ] highlightHydrationNodes  (export function) :21
+[ ] removeHydrationHighlights  (export function) :41
+[ ] highlightHydrationElement  (function) :47
+[ ] findNodesForHydrationOverlay  (function) :71
+      -- Returns the first level of hydrated nodes Note: Mismatched nodes nested in hydrated nodes aren't included
+[ ] findErrorNodesForHydrationOverlay  (function) :86
+
+## devtools/projects/ng-devtools-backend/src/lib/index.ts
+[ ] initializeMessageBus  (export arrow) :13
+
+## devtools/projects/ng-devtools-backend/src/lib/profiling/capture.ts
+[ ] start  (export arrow) :37
+[ ] stop  (export arrow) :54
+[ ] startEvent  (arrow) :65
+[ ] getEventStart  (arrow) :71
+[ ] getHooks  (arrow) :81
+[ ] insertOrMerge  (arrow) :233
+[ ] insertElementProfile  (arrow) :262
+[ ] prepareInitialFrame  (arrow) :294
+[ ] flushBuffer  (arrow) :346
+[ ] getChangeDetectionSource  (arrow) :371
+[ ] lexicographicOrder  (arrow) :379
+
+## devtools/projects/ng-devtools-backend/src/lib/profiling/performance-track.ts
+[ ] recordMark  (arrow) :29
+[ ] endMark  (arrow) :36
+[ ] initializePerformanceTrack  (function) :105
+[ ] enablePerformanceTrack  (export function) :115
+      -- Enable Angular's performance track in the Chrome DevTools profiler.
+
+## devtools/projects/ng-devtools-backend/src/lib/profiling/profiler/index.ts
+[ ] selectProfilerStrategy  (arrow) :24
+      -- Factory method for creating profiler object. Gives priority to NgProfiler, falls back on PatchingProfiler if framework APIs are not present.
+[ ] getProfiler  (export function) :35
+      -- Get the Profiler reference. Initializes the Profiler if it wasn't requested before.
+
+## devtools/projects/ng-devtools-backend/src/lib/profiling/profiler/native.ts
+[ ] NgProfiler  (export class) :21
+      -- Implementation of Profiler that utilizes framework APIs fire profiler hooks.
+[ ] NgProfiler.constructor  (ctor) :26
+[ ] NgProfiler._initialize  (method) :38
+[ ] NgProfiler._setProfilerCallback  (method) :45
+[ ] NgProfiler.destroy  (method) :49
+[ ] NgProfiler.onIndexForest  (method) :53
+[ ] NgProfiler.[ɵProfilerEvent.BootstrapApplicationStart]  (method) :71
+[ ] NgProfiler.[ɵProfilerEvent.BootstrapApplicationEnd]  (method) :76
+[ ] NgProfiler.[ɵProfilerEvent.BootstrapComponentStart]  (method) :81
+[ ] NgProfiler.[ɵProfilerEvent.BootstrapComponentEnd]  (method) :86
+[ ] NgProfiler.[ɵProfilerEvent.ChangeDetectionStart]  (method) :91
+[ ] NgProfiler.[ɵProfilerEvent.ChangeDetectionEnd]  (method) :96
+[ ] NgProfiler.[ɵProfilerEvent.ChangeDetectionSyncStart]  (method) :101
+[ ] NgProfiler.[ɵProfilerEvent.ChangeDetectionSyncEnd]  (method) :106
+[ ] NgProfiler.[ɵProfilerEvent.AfterRenderHooksStart]  (method) :111
+[ ] NgProfiler.[ɵProfilerEvent.AfterRenderHooksEnd]  (method) :116
+[ ] NgProfiler.[ɵProfilerEvent.ComponentStart]  (method) :121
+[ ] NgProfiler.[ɵProfilerEvent.ComponentEnd]  (method) :126
+[ ] NgProfiler.[ɵProfilerEvent.DeferBlockStateStart]  (method) :131
+[ ] NgProfiler.[ɵProfilerEvent.DeferBlockStateEnd]  (method) :136
+[ ] NgProfiler.[ɵProfilerEvent.DynamicComponentStart]  (method) :141
+[ ] NgProfiler.[ɵProfilerEvent.DynamicComponentEnd]  (method) :146
+[ ] NgProfiler.[ɵProfilerEvent.HostBindingsUpdateStart]  (method) :151
+[ ] NgProfiler.[ɵProfilerEvent.HostBindingsUpdateEnd]  (method) :156
+[ ] NgProfiler.[ɵProfilerEvent.TemplateCreateStart]  (method) :161
+[ ] NgProfiler.[ɵProfilerEvent.TemplateCreateEnd]  (method) :166
+[ ] NgProfiler.[ɵProfilerEvent.TemplateUpdateStart]  (method) :171
+[ ] NgProfiler.[ɵProfilerEvent.TemplateUpdateEnd]  (method) :205
+[ ] NgProfiler.[ɵProfilerEvent.LifecycleHookStart]  (method) :222
+[ ] NgProfiler.[ɵProfilerEvent.LifecycleHookEnd]  (method) :231
+[ ] NgProfiler.[ɵProfilerEvent.OutputStart]  (method) :240
+[ ] NgProfiler.[ɵProfilerEvent.OutputEnd]  (method) :250
+
+## devtools/projects/ng-devtools-backend/src/lib/profiling/profiler/polyfill.ts
+[ ] PatchingProfiler  (export class) :36
+      -- Implementation of Profiler that uses monkey patching of directive templates and lifecycle methods to fire profiler hooks.
+[ ] PatchingProfiler.destroy  (method) :41
+[ ] PatchingProfiler.onIndexForest  (method) :55
+[ ] PatchingProfiler._fireCreationCallback  (method) :67
+[ ] PatchingProfiler._fireDestroyCallback  (method) :73
+[ ] PatchingProfiler._observeComponent  (method) :79
+[ ] PatchingProfiler._observeLifecycle  (method) :112
+
+## devtools/projects/ng-devtools-backend/src/lib/profiling/profiler/shared.ts
+[ ] Profiler  (export class) :92
+      --  Class for profiling angular applications. Handles hook subscriptions and emitting change detection events.
+[ ] Profiler.constructor  (ctor) :100
+[ ] Profiler.destroy  (method) :104
+[ ] Profiler.onIndexForest  (method) :106
+[ ] Profiler.subscribe  (method) :108
+[ ] Profiler.unsubscribe  (method) :112
+[ ] Profiler._onCreate  (method) :117
+      -- @internal
+[ ] Profiler._onDestroy  (method) :131
+      -- @internal
+[ ] Profiler._onChangeDetectionStart  (method) :145
+      -- @internal
+[ ] Profiler._onChangeDetectionEnd  (method) :158
+      -- @internal
+[ ] Profiler._onLifecycleHookStart  (method) :171
+      -- @internal
+[ ] Profiler._onLifecycleHookEnd  (method) :192
+      -- @internal
+[ ] Profiler._onOutputStart  (method) :206
+      -- @internal
+[ ] Profiler._onOutputEnd  (method) :220
+      -- @internal
+[ ] Profiler._invokeCallback  (method) :234
+      -- @internal
+[ ] getLifeCycleName  (export arrow) :257
+
+## devtools/projects/ng-devtools-backend/src/lib/router-tree/router-tree.ts
+[ ] collectActiveRouteConfigs  (function) :33
+      -- Recursively traverses the ActivatedRoute tree and collects all routeConfig objects.
+[ ] getActiveRouteConfigs  (export function) :65
+      -- Gets the set of currently active Route configuration objects from the router state. This function synchronously reads the current router state without waiting f
+[ ] parseRoutes  (export function) :74
+[ ] getGuardNames  (function) :93
+[ ] getProviderName  (function) :100
+[ ] assignChildrenToParent  (function) :106
+[ ] getClassOrFunctionName  (function) :191
+      -- Get the display name for a function or class. '[Function]' is returned instead
+[ ] getPropertyName  (function) :208
+[ ] childRouteName  (function) :219
+[ ] getRouterCallableConstructRef  (export function) :237
+      -- Find a named callable construct (class or function) by type & name in a source routes tree.
+
+## devtools/projects/ng-devtools-backend/src/lib/shared/highlighter/dom.ts
+[ ] createOverlayWithLabels  (export function) :33
+[ ] positionOverlayElement  (export function) :93
+[ ] setLabelElementVisibility  (export function) :103
+[ ] getComponentRect  (export function) :120
+[ ] toCSSColor  (function) :130
+[ ] isInDoc  (function) :134
+
+## devtools/projects/ng-devtools-backend/src/lib/shared/highlighter/highlights.ts
+[ ] Highlight  (export class) :79
+      -- Provides a container of all highlight-related references and controls over the highlight.
+[ ] Highlight.constructor  (ctor) :82
+[ ] Highlight.updateLabel  (method) :96
+      -- Update a label of the highlight.
+[ ] Highlight.destroy  (method) :108
+      -- Remove the highlight.
+[ ] Highlight.display  (method) :124
+      -- Render/append the highlight to the DOM.
+[ ] Highlight.hide  (method) :131
+      -- Remove the highlight from the DOM.
+[ ] Highlight.position  (method) :141
+      -- Position the highlight by a provided `DOMRect`. If omitted, the current bounding client rect of the target element will be used.
+[ ] validateTemplateLabels  (function) :150
+[ ] createHydrationHighlightTemplate  (function) :201
+
+## devtools/projects/ng-devtools-backend/src/lib/shared/highlighter/index.ts
+[ ] storeHighlight  (function) :141
+      -- Store the `Highlight` in the active highlights data structures.
+[ ] highlightElement  (export function) :160
+      -- Highlight an element.
+[ ] removeElementHighlights  (export function) :192
+      -- Remove all highlights of a given target element.
+[ ] removeAllHighlights  (export function) :206
+      -- Remove all active highlights.
+[ ] removeHighlightsByType  (export function) :219
+      -- Remove all active highlights of the provided type.
+[ ] forEachActiveHighlight  (function) :238
+      -- Iterate over all active highlights. Do NOT perform mutations during the iterations.
+[ ] displayElementHighlights  (function) :261
+      -- Determines the highlight with the highest priority and renders it. The rest are hidden.
+
+## devtools/projects/ng-devtools-backend/src/lib/shared/ng-debug-api/ng-debug-api.ts
+[ ] ngDebugClient  (export arrow) :14
+      -- Returns a handle to window.ng APIs (global angular debugging).
+[ ] ngDebugApiIsSupported  (export function) :24
+      -- Type guard that checks whether a given debug API is supported within window.ng
+[ ] ngDebugDependencyInjectionApiIsSupported  (export function) :32
+      -- Checks whether Dependency Injection debug API is supported within window.ng
+[ ] ngDebugProfilerApiIsSupported  (export function) :54
+      -- Checks whether Profiler API is supported within window.ng
+[ ] ngDebugRoutesApiIsSupported  (export function) :71
+      -- Checks whether Router API is supported within window.ng
+[ ] ngDebugSignalGraphApiIsSupported  (export function) :81
+      -- Checks whether Signal Graph API is supported within window.ng
+[ ] ngDebugTransferStateApiIsSupported  (export function) :90
+      -- Checks if transfer state is available. Transfer state is only relevant when Angular app uses Server-Side Rendering.
+[ ] ngDebugSignalPropertiesInspectionApiIsSupported  (export function) :96
+      -- Checks whether signal properties inspection API is supported within window.ng
+
+## devtools/projects/ng-devtools-backend/src/lib/shared/ng-debug-api/supported-apis.ts
+[ ] getSupportedApis  (export function) :24
+      -- Returns an object with all available Devtools APIs.
+
+## devtools/projects/ng-devtools-backend/src/lib/shared/state-serializer/object-utils.ts
+[ ] getKeys  (export function) :17
+      -- which will add unnecessary complexity.
+[ ] getDescriptor  (export arrow) :46
+      -- This helper function covers the common scenario as well as the getters and setters
+
+## devtools/projects/ng-devtools-backend/src/lib/shared/state-serializer/prop-type.ts
+[ ] getPropType  (export arrow) :28
+      -- Determines the devtools-PropType of a component's property
+
+## devtools/projects/ng-devtools-backend/src/lib/shared/state-serializer/serialized-descriptor-factory.ts
+[ ] isEditable  (arrow) :157
+[ ] isGetterOrSetter  (arrow) :182
+[ ] getPreview  (arrow) :185
+[ ] createShallowSerializedDescriptor  (export function) :205
+[ ] createLevelSerializedDescriptor  (export function) :231
+[ ] createNestedSerializedDescriptor  (export function) :267
+[ ] getNestedDescriptorValue  (function) :297
+[ ] getLevelDescriptorValue  (function) :331
+[ ] truncate  (function) :370
+
+## devtools/projects/ng-devtools-backend/src/lib/shared/state-serializer/state-serializer.ts
+[ ] nestedSerializer  (function) :29
+[ ] levelSerializer  (function) :76
+[ ] serializeDirectiveState  (export function) :119
+[ ] serializeValue  (export function) :132
+[ ] deeplySerializeSelectedProperties  (export function) :136
+[ ] getContainerType  (function) :156
+[ ] isWritableSignal  (function) :164
+
+## devtools/projects/ng-devtools-backend/src/lib/shared/utils/general.ts
+[ ] runOutsideAngular  (export arrow) :11
+[ ] isCustomElement  (export arrow) :29
+[ ] isSignal  (export function) :40
+[ ] safelyReadSignalValue  (export function) :48
+[ ] unwrapSignal  (export function) :57
+
+## devtools/projects/ng-devtools-backend/src/lib/shared/utils/serialization.ts
+[ ] sanitizeObject  (export function) :9
+[ ] recurse  (function) :13
+
+## devtools/projects/ng-devtools-backend/src/lib/shared/utils/signal-graph-ref.ts
+[ ] SignalGraphRef  (export class) :15
+      -- Keeps a `ɵDebugSignalGraph` reference tied to a weak-referenced key. If the key is garbage collected, the graph is also cleared.
+[ ] SignalGraphRef.deref  (method) :19
+      -- Gets the key-bound signal graph reference.
+[ ] SignalGraphRef.set  (method) :24
+      -- Sets the signal graph.
+[ ] SignalGraphRef.exists  (method) :29
+      -- Checks if the key-bound signal graph exists.
+[ ] SignalGraphRef.clear  (method) :34
+      -- Clears the reference.
+
+## devtools/projects/ng-devtools/src/lib/application-environment/index.ts
+[ ] ApplicationEnvironment  (export class) :21
+[ ] ApplicationEnvironment.environment  (accessor) :22
+
+## devtools/projects/ng-devtools/src/lib/application-operations/index.ts
+[ ] ApplicationOperations  (export class) :12
+[ ] ApplicationOperations.viewSource  (method) :13
+[ ] ApplicationOperations.selectDomElement  (method) :14
+[ ] ApplicationOperations.inspect  (method) :15
+[ ] ApplicationOperations.inspectSignal  (method) :16
+[ ] ApplicationOperations.viewSourceFromRouter  (method) :17
+[ ] ApplicationOperations.setStorageItems  (method) :18
+[ ] ApplicationOperations.getStorageItems  (method) :19
+[ ] ApplicationOperations.removeStorageItems  (method) :20
+
+## devtools/projects/ng-devtools/src/lib/application-providers/settings_provider.ts
+[ ] provideSettings  (export function) :20
+[ ] applyMigrations  (export function) :46
+      -- Migrates the provided data to the latest data format, if needed. Returns a new object with the migrated data.
+
+## devtools/projects/ng-devtools/src/lib/application-services/browser_styles_service.ts
+[ ] BrowserStylesService  (export class) :36
+[ ] BrowserStylesService.initBrowserSpecificStyles  (method) :44
+[ ] BrowserStylesService.addBrowserUiClass  (method) :50
+      -- Add the browser class to the document body
+[ ] BrowserStylesService.loadBrowserStyle  (method) :56
+      -- Load browser-specific styles
+[ ] BrowserStylesService.detectBrowser  (method) :67
+
+## devtools/projects/ng-devtools/src/lib/application-services/frame_manager.ts
+[ ] FrameManager  (export class) :17
+[ ] FrameManager.initialize  (method) :43
+[ ] FrameManager.initialize  (method) :49
+[ ] FrameManager.isSelectedFrame  (method) :100
+[ ] FrameManager.inspectFrame  (method) :104
+[ ] FrameManager.frameHasUniqueUrl  (method) :117
+[ ] FrameManager.addFrame  (method) :126
+[ ] FrameManager.removeFrame  (method) :137
+
+## devtools/projects/ng-devtools/src/lib/application-services/settings.ts
+[ ] Settings  (export class) :15
+      -- https://github.com/angular/angular/blob/main/devtools/docs/settings.md
+
+## devtools/projects/ng-devtools/src/lib/application-services/settings_store.ts
+[ ] SettingsStore  (export class) :20
+      -- Provides an API for storing and preserving settings values.
+[ ] SettingsStore.constructor  (ctor) :25
+[ ] SettingsStore.create  (method) :32
+      -- Create a settings value a provided key, as a writable signal. If the item doesn't exist, a new one will be created. Updates to the signal value are automaticall
+
+## devtools/projects/ng-devtools/src/lib/application-services/test-utils/app_operations_mock.ts
+[ ] AppOperationsMock  (export class) :14
+[ ] AppOperationsMock.getStoredSettings  (method) :18
+      -- Helper method – gives access to stored settings
+[ ] AppOperationsMock.setStorageItems  (method) :22
+[ ] AppOperationsMock.getStorageItems  (method) :29
+[ ] AppOperationsMock.removeStorageItems  (method) :37
+[ ] AppOperationsMock.viewSource  (method) :41
+[ ] AppOperationsMock.selectDomElement  (method) :45
+[ ] AppOperationsMock.inspect  (method) :49
+[ ] AppOperationsMock.inspectSignal  (method) :57
+[ ] AppOperationsMock.viewSourceFromRouter  (method) :61
+
+## devtools/projects/ng-devtools/src/lib/application-services/test-utils/settings_mock.ts
+[ ] SettingsMock  (export class) :14
+
+## devtools/projects/ng-devtools/src/lib/application-services/theme_service.ts
+[ ] ThemeService  (export class) :28
+[ ] ThemeService.constructor  (ctor) :48
+[ ] ThemeService.systemPrefersDarkMode  (accessor) :55
+[ ] ThemeService.toggleDarkMode  (method) :59
+[ ] ThemeService.initializeThemeWatcher  (method) :64
+[ ] ThemeService.updateThemeClass  (method) :83
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/devtools-tabs.component.ts
+[ ] DevToolsTabsComponent  (export class) :67
+[ ] DevToolsTabsComponent.constructor  (ctor) :117
+[ ] DevToolsTabsComponent.emitSelectedFrame  (method) :152
+[ ] DevToolsTabsComponent.changeTab  (method) :158
+[ ] DevToolsTabsComponent.toggleInspector  (method) :166
+[ ] DevToolsTabsComponent.stopInspecting  (method) :171
+[ ] DevToolsTabsComponent.emitInspectorEvent  (method) :177
+[ ] DevToolsTabsComponent.toggleInspectorState  (method) :186
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/diffing/index.ts
+[ ] diff  (export arrow) :25
+      -- Performs a diff between a host and a new array. The host array is modified in-place with the diff.
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/directive-explorer.component.ts
+[ ] sameDirectives  (arrow) :65
+[ ] DirectiveExplorerComponent  (export class) :110
+[ ] DirectiveExplorerComponent.constructor  (ctor) :153
+[ ] DirectiveExplorerComponent.isNonTopLevelFirefoxFrame  (method) :184
+[ ] DirectiveExplorerComponent.handleNodeSelection  (method) :188
+[ ] DirectiveExplorerComponent.subscribeToBackendEvents  (method) :206
+[ ] DirectiveExplorerComponent.refresh  (method) :219
+[ ] DirectiveExplorerComponent.viewSource  (method) :237
+[ ] DirectiveExplorerComponent.handleSelectDomElement  (method) :266
+[ ] DirectiveExplorerComponent.highlight  (method) :284
+[ ] DirectiveExplorerComponent.unhighlight  (method) :291
+[ ] DirectiveExplorerComponent._constructViewQuery  (method) :295
+[ ] DirectiveExplorerComponent._getPropertyQuery  (method) :305
+[ ] DirectiveExplorerComponent.highlightComponent  (method) :325
+[ ] DirectiveExplorerComponent.removeComponentHighlight  (method) :329
+[ ] DirectiveExplorerComponent.handleSelect  (method) :333
+[ ] DirectiveExplorerComponent.handleSetParents  (method) :337
+[ ] DirectiveExplorerComponent.inspect  (method) :341
+[ ] DirectiveExplorerComponent.createHydrationOverlays  (method) :368
+[ ] DirectiveExplorerComponent.removeHydrationOverlays  (method) :372
+[ ] DirectiveExplorerComponent.refreshHydrationNodeHighlightsIfNeeded  (method) :376
+[ ] DirectiveExplorerComponent.showSignalGraph  (method) :383
+[ ] DirectiveExplorerComponent.onResponsiveSplitDirChange  (method) :391
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/directive-forest/breadcrumbs/breadcrumbs.component.ts
+[ ] BreadcrumbsComponent  (export class) :29
+[ ] BreadcrumbsComponent.constructor  (ctor) :60
+[ ] BreadcrumbsComponent.scroll  (method) :68
+[ ] BreadcrumbsComponent.updateScrollButtonVisibility  (method) :73
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/directive-forest/component-data-source/index.ts
+[ ] trackBy  (arrow) :45
+[ ] getId  (arrow) :48
+[ ] filterCommentNodes  (arrow) :76
+      -- Takes an `IndexedNode` forest and returns a transformed forest without `#comment` nodes. The algorithm has linear complexity and O(depth(forest)) memory complex
+[ ] ComponentDataSource  (export class) :91
+[ ] ComponentDataSource.constructor  (ctor) :128
+[ ] ComponentDataSource.data  (accessor) :132
+[ ] ComponentDataSource.expandedDataValues  (accessor) :136
+[ ] ComponentDataSource.getFlatNodeFromIndexedNode  (method) :140
+[ ] ComponentDataSource.getFlatNodeByPosition  (method) :144
+[ ] ComponentDataSource.update  (method) :152
+[ ] ComponentDataSource.connect  (method) :207
+[ ] ComponentDataSource.disconnect  (method) :226
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/directive-forest/directive-forest-filter-fn-generator.ts
+[ ] toParserValue  (function) :55
+[ ] checkForMatch  (function) :62
+[ ] tokenizeDirectiveForestFilter  (export function) :82
+[ ] parseDirectiveForestFilter  (export function) :121
+[ ] directiveForestFilterFnGenerator  (export arrow) :188
+      -- Generates a `FilterFn`, that performs token matching, for the directive-forest filter.
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/directive-forest/directive-forest-utils.ts
+[ ] isChildOf  (export arrow) :13
+[ ] parentCollapsed  (export arrow) :25
+[ ] getDirectivesArrayString  (export arrow) :40
+      -- Returns the `FlatNode`'s directive array string.
+[ ] matchesDirectiveOrComponentId  (export arrow) :43
+[ ] getFullNodeNameString  (export arrow) :49
+      -- Returns the full node name string as rendered by the tree-node component.
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/directive-forest/directive-forest.component.ts
+[ ] DirectiveForestComponent  (export class) :69
+[ ] DirectiveForestComponent.constructor  (ctor) :114
+[ ] DirectiveForestComponent.handleSelectDomElement  (method) :155
+[ ] DirectiveForestComponent.highlightNode  (method) :159
+[ ] DirectiveForestComponent.removeHighlight  (method) :164
+[ ] DirectiveForestComponent.selectAndEnsureVisible  (method) :168
+[ ] DirectiveForestComponent.select  (method) :190
+[ ] DirectiveForestComponent.clearSelectedNode  (method) :200
+[ ] DirectiveForestComponent.navigateUp  (method) :207
+[ ] DirectiveForestComponent.navigateDown  (method) :231
+[ ] DirectiveForestComponent.collapseCurrent  (method) :258
+[ ] DirectiveForestComponent.expandCurrent  (method) :270
+[ ] DirectiveForestComponent.isEditingDirectiveState  (method) :282
+[ ] DirectiveForestComponent.handleFilter  (method) :286
+[ ] DirectiveForestComponent.navigateMatchedNode  (method) :310
+[ ] DirectiveForestComponent.reselectNodeOnUpdate  (method) :332
+[ ] DirectiveForestComponent.updateForest  (method) :345
+[ ] DirectiveForestComponent.populateParents  (method) :375
+[ ] DirectiveForestComponent.subscribeToInspectorEvents  (method) :391
+[ ] DirectiveForestComponent.selectNodeByComponentId  (method) :407
+[ ] DirectiveForestComponent.selectNodeByInstanceId  (method) :414
+[ ] DirectiveForestComponent.expandParents  (method) :429
+[ ] DirectiveForestComponent.handleViewportResize  (method) :433
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/directive-forest/index-forest/index.ts
+[ ] indexTree  (arrow) :22
+[ ] indexForest  (export arrow) :43
+[ ] findNodeByPosition  (export arrow) :46
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/directive-forest/tree-node/tree-node.component.ts
+[ ] TreeNodeComponent  (export class) :59
+[ ] TreeNodeComponent.constructor  (ctor) :111
+[ ] TreeNodeComponent.isSelected  (accessor) :115
+[ ] TreeNodeComponent.isHighlighted  (accessor) :120
+[ ] TreeNodeComponent.handleMatchedText  (method) :124
+[ ] TreeNodeComponent.buildMatchedTextElement  (method) :136
+[ ] TreeNodeComponent.appendText  (method) :156
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/property-pane/defer-view/defer-view.component.ts
+[ ] DeferViewComponent  (export class) :19
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/property-pane/for-loop-view/for-loop-data-serializer.ts
+[ ] buildForLoopDataTree  (export function) :12
+[ ] createNodeFromDescriptor  (function) :18
+[ ] buildChildNodes  (function) :33
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/property-pane/for-loop-view/for-loop-view.component.ts
+[ ] ForLoopViewComponent  (export class) :23
+[ ] ForLoopViewComponent.buildForLoopDataTree  (method) :27
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/property-pane/property-pane-header/component-metadata/component-metadata.component.ts
+[ ] ComponentMetadataComponent  (export class) :66
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/property-pane/property-pane-header/property-pane-header.component.ts
+[ ] PropertyPaneHeaderComponent  (export class) :24
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/property-pane/property-pane.component.ts
+[ ] PropertyPaneComponent  (export class) :32
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/property-pane/property-view/property-view-body/dependency-viewer/dependency-viewer.component.ts
+[ ] DependencyViewerComponent  (export class) :21
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/property-pane/property-view/property-view-body/dependency-viewer/resolution-path/resolution-path.component.ts
+[ ] ResolutionPathComponent  (export class) :25
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/property-pane/property-view/property-view-body/prop-actions-menu/prop-actions-menu.component.ts
+[ ] PropActionsMenuComponent  (export class) :86
+[ ] PropActionsMenuComponent.constructor  (ctor) :122
+[ ] PropActionsMenuComponent.showInSignalGraph  (method) :141
+[ ] PropActionsMenuComponent.logValue  (method) :149
+[ ] PropActionsMenuComponent.getSignalNode  (method) :161
+[ ] PropActionsMenuComponent.preventScrollOnCtxExpanded  (method) :169
+[ ] PropActionsMenuComponent.getScrollableAncestor  (method) :205
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/property-pane/property-view/property-view-body/property-view-body.component.ts
+[ ] PropertyViewBodyComponent  (export class) :36
+[ ] PropertyViewBodyComponent.updateValue  (method) :81
+[ ] PropertyViewBodyComponent.handleInspect  (method) :85
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/property-pane/property-view/property-view-header/property-view-header.component.ts
+[ ] PropertyViewHeaderComponent  (export class) :22
+[ ] PropertyViewHeaderComponent.handleViewSource  (method) :43
+      -- output that emits directive
+[ ] PropertyViewHeaderComponent.handlelogInstance  (method) :48
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/property-pane/property-view/property-view.component.ts
+[ ] PropertyViewComponent  (export class) :24
+[ ] PropertyViewComponent.handleLogInstance  (method) :31
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/property-resolver/arrayify-props.ts
+[ ] arrayifyProps  (export arrow) :12
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/property-resolver/directive-property-resolver.ts
+[ ] getDirectiveControls  (arrow) :30
+[ ] constructPathOfKeysToPropertyValue  (export arrow) :40
+[ ] DirectivePropertyResolver  (export class) :52
+[ ] DirectivePropertyResolver.constructor  (ctor) :65
+[ ] DirectivePropertyResolver.directiveInputControls  (accessor) :78
+[ ] DirectivePropertyResolver.directivePropControls  (accessor) :82
+[ ] DirectivePropertyResolver.directiveOutputControls  (accessor) :86
+[ ] DirectivePropertyResolver.directiveStateControls  (accessor) :90
+[ ] DirectivePropertyResolver.directiveMetadata  (accessor) :94
+[ ] DirectivePropertyResolver.directiveProperties  (accessor) :98
+[ ] DirectivePropertyResolver.directivePosition  (accessor) :102
+[ ] DirectivePropertyResolver.getExpandedProperties  (method) :106
+[ ] DirectivePropertyResolver.updateProperties  (method) :115
+[ ] DirectivePropertyResolver.updateValue  (method) :125
+[ ] DirectivePropertyResolver.logValue  (method) :132
+[ ] DirectivePropertyResolver._createDataSourceFromProps  (method) :138
+[ ] DirectivePropertyResolver._classifyProperties  (method) :148
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/property-resolver/element-property-resolver.ts
+[ ] ElementPropertyResolver  (export class) :23
+[ ] ElementPropertyResolver.constructor  (ctor) :26
+[ ] ElementPropertyResolver.clearProperties  (method) :28
+[ ] ElementPropertyResolver.setProperties  (method) :32
+[ ] ElementPropertyResolver._flushDeletedProperties  (method) :55
+[ ] ElementPropertyResolver.getExpandedProperties  (method) :65
+[ ] ElementPropertyResolver.getDirectiveController  (method) :78
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/property-resolver/flatten.ts
+[ ] getTreeFlattener  (export arrow) :16
+[ ] expandable  (export arrow) :30
+[ ] getChildren  (arrow) :40
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/property-resolver/property-data-source.ts
+[ ] trackBy  (arrow) :28
+[ ] PropertyDataSource  (export class) :31
+[ ] PropertyDataSource.constructor  (ctor) :37
+[ ] PropertyDataSource.data  (accessor) :48
+[ ] PropertyDataSource.treeControl  (accessor) :52
+[ ] PropertyDataSource.update  (method) :56
+[ ] PropertyDataSource.connect  (method) :62
+[ ] PropertyDataSource.disconnect  (method) :93
+[ ] PropertyDataSource._toggleNode  (method) :98
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/property-resolver/property-expanded-directive-properties.ts
+[ ] getExpandedDirectiveProperties  (export arrow) :12
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/signal-graph-manager/signal-graph-manager.ts
+[ ] SignalGraphManager  (export class) :18
+      -- Keeps the signal graph of a provided element/component.
+[ ] SignalGraphManager.constructor  (ctor) :31
+[ ] SignalGraphManager.listen  (method) :46
+      -- Listen for element/component change by a provided signal and update the signal graph according to it.
+[ ] SignalGraphManager.unlisten  (method) :69
+      -- Unlisten the currently listened element.
+[ ] SignalGraphManager.destroy  (method) :73
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/directive-explorer/signal-graph-pane/signal-graph-pane.component.ts
+[ ] SignalGraphPaneComponent  (export class) :48
+[ ] SignalGraphPaneComponent.onNodeClick  (method) :98
+[ ] SignalGraphPaneComponent.gotoSource  (method) :103
+[ ] SignalGraphPaneComponent.expandCluster  (method) :114
+[ ] SignalGraphPaneComponent.highlightDeps  (method) :118
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/injector-tree/injector-providers/injector-providers.component.ts
+[ ] InjectorProvidersComponent  (export class) :27
+[ ] InjectorProvidersComponent.select  (method) :61
+[ ] InjectorProvidersComponent.displayedColumns  (accessor) :66
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/injector-tree/injector-tree-fns.ts
+[ ] getInjectorIdsToRootFromNode  (export function) :99
+[ ] generateEdgeIdsFromNodeIds  (export function) :111
+[ ] equalInjector  (export function) :121
+[ ] findExistingPath  (export function) :125
+[ ] transformInjectorResolutionPathsIntoTree  (export function) :132
+[ ] grabInjectorPathsFromDirectiveForest  (export function) :176
+[ ] splitInjectorPathsIntoElementAndEnvironmentPaths  (export function) :196
+[ ] filterOutInjectorsWithNoProviders  (export function) :247
+[ ] filterOutAngularInjectors  (export function) :257
+[ ] d3InjectorTreeLinkModifier  (export function) :263
+[ ] d3InjectorTreeNodeModifier  (export function) :280
+[ ] areInjectorTreeNodesEqual  (export function) :301
+      -- Returns whether InjectorTreeNodes are equal (excl. children comparison).
+[ ] areInjectorTreesEqual  (export function) :310
+      -- Returns whether injector trees (InjectorTreeNodes with children) are equal.
+[ ] isElementTreeInjector  (export function) :349
+      -- Checks whether an injector belongs to the element tree.
+[ ] isEnvironmentTreeInjector  (export function) :355
+      -- Checks whether an injector belongs to the environment tree.
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/injector-tree/injector-tree.component.ts
+[ ] InjectorTreeComponent  (export class) :84
+[ ] InjectorTreeComponent.constructor  (ctor) :142
+[ ] InjectorTreeComponent.toggleHideInjectorsWithNoProviders  (method) :157
+[ ] InjectorTreeComponent.toggleHideAngularInjectors  (method) :162
+[ ] InjectorTreeComponent.onTreeRender  (method) :167
+[ ] InjectorTreeComponent.selectInjectorByNode  (method) :178
+[ ] InjectorTreeComponent.onResponsiveSplitDirChange  (method) :190
+[ ] InjectorTreeComponent.init  (method) :200
+[ ] InjectorTreeComponent.refreshVisualizer  (method) :215
+[ ] InjectorTreeComponent.updateInjectorTreeVisualization  (method) :234
+      -- Converts the array of resolution paths for every node in the directive forest into a tree structure that can be rendered by the injector tree visualizer.
+[ ] InjectorTreeComponent.snapToRoot  (method) :267
+[ ] InjectorTreeComponent.snapToNode  (method) :281
+[ ] InjectorTreeComponent.reselectSelectedNode  (method) :298
+[ ] InjectorTreeComponent.getNodeByComponentId  (method) :322
+[ ] InjectorTreeComponent.highlightPathFromSelectedInjector  (method) :339
+[ ] InjectorTreeComponent.highlightNodeById  (method) :378
+[ ] InjectorTreeComponent.highlightEdgeById  (method) :389
+[ ] InjectorTreeComponent.unhighlightAllEdges  (method) :398
+[ ] InjectorTreeComponent.unhighlightAllNodes  (method) :405
+[ ] InjectorTreeComponent.getProviders  (method) :413
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/file-api-service.ts
+[ ] FileApiService  (export class) :15
+[ ] FileApiService.publishFileUpload  (method) :18
+[ ] FileApiService.saveObjectAsJSON  (method) :31
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/profiler-import-dialog/profiler-import-dialog.component.ts
+[ ] ProfilerImportDialogComponent  (export class) :26
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/profiler.component.ts
+[ ] ProfilerComponent  (export class) :33
+[ ] ProfilerComponent.constructor  (ctor) :44
+[ ] ProfilerComponent.startRecording  (method) :100
+[ ] ProfilerComponent.stopRecording  (method) :105
+[ ] ProfilerComponent.exportProfilerResults  (method) :111
+[ ] ProfilerComponent.importProfilerResults  (method) :119
+[ ] ProfilerComponent.discardRecording  (method) :123
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/recording-timeline/filter.ts
+[ ] DurationQuery  (class) :52
+[ ] DurationQuery.parseArguments  (method) :54
+[ ] DurationQuery.apply  (method) :67
+[ ] SourceQuery  (class) :72
+[ ] SourceQuery.parseArguments  (method) :74
+[ ] SourceQuery.apply  (method) :78
+[ ] parseFilter  (export arrow) :106
+      -- Parses a query in the form:  filter := ('!'? query)*  query := 'sort': [a-z]* | 'duration': operator duration  operator := '=' | '>' | '<' | '>=' | '<='  durati
+[ ] createFilter  (export arrow) :136
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/recording-timeline/frame-selector/frame-selector.component.ts
+[ ] framesBoundSignal  (function) :44
+      -- Returns a linked signal that resets on source change.
+[ ] FrameSelectorComponent  (export class) :76
+[ ] FrameSelectorComponent.parseFloat  (method) :115
+[ ] FrameSelectorComponent.constructor  (ctor) :122
+[ ] FrameSelectorComponent._smartJoinIndexLabels  (method) :138
+[ ] FrameSelectorComponent.move  (method) :170
+[ ] FrameSelectorComponent._selectFrames  (method) :178
+[ ] FrameSelectorComponent.handleFrameSelection  (method) :186
+[ ] FrameSelectorComponent._ensureVisible  (method) :212
+[ ] FrameSelectorComponent.stopDragScrolling  (method) :229
+[ ] FrameSelectorComponent.startDragScroll  (method) :234
+[ ] FrameSelectorComponent.dragScroll  (method) :243
+[ ] FrameSelectorComponent.trackByIndex  (method) :253
+[ ] FrameSelectorComponent.getBarStyles  (method) :257
+[ ] FrameSelectorComponent.getColorByFrameRate  (method) :271
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/recording-timeline/record-formatter/bargraph-formatter/bargraph-formatter.ts
+[ ] BarGraphFormatter  (export class) :26
+[ ] BarGraphFormatter.formatFrame  (method) :29
+[ ] BarGraphFormatter.addFrame  (method) :67
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/recording-timeline/record-formatter/flamegraph-formatter/flamegraph-formatter.ts
+[ ] FlamegraphFormatter  (export class) :26
+[ ] FlamegraphFormatter.formatFrame  (method) :27
+[ ] FlamegraphFormatter.addFrame  (method) :53
+[ ] didRunChangeDetection  (arrow) :95
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/recording-timeline/record-formatter/frame-merger.ts
+[ ] mergeProperty  (arrow) :16
+[ ] mergeDirective  (arrow) :26
+[ ] mergeDirectives  (arrow) :34
+[ ] mergeFrame  (arrow) :55
+[ ] mergeFrames  (export arrow) :61
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/recording-timeline/record-formatter/record-formatter.ts
+[ ] RecordFormatter  (export class) :27
+[ ] RecordFormatter.formatFrame  (method) :28
+[ ] RecordFormatter.addFrame  (method) :29
+[ ] RecordFormatter.getLabel  (method) :31
+[ ] RecordFormatter.getValue  (method) :46
+[ ] RecordFormatter.getDirectiveValue  (method) :54
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/recording-timeline/record-formatter/tree-map-formatter/tree-map-formatter.ts
+[ ] TreeMapFormatter  (export class) :21
+[ ] TreeMapFormatter.formatFrame  (method) :24
+[ ] TreeMapFormatter.addFrame  (method) :46
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/recording-timeline/recording-timeline-controls/recording-timeline-controls.component.ts
+[ ] RecordingTimelineControlsComponent  (export class) :20
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/recording-timeline/recording-timeline.component.ts
+[ ] RecordingTimelineComponent  (export class) :34
+[ ] RecordingTimelineComponent.constructor  (ctor) :67
+[ ] RecordingTimelineComponent.setFilter  (method) :82
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/recording-timeline/recording-visualizer/bargraph-visualizer/bar-chart/bar-chart.component.ts
+[ ] BarChartComponent  (export class) :26
+[ ] createBarText  (export function) :48
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/recording-timeline/recording-visualizer/bargraph-visualizer/bargraph-visualizer.component.ts
+[ ] BargraphVisualizerComponent  (export class) :24
+[ ] BargraphVisualizerComponent.formatEntryData  (method) :32
+[ ] BargraphVisualizerComponent.selectNode  (method) :36
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/recording-timeline/recording-visualizer/execution-details/execution-details.component.ts
+[ ] ExecutionDetailsComponent  (export class) :17
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/recording-timeline/recording-visualizer/flamegraph-visualizer/flamegraph-visualizer.component.ts
+[ ] FlamegraphVisualizerComponent  (export class) :29
+[ ] FlamegraphVisualizerComponent.selectFrame  (method) :64
+[ ] FlamegraphVisualizerComponent.formatEntryData  (method) :78
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/recording-timeline/recording-visualizer/profile-formatter/profile-formatter.ts
+[ ] formatOutput  (arrow) :14
+[ ] formatDirectiveProfile  (export arrow) :31
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/recording-timeline/recording-visualizer/recording-visualizer.component.ts
+[ ] RecordingVisualizerComponent  (export class) :38
+[ ] RecordingVisualizerComponent.selectNode  (method) :63
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/recording-timeline/recording-visualizer/tree-map-visualizer/tree-map-visualizer.component.ts
+[ ] TreeMapVisualizerComponent  (export class) :31
+[ ] TreeMapVisualizerComponent.constructor  (ctor) :47
+[ ] TreeMapVisualizerComponent.ngOnDestroy  (method) :62
+[ ] TreeMapVisualizerComponent._renderTree  (method) :67
+[ ] TreeMapVisualizerComponent._removeTree  (method) :72
+[ ] TreeMapVisualizerComponent._createTree  (method) :76
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/recording-timeline/shared/estimate-frame-rate.ts
+[ ] estimateFrameRate  (export function) :9
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/recording-timeline/visualizer-controls/visualizer-controls.component.ts
+[ ] VisualizerControlsComponent  (export class) :21
+[ ] VisualizerControlsComponent.onVisualizationChange  (method) :30
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/router-tree/router-details-row/route-data-serializer.ts
+[ ] buildRouteDataTree  (export function) :12
+[ ] buildArrayNodes  (function) :18
+[ ] buildObjectNodes  (function) :22
+[ ] createNode  (function) :26
+[ ] getValuePreview  (function) :49
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/router-tree/router-details-row/route-details-row.component.ts
+[ ] RouteDetailsRowComponent  (export class) :32
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/router-tree/router-tree-fns.ts
+[ ] getRouteLabel  (export function) :20
+[ ] mapRoute  (export function) :28
+[ ] transformRoutesIntoVisTree  (export function) :40
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/router-tree/router-tree.component.ts
+[ ] RouterTreeComponent  (export class) :53
+[ ] RouterTreeComponent.togglePathSettings  (method) :93
+[ ] RouterTreeComponent.viewSourceFromRouter  (method) :98
+[ ] RouterTreeComponent.viewComponentSource  (method) :117
+[ ] RouterTreeComponent.viewFunctionSource  (method) :134
+[ ] RouterTreeComponent.navigateRoute  (method) :148
+[ ] RouterTreeComponent.onRouterTreeRender  (method) :152
+[ ] RouterTreeComponent.nodeClick  (method) :158
+[ ] RouterTreeComponent.navigateMatchedRoute  (method) :163
+[ ] RouterTreeComponent.handleFilter  (method) :175
+[ ] RouterTreeComponent.d3NodeModifier  (method) :207
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/settings/settings.component.ts
+[ ] SettingsComponent  (export class) :26
+[ ] SettingsComponent.onThemeChange  (method) :39
+[ ] SettingsComponent.onDocClick  (method) :44
+[ ] SettingsComponent.onHostClick  (method) :52
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/tab-update/index.ts
+[ ] TabUpdate  (export class) :15
+      -- which doesn't have consistent dimensions when collapsed and expanded.
+[ ] TabUpdate.notify  (method) :20
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/transfer-state/transfer-state.component.ts
+[ ] getByteSize  (function) :52
+      -- table approximates the total transferred payload.
+[ ] TransferStateComponent  (export class) :95
+[ ] TransferStateComponent.constructor  (ctor) :177
+[ ] TransferStateComponent.getValueType  (method) :206
+[ ] TransferStateComponent.onSortChange  (method) :212
+[ ] TransferStateComponent.clearFilter  (method) :216
+[ ] TransferStateComponent.startLoadingTimeout  (method) :220
+[ ] TransferStateComponent.clearLoadingTimeout  (method) :231
+[ ] TransferStateComponent.copyToClipboard  (method) :238
+
+## devtools/projects/ng-devtools/src/lib/devtools-tabs/transfer-state/value-tree-builder.ts
+[ ] buildValueTree  (export function) :15
+[ ] createNode  (function) :19
+[ ] buildChildren  (function) :48
+[ ] getValuePreview  (function) :57
+[ ] getPropType  (function) :73
+
+## devtools/projects/ng-devtools/src/lib/devtools.component.ts
+[ ] DevToolsComponent  (export class) :60
+[ ] DevToolsComponent.constructor  (ctor) :86
+[ ] DevToolsComponent.inspectFrame  (method) :109
+[ ] DevToolsComponent.ngOnDestroy  (method) :113
+[ ] DevToolsComponent.syncBackendWithSettings  (method) :117
+
+## devtools/projects/ng-devtools/src/lib/shared/angie/angie.component.ts
+[ ] AngieComponent  (export class) :35
+
+## devtools/projects/ng-devtools/src/lib/shared/button/button.component.ts
+[ ] ButtonComponent  (export class) :27
+
+## devtools/projects/ng-devtools/src/lib/shared/docs-ref-button/docs-ref-button.component.ts
+[ ] DocsRefButtonComponent  (export class) :30
+
+## devtools/projects/ng-devtools/src/lib/shared/filter/filter.component.ts
+[ ] genericSearchGenerator  (arrow) :35
+      -- Default `FilterFn` generator for a generic string search.
+[ ] FilterComponent  (export class) :74
+[ ] FilterComponent.constructor  (ctor) :108
+[ ] FilterComponent.emitNextMatched  (method) :120
+[ ] FilterComponent.emitPrevMatched  (method) :124
+[ ] FilterComponent.clearFilter  (method) :128
+
+## devtools/projects/ng-devtools/src/lib/shared/icon/icon.component.ts
+[ ] IconComponent  (export class) :22
+
+## devtools/projects/ng-devtools/src/lib/shared/object-tree-explorer/object-tree-explorer.component.ts
+[ ] ObjectTreeExplorerComponent  (export class) :68
+[ ] ObjectTreeExplorerComponent.constructor  (ctor) :86
+
+## devtools/projects/ng-devtools/src/lib/shared/object-tree-explorer/prop-value-highlighter/prop-value-highlighter.directive.ts
+[ ] PropValueHighlighterDirective  (export class) :20
+
+## devtools/projects/ng-devtools/src/lib/shared/object-tree-explorer/property-editor/property-editor.component.ts
+[ ] parseValue  (arrow) :32
+[ ] PropertyEditorComponent  (export class) :52
+[ ] PropertyEditorComponent.constructor  (ctor) :66
+[ ] PropertyEditorComponent.accept  (method) :75
+[ ] PropertyEditorComponent.reject  (method) :81
+[ ] PropertyEditorComponent.onClick  (method) :86
+[ ] PropertyEditorComponent.onFocus  (method) :92
+[ ] PropertyEditorComponent.onBlur  (method) :99
+
+## devtools/projects/ng-devtools/src/lib/shared/object-tree-explorer/property-preview/property-preview.component.ts
+[ ] PropertyPreviewComponent  (export class) :23
+
+## devtools/projects/ng-devtools/src/lib/shared/signal-details/signal-details.component.ts
+[ ] SignalDetailsComponent  (export class) :54
+[ ] SignalDetailsComponent.getCompoundNodeValueHof  (method) :116
+
+## devtools/projects/ng-devtools/src/lib/shared/signal-details/signal-value-tree/signal-data-source.ts
+[ ] arrayifyProps  (export arrow) :24
+[ ] SignalDataSource  (export class) :41
+[ ] SignalDataSource.constructor  (ctor) :46
+[ ] SignalDataSource.connect  (method) :65
+[ ] SignalDataSource.disconnect  (method) :94
+[ ] SignalDataSource.toggleNode  (method) :98
+
+## devtools/projects/ng-devtools/src/lib/shared/signal-details/signal-value-tree/signal-value-tree.component.ts
+[ ] SignalValueTreeComponent  (export class) :26
+
+## devtools/projects/ng-devtools/src/lib/shared/signal-graph/devtools-signal-graph.ts
+[ ] identifyClusters  (function) :41
+      -- Identifies clusters within a `DebugSignalGraph` using the node label strings, and returns an array of cluster objects (intermediate type) used for building the 
+[ ] processClusterToClusterDependencies  (function) :101
+      -- Process cluster-to-cluster dependencies by adding the required edges to the provided signal graph in-place.
+[ ] convertToDevtoolsSignalGraph  (export function) :148
+      -- Convert a `DebugSignalGraph` to a DevTools-FE specific `DevtoolsSignalGraph`.
+
+## devtools/projects/ng-devtools/src/lib/shared/signal-graph/utils.ts
+[ ] isClusterNode  (export function) :17
+      -- Check if a node is a synthetic cluster node (i.e. collapsed version of a cluster).
+[ ] isSignalNode  (export function) :22
+      -- Check if a node is a regular signal node (e.g. signal, computed, effect, etc.),
+[ ] getNodeNames  (export function) :36
+      -- Returns signal node and cluster node names (if part of a cluster). Intended for format: <Cluster_Type>#<Cluster_Name>.<Compound_Node_Name>
+[ ] checkClusterMatch  (export function) :70
+      -- Checks whether a `DebugSignalGraphNode` is part of a cluster and returns the the cluster and signal names, if it's affirmative. Intended for format: <Cluster_Ty
+[ ] getNodeLabel  (export function) :87
+      -- Returns the actual name/label of the signal node.
+
+## devtools/projects/ng-devtools/src/lib/shared/signals-visualizer/signal-node-filter-fn-generator.ts
+[ ] tokenizeSignalNodeFilter  (export function) :36
+[ ] parseSignalNodeFilter  (export function) :68
+[ ] signalNodeFilterFnGenerator  (export arrow) :107
+      -- Generates a `FilterFn`, that performs token matching, for the signal node filter intended for the `signal-visualizer`.
+
+## devtools/projects/ng-devtools/src/lib/shared/signals-visualizer/signals-visualizer.component.ts
+[ ] SignalsVisualizerComponent  (export class) :53
+[ ] SignalsVisualizerComponent.constructor  (ctor) :83
+[ ] SignalsVisualizerComponent.expandCluster  (method) :149
+[ ] SignalsVisualizerComponent.highlightDependencies  (method) :153
+[ ] SignalsVisualizerComponent.unhighlightDependencies  (method) :157
+[ ] SignalsVisualizerComponent.collapseCluster  (method) :161
+[ ] SignalsVisualizerComponent.handleFilter  (method) :165
+[ ] SignalsVisualizerComponent.navigateMatchedNode  (method) :211
+[ ] SignalsVisualizerComponent.setUpSignalsVisualizer  (method) :227
+
+## devtools/projects/ng-devtools/src/lib/shared/signals-visualizer/signals-visualizer.ts
+[ ] SignalsGraphVisualizer  (export class) :83
+      -- - Expanded cluster node – A cluster node, visualized as a container of its child nodes (i.e. expanded)
+[ ] SignalsGraphVisualizer.constructor  (ctor) :106
+[ ] SignalsGraphVisualizer.snapToNode  (method) :131
+      -- Snaps to a provided node.
+[ ] SignalsGraphVisualizer.snapToNode  (method) :132
+[ ] SignalsGraphVisualizer.snapToNode  (method) :133
+[ ] SignalsGraphVisualizer.snapToRootNode  (method) :155
+      -- Snaps to the root node – either the template or the first node depending which exists.
+[ ] SignalsGraphVisualizer.highlightNode  (method) :169
+      -- Adds a standard outline to the provided node. Using `null`, clears the highlighted node.
+[ ] SignalsGraphVisualizer.zoomScale  (method) :176
+[ ] SignalsGraphVisualizer.cleanup  (method) :183
+[ ] SignalsGraphVisualizer.reset  (method) :190
+[ ] SignalsGraphVisualizer.render  (method) :205
+[ ] SignalsGraphVisualizer.setClusterState  (method) :220
+[ ] SignalsGraphVisualizer.highlightDependencies  (method) :236
+[ ] SignalsGraphVisualizer.unhighlightDependencies  (method) :282
+      -- Unhighlight the currently highlighted dependencies.
+[ ] SignalsGraphVisualizer.onNodeClick  (method) :300
+      -- Listen for node clicks.
+[ ] SignalsGraphVisualizer.onClustersStateChange  (method) :317
+      -- Listen for cluster state changes.
+[ ] SignalsGraphVisualizer.onDependenciesHighlight  (method) :334
+      -- Listen for dependencies highlighting.
+[ ] SignalsGraphVisualizer.isNodeVisible  (method) :345
+[ ] SignalsGraphVisualizer.updateClusters  (method) :356
+[ ] SignalsGraphVisualizer.updateNodes  (method) :395
+[ ] SignalsGraphVisualizer.updateEdges  (method) :475
+[ ] SignalsGraphVisualizer.updateDagreNode  (method) :522
+[ ] SignalsGraphVisualizer.updateNodeEpochAnimations  (method) :537
+[ ] SignalsGraphVisualizer.notifyForClusterVisibilityUpdate  (method) :550
+[ ] SignalsGraphVisualizer.createNodeHtml  (method) :556
+[ ] SignalsGraphVisualizer.addCloseButtonsToClusters  (method) :599
+      -- Needs to be executed after the cluster has been rendered.
+[ ] SignalsGraphVisualizer.reinforceNodeDimensions  (method) :650
+      -- this always happens, which prevents misaligned nodes after a cluster collapse.
+[ ] SignalsGraphVisualizer.getNodeLabelsSelection  (method) :667
+[ ] SignalsGraphVisualizer.highlightEdges  (method) :676
+      -- Highlight a set of edges represented by `v-w` strings.
+[ ] SignalsGraphVisualizer.highlightNodesPath  (method) :696
+      -- Highlights a path of nodes (usually a dependency tree) by a provided origin node and path nodes ID.
+[ ] SignalsGraphVisualizer.unhighlightNodesAndEdges  (method) :721
+      -- Unhighlight the currently highlighted nodes and edges. Returns the origin node.
+[ ] getBodyText  (function) :744
+[ ] getEdgeId  (function) :773
+[ ] convertNodesToMap  (function) :777
+[ ] isDagreClusterNode  (function) :781
+[ ] appendClasses  (function) :786
+      -- Appends space-separated classes to a D3 selection.
+[ ] removeClasses  (function) :792
+      -- Removes space-separated classes to a D3 selection.
+
+## devtools/projects/ng-devtools/src/lib/shared/split/responsive-split.directive.ts
+[ ] ResponsiveSplitDirective  (export class) :30
+[ ] ResponsiveSplitDirective.constructor  (ctor) :41
+[ ] ResponsiveSplitDirective.applyDirection  (method) :60
+
+## devtools/projects/ng-devtools/src/lib/shared/split/split.component.ts
+[ ] SplitComponent  (export class) :116
+[ ] SplitComponent.debounceTime  (method) :145
+[ ] SplitComponent.constructor  (ctor) :162
+[ ] SplitComponent.getNbGutters  (method) :185
+[ ] SplitComponent.addArea  (method) :189
+[ ] SplitComponent.removeArea  (method) :207
+[ ] SplitComponent.updateArea  (method) :219
+[ ] SplitComponent.showArea  (method) :229
+[ ] SplitComponent.hideArea  (method) :241
+[ ] SplitComponent.getVisibleAreaSizes  (method) :257
+[ ] SplitComponent.setVisibleAreaSizes  (method) :261
+[ ] SplitComponent.build  (method) :280
+[ ] SplitComponent.refreshStyleSizes  (method) :368
+[ ] SplitComponent.clickGutter  (method) :429
+[ ] SplitComponent.startDragging  (method) :457
+[ ] SplitComponent.dragEvent  (method) :547
+[ ] SplitComponent.stopDragging  (method) :669
+[ ] SplitComponent.notify  (method) :712
+[ ] SplitComponent.ngOnDestroy  (method) :736
+
+## devtools/projects/ng-devtools/src/lib/shared/split/splitArea.directive.ts
+[ ] SplitAreaDirective  (export class) :17
+[ ] SplitAreaDirective.order  (accessor) :21
+[ ] SplitAreaDirective.order  (accessor) :27
+[ ] SplitAreaDirective.size  (accessor) :36
+[ ] SplitAreaDirective.size  (accessor) :42
+[ ] SplitAreaDirective.minSize  (accessor) :51
+[ ] SplitAreaDirective.minSize  (accessor) :57
+[ ] SplitAreaDirective.maxSize  (accessor) :66
+[ ] SplitAreaDirective.maxSize  (accessor) :72
+[ ] SplitAreaDirective.lockSize  (accessor) :81
+[ ] SplitAreaDirective.lockSize  (accessor) :87
+[ ] SplitAreaDirective.visible  (accessor) :96
+[ ] SplitAreaDirective.visible  (accessor) :108
+[ ] SplitAreaDirective.constructor  (ctor) :117
+[ ] SplitAreaDirective.ngOnInit  (method) :125
+[ ] SplitAreaDirective.setStyleOrder  (method) :140
+[ ] SplitAreaDirective.setStyleFlex  (method) :144
+[ ] SplitAreaDirective.lockEvents  (method) :164
+[ ] SplitAreaDirective.unlockEvents  (method) :173
+[ ] SplitAreaDirective.ngOnDestroy  (method) :180
+
+## devtools/projects/ng-devtools/src/lib/shared/split/utils.ts
+[ ] getPointFromEvent  (export function) :19
+[ ] getElementPixelSize  (export function) :40
+[ ] getInputBoolean  (export function) :49
+[ ] getInputPositiveNumber  (export function) :53
+[ ] isUserSizesValid  (export function) :60
+[ ] getAreaMinSize  (export function) :76
+[ ] getAreaMaxSize  (export function) :96
+[ ] getGutterSideAbsorptionCapacity  (export function) :116
+[ ] getAreaAbsorptionCapacity  (function) :133
+[ ] getAreaAbsorptionCapacityPercent  (function) :168
+[ ] getAreaAbsorptionCapacityPixel  (function) :230
+[ ] updateAreaSize  (export function) :286
+
+## devtools/projects/ng-devtools/src/lib/shared/tree-visualizer/graph-renderer.ts
+[ ] GraphRenderer  (export class) :9
+[ ] GraphRenderer.render  (method) :10
+[ ] GraphRenderer.getInternalNodeById  (method) :11
+[ ] GraphRenderer.snapToNode  (method) :12
+[ ] GraphRenderer.snapToRoot  (method) :13
+[ ] GraphRenderer.highlightNode  (method) :14
+[ ] GraphRenderer.zoomScale  (method) :15
+[ ] GraphRenderer.cleanup  (method) :22
+[ ] GraphRenderer.dispose  (method) :28
+[ ] GraphRenderer.onNodeClick  (method) :32
+[ ] GraphRenderer.onNodeMouseover  (method) :36
+[ ] GraphRenderer.onNodeMouseout  (method) :40
+
+## devtools/projects/ng-devtools/src/lib/shared/tree-visualizer/tree-visualizer.component.ts
+[ ] TreeVisualizerComponent  (export class) :47
+[ ] TreeVisualizerComponent.constructor  (ctor) :68
+[ ] TreeVisualizerComponent.svg  (accessor) :93
+[ ] TreeVisualizerComponent.snapToRoot  (method) :97
+[ ] TreeVisualizerComponent.snapToNode  (method) :101
+[ ] TreeVisualizerComponent.highlightNode  (method) :105
+[ ] TreeVisualizerComponent.getNodeById  (method) :109
+[ ] TreeVisualizerComponent.renderGraph  (method) :113
+
+## devtools/projects/ng-devtools/src/lib/shared/tree-visualizer/tree-visualizer.ts
+[ ] wrapEvent  (function) :58
+      -- Inspired by https://www.mulberryhousesoftware.com/articles/supporting-two-major-versions-of-d3
+[ ] wrapEvent  (function) :59
+[ ] wrapEvent  (function) :60
+[ ] TreeVisualizer  (export class) :64
+[ ] TreeVisualizer.constructor  (ctor) :80
+[ ] TreeVisualizer.zoomScale  (method) :100
+[ ] TreeVisualizer.snapToRoot  (method) :107
+      -- Snaps to the root node. NOTE: Relies on container size.
+[ ] TreeVisualizer.snapToNode  (method) :114
+      -- Snaps to a provided node. NOTE: Relies on container size.
+[ ] TreeVisualizer.highlightNode  (method) :122
+      -- Adds an outline to the provided node. Using `null`, clears the highlighted node.
+[ ] TreeVisualizer.getInternalNodeById  (method) :129
+[ ] TreeVisualizer.cleanup  (method) :139
+[ ] TreeVisualizer.dispose  (method) :145
+[ ] TreeVisualizer.render  (method) :150
+[ ] TreeVisualizer.getNodeCoor  (method) :335
+      -- Returns the node coordinates based on orientation.
+[ ] TreeVisualizer.manageSnappedNode  (method) :347
+[ ] TreeVisualizer.keepSnappedNodeOnFocus  (method) :352
+[ ] TreeVisualizer.cleanSnappedNodeOnInteraction  (method) :380
+[ ] TreeVisualizer.snapToD3Node  (method) :387
+[ ] TreeVisualizer.findD3NodeByDataNode  (method) :402
+[ ] TreeVisualizer.smartSnappedNodeReset  (method) :430
+      -- Resets `snappedNode` only if the current tree doesn't contain it. Will perform deep equality check, if `nodeEqualityFn` is provided; or fallback to a shallow co
+
+## devtools/projects/ng-devtools/src/lib/shared/utils/debouncer.ts
+[ ] Debouncer  (export class) :10
+      -- Debounces a callback/handler.
+[ ] Debouncer.debounce  (method) :35
+      -- Debounces the wrapped handler by a provided timeout. Example: ```typescript // Non-debounced api((args) => { ... }); // Debounced const d = new Debouncer(); api
+[ ] Debouncer.cancel  (method) :48
+      -- Cancel the currently debounced handler, if not resolved.
+
+## devtools/projects/ng-devtools/src/lib/shared/utils/formatting.ts
+[ ] formatBytes  (export function) :14
+      -- Formats a byte count into a readable string with appropriate units.
+[ ] getFormattedValue  (export function) :36
+      -- Formats a value into a readable string representation
+
+## devtools/projects/protocol/src/lib/message-bus.ts
+[ ] MessageBus  (export class) :11
+[ ] MessageBus.on  (method) :12
+[ ] MessageBus.once  (method) :13
+[ ] MessageBus.emit  (method) :14
+[ ] MessageBus.destroy  (method) :15
+
+## devtools/projects/protocol/src/lib/priority-aware-message-bus.ts
+[ ] PriorityAwareMessageBus  (export class) :50
+[ ] PriorityAwareMessageBus.constructor  (ctor) :54
+[ ] PriorityAwareMessageBus.on  (method) :63
+[ ] PriorityAwareMessageBus.once  (method) :70
+[ ] PriorityAwareMessageBus.emit  (method) :77
+[ ] PriorityAwareMessageBus.destroy  (method) :101
+[ ] PriorityAwareMessageBus._afterMessage  (method) :105
+
+## devtools/projects/shared-utils/src/lib/angular-check.ts
+[ ] appIsAngularInDevMode  (export arrow) :13
+[ ] appIsAngularIvy  (export arrow) :17
+[ ] appIsAngular  (export arrow) :22
+[ ] appIsSupportedAngularVersion  (export arrow) :26
+[ ] appHasGlobalNgDebugObject  (arrow) :47
+      -- We check if the global `window.ng` is an object and if this object has the `getComponent` or `probe` methods attached to it. `ng.probe` is a view engine method,
+[ ] getAngularVersion  (export arrow) :54
+[ ] isHydrationEnabled  (export function) :62
+
+## devtools/projects/shared-utils/src/lib/shared-utils.ts
+[ ] arrayEquals  (export arrow) :10
+      -- works with arrays of string, numbers and booleans
+
+## devtools/projects/shell-browser/src/app/app.component.ts
+[ ] AppComponent  (export class) :20
+[ ] AppComponent.ngOnInit  (method) :41
+[ ] AppComponent.ngOnDestroy  (method) :54
+
+## devtools/projects/shell-browser/src/app/background.ts
+[ ] getPopUpName  (function) :14
+[ ] checkGoogler  (function) :32
+      -- Probes an internal Google-only domain (g3doc.corp.google.com) using `mode: 'no-cors'`. Connectivity success vs. network/transport error is used as a heuristic t
+
+## devtools/projects/shell-browser/src/app/chrome-application-environment.ts
+[ ] ChromeApplicationEnvironment  (export class) :13
+[ ] ChromeApplicationEnvironment.environment  (accessor) :16
+
+## devtools/projects/shell-browser/src/app/chrome-application-operations.ts
+[ ] ChromeApplicationOperations  (export class) :17
+[ ] ChromeApplicationOperations.viewSource  (method) :20
+[ ] ChromeApplicationOperations.selectDomElement  (method) :25
+[ ] ChromeApplicationOperations.inspect  (method) :30
+[ ] ChromeApplicationOperations.inspectSignal  (method) :45
+[ ] ChromeApplicationOperations.viewSourceFromRouter  (method) :52
+[ ] ChromeApplicationOperations.setStorageItems  (method) :57
+[ ] ChromeApplicationOperations.getStorageItems  (method) :61
+[ ] ChromeApplicationOperations.removeStorageItems  (method) :65
+[ ] ChromeApplicationOperations.runInInspectedWindow  (method) :69
+[ ] ChromeApplicationOperations.storage  (accessor) :84
+[ ] stringifyAndEscape  (function) :92
+
+## devtools/projects/shell-browser/src/app/chrome-message-bus.ts
+[ ] ChromeMessageBus  (export class) :20
+[ ] ChromeMessageBus.constructor  (ctor) :24
+[ ] ChromeMessageBus.onAny  (method) :33
+[ ] ChromeMessageBus.on  (method) :45
+[ ] ChromeMessageBus.once  (method) :59
+[ ] ChromeMessageBus.emit  (method) :69
+[ ] ChromeMessageBus.destroy  (method) :82
+
+## devtools/projects/shell-browser/src/app/chrome-window-extensions.ts
+[ ] initializeExtendedWindowOperations  (export arrow) :20
+[ ] extendWindowOperations  (arrow) :24
+[ ] traverseDirective  (arrow) :119
+
+## devtools/projects/shell-browser/src/app/comm-utils.ts
+[ ] stripUrlQueryParamsAndFragment  (export function) :9
+[ ] getContentScriptUri  (export function) :23
+      -- Returns the URI of the extension content script.
+[ ] getBackendUri  (export function) :29
+      -- Returns the URI of the extension backend.
+[ ] getDetectAngularScriptUri  (export function) :35
+      -- Returns the URI of the Angular detection script.
+
+## devtools/projects/shell-browser/src/app/content-script.ts
+[ ] handleDisconnect  (arrow) :32
+[ ] attemptBackendHandshake  (function) :40
+[ ] handshakeWithBackend  (arrow) :98
+[ ] proxyEventFromWindowToDevToolsExtension  (arrow) :116
+
+## devtools/projects/shell-browser/src/app/detect-angular.ts
+[ ] detectAngular  (function) :27
+
+## devtools/projects/shell-browser/src/app/konami-code.service.ts
+[ ] KonamiCodeService  (export class) :12
+[ ] KonamiCodeService.constructor  (ctor) :28
+[ ] KonamiCodeService.ngOnDestroy  (method) :48
+
+## devtools/projects/shell-browser/src/app/same-page-message-bus.ts
+[ ] SamePageMessageBus  (export class) :25
+      -- Note: This Bus implementation implements a filter based of topic. It might not be suitable for others messages than the ones currently used.
+[ ] SamePageMessageBus.constructor  (ctor) :29
+[ ] SamePageMessageBus.onAny  (method) :37
+[ ] SamePageMessageBus.on  (method) :54
+[ ] SamePageMessageBus.once  (method) :73
+[ ] SamePageMessageBus.emit  (method) :86
+[ ] SamePageMessageBus.destroy  (method) :104
+[ ] SamePageMessageBus.shouldSkipMessage  (method) :109
+[ ] SamePageMessageBus.updateStatus  (method) :113
+
+## devtools/projects/shell-browser/src/app/tab_manager.ts
+[ ] isNumeric  (function) :25
+[ ] TabManager  (export class) :33
+[ ] TabManager.constructor  (ctor) :34
+[ ] TabManager.initialize  (method) :39
+[ ] TabManager.initialize  (method) :45
+[ ] TabManager.ensureTabExists  (method) :69
+[ ] TabManager.registerDevToolsForTab  (method) :76
+[ ] TabManager.registerContentScriptForTab  (method) :112
+[ ] TabManager.doublePipe  (method) :173
+
+## devtools/projects/shell-browser/src/devtools.ts
+[ ] createDevToolsPanel  (function) :25
+
+## devtools/src/app/app.component.ts
+[ ] AppComponent  (export class) :18
+[ ] EmptyComponent  (export class) :26
+[ ] OtherAppComponent  (export class) :42
+
+## devtools/src/app/demo-app/auxiliary/auxiliary.component.ts
+[ ] AuxiliaryComponent  (export class) :15
+
+## devtools/src/app/demo-app/cookies.component.ts
+[ ] CookieRecipe  (export class) :27
+[ ] CookieRecipe.update  (method) :34
+
+## devtools/src/app/demo-app/demo-app.component.ts
+[ ] StructuralDirective  (export class) :41
+[ ] StructuralDirective.ngOnInit  (method) :45
+[ ] DemoAppComponent  (export class) :66
+[ ] DemoAppComponent.getTitle  (method) :89
+[ ] DemoAppComponent.constructor  (ctor) :96
+
+## devtools/src/app/demo-app/heavy.component.ts
+[ ] fib  (arrow) :11
+[ ] HeavyComponent  (export class) :23
+[ ] HeavyComponent.calculate  (method) :40
+
+## devtools/src/app/demo-app/sample-properties.component.ts
+[ ] SamplePropertiesComponent  (export class) :19
+
+## devtools/src/app/demo-app/sample.service.ts
+[ ] SampleService  (export class) :12
+
+## devtools/src/app/demo-app/todo/about/about.component.ts
+[ ] AboutComponent  (export class) :18
+[ ] ProtectedAboutComponent  (export class) :27
+
+## devtools/src/app/demo-app/todo/app-todo.component.ts
+[ ] MyServiceA  (export class) :17
+[ ] AppTodoComponent  (export class) :26
+[ ] AppTodoComponent.toggleAllowGuard  (method) :43
+[ ] AppTodoComponent.openDialog  (method) :64
+
+## devtools/src/app/demo-app/todo/app.module.ts
+[ ] AllowGuardService  (export class) :25
+      -- Service to manage the allowGuard state for testing router tree visualization.
+[ ] AllowGuardService.toggle  (method) :28
+[ ] canMatchGuard  (export arrow) :33
+[ ] AppModule  (export class) :82
+
+## devtools/src/app/demo-app/todo/dialog.component.ts
+[ ] DialogComponent  (export class) :40
+[ ] DialogComponent.onNoClick  (method) :44
+
+## devtools/src/app/demo-app/todo/home/sample.pipe.ts
+[ ] SamplePipe  (export class) :15
+[ ] SamplePipe.transform  (method) :16
+[ ] SamplePipe.ngOnDestroy  (method) :20
+
+## devtools/src/app/demo-app/todo/home/todo.component.ts
+[ ] TodoComponent  (export class) :20
+[ ] TodoComponent.toggle  (method) :27
+[ ] TodoComponent.completeEdit  (method) :32
+[ ] TodoComponent.enableEditMode  (method) :38
+
+## devtools/src/app/demo-app/todo/home/todos.component.ts
+[ ] fib  (arrow) :27
+[ ] BaseCaseComponent  (export class) :39
+[ ] RecursiveComponent  (export class) :57
+[ ] SvgDemoComponent  (export class) :65
+[ ] TodosComponent  (export class) :80
+[ ] TodosComponent.ngOnInit  (method) :103
+[ ] TodosComponent.ngOnDestroy  (method) :109
+[ ] TodosComponent.filterValue  (accessor) :116
+[ ] TodosComponent.itemsLeft  (accessor) :123
+[ ] TodosComponent.clearCompleted  (method) :127
+[ ] TodosComponent.addTodo  (method) :131
+[ ] TodosComponent.onChange  (method) :141
+[ ] TodosComponent.onDelete  (method) :147
+
+## devtools/src/app/demo-app/todo/home/todos.pipe.ts
+[ ] TodosFilter  (export class) :23
+[ ] TodosFilter.transform  (method) :24
+
+## devtools/src/app/demo-app/todo/home/todos.service.ts
+[ ] TodosService  (export class) :11
+[ ] TodosService.getAll  (method) :12
+[ ] TodosService.createTodo  (method) :15
+[ ] TodosService.updateTodo  (method) :18
+[ ] TodosService.deleteTodo  (method) :21
+
+## devtools/src/app/demo-app/todo/home/tooltip.directive.ts
+[ ] TooltipDirective  (export class) :17
+[ ] TooltipDirective.constructor  (ctor) :27
+[ ] TooltipDirective.handleClick  (method) :31
+
+## devtools/src/app/demo-app/todo/routes/routes.component.ts
+[ ] RoutesHomeComponent  (export class) :47
+[ ] RoutesHomeComponent.constructor  (ctor) :54
+[ ] RoutesHomeComponent.ngOnInit  (method) :56
+[ ] RoutesAuxComponent  (export class) :67
+[ ] RoutesOneComponent  (export class) :73
+[ ] RoutesTwoComponent  (export class) :79
+[ ] RoutesStandaloneComponent  (export class) :85
+[ ] Service1  (export class) :88
+[ ] Service2  (export class) :93
+[ ] Service3  (export class) :98
+[ ] Service4  (export class) :103
+
+## devtools/src/app/demo-app/todo/routes/routes.module.ts
+[ ] resolverFn  (export arrow) :32
+[ ] activateGuard  (export arrow) :39
+[ ] customMatcher  (export arrow) :46
+[ ] customRerunLogic  (export function) :53
+[ ] RoutesModule  (export class) :124
+
+## devtools/src/app/demo-app/zippy.component.ts
+[ ] ZippyComponent  (export class) :16
+
+## devtools/src/app/devtools-app/devtools-app.component.ts
+[ ] AppDevToolsComponent  (export class) :21
+
+## devtools/src/app/transfer-state.ts
+[ ] serializeTransferState  (export function) :15
+      -- This function serializes the transfer state into the DOM.
+
+## devtools/src/demo-application-environment.ts
+[ ] DemoApplicationEnvironment  (export class) :13
+[ ] DemoApplicationEnvironment.environment  (accessor) :16
+
+## devtools/src/demo-application-operations.ts
+[ ] DemoApplicationOperations  (export class) :16
+[ ] DemoApplicationOperations.viewSource  (method) :19
+[ ] DemoApplicationOperations.selectDomElement  (method) :24
+[ ] DemoApplicationOperations.inspect  (method) :29
+[ ] DemoApplicationOperations.inspectSignal  (method) :34
+[ ] DemoApplicationOperations.viewSourceFromRouter  (method) :39
+[ ] DemoApplicationOperations.setStorageItems  (method) :46
+[ ] DemoApplicationOperations.getStorageItems  (method) :51
+[ ] DemoApplicationOperations.removeStorageItems  (method) :62
+[ ] DemoApplicationOperations.getLsItems  (method) :71
+[ ] DemoApplicationOperations.setLsItems  (method) :85
+
+## devtools/src/iframe-message-bus.ts
+[ ] IFrameMessageBus  (export class) :11
+[ ] IFrameMessageBus.constructor  (ctor) :14
+[ ] IFrameMessageBus.on  (method) :22
+[ ] IFrameMessageBus.once  (method) :39
+[ ] IFrameMessageBus.emit  (method) :52
+[ ] IFrameMessageBus.destroy  (method) :71
+
+## devtools/src/zone-unaware-iframe-message-bus.ts
+[ ] runOutsideAngular  (arrow) :13
+[ ] ZoneUnawareIFrameMessageBus  (export class) :22
+[ ] ZoneUnawareIFrameMessageBus.constructor  (ctor) :25
+[ ] ZoneUnawareIFrameMessageBus.on  (method) :30
+[ ] ZoneUnawareIFrameMessageBus.once  (method) :38
+[ ] ZoneUnawareIFrameMessageBus.emit  (method) :48
+      -- listener in the extension.
+[ ] ZoneUnawareIFrameMessageBus.destroy  (method) :52
+
+## devtools/tools/esbuild/esbuild-base.config.mts
+[ ] convertObjectToStringDictionary  (function) :14
+      -- Converts an object to a string dictionary.
+
+## devtools/tools/release.mts
+[ ] main  (function) :112
+      -- The main function for the release script. This function orchestrates the release process, from checking for new commits to publishing the extension. It performs
+[ ] checkCleanWorkingDirectory  (function) :175
+      -- Checks that the working directory is clean. If the working directory is not clean, the user is prompted to continue or exit.
+[ ] getLastReleaseSha  (function) :190
+      -- Gets the SHA of the last release commit. This is used to determine which commits to include in the changelog.
+[ ] getCommitsSince  (function) :210
+      -- Gets the commits since a given SHA. This is used to determine which commits to include in the changelog.
+[ ] getNewVersion  (function) :227
+      -- Gets the new version number from the user. This function reads the current version from the manifest files, determines the next version based on the commits sin
+[ ] getCurrentVersion  (function) :262
+      -- Gets the current version number from the manifest files. This function reads the version from the first manifest file and assumes that all manifest files have t
+[ ] updateManifests  (function) :273
+      -- Updates the manifest files with the new version number. This function reads each manifest file, updates the version number, and then writes the file back to dis
+[ ] prepareReleasePullRequest  (function) :294
+      -- Prepares the release pull request. This function creates a new branch, stages the changes to the manifest files, commits the changes, and then pushes the branch
+[ ] getMergedCommitSha  (function) :321
+      -- Gets the SHA of the merged release commit by searching for it on the remote.
+[ ] checkoutMergedCommitAndInstallDependencies  (function) :343
+      -- Checks out the merged commit and installs dependencies.
+[ ] publishChromeExtension  (function) :360
+      -- Publishes the Chrome extension. This function builds the Chrome extension, packages it, and then opens the Chrome Web Store in the browser.
+[ ] publishFirefoxExtension  (function) :383
+      -- Publishes the Firefox extension. This function builds the Firefox extension, packages it, and then opens the Firefox Add-ons page in the browser. It also packag
+[ ] generateChangelog  (function) :428
+      -- Generates the changelog for the release. This function gets the commits since the last release and formats them into a changelog.
+[ ] getFirefoxReviewerNote  (function) :443
+      -- Generates the reviewer note that is submitted with the Firefox extension. This is displayed to the user to help them write the reviewer note.
+[ ] execAndStream  (function) :458
+      -- Executes a command and streams its stdout and stderr.

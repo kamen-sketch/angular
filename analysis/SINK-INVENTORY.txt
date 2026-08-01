@@ -1,0 +1,626 @@
+INVENTARIS SINK & SOURCE KEAMANAN (hasil pemindaian pola)
+Dihasilkan otomatis oleh analysis/tools/scan-sinks.mjs -- jangan diedit manual.
+Berkas dipindai: 3373 (test dikecualikan)
+Pola dipakai   : 29
+
+Catatan: hasil ini adalah KANDIDAT, bukan kerentanan. Setiap baris perlu
+ditinjau manual; lihat analysis/TAINT-TO-SINK.txt untuk rantai yang sudah
+ditelusuri sampai tuntas.
+==============================================================================
+
+RINGKASAN
+------------------------------------------------------------------------------
+tinggi  sink    bypass-sanitasi               20 kecocokan  2 area
+tinggi  sink    child-process                 70 kecocokan  5 area
+tinggi  sink    document-write                 0 kecocokan  0 area
+tinggi  sink    eval-langsung                  0 kecocokan  0 area
+tinggi  sink    eval-taklangsung               1 kecocokan  1 area
+tinggi  sink    function-constructor           4 kecocokan  3 area
+tinggi  sink    innerhtml-bracket              0 kecocokan  0 area
+tinggi  sink    innerhtml-tulis                8 kecocokan  4 area
+tinggi  sink    insertadjacenthtml             0 kecocokan  0 area
+tinggi  sink    range-fragment                 0 kecocokan  0 area
+tinggi  sink    srcdoc-tulis                   1 kecocokan  1 area
+tinggi  sink    timer-string                   0 kecocokan  0 area
+sedang  sink    domparser                      3 kecocokan  2 area
+sedang  sink    fs-tulis                      36 kecocokan  8 area
+sedang  sink    import-dinamis                 2 kecocokan  2 area
+sedang  sink    lokasi-navigasi                2 kecocokan  2 area
+sedang  sink    setattribute-berbahaya         5 kecocokan  3 area
+sedang  sink    setattribute-dinamis          30 kecocokan  7 area
+sedang  sink    src-href-tulis                16 kecocokan  5 area
+sedang  sink    sw-navigasi                   19 kecocokan  4 area
+sedang  sink    unwrap-safevalue              16 kecocokan  3 area
+sedang  sink    worker-importscripts           1 kecocokan  1 area
+sedang  source  src-postmessage               39 kecocokan  4 area
+sedang  source  src-windowname                 0 kecocokan  0 area
+info    guard   sanitizer-runtime             13 kecocokan  2 area
+info    guard   trust-konstan                  8 kecocokan  2 area
+info    guard   trusted-types-policy          11 kecocokan  3 area
+info    source  src-lokasi                    21 kecocokan  5 area
+info    source  src-storage                    4 kecocokan  3 area
+
+==============================================================================
+
+RINCIAN PER POLA
+
+------------------------------------------------------------------------------
+## bypass-sanitasi  [tinggi/sink]  -- 20 kecocokan
+   bypassSecurityTrust* / bypassSanitizationTrust* (taint menembus guard)
+   regex: /(?<![\w$.])bypass(?:Security|Sanitization)Trust\w*\s*\(/
+
+   [packages/platform-browser] 15
+     packages/platform-browser/src/security/dom_sanitization_service.ts:129  abstract bypassSecurityTrustHtml(value: string): SafeHtml;
+     packages/platform-browser/src/security/dom_sanitization_service.ts:137  abstract bypassSecurityTrustStyle(value: string): SafeStyle;
+     packages/platform-browser/src/security/dom_sanitization_service.ts:145  abstract bypassSecurityTrustScript(value: string): SafeScript;
+     packages/platform-browser/src/security/dom_sanitization_service.ts:154  abstract bypassSecurityTrustUrl(value: string): SafeUrl;
+     packages/platform-browser/src/security/dom_sanitization_service.ts:163  abstract bypassSecurityTrustResourceUrl(value: string): SafeResourceUrl;
+     packages/platform-browser/src/security/dom_sanitization_service.ts:216  override bypassSecurityTrustHtml(value: string): SafeHtml {
+     packages/platform-browser/src/security/dom_sanitization_service.ts:217  return bypassSanitizationTrustHtml(value);
+     packages/platform-browser/src/security/dom_sanitization_service.ts:219  override bypassSecurityTrustStyle(value: string): SafeStyle {
+     packages/platform-browser/src/security/dom_sanitization_service.ts:220  return bypassSanitizationTrustStyle(value);
+     packages/platform-browser/src/security/dom_sanitization_service.ts:222  override bypassSecurityTrustScript(value: string): SafeScript {
+     packages/platform-browser/src/security/dom_sanitization_service.ts:223  return bypassSanitizationTrustScript(value);
+     packages/platform-browser/src/security/dom_sanitization_service.ts:225  override bypassSecurityTrustUrl(value: string): SafeUrl {
+     packages/platform-browser/src/security/dom_sanitization_service.ts:226  return bypassSanitizationTrustUrl(value);
+     packages/platform-browser/src/security/dom_sanitization_service.ts:228  override bypassSecurityTrustResourceUrl(value: string): SafeResourceUrl {
+     packages/platform-browser/src/security/dom_sanitization_service.ts:229  return bypassSanitizationTrustResourceUrl(value);
+   [packages/core] 5
+     packages/core/src/sanitization/bypass.ts:149  export function bypassSanitizationTrustHtml(trustedHtml: string): SafeHtml {
+     packages/core/src/sanitization/bypass.ts:161  export function bypassSanitizationTrustStyle(trustedStyle: string): SafeStyle {
+     packages/core/src/sanitization/bypass.ts:173  export function bypassSanitizationTrustScript(trustedScript: string): SafeScript {
+     packages/core/src/sanitization/bypass.ts:185  export function bypassSanitizationTrustUrl(trustedUrl: string): SafeUrl {
+     packages/core/src/sanitization/bypass.ts:197  export function bypassSanitizationTrustResourceUrl(trustedResourceUrl: string): SafeResourceUrl {
+
+------------------------------------------------------------------------------
+## child-process  [tinggi/sink]  -- 70 kecocokan
+   exec / execSync / spawn (eksekusi perintah OS)
+   regex: /(?<![\w$.])(?:exec|execSync|execFile|spawn|spawnSync)\s*\(/
+
+   [scripts] 32
+     scripts/benchmarks/index.mts:135  await exec('pnpm', ['bazel', 'test', bazelTarget, ...benchmarkTestFlags], cwd);
+     scripts/benchmarks/index.mts:219  await exec('pnpm', ['install', '--no-frozen-lockfile', '--prefer-offline'], tempDir);
+     scripts/benchmarks/targets.mts:21  await exec('pnpm', [
+     scripts/benchmarks/targets.mts:43  await exec('pnpm', ['bazel', 'info', 'bazel-testlogs', '--lockfile_mode=update'], cwd)
+     scripts/benchmarks/targets.mts:54  await exec('pnpm', ['bazel', 'query', '--output=label', '--', target])
+     scripts/benchmarks/utils.mts:25  export function exec(cmd: string, args: string[] = [], cwd: string = projectDir): Promise<string> {
+     scripts/build/angular-in-memory-web-api.mts:30  exec(`${bazelCmd} build
+     scripts/build/angular-in-memory-web-api.mts:32  exec(`mkdir -p ${destDir}`);
+     scripts/build/angular-in-memory-web-api.mts:36  const bazelBinPath = exec(`${bazelCmd} --ignore_all_rc_files info bazel-bin`, true);
+     scripts/build/angular-in-memory-web-api.mts:45  exec(`rm -rf ${distTargetDir}`);
+     scripts/build/angular-in-memory-web-api.mts:46  exec(`cp -R ${buildOutputDir} ${distTargetDir}`);
+     scripts/build/angular-in-memory-web-api.mts:47  exec(`chmod -R u+w ${distTargetDir}`);
+     scripts/build/package-builder.mts:59  const targets = exec(queryPackagesCmd, true).split(/\r?\n/).concat(additionalTargets);
+     scripts/build/package-builder.mts:63  const bazelBinPath = exec(`${bazelCmd} --ignore_all_rc_files info bazel-bin`, true);
+     scripts/build/package-builder.mts:83  exec(`chmod -R u+w ${outputPath}`);
+     scripts/build/package-builder.mts:84  exec(`rm -rf ${outputPath}`);
+     scripts/build/package-builder.mts:88  exec(`${bazelCmd} build ${stampConfigArg} ${targets.join(' ')}`);
+     scripts/build/package-builder.mts:92  exec(`rm -rf ${distPath}`);
+     scripts/build/package-builder.mts:93  exec(`mkdir -p ${distPath}`);
+     scripts/build/package-builder.mts:100  exec(`cp -R ${outputPath} ${targetFolder}`);
+     scripts/build/package-builder.mts:101  exec(`chmod -R u+w ${targetFolder}`);
+     scripts/build/package-builder.mts:135  export function exec(command: string): void;
+     scripts/build/package-builder.mts:137  export function exec(command: string, captureStdout: true): string;
+     scripts/build/package-builder.mts:138  export function exec(command: string, captureStdout?: true) {
+     scripts/build/package-builder.mts:139  const stdout = execSync(command, {
+     ... dan 7 lainnya
+   [devtools] 17
+     devtools/tools/release.mts:120  await exec(`git fetch ${angularRepoRemote} main`);
+     devtools/tools/release.mts:177  const {stdout: status} = await exec('git status --porcelain');
+     devtools/tools/release.mts:192  let {stdout: sha} = await exec(
+     devtools/tools/release.mts:211  const {stdout} = await exec(
+     devtools/tools/release.mts:283  await exec(`pnpm ng-dev format files ${manifestPaths.map((f) => `"${f}"`).join(' ')}`);
+     devtools/tools/release.mts:298  await exec(`git branch -D ${releaseBranch}`).catch(() => {});
+     devtools/tools/release.mts:299  await exec(`git checkout -b ${releaseBranch} FETCH_HEAD`);
+     devtools/tools/release.mts:300  await exec(`git commit -m "${releaseCommitPrefix}${newVersion}" "${manifestPaths.join('" "')}"`);
+     devtools/tools/release.mts:301  await exec(`git push origin ${releaseBranch} --force-with-lease`);
+     devtools/tools/release.mts:304  const {stdout: remoteUrl} = await exec('git remote get-url origin');
+     devtools/tools/release.mts:329  await exec(`git fetch ${angularRepoRemote} main`);
+     devtools/tools/release.mts:348  await exec(`git fetch ${angularRepoRemote}`);
+     devtools/tools/release.mts:349  await exec(`git checkout ${mergedCommitSha}`);
+     devtools/tools/release.mts:364  await exec(`zip -r ${join(rootPath, chromeZipPath)} *`, {
+     devtools/tools/release.mts:392  await exec(`zip -r ${join(rootPath, firefoxZipPath)} *`, {
+     devtools/tools/release.mts:398  await exec(`git archive FETCH_HEAD -o "${sourceZipPath}"`);
+     devtools/tools/release.mts:460  const child = spawn(`${command} ${args.join(' ')}`, [], {
+   [packages/zone.js] 16
+     packages/zone.js/tools/release.mts:115  await exec(`git checkout -b "${releaseBranch}"`);
+     packages/zone.js/tools/release.mts:118  await exec(`git add packages/zone.js/CHANGELOG.md packages/zone.js/package.json`);
+     packages/zone.js/tools/release.mts:120  await exec(`git commit -m "${commitMessage}"`);
+     packages/zone.js/tools/release.mts:125  await exec(`git push ${forkRemote} "${releaseBranch}"`);
+     packages/zone.js/tools/release.mts:169  await exec(`git fetch https:
+     packages/zone.js/tools/release.mts:170  await exec(`git checkout FETCH_HEAD`);
+     packages/zone.js/tools/release.mts:179  const {stdout: sha} = await exec(
+     packages/zone.js/tools/release.mts:190  await exec(`git checkout ${trimmedSha}`);
+     packages/zone.js/tools/release.mts:221  await exec(`git tag ${tagName} ${trimmedSha}`);
+     packages/zone.js/tools/release.mts:225  await exec(`git push https:
+     packages/zone.js/tools/release.mts:232  await exec('git clean -dxf');
+     packages/zone.js/tools/release.mts:237  const {stdout: status} = await exec('git status --porcelain');
+     packages/zone.js/tools/release.mts:270  const {stdout: tags} = await exec(`git tag --list "zone.js-*"`);
+     packages/zone.js/tools/release.mts:298  const {stdout: user} = await exec(`npm whoami --registry ${registry}`);
+     packages/zone.js/tools/release.mts:308  const child = spawn(`${command} ${args.join(' ')}`, [], {
+     packages/zone.js/tools/release.mts:339  const {stdout} = await exec('git remote -v');
+   [tools] 3
+     tools/symbol-extractor/run_all_symbols_extractor_tests.js:30  const ALL_TEST_TARGETS = spawnSync(
+     tools/symbol-extractor/run_all_symbols_extractor_tests.js:53  const commandResult = spawnSync('pnpm', ['--silent', 'bazel', 'build', targets.join(' ')], {
+     tools/symbol-extractor/run_all_symbols_extractor_tests.js:69  const commandResult = spawnSync('pnpm', ['--silent', 'bazel', command, target], {
+   [adev] 2
+     adev/scripts/update-cross-repo-docs/index.mjs:35  execSync(`git status --porcelain`, {stdio: 'inherit'});
+     adev/src/app/editor/node-runtime-sandbox.service.ts:492  private async spawn(command: string, args: string[] = []): Promise<WebContainerProcess> {
+
+------------------------------------------------------------------------------
+## document-write  [tinggi/sink]  -- 0 kecocokan
+   document.write() / writeln()
+   regex: /\.\s*write(?:ln)?\s*\(/
+   syarat: /document|doc\b|\bwin(?:dow)?\./
+
+   (tidak ada kecocokan)
+
+------------------------------------------------------------------------------
+## eval-langsung  [tinggi/sink]  -- 0 kecocokan
+   Pemanggilan eval() langsung
+   regex: /(?<![\w$.])eval\s*\(/
+
+   (tidak ada kecocokan)
+
+------------------------------------------------------------------------------
+## eval-taklangsung  [tinggi/sink]  -- 1 kecocokan
+   Akses eval lewat bracket, mis. global['eval'](...)
+   regex: /\[\s*['"`]eval['"`]\s*\]\s*\(/
+
+   [packages/compiler] 1
+     packages/compiler/src/output/output_jit_trusted_types.ts:125  const fn = global['eval'](trustedScriptFromString(body) as string) as Function;
+
+------------------------------------------------------------------------------
+## function-constructor  [tinggi/sink]  -- 4 kecocokan
+   new Function(...) / Function(...) sebagai konstruktor kode
+   regex: /(?<![\w$.])(?:new\s+)?Function\s*\(/
+   tolak: /(?::\s*Function|<\s*Function|as\s+Function|\bFunction\s*\|)/
+
+   [packages/compiler] 2
+     packages/compiler/src/output/output_jit_trusted_types.ts:109  return new Function(...args);
+     packages/compiler/src/output/output_jit_trusted_types.ts:131  return new Function(...args);
+   [modules] 1
+     modules/utilities/perf_util.ts:129  return await new Function(`return import('@angular/benchpress');`)();
+   [packages/core] 1
+     packages/core/schematics/utils/load_esm.ts:25  const namespaceObject = await new Function('modulePath', `return import(modulePath);`)(
+
+------------------------------------------------------------------------------
+## innerhtml-bracket  [tinggi/sink]  -- 0 kecocokan
+   Penugasan innerHTML lewat bracket, mis. el['innerHTML'] = x
+   regex: /\[\s*['"`](?:inner|outer)HTML['"`]\s*\]\s*\+?=(?!=)/
+
+   (tidak ada kecocokan)
+
+------------------------------------------------------------------------------
+## innerhtml-tulis  [tinggi/sink]  -- 8 kecocokan
+   Penugasan ke innerHTML/outerHTML
+   regex: /\.\s*(?:inner|outer)HTML\s*\+?=(?!=)/
+
+   [adev] 5
+     adev/shared-docs/components/tab-group/tab-group.component.ts:66  tabpanels[i].nativeElement.innerHTML = '';
+     adev/shared-docs/components/viewers/docs-viewer/docs-viewer.component.ts:108  contentContainer.innerHTML = content;
+     adev/shared-docs/services/table-of-contents-loader.service.ts:48  div.innerHTML = heading.innerHTML;
+     adev/src/app/editor/code-editor/extensions/tooltip.ts:103  wrapper.innerHTML = sanitizedHtml;
+     adev/src/app/editor/code-editor/extensions/tooltip.ts:149  tagsWrapper.innerHTML = sanitizedHtml;
+   [modules] 1
+     modules/ssr-benchmarks/src/main.server.ts:30  doc.body.innerHTML = '<app-root></app-root>';
+   [packages/core] 1
+     packages/core/src/sanitization/inert_body.ts:75  templateEl.innerHTML = trustedHTMLFromString(html) as string;
+   [packages/upgrade] 1
+     packages/upgrade/src/common/src/upgrade_helper.ts:254  this.element.innerHTML = html;
+
+------------------------------------------------------------------------------
+## insertadjacenthtml  [tinggi/sink]  -- 0 kecocokan
+   insertAdjacentHTML()
+   regex: /\.\s*insertAdjacentHTML\s*\(/
+
+   (tidak ada kecocokan)
+
+------------------------------------------------------------------------------
+## range-fragment  [tinggi/sink]  -- 0 kecocokan
+   createContextualFragment() mem-parse HTML menjadi node hidup
+   regex: /\.\s*createContextualFragment\s*\(/
+
+   (tidak ada kecocokan)
+
+------------------------------------------------------------------------------
+## srcdoc-tulis  [tinggi/sink]  -- 1 kecocokan
+   Penugasan ke iframe.srcdoc
+   regex: /\.\s*srcdoc\s*\+?=(?!=)/
+
+   [packages/core] 1
+     packages/core/src/sanitization/iframe_attrs_validation.ts:32  iframe.srcdoc = trustedHTMLFromString('') as unknown as string;
+
+------------------------------------------------------------------------------
+## timer-string  [tinggi/sink]  -- 0 kecocokan
+   setTimeout/setInterval dengan argumen string (dievaluasi sebagai kode)
+   regex: /(?<![\w$.])set(?:Timeout|Interval)\s*\(\s*['"`]/
+
+   (tidak ada kecocokan)
+
+------------------------------------------------------------------------------
+## domparser  [sedang/sink]  -- 3 kecocokan
+   DOMParser.parseFromString() (inert, tapi sumber node)
+   regex: /\.\s*parseFromString\s*\(/
+
+   [packages/core] 2
+     packages/core/src/sanitization/inert_body.ts:44  const body = new window.DOMParser().parseFromString(
+     packages/core/src/sanitization/inert_body.ts:89  return !!new window.DOMParser().parseFromString(
+   [devtools] 1
+     devtools/projects/ng-devtools-backend/src/lib/shared/highlighter/highlights.ts:225  const svg = new DOMParser().parseFromString(icon, 'image/svg+xml')
+
+------------------------------------------------------------------------------
+## fs-tulis  [sedang/sink]  -- 36 kecocokan
+   writeFile / appendFile / rm / unlink dengan path dinamis
+   regex: /(?<![\w$.])(?:writeFileSync|writeFile|appendFileSync|rmSync|unlinkSync)\s*\(/
+
+   [adev] 20
+     adev/scripts/routes/generate-routes.mts:72  writeFileSync(outputFile, JSON.stringify(uniqueRoutes, null, 2));
+     adev/shared-docs/pipeline/api-gen/extraction/index.mts:116  writeFileSync(outputFilenameExecRootRelativePath, output, {encoding: 'utf8'});
+     adev/shared-docs/pipeline/api-gen/manifest/index.mts:24  writeFileSync(outputFilenameExecRootRelativePath, JSON.stringify(manifest), {encoding: 'utf8'});
+     adev/shared-docs/pipeline/api-gen/rendering/index.mts:172  writeFileSync(outputPath, htmlOutputs[i], {encoding: 'utf8'});
+     adev/shared-docs/pipeline/examples/previews/index.mts:77  await writeFile(outputFilePath, previewsComponentMap);
+     adev/shared-docs/pipeline/examples/stackblitz/index.mts:15  writeFileSync(outputFilePath, htmlOutputContent, {encoding: 'utf8'});
+     adev/shared-docs/pipeline/examples/zip/index.mts:15  writeFileSync(outputFilePath, zipContent);
+     adev/shared-docs/pipeline/guides/index.mts:86  await writeFile(htmlOutputPath, htmlOutputContent, {encoding: 'utf8'});
+     adev/shared-docs/pipeline/navigation/index.mts:23  writeFileSync(outputFilePath, JSON.stringify(navData));
+     adev/shared-docs/pipeline/tutorials/playground_index.mts:54  writeFileSync(
+     adev/shared-docs/pipeline/tutorials/playground_index.mts:58  writeFileSync(
+     adev/shared-docs/pipeline/tutorials/playground_index.mts:65  writeFileSync(
+     adev/shared-docs/pipeline/tutorials/tutorial_index.mts:51  writeFileSync(
+     adev/shared-docs/pipeline/tutorials/tutorial_index.mts:55  writeFileSync(
+     adev/shared-docs/pipeline/tutorials/tutorial_index.mts:72  writeFileSync(
+     adev/shared-docs/pipeline/tutorials/tutorial_index.mts:76  writeFileSync(
+     adev/shared-docs/pipeline/tutorials/tutorial_index.mts:83  writeFileSync(
+     adev/src/app/editor/node-runtime-sandbox.service.ts:251  async writeFile(path: string, content: string | Uint8Array): Promise<void> {
+     adev/src/content/examples/schematics-for-libraries/projects/my-lib/schematics/my-service/index.ts:30  async writeFile(path: string, data: string): Promise<void> {
+     adev/src/context/llms.mts:133  await writeFile(outputFilePath, processedContent, 'utf-8');
+   [packages/compiler-cli] 5
+     packages/compiler-cli/src/ngtsc/file_system/src/compiler_host.ts:37  writeFile(
+     packages/compiler-cli/src/ngtsc/file_system/src/invalid_file_system.ts:28  writeFile(path: AbsoluteFsPath, data: string | Uint8Array, exclusive?: boolean): void {
+     packages/compiler-cli/src/ngtsc/file_system/src/node_js_file_system.ts:125  writeFile(path: AbsoluteFsPath, data: string | Uint8Array, exclusive: boolean = false): void {
+     packages/compiler-cli/src/ngtsc/file_system/src/types.ts:78  writeFile(path: AbsoluteFsPath, data: string | Uint8Array, exclusive?: boolean): void;
+     packages/compiler-cli/src/ngtsc/program_driver/src/ts_create_program_driver.ts:180  writeFile(): never {
+   [packages/common] 3
+     packages/common/locales/generate-locales-tool/bin/get-base-currencies-file.ts:19  writeFileSync('base_currencies_generated.ts', generateBaseCurrenciesFile(baseLocaleData), {
+     packages/common/locales/generate-locales-tool/bin/get-base-locale-file.ts:21  writeFileSync(
+     packages/common/locales/generate-locales-tool/bin/get-closure-locale-file.ts:21  writeFileSync(
+   [devtools] 2
+     devtools/projects/shell-browser/set-version.js:29  writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
+     devtools/tools/release.mts:279  await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+   [packages/core] 2
+     packages/core/schematics/utils/project_tsconfig_paths.ts:78  async writeFile(path: string, data: string): Promise<void> {
+     packages/core/schematics/utils/tsurge/helpers/angular_devkit/devkit_filesystem.ts:143  writeFile(path: AbsoluteFsPath, data: string | Uint8Array): void {
+   [tools] 2
+     tools/manual_api_docs/generate_block_api_json.mts:47  writeFileSync(
+     tools/manual_api_docs/generate_element_api_json.mts:37  writeFileSync(
+   [packages/benchpress] 1
+     packages/benchpress/src/common_options.ts:46  function writeFile(filename: string, content: string): Promise<any> {
+   [packages/zone.js] 1
+     packages/zone.js/tools/release.mts:292  await writeFile(packageJsonPath, JSON.stringify(manifest, undefined, 2) + '\n');
+
+------------------------------------------------------------------------------
+## import-dinamis  [sedang/sink]  -- 2 kecocokan
+   import() dinamis dengan ekspresi non-literal
+   regex: /(?<![\w$.])import\s*\(\s*(?!['"`])/
+
+   [adev] 1
+     adev/src/app/routing/routes.ts:58  import(
+   [packages/core] 1
+     packages/core/schematics/utils/load_esm.ts:25  const namespaceObject = await new Function('modulePath', `return import(modulePath);`)(
+
+------------------------------------------------------------------------------
+## lokasi-navigasi  [sedang/sink]  -- 2 kecocokan
+   location.href= / location.assign / replace / window.open
+   regex: /(?:location\s*\.\s*(?:href|protocol)\s*\+?=(?!=)|location\s*\.\s*(?:assign|replace)\s*\(|(?:window|self|globalThis|top|parent)\s*\.\s*open\s*\()/
+
+   [adev] 1
+     adev/src/app/app.component.ts:104  window.open(`https:
+   [devtools] 1
+     devtools/projects/shell-browser/src/app/konami-code.service.ts:40  window.open('https:
+
+------------------------------------------------------------------------------
+## setattribute-berbahaya  [sedang/sink]  -- 5 kecocokan
+   setAttribute dengan nama atribut sensitif (literal)
+   regex: /\.\s*setAttribute\s*\(\s*['"`](?:src|href|srcdoc|action|formaction|data|codebase|xlink:href|style|sandbox|allow|csp)['"`]/i
+
+   [adev] 2
+     adev/shared-docs/components/viewers/docs-viewer/docs-viewer.component.ts:442  iframe.setAttribute('allow', 'accelerometer; encrypted-media; gyroscope; picture-in-picture');
+     adev/src/app/core/services/header.service.ts:31  this.document.querySelector('link[rel=canonical]')?.setAttribute('href', fullPath);
+   [packages/router] 2
+     packages/router/upgrade/src/upgrade.ts:147  anchor.setAttribute('href', url);
+     packages/router/upgrade/src/upgrade.ts:148  anchor.setAttribute('href', anchor.href);
+   [packages/platform-browser] 1
+     packages/platform-browser/src/dom/shared_styles_host.ts:103  linkElement.setAttribute('href', url);
+
+------------------------------------------------------------------------------
+## setattribute-dinamis  [sedang/sink]  -- 30 kecocokan
+   setAttribute dengan nama atribut dari variabel (tidak bisa dinilai statis)
+   regex: /\.\s*setAttribute\s*\(\s*(?!['"`])[A-Za-z_$]/
+   tolak: /setAttribute\s*\(\s*(?:[A-Z][A-Z0-9_]*\s*[,)]|\w+\.[A-Z][A-Z0-9_]*\s*[,)])/
+
+   [packages/core] 10
+     packages/core/src/hydration/annotate.ts:232  renderer.setAttribute(hostElement, NGH_ATTR_NAME, finalIndex);
+     packages/core/src/hydration/annotate.ts:835  renderer.setAttribute(element, SKIP_HYDRATION_ATTR_NAME, '');
+     packages/core/src/hydration/annotate.ts:840  renderer.setAttribute(element, NGH_ATTR_NAME, index.toString());
+     packages/core/src/render3/dom_node_manipulation.ts:117  renderer.setAttribute(element, 'style', newValue);
+     packages/core/src/render3/dom_node_manipulation.ts:136  renderer.setAttribute(element, 'class', newValue);
+     packages/core/src/render3/instructions/attach_source_locations.ts:44  renderer.setAttribute(node, attributeName, attributeValue);
+     packages/core/src/render3/instructions/shared.ts:340  renderer.setAttribute(element as RElement, attrName, debugValue);
+     packages/core/src/render3/instructions/shared.ts:540  renderer.setAttribute(element, name, strValue as string, namespace);
+     packages/core/src/render3/util/attrs_utils.ts:60  renderer.setAttribute(native, attrName, attrVal, namespaceURI);
+     packages/core/src/render3/util/attrs_utils.ts:69  renderer.setAttribute(native, attrName, attrVal as string);
+   [packages/common] 8
+     packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:780  this.renderer.setAttribute(this.imgElement, name, value);
+     packages/common/src/directives/ng_optimized_image/preload-link-creator.ts:85  renderer.setAttribute(preload, 'as', 'image');
+     packages/common/src/directives/ng_optimized_image/preload-link-creator.ts:86  renderer.setAttribute(preload, 'href', src);
+     packages/common/src/directives/ng_optimized_image/preload-link-creator.ts:87  renderer.setAttribute(preload, 'rel', 'preload');
+     packages/common/src/directives/ng_optimized_image/preload-link-creator.ts:88  renderer.setAttribute(preload, 'fetchpriority', 'high');
+     packages/common/src/directives/ng_optimized_image/preload-link-creator.ts:91  renderer.setAttribute(preload, 'crossorigin', crossOrigin);
+     packages/common/src/directives/ng_optimized_image/preload-link-creator.ts:95  renderer.setAttribute(preload, 'imageSizes', sizes);
+     packages/common/src/directives/ng_optimized_image/preload-link-creator.ts:99  renderer.setAttribute(preload, 'imageSrcset', srcset);
+   [packages/platform-browser] 6
+     packages/platform-browser/animations/async/src/async_animation_renderer.ts:263  this.delegate.setAttribute(el, name, value, namespace);
+     packages/platform-browser/src/browser/meta.ts:180  Object.keys(tag).forEach((prop: string) => el.setAttribute(getMetaKeyMap(prop), tag[prop]));
+     packages/platform-browser/src/dom/dom_renderer.ts:396  el.setAttribute(name, value);
+     packages/platform-browser/src/dom/dom_renderer.ts:399  el.setAttribute(name, value);
+     packages/platform-browser/src/dom/dom_renderer.ts:709  this.setAttribute(element, this.hostAttr, '');
+     packages/platform-browser/src/dom/dom_renderer.ts:714  super.setAttribute(el, this.contentAttr, '');
+   [packages/forms] 3
+     packages/forms/src/directives/native.ts:59  renderer.setAttribute(element, name, value as string);
+     packages/forms/src/directives/native.ts:65  renderer.setAttribute(element, name, '');
+     packages/forms/src/directives/native.ts:75  renderer.setAttribute(element, name, value.toString());
+   [packages/animations] 1
+     packages/animations/browser/src/render/renderer.ts:117  this.delegate.setAttribute(el, name, value, namespace);
+   [packages/platform-server] 1
+     packages/platform-server/src/utils.ts:152  renderer.setAttribute(element, 'ng-server-context', serverContext);
+   [packages/router] 1
+     packages/router/src/directives/router_link.ts:531  renderer.setAttribute(nativeElement, attrName, attrValue);
+
+------------------------------------------------------------------------------
+## src-href-tulis  [sedang/sink]  -- 16 kecocokan
+   Penugasan ke .src / .href / .action / .data / .codebase
+   regex: /\.\s*(?:src|href|action|formAction|codebase)\s*\+?=(?!=)/
+
+   [adev] 7
+     adev/shared-docs/components/viewers/docs-viewer/docs-viewer.component.ts:399  (anchor as HTMLAnchorElement).href = this.location.path() + url.hash;
+     adev/shared-docs/components/viewers/docs-viewer/docs-viewer.component.ts:431  thumbnail.src = thumbnail.src.replace('maxresdefault', 'hqdefault');
+     adev/shared-docs/components/viewers/docs-viewer/docs-viewer.component.ts:440  iframe.src = src;
+     adev/shared-docs/pipeline/shared/marked/extensions/docs-code/format/index.mts:87  linkElement.href = apiLink;
+     adev/src/app/core/services/analytics/analytics.service.ts:98  el.src = url as string;
+     adev/src/app/editor/download-manager.service.ts:44  anchor.href = url;
+     adev/src/app/features/update/update.component.ts:297  upgradeStep.action += `
+   [devtools] 4
+     devtools/projects/ng-devtools/src/lib/application-services/browser_styles_service.ts:62  style.href = `./styles/${fileName}`;
+     devtools/projects/ng-devtools/src/lib/devtools-tabs/profiler/file-api-service.ts:35  downloadLink.href = URL.createObjectURL(
+     devtools/projects/shell-browser/src/app/content-script.ts:82  script.src = chrome.runtime.getURL('app/backend_bundle.js');
+     devtools/projects/shell-browser/src/app/ng-validate.ts:13  script.src = chrome.runtime.getURL('app/detect_angular_bundle.js');
+   [packages/common] 2
+     packages/common/http/src/jsonp.ts:168  node.src = url;
+     packages/common/src/directives/ng_optimized_image/image_loaders/netlify_loader.ts:85  config.src = '/' + config.src;
+   [packages/platform-server] 2
+     packages/platform-server/src/location.ts:55  this.href = href;
+     packages/platform-server/src/location.ts:104  writableThis.href = href;
+   [packages/core] 1
+     packages/core/src/sanitization/iframe_attrs_validation.ts:31  iframe.src = '';
+
+------------------------------------------------------------------------------
+## sw-navigasi  [sedang/sink]  -- 19 kecocokan
+   clients.openWindow() / client.navigate() / scope.fetch() di Service Worker
+   regex: /\.\s*(?:openWindow|navigate)\s*\(|scope\s*\.\s*fetch\s*\(/
+
+   [packages/service-worker] 10
+     packages/service-worker/worker/src/app-version.ts:196  return await this.scope.fetch(req);
+     packages/service-worker/worker/src/assets.ts:560  return await this.scope.fetch(req);
+     packages/service-worker/worker/src/data.ts:440  const networkFetch = this.scope.fetch(req);
+     packages/service-worker/worker/src/data.ts:617  return this.scope.fetch(req);
+     packages/service-worker/worker/src/driver.ts:444  await this.scope.clients.openWindow(urlToOpen);
+     packages/service-worker/worker/src/driver.ts:451  await this.scope.clients.openWindow(urlToOpen);
+     packages/service-worker/worker/src/driver.ts:458  matchingClient = await matchingClient.navigate(urlToOpen);
+     packages/service-worker/worker/src/driver.ts:461  await this.scope.clients.openWindow(urlToOpen);
+     packages/service-worker/worker/src/driver.ts:466  await this.scope.fetch(urlToOpen);
+     packages/service-worker/worker/src/driver.ts:1377  return await this.scope.fetch(req);
+   [adev] 4
+     adev/src/app/features/playground/playground.component.ts:97  this.router.navigate([], {
+     adev/src/app/features/references/api-reference-list/api-reference-list.component.ts:162  this.router.navigate([], {
+     adev/src/app/features/references/services/reference-scroll-handler.service.ts:49  this.router.navigate([], {fragment: memberId, replaceUrl: true});
+     adev/src/app/features/update/update.component.ts:216  this.router.navigate([], {
+   [packages/router] 3
+     packages/router/src/statemanager/navigation_state_manager.ts:252  this.navigate(path, transition);
+     packages/router/src/statemanager/navigation_state_manager.ts:294  this.navigation.navigate(path, {
+     packages/router/src/statemanager/navigation_state_manager.ts:363  this.navigation.navigate(pathOrUrl, {
+   [packages/common] 2
+     packages/common/src/location/navigation_adapter_for_location.ts:59  this.navigation.navigate(url, {state, history: 'replace'});
+     packages/common/src/location/navigation_adapter_for_location.ts:66  this.navigation.navigate(url, {state, history: 'push'});
+
+------------------------------------------------------------------------------
+## unwrap-safevalue  [sedang/sink]  -- 16 kecocokan
+   unwrapSafeValue() melepas nilai mentah dari pembungkus SafeValue
+   regex: /(?<![\w$.])unwrapSafeValue\s*\(/
+
+   [packages/core] 10
+     packages/core/src/render3/instructions/styling.ts:728  const unwrappedValue = unwrapSafeValue(value) as
+     packages/core/src/render3/instructions/styling.ts:766  keyValueArraySet(keyValueArray, key, unwrapSafeValue(value));
+     packages/core/src/render3/instructions/styling.ts:1037  value = unwrapSafeValue(value) + suffix;
+     packages/core/src/render3/instructions/styling.ts:1039  value = stringify(unwrapSafeValue(value));
+     packages/core/src/sanitization/bypass.ts:100  export function unwrapSafeValue(value: SafeValue): string;
+     packages/core/src/sanitization/sanitization.ts:69  return trustedHTMLFromStringBypass(unwrapSafeValue(unsafeHtml));
+     packages/core/src/sanitization/sanitization.ts:91  return unwrapSafeValue(unsafeStyle);
+     packages/core/src/sanitization/sanitization.ts:118  return unwrapSafeValue(unsafeUrl);
+     packages/core/src/sanitization/sanitization.ts:142  return trustedScriptURLFromStringBypass(unwrapSafeValue(unsafeResourceUrl));
+     packages/core/src/sanitization/sanitization.ts:170  return trustedScriptFromStringBypass(unwrapSafeValue(unsafeScript));
+   [packages/platform-browser] 5
+     packages/platform-browser/src/security/dom_sanitization_service.ts:176  return unwrapSafeValue(value);
+     packages/platform-browser/src/security/dom_sanitization_service.ts:181  return unwrapSafeValue(value);
+     packages/platform-browser/src/security/dom_sanitization_service.ts:186  return unwrapSafeValue(value);
+     packages/platform-browser/src/security/dom_sanitization_service.ts:195  return unwrapSafeValue(value);
+     packages/platform-browser/src/security/dom_sanitization_service.ts:200  return unwrapSafeValue(value);
+   [packages/common] 1
+     packages/common/src/directives/ng_optimized_image/ng_optimized_image.ts:1465  return unwrapSafeValue(value);
+
+------------------------------------------------------------------------------
+## worker-importscripts  [sedang/sink]  -- 1 kecocokan
+   importScripts() / new Worker() memuat kode eksternal
+   regex: /(?<![\w$.])(?:importScripts|Worker)\s*\(/
+
+   [adev] 1
+     adev/src/app/editor/code-editor/workers/factory-provider.ts:18  return new Worker(new URL('./typescript-vfs.worker.ts', import.meta.url), {
+
+------------------------------------------------------------------------------
+## src-postmessage  [sedang/source]  -- 39 kecocokan
+   postMessage / listener 'message' (data lintas-origin)
+   regex: /(?:\.\s*postMessage\s*\(|['"`]message['"`]\s*,\s*(?:this\.)?\w*(?:handler|listener|on\w+))/
+
+   [devtools] 24
+     devtools/projects/shell-browser/src/app/chrome-message-bus.ts:73  this._port.postMessage({
+     devtools/projects/shell-browser/src/app/content-script.ts:29  port.postMessage('__NG_DEVTOOLS_BEAT');
+     devtools/projects/shell-browser/src/app/detect-angular.ts:42  win.postMessage(detection, '*');
+     devtools/projects/shell-browser/src/app/same-page-message-bus.ts:46  window.addEventListener('message', listener);
+     devtools/projects/shell-browser/src/app/same-page-message-bus.ts:50  window.removeEventListener('message', listener);
+     devtools/projects/shell-browser/src/app/same-page-message-bus.ts:65  window.addEventListener('message', listener);
+     devtools/projects/shell-browser/src/app/same-page-message-bus.ts:69  window.removeEventListener('message', listener);
+     devtools/projects/shell-browser/src/app/same-page-message-bus.ts:81  window.removeEventListener('message', listener);
+     devtools/projects/shell-browser/src/app/same-page-message-bus.ts:83  window.addEventListener('message', listener);
+     devtools/projects/shell-browser/src/app/same-page-message-bus.ts:91  window.postMessage(
+     devtools/projects/shell-browser/src/app/tab_manager.ts:88  connection.port?.postMessage({topic: 'devtoolsShutdown'});
+     devtools/projects/shell-browser/src/app/tab_manager.ts:104  tab.devtools!.postMessage({
+     devtools/projects/shell-browser/src/app/tab_manager.ts:156  tab.devtools.postMessage({
+     devtools/projects/shell-browser/src/app/tab_manager.ts:210  devtoolsPort.postMessage({
+     devtools/projects/shell-browser/src/app/tab_manager.ts:224  contentScriptPort.postMessage(message);
+     devtools/projects/shell-browser/src/app/tab_manager.ts:236  devtoolsPort.postMessage(message);
+     devtools/projects/shell-browser/src/app/tab_manager.ts:242  devtoolsPort.postMessage({
+     devtools/projects/shell-browser/src/devtools.ts:73  currentPanelWindow.postMessage({type: 'angular-devtools-deep-link', instanceId}, '*');
+     devtools/projects/shell-browser/src/devtools.ts:78  panelWindow.postMessage(
+     devtools/src/iframe-message-bus.ts:31  window.addEventListener('message', listener);
+     devtools/src/iframe-message-bus.ts:35  window.removeEventListener('message', listener);
+     devtools/src/iframe-message-bus.ts:46  window.removeEventListener('message', listener);
+     devtools/src/iframe-message-bus.ts:49  window.addEventListener('message', listener);
+     devtools/src/iframe-message-bus.ts:53  this.docWindow().postMessage(
+   [packages/service-worker] 12
+     packages/service-worker/src/low_level.ts:218  sw.postMessage({
+     packages/service-worker/src/low_level.ts:234  const postMessage = this.postMessage(type, payload);
+     packages/service-worker/src/provider.ts:55  const onControllerChange = () => sw.controller?.postMessage({action: 'INITIALIZE'});
+     packages/service-worker/worker/src/driver.ts:202  this.scope.registration.active.postMessage({action: 'INITIALIZE'});
+     packages/service-worker/worker/src/driver.ts:538  client.postMessage({
+     packages/service-worker/worker/src/driver.ts:543  client.postMessage({
+     packages/service-worker/worker/src/driver.ts:1236  client.postMessage({type: 'UNRECOVERABLE_STATE', reason});
+     packages/service-worker/worker/src/driver.ts:1254  client.postMessage({
+     packages/service-worker/worker/src/driver.ts:1271  client.postMessage({
+     packages/service-worker/worker/src/driver.ts:1294  client.postMessage({
+     packages/service-worker/worker/src/driver.ts:1330  client.postMessage(notice);
+     packages/service-worker/worker/src/driver.ts:1338  client.postMessage(msg);
+   [adev] 2
+     adev/src/app/editor/code-editor/code-mirror-editor.service.ts:257  this.tsVfsWorker.postMessage(request);
+     adev/src/app/editor/error-filename-handler.ts:20  window.parent.postMessage(
+   [packages/zone.js] 1
+     packages/zone.js/lib/zone-spec/fake-async-test.ts:642  channel.port2.postMessage(undefined);
+
+------------------------------------------------------------------------------
+## src-windowname  [sedang/source]  -- 0 kecocokan
+   window.name (bertahan lintas navigasi, sepenuhnya dikendalikan penyerang)
+   regex: /window\s*\.\s*name(?!\s*[:=]\s*['"`])/
+
+   (tidak ada kecocokan)
+
+------------------------------------------------------------------------------
+## sanitizer-runtime  [info/guard]  -- 13 kecocokan
+   Pemanggilan ɵɵsanitize* / _sanitizeHtml / _sanitizeUrl
+   regex: /(?<![\w$.])(?:ɵɵsanitize\w+|_sanitize(?:Html|Url))\s*\(/
+
+   [packages/core] 11
+     packages/core/src/sanitization/html_sanitizer.ts:199  if (URI_ATTRS[lower]) value = _sanitizeUrl(value);
+     packages/core/src/sanitization/html_sanitizer.ts:304  export function _sanitizeHtml(defaultDoc: any, unsafeHtmlInput: string): TrustedHTML | string {
+     packages/core/src/sanitization/sanitization.ts:51  export function ɵɵsanitizeHtml(
+     packages/core/src/sanitization/sanitization.ts:71  return _sanitizeHtml(getDocument(), renderStringify(unsafeHtml));
+     packages/core/src/sanitization/sanitization.ts:85  export function ɵɵsanitizeStyle(unsafeStyle: any): string {
+     packages/core/src/sanitization/sanitization.ts:112  export function ɵɵsanitizeUrl(unsafeUrl: any): string {
+     packages/core/src/sanitization/sanitization.ts:120  return _sanitizeUrl(renderStringify(unsafeUrl));
+     packages/core/src/sanitization/sanitization.ts:134  export function ɵɵsanitizeResourceUrl(unsafeResourceUrl: any): TrustedScriptURL | string {
+     packages/core/src/sanitization/sanitization.ts:162  export function ɵɵsanitizeScript(unsafeScript: any): TrustedScript | string {
+     packages/core/src/sanitization/sanitization.ts:263  export function ɵɵsanitizeUrlOrResourceUrl(unsafeUrl: any, tag: string, prop: string) {
+     packages/core/src/sanitization/url_sanitizer.ts:39  export function _sanitizeUrl(url: string): string {
+   [packages/platform-browser] 2
+     packages/platform-browser/src/security/dom_sanitization_service.ts:178  return _sanitizeHtml(this._doc, String(value)).toString();
+     packages/platform-browser/src/security/dom_sanitization_service.ts:197  return _sanitizeUrl(String(value));
+
+------------------------------------------------------------------------------
+## trust-konstan  [info/guard]  -- 8 kecocokan
+   ɵɵtrustConstantHtml / ɵɵtrustConstantResourceUrl
+   regex: /(?<![\w$.])ɵɵtrustConstant\w+/
+
+   [packages/core] 6
+     packages/core/src/core_render3_private_export.ts:321  ɵɵtrustConstantHtml,
+     packages/core/src/core_render3_private_export.ts:322  ɵɵtrustConstantResourceUrl,
+     packages/core/src/render3/jit/environment.ts:196  'ɵɵtrustConstantHtml': sanitization.ɵɵtrustConstantHtml,
+     packages/core/src/render3/jit/environment.ts:197  'ɵɵtrustConstantResourceUrl': sanitization.ɵɵtrustConstantResourceUrl,
+     packages/core/src/sanitization/sanitization.ts:191  export function ɵɵtrustConstantHtml(html: TemplateStringsArray): TrustedHTML | string {
+     packages/core/src/sanitization/sanitization.ts:217  export function ɵɵtrustConstantResourceUrl(url: TemplateStringsArray): TrustedScriptURL | string {
+   [packages/compiler] 2
+     packages/compiler/src/render3/r3_identifiers.ts:484  static trustConstantHtml: o.ExternalReference = {name: 'ɵɵtrustConstantHtml', moduleName: CORE};
+     packages/compiler/src/render3/r3_identifiers.ts:486  name: 'ɵɵtrustConstantResourceUrl',
+
+------------------------------------------------------------------------------
+## trusted-types-policy  [info/guard]  -- 11 kecocokan
+   createPolicy / createHTML / createScript / createScriptURL
+   regex: /\.\s*create(?:Policy|HTML|Script|ScriptURL)\s*\(/
+
+   [packages/core] 7
+     packages/core/src/util/security/trusted_types.ts:43  policy = (global.trustedTypes as TrustedTypePolicyFactory).createPolicy('angular', {
+     packages/core/src/util/security/trusted_types.ts:69  return getPolicy()?.createHTML(html) || html;
+     packages/core/src/util/security/trusted_types.ts:82  return getPolicy()?.createScriptURL(url) || url;
+     packages/core/src/util/security/trusted_types_bypass.ts:44  policy = (global.trustedTypes as TrustedTypePolicyFactory).createPolicy(
+     packages/core/src/util/security/trusted_types_bypass.ts:72  return getPolicy()?.createHTML(html) || html;
+     packages/core/src/util/security/trusted_types_bypass.ts:84  return getPolicy()?.createScript(script) || script;
+     packages/core/src/util/security/trusted_types_bypass.ts:96  return getPolicy()?.createScriptURL(url) || url;
+   [packages/compiler] 2
+     packages/compiler/src/output/output_jit_trusted_types.ts:73  policy = trustedTypes.createPolicy('angular#unsafe-jit', {
+     packages/compiler/src/output/output_jit_trusted_types.ts:95  return getPolicy()?.createScript(script) || script;
+   [packages/upgrade] 2
+     packages/upgrade/src/common/src/security/trusted_types.ts:37  policy = windowWithTrustedTypes.trustedTypes.createPolicy('angular#unsafe-upgrade', {
+     packages/upgrade/src/common/src/security/trusted_types.ts:60  return getPolicy()?.createHTML(html) || html;
+
+------------------------------------------------------------------------------
+## src-lokasi  [info/source]  -- 21 kecocokan
+   location.search / hash / href, document.URL, referrer
+   regex: /(?:location\s*\.\s*(?:search|hash|href|pathname)|document\s*\.\s*(?:URL|referrer|documentURI))/
+
+   [packages/common] 6
+     packages/common/src/directives/ng_optimized_image/url.ts:12  return isAbsoluteUrl(src) ? new URL(src) : new URL(src, win.location.href);
+     packages/common/src/location/platform_location.ts:136  return this._location.href;
+     packages/common/src/location/platform_location.ts:148  return this._location.pathname;
+     packages/common/src/location/platform_location.ts:151  return this._location.search;
+     packages/common/src/location/platform_location.ts:154  return this._location.hash;
+     packages/common/src/location/platform_location.ts:157  this._location.pathname = newPath;
+   [adev] 5
+     adev/shared-docs/components/viewers/example-viewer/example-viewer.component.ts:123  location.pathname +
+     adev/shared-docs/components/viewers/example-viewer/example-viewer.component.ts:124  location.search +
+     adev/src/app/core/layout/navigation/navigation.component.ts:57  protected readonly isUwu = 'location' in globalThis ? location.search.includes('uwu') : false;
+     adev/src/app/editor/terminal/interactive-terminal.ts:48  if (!this.window.location.search.includes('sudo=true')) {
+     adev/src/app/routing/router_providers.ts:137  window.history.replaceState(window.history.state, '', window.location.href);
+   [devtools] 5
+     devtools/projects/shell-browser/src/app/comm-utils.ts:24  const url = stripUrlQueryParamsAndFragment(window.location.href);
+     devtools/projects/shell-browser/src/app/comm-utils.ts:30  const url = stripUrlQueryParamsAndFragment(window.location.href);
+     devtools/projects/shell-browser/src/app/comm-utils.ts:36  const url = stripUrlQueryParamsAndFragment(window.location.href);
+     devtools/projects/shell-browser/src/app/content-script.ts:19  name: `${document.title || location.href}`,
+     devtools/src/app/demo-app/todo/home/todos.component.ts:118  return (window.location.hash.replace(/^#\
+   [modules] 4
+     modules/benchmarks/src/defer/init.ts:19  const url = new URL(document.location.href);
+     modules/benchmarks/src/hydration/init.ts:20  const url = new URL(document.location.href);
+     modules/benchmarks/src/util.ts:77  const search = decodeURIComponent(location.search);
+     modules/playground/src/jsonp/app/jsonp_comp.ts:31  const peopleUrl = new URL('./people.json', window.location.href).toString();
+   [packages/examples] 1
+     packages/examples/service-worker/registration-options/module.ts:37  useFactory: () => ({enabled: location.search.includes('sw=true')}),
+
+------------------------------------------------------------------------------
+## src-storage  [info/source]  -- 4 kecocokan
+   localStorage / sessionStorage / document.cookie
+   regex: /(?:localStorage|sessionStorage)\s*\.\s*getItem\s*\(|document\s*\.\s*cookie/
+
+   [adev] 2
+     adev/shared-docs/providers/local-storage.ts:42  return localStorage.getItem(key);
+     adev/src/app/core/services/analytics/analytics.service.ts:77  if (this.localStorage.getItem(STORAGE_KEY) === 'true') {
+   [devtools] 1
+     devtools/src/demo-application-operations.ts:72  const storage = this.localStorage.getItem(STORAGE_KEY);
+   [packages/platform-browser] 1
+     packages/platform-browser/src/browser/browser_adapter.ts:83  return parseCookieValue(document.cookie, name);
+

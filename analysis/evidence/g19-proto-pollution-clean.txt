@@ -1,0 +1,52 @@
+[
+ {
+  "label": "router query  ?__proto__[p1]=x",
+  "galat": null,
+  "keluaran": "{\"__proto__[p1]\":\"x\"}",
+  "sondir": "p1",
+  "prototipeTercemar": "TIDAK"
+ },
+ {
+  "label": "router query  ?__proto__=x",
+  "galat": null,
+  "keluaran": "{}",
+  "sondir": "p2",
+  "prototipeTercemar": "TIDAK"
+ },
+ {
+  "label": "router matrix /a;__proto__=x",
+  "galat": null,
+  "keluaran": "[{}]",
+  "sondir": "p3",
+  "prototipeTercemar": "TIDAK"
+ },
+ {
+  "label": "router matrix /a;constructor=x",
+  "galat": null,
+  "keluaran": "[{\"constructor\":\"x\"}]",
+  "sondir": "p4",
+  "prototipeTercemar": "TIDAK"
+ },
+ {
+  "label": "HttpParams fromString __proto__[p5]=x",
+  "galat": null,
+  "keluaran": "\"__proto__%5Bp5%5D=x\"",
+  "sondir": "p5",
+  "prototipeTercemar": "TIDAK"
+ },
+ {
+  "label": "HttpParams fromString __proto__=x",
+  "galat": null,
+  "keluaran": "{\"v\":\"x\"}",
+  "sondir": "p6",
+  "prototipeTercemar": "TIDAK"
+ },
+ {
+  "label": "KONTROL POSITIF (sengaja mencemari)",
+  "galat": null,
+  "keluaran": "\"dicemari\"",
+  "sondir": "pZZ",
+  "prototipeTercemar": "TERCEMAR"
+ }
+]
+pageerror: (none)
