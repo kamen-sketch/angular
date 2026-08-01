@@ -168,6 +168,33 @@ have to mean two people sharing a computer. The same condition arises with:
 - one person holding both a personal and a business account;
 - kiosks and shared workstations.
 
+### The server's other standard defence also fails
+
+The same proof-of-concept server sends **`Cache-Control: no-store`** on that
+response — the strongest directive a server can send. It makes no difference.
+`analysis/tools/ngsw/cache-control.mjs` isolates that single variable
+(same-origin, no `Vary`, endpoint deliberately covered by `dataGroups`):
+
+```
+Cache-Control: no-store                  -> stored, 1 request to server
+Cache-Control: no-cache, private         -> stored, 1 request to server
+Cache-Control: max-age=0, must-revalidate-> stored, 1 request to server
+Cache-Control: max-age=3600              -> stored, 1 request to server
+```
+
+All four behave identically. `worker/src/data.ts` never reads `Cache-Control`
+at all — while its sibling `worker/src/assets.ts:183-205` does parse it, for
+unhashed asset expiry. The side that handles **API responses**, where
+`no-store` matters most, is the side that ignores it.
+
+This is stated as a supporting fact, not as a separate vulnerability: Cache
+Storage is a programmatic cache and does not implement HTTP caching semantics,
+so "we do not consult `Cache-Control`" is a defensible design position on its
+own. What it removes is the rebuttal that the operator should have protected
+themselves. **The server deployed both standard defences — `Cache-Control:
+no-store` and `Vary: Authorization` — and neither prevented the cross-principal
+replay.**
+
 ### Why several common rebuttals do not apply
 
 | rebuttal | why it does not apply |
@@ -179,6 +206,7 @@ have to mean two people sharing a computer. The same condition arises with:
 | "cache poisoning by an attacker" | there is no attacker; this happens through normal use |
 | "this is default browser behaviour" | the Cache API default is `ignoreVary: false` |
 | "the developer chose cache-first" | true, but they were given no option to preserve `Vary` semantics |
+| "the server should have sent `no-store`" | it did; `data.ts` never reads `Cache-Control` |
 
 ### Severity
 
