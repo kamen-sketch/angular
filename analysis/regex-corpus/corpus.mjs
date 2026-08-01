@@ -551,6 +551,32 @@ export const KELAS_BERPINDAH = [
   },
 ];
 
+INKONSISTENSI_DIRI.push({
+  id: 'G-27-baca-rantai-prototipe',
+  hipotesis:
+    'Sebuah PETA dideklarasikan sebagai objek literal lalu dibaca dengan kunci ' +
+    'DINAMIS. Objek literal mewarisi seluruh anggota Object.prototype, sehingga ' +
+    'kunci seperti toString/constructor/valueOf/__proto__ mengembalikan nilai ' +
+    'bawaan yang truthy — dan setiap gerbang berbentuk M[k], M[k] || d, atau ' +
+    'M[k] ?? d ikut bocor.',
+  berkasPenuh: true,
+  prafilter: /(?:const|let|var)\s+[A-Za-z_$][\w$]*\s*(?::[^=\n]*)?=\s*\{/,
+  re: /(?<![\w$.])([A-Z][\w$]*)\s*\[\s*(?!['"`\d])[A-Za-z_$][\w$.]*\s*\]/,
+  implementasi: 'analysis/regex-corpus/scan-proto-read.mjs',
+  temuan: 'F-06 (VALID_ATTRS) dan F-17 (META_KEYS_MAP) — keduanya dipakai sebagai jangkar validasi-diri',
+  triase:
+    'Tiga pertanyaan, berurutan: (1) bisakah kuncinya bernilai anggota ' +
+    'Object.prototype? (2) dari mana kuncinya berasal — masukan runtime atau ' +
+    'nilai build-time? (3) apa akibat nilai bawaan yang truthy: gerbang ' +
+    'terbuka, atau sekadar lemparan? Pertanyaan (2) yang paling sering ' +
+    'menggugurkan kandidat.',
+  pelajaran:
+    'Jalan pertama pemindai ini BUTA terhadap F-06 dan validasi-dirilah yang ' +
+    'menangkapnya. Dua celah: peta yang dibangun fungsi (`merge(...)`) bukan ' +
+    'literal, dan peta yang dideklarasikan di berkas LAIN lalu diimpor. ' +
+    'Pemindai satu-berkas akan selalu melewatkan kelas kedua itu.',
+});
+
 export const SEMUA = {
   CATATAN_RISET, SINKS, NATIVE, GUARDS, GUARDS_LANJUTAN, DESYNC, RAPUH, STRUKTUR,
   INKONSISTENSI_DIRI, KELAS_BERPINDAH,

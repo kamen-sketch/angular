@@ -1702,6 +1702,64 @@ F-18  animations: SELF_TOKEN_REGEX kehilangan backslash — "s*" bukan kelas
   querySelectorAll. Yang TIDAK saya amati langsung: lemparan dari dalam
   pipeline animasi Angular yang berjalan penuh.
 
+
+==============================================================================
+G-27  Pemindai pembacaan rantai prototipe — kandidat baru, SEMUA gugur di
+      triase keterjangkauan
+==============================================================================
+
+  analysis/regex-corpus/scan-proto-read.mjs   (exit 0 = kedua jangkar ditemukan)
+
+  Kelas ini sudah membayar dua kali TANPA alat (F-06, F-17), jadi ia dijadikan
+  pemindai supaya bukan tebakan saya yang menentukan lokasinya.
+
+  TITIK BUTA YANG DITANGKAP VALIDASI-DIRI
+  ---------------------------------------
+  Jalan pertama TIDAK menemukan F-06. Dua celah sekaligus:
+    (a) `VALID_ATTRS` dibangun dengan `merge(...)`, bukan objek literal;
+    (b) ia dideklarasikan di html_sanitizer.ts lalu DIIMPOR ke i18n_parse.ts.
+  Pemindai satu-berkas akan selalu melewatkan celah (b). Keduanya diperbaiki;
+  sekarang kedua jangkar ditemukan dan pemindai keluar dengan status 0.
+
+  TRIASE KANDIDAT BARU — tiga yang paling mungkin, semuanya gugur
+  ---------------------------------------------------------------
+  1. platform-browser/src/dom/events/key_events.ts:155
+         let keycode = _keyMap[event.key] || event.key;
+     `event.key` MEMANG masukan runtime dari platform. Untuk 'constructor',
+     `_keyMap` mengembalikan fungsi -> truthy -> lolos cek `!keycode` ->
+     `keycode.toLowerCase()` melempar TypeError.
+     GUGUR: papan ketik fisik tidak dapat menghasilkan key 'constructor'.
+     Hanya `new KeyboardEvent({key:'constructor'})` yang bisa, dan itu
+     menuntut eksekusi skrip same-origin — kompromi yang sudah terjadi.
+
+  2. router/src/recognize.ts:589   (checkOutletNameUniqueness)
+         const routeWithSameOutletName = names[n.value.outlet];
+     Untuk outlet bernama 'constructor', `names[...]` mengembalikan `Object`
+     -> truthy -> masuk cabang error -> `routeWithSameOutletName.url.map(...)`
+     melempar TypeError SEBELUM RuntimeError yang dimaksud terbentuk.
+     GUGUR sebagai masukan tak-tepercaya: node hanya terbentuk bila konfigurasi
+     rute aplikasi MENDEKLARASIKAN outlet bernama itu. Nama outlet di URL saja
+     tidak cukup. Jadi ini dikendalikan developer, bukan penyerang.
+
+  3. core/primitives/event-dispatch/src/cache.ts:47
+         return parseCache[text];        // text = nilai atribut jsaction
+     Untuk 'constructor'/'__proto__', pengembaliannya truthy sehingga hasil
+     parse palsu dipakai dan event tidak jadi diputar ulang untuk elemen itu.
+     Polusi prototipe TIDAK terjadi: `setParsed` hanya dipanggil bila
+     `getParsed` falsy, dan untuk kunci warisan ia tidak pernah falsy.
+     GUGUR: menuntut penyisipan atribut `jsaction` ke DOM — yaitu injeksi HTML,
+     yang sudah berarti XSS.
+
+  KESIMPULAN JUJUR
+  ----------------
+  Tidak ada temuan baru dari putaran ini. Yang dihasilkan adalah alat yang
+  menutup kelas ini secara sistematis dan menemukan kembali kedua kasus yang
+  sudah diketahui. Sisa kandidat (~17) semuanya berkunci build-time atau
+  konstanta.
+
+  Nilai negatif ini: kelas "pembacaan rantai prototipe" kini berstatus
+  DIPERIKSA MENYELURUH, bukan sekadar "dua kasus yang kebetulan saya lihat".
+
 ==============================================================================
 RINGKASAN
 ==============================================================================
