@@ -1963,6 +1963,86 @@ F-20  TransferState.get() membaca lewat rantai prototipe, sementara hasKey()
   (`store: Record<...> = {}`), bukan deklarasi `const NAME = {`. Celah itu
   dicatat di korpus.
 
+
+==============================================================================
+AREA DIPERIKSA, NEGATIF: bentuk ketiga G-27 — peta PROPERTI KELAS
+==============================================================================
+
+  Celah yang dicatat pada F-20 kini ditutup. G-27 mendapat langkah ketiga:
+  peta yang dideklarasikan sebagai properti kelas dan dibaca lewat
+  `this.NAMA[k]`. 2037 berkas, 10 kandidat. Validasi-diri sekarang menuntut
+  F-06, F-17, DAN F-20 sekaligus, ditambah satu kontrol negatif dari berkas
+  yang sama (`onSerializeCallbacks`, dijaga di transfer_state.ts:134, karena
+  itu TIDAK boleh muncul di laporan).
+
+  DUA KALI VALIDASI-DIRI MENOLAK PEMINDAI SAYA SENDIRI
+  ----------------------------------------------------
+  Versi pertama menguji penjaga pada tingkat BERKAS: transfer_state.ts memuat
+  `hasOwnProperty`, maka berkas itu "aman" — F-20 hilang dari laporan.
+  Versi kedua menguji pada tingkat PETA: `this.store.hasOwnProperty` memang
+  ada, maka `this.store` "aman" — F-20 masih hilang. Penjaga itu ada di
+  `hasKey()`, metode yang berbeda dari `get()`.
+
+  Itu bukan detail teknis. Penjaga-yang-ada-tapi-tidak-di-sini ADALAH kelas
+  cacat yang paling produktif sepanjang audit ini (F-11, F-12, F-13, F-15,
+  F-17, F-19, F-20). Uji yang menganggapnya aman membutakan pemindai justru
+  terhadap satu-satunya hal yang dicarinya.
+
+  RUANG LINGKUP PENJAGA ADALAH BATAS METODE, BUKAN JARAK BARIS
+  ------------------------------------------------------------
+  Jendela "N baris ke atas" gagal ke DUA arah, dan triase membuktikan keduanya:
+
+    sempit  placeholder.ts:158 terlapor sebagai cacat, padahal
+            :152  const seen = this._placeHolderNameCounts.hasOwnProperty(base);
+            :153  if (!seen) { ...; return base; }
+            :158  const id = this._placeHolderNameCounts[base];
+            Penjaganya dihoist ke boolean lalu dipakai untuk keluar lebih awal.
+            Benar, hanya enam baris jauhnya. FALSE POSITIVE.
+
+    lebar   F-20 tertelan: `hasKey()` hanya dua puluh baris dari `get()`.
+
+  Pembedanya bukan jarak — penjaga placeholder.ts berada DI DALAM metode yang
+  sama, penjaga F-20 tidak. Pemindai sekarang mencari penjaga di dalam metode
+  yang melingkupi pembacaan, dan tidak lebih jauh. Setelah itu false positive
+  tadi hilang dan F-20 tetap terlapor.
+
+  TRIASE 10 KANDIDAT — TIDAK ADA YANG NAIK JADI TEMUAN
+  -----------------------------------------------------
+  common/src/directives/ng_plural.ts:69   this._caseViews[key]
+      BERSIH, dan alasannya di HULU. `key` berasal dari `getPluralCategory`,
+      yang hanya bisa mengembalikan (a) anggota `cases`, dan `cases` adalah
+      `Object.keys(this._caseViews)` — kunci MILIK SENDIRI saja — atau
+      (b) literal 'other' bila ada di `cases`, atau (c) melempar. Tidak ada
+      jalan bagi kunci warisan untuk sampai ke pembacaan itu.
+
+  router/src/router_scroller.ts:153       this.store[this.restoredId]
+      BERSIH. `restoredId` bertipe number (:45, :91 dari
+      `e.restoredState.navigationId`). Tidak satu pun anggota
+      `Object.prototype` bernama angka.
+
+  compiler/src/i18n/serializers/placeholder.ts:55,70  this._signatureToName[sig]
+      BERSIH. `sig` adalah keluaran `_hashTag`/`_hashClosingTag`, yang selalu
+      berawalan '<'. Tidak bisa menyamai nama anggota `Object.prototype`.
+
+  core/primitives/event-dispatch/src/eventcontract.ts:231,244
+      ASIMETRI NYATA, DAMPAK DAPAT DIABAIKAN — dicatat, tidak dikejar.
+      `addEvent` menjaga dengan `eventType in this.eventHandlers` (:153),
+      sedangkan `getEventTypesForBrowserEventType` (:231) dan `handler` (:244)
+      membaca langsung. Tapi `in` SENDIRI menelusuri rantai prototipe, jadi
+      penjaga di :153 bukan pemeriksaan kepemilikan; ia salah ke arah yang
+      sama. Untuk memicunya sebuah aplikasi harus mengikat nama peristiwa
+      kustom bernama `toString`/`valueOf`/`constructor` di templatnya sendiri.
+      Bukan masukan penyerang, tidak ada pengungkapan. Diperiksa, bukan cacat
+      yang layak dilaporkan.
+
+  Sisanya (animations `_namespaceLookup`, `_triggerCache`, compiler
+  `publicToNextId`, benchpress `parameters_`) berkunci nilai build-time atau
+  id yang dihasilkan sendiri; tidak ada yang menerima string dari runtime.
+
+  HASIL: bentuk ketiga menambah CAKUPAN, bukan temuan. Itu tetap ada nilainya —
+  "belum diperiksa" berubah menjadi "diperiksa, bersih", dan pemindainya kini
+  tidak bisa lagi buta terhadap cacat yang sudah terbukti.
+
 ==============================================================================
 RINGKASAN
 ==============================================================================

@@ -583,6 +583,23 @@ INKONSISTENSI_DIRI.push({
     'BENTUK yang sudah dikenal; penelusuran fitur menemukan bentuk yang belum. ' +
     'Keduanya diperlukan, dan yang kedua yang menghasilkan bentuk baru untuk ' +
     'diberikan kembali ke pemindai.',
+  celahItuKiniDitutup:
+    'Langkah 3 ditambahkan: peta PROPERTI KELAS yang dibaca lewat `this.NAMA[k]`. ' +
+    'Validasi-diri sekarang menuntut F-06, F-17, DAN F-20, plus satu kontrol ' +
+    'negatif dari berkas yang sama (`onSerializeCallbacks`, yang memang dijaga ' +
+    'di transfer_state.ts:134 dan karena itu TIDAK boleh terlapor). ' +
+    'Dua kali validasi-diri itu menolak versi pemindai saya: uji penjaga ' +
+    'tingkat-BERKAS menyatakan transfer_state.ts aman (ada `hasOwnProperty` di ' +
+    'baris 111), lalu uji tingkat-PETA masih menyatakan `this.store` aman ' +
+    '(penjaganya menyebut peta yang benar — hanya di metode yang berbeda). ' +
+    'Keduanya membutakan pemindai terhadap cacatnya sendiri.',
+  pelajaranPenjaga:
+    'Ruang lingkup penjaga adalah BATAS METODE, bukan jarak baris. Jendela ' +
+    '"N baris ke atas" gagal di dua arah sekaligus: sempit -> placeholder.ts:158 ' +
+    'terlapor padahal penjaganya ada di :152, dihoist ke boolean lalu dipakai ' +
+    'untuk keluar lebih awal; lebar -> F-20 tertelan karena `hasKey()` hanya ' +
+    'dua puluh baris dari `get()`. Yang membedakan keduanya bukan jarak: ' +
+    'penjaga placeholder.ts ada DI DALAM metode yang sama, penjaga F-20 tidak.',
 });
 
 export const SEMUA = {

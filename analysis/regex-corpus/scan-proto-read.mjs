@@ -59,6 +59,23 @@ const lineOf = (text, idx) => text.slice(0, idx).split('\n').length;
 const RE_MAP_DECL =
   /(?:^|\n)\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*(?::[^=\n]*)?=\s*(\{|merge\s*\(|Object\s*\.\s*assign\s*\(\s*\{)/g;
 
+// BENTUK KETIGA — peta sebagai PROPERTI KELAS, dibaca lewat `this.NAMA[k]`.
+//
+// Ini ditambahkan SETELAH F-20, dan bukan karena pemindainya melaporkan sesuatu:
+// F-20 ditemukan lewat penelusuran fitur, lalu terbukti tak terlihat di sini.
+//
+//     packages/core/src/transfer_state.ts:82
+//         store: Record<string, unknown | undefined> = {};
+//
+// Tidak ada `const`, tidak ada `let`. Dua jalan pertama pemindai ini menuntut
+// salah satunya, jadi seluruh peta milik kelas — di seluruh repositori — luput.
+//
+// Sengaja MENUNTUT anotasi tipe atau kata kunci pengubah. `foo = {}` telanjang
+// di dalam badan fungsi adalah penugasan ulang variabel biasa, bukan deklarasi
+// peta; tanpa syarat ini derau menenggelamkan sinyalnya.
+const RE_PROP_DECL =
+  /(?:^|\n)[ \t]+(?:(?:private|public|protected|readonly|static|declare|override)\s+)*([A-Za-z_$][\w$]*)\s*(?:!\s*)?(?::\s*(?:Record<|\{|Map<|[A-Za-z_$][\w$.]*(?:<[^=\n]*>)?)[^=\n]*)=\s*(\{\s*\}|\{\s*$|merge\s*\(|Object\s*\.\s*assign\s*\(\s*\{)/g;
+
 // Impor bernama: `import {A, B as C} from '...'`
 const RE_IMPORT = /import\s*\{([^}]*)\}\s*from\s*['"]([^'"]+)['"]/g;
 
@@ -152,6 +169,129 @@ for (const [file, text] of texts) {
   }
 }
 
+// LANGKAH 3 — peta milik kelas, dibaca lewat `this.NAMA[k]`.
+//
+// Penjaganya diperiksa PER-PEMBACAAN, bukan per-berkas maupun per-peta.
+//
+// Dua kali menyempit, dan validasi-diri yang memaksa keduanya. Uji tingkat
+// BERKAS menyatakan transfer_state.ts "dijaga" karena `hasOwnProperty` muncul
+// di baris 111 dan 134. Uji tingkat PETA masih menyatakan `this.store`
+// "dijaga" karena `this.store.hasOwnProperty` muncul — di dalam `hasKey()`,
+// dua puluh baris dari `get()` yang tidak dijaga.
+//
+// Itu bukan detail: penjaga-yang-ada-tapi-tidak-di-sini ADALAH cacatnya. Uji
+// yang menganggapnya aman justru membutakan pemindai terhadap kelas temuan
+// yang paling produktif sepanjang audit ini. Jadi pertanyaannya harus:
+// dijagakah PEMBACAAN INI, di tempatnya sendiri.
+//
+// Jendela "N baris ke atas" adalah jawaban yang SALAH, dan triase yang
+// membuktikannya: placeholder.ts:158 membaca `this._placeHolderNameCounts[base]`
+// enam baris di bawah penjaganya —
+//     const seen = this._placeHolderNameCounts.hasOwnProperty(base);   :152
+//     if (!seen) { ...; return base; }
+//     const id = this._placeHolderNameCounts[base];                    :158
+// Penjaganya dihoist ke boolean lalu dipakai untuk keluar lebih awal. Jendela
+// sempit melaporkannya sebagai cacat; jendela lebar akan menelan F-20.
+//
+// Pembedanya bukan JARAK melainkan BATAS METODE. Penjaga F-20 ada di `hasKey()`,
+// metode yang berbeda dari `get()` — sejauh apa pun jendelanya, itu tetap bukan
+// penjaga bagi pembacaan di `get()`. Jadi carilah penjaga di dalam metode yang
+// MELINGKUPI pembacaan itu, dan tidak lebih jauh.
+
+/** Awal-akhir badan metode yang melingkupi `line` (1-berbasis). */
+function metodePelingkup(lines, line) {
+  // Anggota kelas ditulis pada indentasi dua spasi di gaya berkas Angular.
+  const RE_ANGGOTA = /^ {2}(?:(?:private|public|protected|static|readonly|async|override|get|set)\s+)*[A-Za-z_$][\w$]*\s*(?:<[^>]*>)?\s*\(/;
+  let awal = -1;
+  for (let i = line - 1; i >= 0; i--) {
+    if (RE_ANGGOTA.test(lines[i])) {
+      awal = i;
+      break;
+    }
+  }
+  if (awal < 0) return null;
+  let akhir = lines.length;
+  for (let i = awal + 1; i < lines.length; i++) {
+    if (/^ {2}\}/.test(lines[i])) {
+      akhir = i;
+      break;
+    }
+  }
+  return line - 1 <= akhir ? {awal, akhir} : null;
+}
+const findingsProp = [];
+for (const [file, text] of texts) {
+  const rel = relative(ROOT, file);
+  const lines = text.split('\n');
+
+  const props = new Map(); // nama -> baris deklarasi
+  RE_PROP_DECL.lastIndex = 0;
+  let m;
+  while ((m = RE_PROP_DECL.exec(text))) {
+    const name = m[1];
+    const line = lineOf(text, m.index);
+    const src = lines[line - 1] ?? '';
+    if (SAFE_DECL.test(src)) continue;
+    // Kata kunci kontrol yang kebetulan berbentuk sama.
+    if (/^(?:if|for|while|switch|catch|return|case|else|do)$/.test(name)) continue;
+    if (name.length < 3) continue;
+    props.set(name, line);
+  }
+  if (!props.size) continue;
+
+  for (const [name, declLine] of props) {
+    const reRead = new RegExp(`this\\s*\\.\\s*${name}\\s*\\[\\s*([A-Za-z_$][\\w$.]*)\\s*\\]`, 'g');
+    let r;
+    const reads = [];
+    while ((r = reRead.exec(text))) {
+      const key = r[1];
+      if (KUNCI_KONSTAN.test(key)) continue;
+      const line = lineOf(text, r.index);
+      const src = (lines[line - 1] ?? '').trim();
+      if (/^\s*(\*|\/\/)/.test(src)) continue;
+      // Penulisan dan penghapusan bukan gerbang pembacaan.
+      if (/\]\s*=(?!=)/.test(src.slice(src.indexOf(name)))) continue;
+      if (/\bdelete\s+this\s*\./.test(src)) continue;
+      // Dijagakah pembacaan INI? Cari penjaga di dalam metode yang melingkupinya.
+      // Kalau batas metode tidak terdeteksi, jatuh kembali ke jendela sempit —
+      // memilih false negative daripada melebar tanpa batas.
+      const mp = metodePelingkup(lines, line);
+      const jendela = mp
+        ? lines.slice(mp.awal, mp.akhir + 1).join('\n')
+        : lines.slice(Math.max(0, line - 5), line).join('\n');
+      const g = (re) => new RegExp(re.replace('NAMA', name)).test(jendela);
+      const dijaga =
+        g(String.raw`this\s*\.\s*NAMA\s*\.\s*hasOwnProperty\s*\(`) ||
+        g(String.raw`Object\s*\.\s*hasOwn\s*\(\s*this\s*\.\s*NAMA`) ||
+        g(String.raw`hasOwnProperty\s*\.\s*call\s*\(\s*this\s*\.\s*NAMA`) ||
+        g(String.raw`\bin\s+this\s*\.\s*NAMA\b`);
+      reads.push({line, key, src, dijaga});
+    }
+    if (!reads.length) continue;
+
+    const takDijagaDi = reads.filter((r) => !r.dijaga);
+    if (!takDijagaDi.length) continue; // semua pembacaan dijaga di tempatnya
+    // Adakah penjaga untuk peta ini DI MANA PUN di berkas ini? Kalau ada,
+    // temuannya adalah ASIMETRI — bentuk F-20, dan yang paling layak ditriase.
+    const adaPenjagaLain = new RegExp(
+      String.raw`this\s*\.\s*${name}\s*\.\s*hasOwnProperty\s*\(|Object\s*\.\s*hasOwn\s*\(\s*this\s*\.\s*${name}|\bin\s+this\s*\.\s*${name}\b`,
+    ).test(text);
+
+    findingsProp.push({
+      rel,
+      name,
+      declLine,
+      reads: takDijagaDi,
+      total: reads.length,
+      asimetri: adaPenjagaLain,
+    });
+  }
+}
+// Asimetri lebih dulu: penjaganya ADA di berkas ini, hanya tidak di pembacaan ini.
+findingsProp.sort(
+  (a, b) => Number(b.asimetri) - Number(a.asimetri) || b.reads.length - a.reads.length,
+);
+
 // Yang belum dijaga sama sekali lebih dulu.
 findings.sort((a, b) => Number(a.guarded) - Number(b.guarded) || b.reads.length - a.reads.length);
 
@@ -183,6 +323,29 @@ for (const f of sebagian) {
   );
 }
 
+console.log(
+  `\n--- BENTUK KETIGA: peta PROPERTI KELAS, dibaca lewat this.NAMA[k] (${findingsProp.length}) ---`,
+);
+console.log('    (penjaga dinilai per-PEMBACAAN — lihat komentar langkah 3)');
+const asimetri = findingsProp.filter((f) => f.asimetri);
+console.log(
+  `\n  >>> ASIMETRI — penjaga untuk peta ini ADA di berkasnya, tapi tidak di` +
+    ` pembacaan ini (${asimetri.length}):`,
+);
+for (const f of asimetri) {
+  console.log(`\n  ${f.rel}`);
+  console.log(
+    `    this.${f.name} :${f.declLine}   ${f.reads.length} dari ${f.total} pembacaan tak dijaga`,
+  );
+  for (const r of f.reads.slice(0, 4)) console.log(`       :${r.line}  ${r.src.slice(0, 90)}`);
+}
+console.log(`\n  Tanpa penjaga di mana pun (${findingsProp.length - asimetri.length}):`);
+for (const f of findingsProp.filter((x) => !x.asimetri)) {
+  console.log(
+    `    ${f.rel}  this.${f.name}:${f.declLine}  ${f.reads.length}/${f.total} pembacaan`,
+  );
+}
+
 console.log('\n' + '='.repeat(78));
 console.log('TRIASE: (1) bisakah kuncinya bernilai toString/constructor/valueOf/__proto__?');
 console.log('        (2) dari mana kuncinya berasal — masukan runtime atau nilai build-time?');
@@ -191,11 +354,34 @@ console.log('        (3) apa akibat nilai bawaan yang truthy: gerbang terbuka, a
 // VALIDASI-DIRI terhadap dua kasus yang sudah diketahui.
 const f06 = findings.find((f) => f.rel.endsWith('i18n/i18n_parse.ts') && f.name === 'VALID_ATTRS');
 const f17 = findings.find((f) => f.rel.endsWith('browser/meta.ts') && f.name === 'META_KEYS_MAP');
+// F-20 harus muncul di langkah 3 DAN harus terdaftar sebagai tak-dijaga.
+// F-20 harus muncul, dan harus masuk kelompok ASIMETRI — bukan sekadar
+// "tanpa penjaga di mana pun". Justru keberadaan `hasKey()` yang membuatnya
+// bisa dinilai, jadi pemindai yang melaporkannya di kelompok yang salah tetap
+// dianggap gagal.
+const f20 = findingsProp.find(
+  (f) => f.rel.endsWith('core/src/transfer_state.ts') && f.name === 'store' && f.asimetri,
+);
+// KONTROL NEGATIF dari berkas yang SAMA: `onSerializeCallbacks` dibaca di :136
+// tepat di dalam `if (...hasOwnProperty(key))` pada :134. Ia TIDAK boleh
+// terlapor sama sekali. Jika ikut muncul, jendela penjaganya tidak berfungsi
+// dan seluruh langkah 3 hanya derau.
+const kontrol = findingsProp.find(
+  (f) => f.rel.endsWith('core/src/transfer_state.ts') && f.name === 'onSerializeCallbacks',
+);
+const kontrolOk = !kontrol;
+
 console.log('\n' + '='.repeat(78));
-console.log(`VALIDASI-DIRI  F-06 (VALID_ATTRS): ${f06 ? 'ditemukan' : 'TIDAK DITEMUKAN'}` +
-  `   F-17 (META_KEYS_MAP): ${f17 ? 'ditemukan' : 'TIDAK DITEMUKAN'}`);
-if (!f06 || !f17) {
+console.log(
+  `VALIDASI-DIRI  F-06 (VALID_ATTRS): ${f06 ? 'ditemukan' : 'TIDAK DITEMUKAN'}` +
+    `   F-17 (META_KEYS_MAP): ${f17 ? 'ditemukan' : 'TIDAK DITEMUKAN'}`,
+);
+console.log(
+  `               F-20 (this.store, tak dijaga): ${f20 ? 'ditemukan' : 'TIDAK DITEMUKAN'}` +
+    `   kontrol negatif (onSerializeCallbacks dijaga): ${kontrolOk ? 'ya' : 'TIDAK'}`,
+);
+if (!f06 || !f17 || !f20 || !kontrolOk) {
   console.log('Pemindai buta terhadap kasus yang sudah diketahui — jangan percayai keluarannya.');
 }
 console.log('='.repeat(78));
-process.exit(f06 && f17 ? 0 : 1);
+process.exit(f06 && f17 && f20 && kontrolOk ? 0 : 1);
