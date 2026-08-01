@@ -43,7 +43,7 @@ const MUTANTS = join(HERE, 'mutants');
  * Dinaikkan hanya bersamaan dengan perbaikan pemindai yang disengaja.
  */
 const GARIS_DASAR = {
-  'scan-proto-read.mjs': {dayaTemu: 1, dari: 5},
+  'scan-proto-read.mjs': {dayaTemu: 5, dari: 5},
 };
 
 const KASUS = readdirSync(join(MUTANTS, 'packages', 'mut', 'src')).sort();
@@ -72,7 +72,15 @@ for (const [pemindai, dasar] of Object.entries(GARIS_DASAR)) {
     out = (e.stdout || '') + (e.stderr || '');
   }
 
-  const tertangkap = (f) => out.includes(f);
+  // "Tertangkap" harus berarti DILAPORKAN SEBAGAI CACAT, bukan sekadar disebut.
+  // Jalan pertama harness ini memakai `out.includes(f)` dan langsung menuduh
+  // n2-guarded sebagai salah-lapor — padahal pemindai menempatkannya dengan
+  // BENAR di daftar "berkasnya punya penjaga", yang memang bukan tuduhan cacat.
+  // Harness yang tidak membedakan bagian keluaran akan menghukum pemindai atas
+  // penilaian yang justru tepat.
+  const BAGIAN_CACAT = /--- TANPA penjaga apa pun[\s\S]*?(?=\n--- |\n={10})|ASIMETRI —[\s\S]*?(?=\n  Tanpa penjaga|\n={10})|--- Tanpa penjaga di mana pun[\s\S]*?(?=\n={10})/g;
+  const wilayahCacat = (out.match(BAGIAN_CACAT) || []).join('\n');
+  const tertangkap = (f) => wilayahCacat.includes(f);
   const mDitemukan = mutan.filter(tertangkap);
   const nDitemukan = negatif.filter(tertangkap);
 
@@ -110,17 +118,34 @@ console.log('\n' + line);
 console.log('APA YANG ANGKA INI KATAKAN');
 console.log(line);
 console.log(`
-Ketepatan tinggi, daya temu rendah. Pemindai ini nyaris tidak pernah salah
-lapor — dan nyaris selalu buta terhadap cacat yang SAMA bila ditulis dengan
-cara lain. Satu-satunya mutan yang tertangkap adalah yang cuma berganti NAMA;
-begitu bentuk sintaksisnya berubah (helper, Reflect.get, alias, ?.[k]) ia
-hilang seluruhnya, padahal semantik cacatnya persis sama.
+Garis dasar pertama harness ini adalah 1/5 (20%) dengan ketepatan 2/2. Satu-
+satunya mutan yang tertangkap saat itu hanyalah yang berganti NAMA; begitu
+sintaksisnya berubah, pemindai buta — padahal semantik cacatnya persis sama.
 
-Itu bukan kekurangan penyaring yang bisa dilonggarkan. Itu akibat langsung
-dari cara pemindai dibangun: ia menyandikan BENTUK yang melahirkannya.
+Sekarang 5/5 dengan ketepatan tetap 2/2, dan yang menutup jaraknya ada dua,
+keduanya berasal dari kegagalan yang TERUKUR, bukan dari tebakan:
 
-Angka ini sengaja dibiarkan rendah dan dicatat, bukan diperbaiki diam-diam,
-supaya klaim "area X sudah dipindai bersih" dibaca dengan bobot yang benar:
-bersih MENURUT SATU BENTUK, bukan bersih terhadap kelasnya.
+  m2, m4  lapisan def-use intra-berkas — pabrik peta, pemanggilannya, dan
+          alias, diselesaikan sampai titik tetap di dalam satu berkas.
+  m3, m5  memperluas BENTUK SINK: \`Reflect.get(M, k)\` dan \`M?.[k]\` menelusuri
+          rantai prototipe persis seperti \`M[k]\`.
+
+Yang paling perlu dicatat: DUA dari empat kegagalan itu disebabkan penyaring
+peredam derau SAYA SENDIRI, bukan oleh keterbatasan leksikal.
+  - \`k\` dibuang karena ada di daftar "kunci jelas konstan" (i|j|k|idx|index),
+    daftar yang dimaksudkan untuk indeks ARRAY — padahal di m5 \`k\` adalah
+    parameter fungsi, kunci yang sepenuhnya dinamis.
+  - \`t\` dibuang karena ambang panjang nama 3 karakter.
+Penyaring yang dipasang untuk menaikkan ketepatan ternyata menurunkan daya
+temu tanpa terlihat, dan hanya holdout yang menunjukkannya.
+
+BIAYA DERAU DI REPOSITORI SUNGGUHAN: NOL pasangan tambahan (39 sebelum dan
+sesudah; bentuk-ketiga tetap 10), dan validasi-diri F-06/F-17/F-20 tetap lulus.
+Jadi kenaikan daya temu ini bukan hasil melonggarkan ambang secara membabi buta.
+
+BATASNYA, dinyatakan terus terang: def-use ini INTRA-BERKAS dan hanya mengenali
+tiga bentuk (pabrik, pemanggilan, alias). Ia bukan taint analysis, tidak
+mengikuti nilai lewat parameter, properti, callback, atau modul. Kelas mutan di
+sini pun masih satu — prototipe. Pemindai lain belum punya holdout sama sekali.
 `);
 process.exit(gagal ? 1 : 0);

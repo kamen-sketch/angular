@@ -76,14 +76,91 @@ const RE_MAP_DECL =
 const RE_PROP_DECL =
   /(?:^|\n)[ \t]+(?:(?:private|public|protected|readonly|static|declare|override)\s+)*([A-Za-z_$][\w$]*)\s*(?:!\s*)?(?::\s*(?:Record<|\{|Map<|[A-Za-z_$][\w$.]*(?:<[^=\n]*>)?)[^=\n]*)=\s*(\{\s*\}|\{\s*$|merge\s*\(|Object\s*\.\s*assign\s*\(\s*\{)/g;
 
+// ---------------------------------------------------------------------------
+// LAPISAN DEF-USE INTRA-BERKAS (ditambahkan setelah validasi holdout).
+//
+// Validasi holdout mengukur daya temu pemindai ini pada mutan — cacat yang
+// SAMA, ditulis berbeda — dan hasilnya 1 dari 5. Dua dari empat kegagalan itu
+// murni soal ALIRAN NILAI, bukan soal bentuk:
+//
+//     m2   const table = buildLookup();  table[userKey]
+//     m4   const t = registry;           t[k]
+//
+// Keduanya peta, keduanya dibaca dengan kunci dinamis. Pemindai leksikal tidak
+// melihatnya karena ia menuntut deklarasi berbentuk `= {`. Lapisan ini
+// menyelesaikan rantai def-use SEDERHANA di dalam SATU berkas sampai titik
+// tetap: pabrik peta, pemanggilannya, dan alias.
+//
+// Sengaja intra-berkas saja. Analisis lintas-prosedur yang sebenarnya bukan
+// pekerjaan regex, dan berpura-pura sebaliknya hanya akan menukar buta menjadi
+// salah lapor.
+// ---------------------------------------------------------------------------
+
+/** Fungsi yang MENGEMBALIKAN objek literal — "pabrik peta". */
+const RE_FACTORY =
+  /(?:^|\n)\s*(?:export\s+)?function\s+([A-Za-z_$][\w$]*)\s*\([^)]*\)[^{]*\{([\s\S]{0,800}?)\n\}/g;
+/** `const X = f(...)` — X mewarisi sifat-peta bila f adalah pabrik peta. */
+const RE_CALL_ASSIGN =
+  /(?:^|\n)\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*(?::[^=\n]*)?=\s*([A-Za-z_$][\w$]*)\s*\(/g;
+/** `const X = Y;` — alias murni. */
+const RE_ALIAS =
+  /(?:^|\n)\s*(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*(?::[^=\n]*)?=\s*([A-Za-z_$][\w$]*)\s*;/g;
+
+/**
+ * Perluas himpunan nama-yang-bernilai-peta di satu berkas sampai titik tetap.
+ * `maps` dimutasi di tempat; nilai barunya menandai asal-usulnya supaya
+ * laporannya tetap bisa ditelusuri.
+ */
+function perluasDefUse(text, maps) {
+  const pabrik = new Set();
+  RE_FACTORY.lastIndex = 0;
+  let m;
+  while ((m = RE_FACTORY.exec(text))) {
+    if (/return\s*(?:\{|merge\s*\(|Object\s*\.\s*assign\s*\()/.test(m[2])) pabrik.add(m[1]);
+  }
+  let berubah = true;
+  let putaran = 0;
+  while (berubah && putaran++ < 5) {
+    berubah = false;
+    RE_CALL_ASSIGN.lastIndex = 0;
+    while ((m = RE_CALL_ASSIGN.exec(text))) {
+      if (!maps.has(m[1]) && pabrik.has(m[2]) && m[1].length >= 3) {
+        maps.set(m[1], {line: lineOf(text, m.index), asal: `def-use: ${m[2]}()`});
+        berubah = true;
+      }
+    }
+    RE_ALIAS.lastIndex = 0;
+    while ((m = RE_ALIAS.exec(text))) {
+      // Ambang panjang 3 berlaku untuk DEKLARASI peta (meredam derau). Untuk
+      // ALIAS ambang itu justru membutakan: sisi kanannya sudah terbukti peta,
+      // jadi `const t = registry;` tidak lebih meragukan daripada nama panjang.
+      if (!maps.has(m[1]) && maps.has(m[2])) {
+        maps.set(m[1], {line: lineOf(text, m.index), asal: `alias: ${m[2]}`});
+        berubah = true;
+      }
+    }
+  }
+}
+
 // Impor bernama: `import {A, B as C} from '...'`
 const RE_IMPORT = /import\s*\{([^}]*)\}\s*from\s*['"]([^'"]+)['"]/g;
 
 // Penjaga yang membuat peta itu aman.
 const SAFE_DECL = /Object\s*\.\s*create\s*\(\s*null|new\s+(?:Map|Set|WeakMap)\b/;
 
-/** Kunci yang jelas KONSTAN — bukan sasaran. */
-const KUNCI_KONSTAN = /^(?:[A-Z][A-Z0-9_]*|\d+|i|j|k|idx|index)$/;
+/**
+ * Kunci yang jelas KONSTAN — bukan sasaran.
+ *
+ * Versi pertama juga membuang `i|j|k|idx|index`, dengan maksud melewati
+ * pengindeksan ARRAY (`arr[i]`). Validasi holdout menunjukkan itu terlalu
+ * lebar: mutan m5 membaca `cache?.[k]` di mana `k` adalah PARAMETER FUNGSI —
+ * kunci yang sepenuhnya dinamis — dan pemindai mendiamkannya justru karena
+ * namanya satu huruf.
+ *
+ * Jadi penyaring peredam derau saya sendiri adalah sumber kebutaan. `idx` dan
+ * `index` dipertahankan (hampir selalu indeks numerik); huruf tunggal tidak.
+ */
+const KUNCI_KONSTAN = /^(?:[A-Z][A-Z0-9_]*|\d+|idx|index)$/;
 
 const files = collect(join(ROOT, 'packages'));
 const texts = new Map();
@@ -135,18 +212,26 @@ for (const [file, text] of texts) {
       if (asal) maps.set(nama, {line: asal.line, asal: asal.rel});
     }
   }
+  // Lapisan def-use: pabrik peta, pemanggilannya, dan alias — sampai titik tetap.
+  perluasDefUse(text, maps);
   if (!maps.size) continue;
 
   for (const [name, {line: declLine, asal}] of maps) {
     // Pembacaan dengan kunci dinamis: NAME[ident] — bukan NAME['literal'] atau NAME[0].
+    // Bentuk pembacaan. Holdout menunjukkan dua kegagalan lagi yang BUKAN soal
+    // aliran nilai melainkan soal bentuk sink: `cache?.[k]` dan
+    // `Reflect.get(policy, k)`. Keduanya menelusuri rantai prototipe persis
+    // seperti `M[k]`, jadi keduanya sink yang sama.
     const reRead = new RegExp(
-      `(?<![\\w$.])${name}\\s*\\[\\s*([A-Za-z_$][\\w$.]*)\\s*\\]`,
+      `(?<![\\w$.])${name}\\s*(?:\\?\\.)?\\[\\s*([A-Za-z_$][\\w$.]*)\\s*\\]` +
+        `|Reflect\\s*\\.\\s*get\\s*\\(\\s*${name}\\s*,\\s*([A-Za-z_$][\\w$.]*)\\s*\\)`,
       'g',
     );
     let r;
     const reads = [];
     while ((r = reRead.exec(text))) {
-      const key = r[1];
+      const key = r[1] ?? r[2];
+      if (!key) continue;
       if (KUNCI_KONSTAN.test(key)) continue;
       const line = lineOf(text, r.index);
       if (line === declLine) continue;

@@ -2542,6 +2542,90 @@ AUDIT LANJUTAN — validasi holdout dan peringkat ancaman
   Itu bukan soal regex pencarinya, melainkan soal bukti dampaknya.
 
 ==============================================================================
+LAPISAN DEF-USE INTRA-BERKAS — daya temu 20% -> 100%, biaya derau NOL
+==============================================================================
+
+  KOREKSI CATATAN LEBIH DULU
+  --------------------------
+  Ulasan terakhir menyebut tiga celah yang SUDAH ditutup di sesi ini. Dicatat
+  supaya daftar celah tidak dibaca lebih besar daripada keadaannya:
+
+    "G-27 masih buta terhadap properti kelas (F-20)"
+        Ditutup di commit f281eaa. LANGKAH 3 pemindai menangani
+        `store: Record<...> = {}` yang dibaca lewat `this.NAMA[k]`, dengan
+        penjaga dinilai PER-PEMBACAAN. Validasi-diri kini MENUNTUT F-20.
+
+    "G-27 belum menangani peta yang diimpor"
+        Ditutup lebih awal. LANGKAH 2 menggabungkan peta lokal dengan peta yang
+        dideklarasikan di berkas lain lalu diimpor — justru itulah yang membuat
+        F-06 (VALID_ATTRS dibangun di html_sanitizer.ts, dipakai di
+        i18n_parse.ts) bisa ditemukan kembali.
+
+    "belum ada deteksi salinan yang di-rename"
+        `analysis/regex-corpus/scan-renamed-copies.mjs` ada, dan justru
+        pemindai itulah yang MELAHIRKAN F-07.
+
+  Yang TETAP BERLAKU dari ulasan itu, dan memang batas sebenarnya: tidak ada
+  data-flow, tidak ada reachability, derau pada pola luas (G-06/G-08/G-19),
+  twin berbasis nama dasar, kompromi backtracking, dan G-29 yang bergantung
+  pada komentar.
+
+  YANG DIKERJAKAN: BUTIR PERTAMA — DATA-FLOW RINGAN, INTRA-BERKAS
+  ---------------------------------------------------------------
+  Saran "bahkan intra-berkas saja sudah banyak membantu" ternyata bisa diukur
+  langsung terhadap garis dasar holdout 1/5 yang sudah tercatat.
+
+  Ditambahkan ke G-27, diselesaikan sampai titik tetap dalam SATU berkas:
+      - pabrik peta   : fungsi yang mengembalikan objek literal
+      - pemanggilan   : `const table = buildLookup()`
+      - alias         : `const t = registry;`
+  Dan diperluas BENTUK SINK-nya: `Reflect.get(M, k)` dan `M?.[k]` menelusuri
+  rantai prototipe persis seperti `M[k]`.
+
+      HASIL HOLDOUT     1/5 (20%)  ->  5/5 (100%)
+      KETEPATAN         2/2        ->  2/2   (tidak berubah)
+      BIAYA DI REPO     39 pasangan -> 39 pasangan; bentuk-ketiga 10 -> 10
+      VALIDASI-DIRI     F-06/F-17/F-20 tetap lulus
+
+  DUA DARI EMPAT KEGAGALAN ITU SALAH SAYA SENDIRI, BUKAN BATAS LEKSIKAL
+  ---------------------------------------------------------------------
+  Ini bagian yang paling layak diingat. Setelah def-use dipasang, daya temu
+  baru 3/5. Dua sisanya gagal karena PENYARING PEREDAM DERAU saya sendiri:
+
+    m5  `cache?.[k]` didiamkan karena `k` ada di daftar "kunci jelas konstan"
+        (`i|j|k|idx|index`) — daftar yang dimaksudkan untuk indeks ARRAY.
+        Di m5, `k` adalah PARAMETER FUNGSI: kunci yang sepenuhnya dinamis.
+    m4  `const t = registry;` didiamkan karena ambang panjang nama 3 karakter.
+
+  Jadi penyaring yang saya pasang untuk menaikkan KETEPATAN diam-diam
+  menurunkan DAYA TEMU, dan tidak ada satu pun mekanisme sebelumnya yang bisa
+  menunjukkannya — sebab validasi-diri hanya menguji temuan yang sudah dikenal,
+  dan temuan itu kebetulan tidak memakai nama satu huruf. Hanya holdout yang
+  membuatnya terlihat.
+
+  Setelah `idx|index` dipertahankan tetapi huruf tunggal dibuang dari daftar,
+  dan ambang panjang dilepas KHUSUS untuk alias (sisi kanannya sudah terbukti
+  peta), daya temu menjadi 5/5 TANPA menambah satu pun kandidat di repositori.
+
+  HARNESS-NYA SENDIRI JUGA SALAH SEKALI
+  --------------------------------------
+  Jalan pertama menilai "tertangkap" dengan `out.includes(namaBerkas)`, lalu
+  menuduh kontrol negatif n2-guarded sebagai salah-lapor. Padahal pemindai
+  menempatkannya dengan BENAR di daftar "berkasnya punya penjaga", yang bukan
+  tuduhan cacat. Harness kini membaca hanya wilayah keluaran yang benar-benar
+  menuduh. Tanpa perbaikan itu saya akan "memperbaiki" pemindai atas penilaian
+  yang sudah tepat.
+
+  BATASNYA, DINYATAKAN TERUS TERANG
+  ----------------------------------
+  Def-use ini INTRA-BERKAS dan hanya mengenali tiga bentuk. Ia bukan taint
+  analysis: tidak mengikuti nilai lewat parameter, properti objek, callback,
+  Observable, DI, atau batas modul. Kelas mutannya pun masih satu (prototipe),
+  dan pemindai selain G-27 belum punya holdout sama sekali. Angka 100% berlaku
+  untuk lima mutan yang SAYA tulis — ia mengukur bahwa satu celah tertentu
+  sudah ditutup, bukan bahwa pemindainya kini umum.
+
+==============================================================================
 RINGKASAN
 ==============================================================================
 
