@@ -2044,6 +2044,182 @@ AREA DIPERIKSA, NEGATIF: bentuk ketiga G-27 — peta PROPERTI KELAS
   tidak bisa lagi buta terhadap cacat yang sudah terbukti.
 
 ==============================================================================
+F-21  encodeUriSegment melepas escape pada ':' — karakter yang dipakai
+      parsernya sendiri sebagai pembatas nama outlet
+==============================================================================
+
+  BERKAS
+  ------
+  packages/router/src/url_tree.ts
+
+      :513  function encodeUriString(s) {
+              return encodeURIComponent(s)
+                .replace(/%40/g, '@')
+                .replace(/%3A/gi, ':')     <- ':' DIKEMBALIKAN jadi literal
+                .replace(/%24/g, '$')
+                .replace(/%2C/gi, ',');
+            }
+
+      :548  export function encodeUriSegment(s) {
+              return encodeUriString(s)
+                .replace(/\(/g, '%28')     <- '(' DIESCAPE, karena struktural
+                .replace(/\)/g, '%29')     <- ')' DIESCAPE, karena struktural
+                .replace(/%26/gi, '&');
+            }
+
+  Dalam satu ekspresi, dua karakter struktural diescape dan satu dilepas.
+  Parser di berkas yang SAMA memakai ':' sebagai pembatas nama outlet:
+
+      private parseParens(allowPrimary, depth) {
+        ...
+        if (path.indexOf(':') > -1) {
+          outletName = path.slice(0, path.indexOf(':'));
+        } else if (allowPrimary) {
+          outletName = PRIMARY_OUTLET;
+        }
+
+  Serializer TIDAK menuliskan awalan `k:` untuk outlet primer di dalam kurung
+  (serializeSegment, cabang non-root), sehingga titik dua PERTAMA yang ditemui
+  parser di posisi itu berasal dari DATA, bukan dari sintaks.
+
+  SIFAT YANG DIUJI, DAN SIFAT YANG SALAH SAYA PILIH LEBIH DULU
+  ------------------------------------------------------------
+  Ukurannya bukan spesifikasi luar: serializer dan parser adalah kelas yang
+  sama, `DefaultUrlSerializer`. Serializer yang keluarannya tidak bisa dibaca
+  ulang oleh parsernya sendiri salah menurut ukurannya sendiri.
+
+  Sifat pertama yang saya uji — "pohon hasil round-trip identik" — TERLALU
+  LEBAR, dan kontrol negatifnya yang membongkarnya. Dengan ukuran itu
+  `/p/(a%3Ab)` ikut gagal, dan saya nyaris memasukkannya ke temuan. Ternyata
+  `/p/(ab)`, tanpa titik dua sama sekali, gagal dengan cara yang persis sama:
+  grup kurung berisi satu anak primer memang DIRATAKAN ke induknya. Normalisasi
+  yang disengaja, tidak ada hubungannya dengan titik dua.
+
+  Sifat yang benar-benar membedakan: MUNCULNYA NAMA OUTLET BARU. Perataan
+  kurung tidak pernah memunculkan nama baru; cacat ini memunculkannya, dan
+  namanya diambil dari data pengguna. Kedua baris itu SENGAJA dipertahankan di
+  tabel probe, ditandai sebagai normalisasi yang diketahui.
+
+  RUNTIME PROOF — artefak npm @angular/router@22.1.0
+  --------------------------------------------------
+  analysis/tools/router-colon/probe.mjs   (exit 0 = terkonfirmasi)
+
+    /p/(a%3Ab//aux:x)      -> /p/(a:b//aux:x)
+                              outlet {aux,primary} -> {a,aux,primary}
+    /p/(admin%3Adash//aux:x) -> /p/(admin:dash//aux:x)
+                              outlet {aux,primary} -> {admin,aux,primary}
+
+  KONTROL NEGATIF — semuanya round-trip dengan BENAR:
+    '(' dan ')' terenkode   -> diescape encodeUriSegment, utuh
+    '/' dan ';' terenkode   -> dibiarkan %2F / %3B, utuh
+    ':' di segmen biasa     -> utuh (di luar kurung ':' tidak struktural)
+    ':' di outlet BERNAMA   -> utuh (awalan `k:` sudah memakan titik dua pertama)
+    tanpa ':' sama sekali   -> utuh
+
+  Jadi pemicunya bukan "kurung merusak segalanya", melainkan satu karakter di
+  satu posisi. Dan fungsi yang SAMA membuktikan penulisnya tahu aturannya:
+  ia mengescape '(' dan ')' tepat karena keduanya struktural.
+
+  KETERJANGKAUAN — dibangun dari DATA, bukan dari URL yang dibuat-buat
+  --------------------------------------------------------------------
+  Bagian kedua probe tidak berangkat dari string URL sama sekali. Ia membangun
+  UrlTree lewat kelas publik (UrlTree/UrlSegment/UrlSegmentGroup) — yang sama
+  dengan yang dibangun `Router.createUrlTree` — lalu menyerahkannya ke
+  serializer:
+
+    nilai "laporan"     -> /p/(laporan//aux:x)     outlet utuh   (kontrol)
+    nilai "admin:dash"  -> /p/(admin:dash//aux:x)  outlet {aux,primary}
+                                                   -> {admin,aux,primary}
+                                                   segmen primer HILANG
+
+  Nilai penggunanya tidak pernah menyentuh sintaks URL; ia hanya sebuah string
+  di dalam sebuah segmen. Serializer sendiri yang menjadikannya sintaks.
+
+  DAMPAK — RENDAH sebagai kerentanan, jelas sebagai cacat kebenaran
+  -----------------------------------------------------------------
+  Yang saya klaim: URL yang ditulis aplikasi ke address bar tidak bisa dibaca
+  ulang menjadi pohon yang sama. Setelah reload, back, atau berbagi tautan,
+  rute yang aktif berbeda dari yang dinavigasikan: segmen outlet primer hilang,
+  dan sebuah outlet bernama-dari-data muncul menggantikannya.
+
+  Yang TIDAK saya klaim: ini bukan jalan penyerang-ke-korban dengan sendirinya.
+  Outlet baru itu hanya benar-benar aktif bila konfigurasi rute aplikasi
+  kebetulan punya outlet dengan nama tersebut, dan guard aplikasi tetap
+  berjalan atas pohon hasil parse. Yang pasti terjadi tanpa syarat tambahan
+  adalah HILANGNYA segmen primer yang dimaksud.
+
+  PRASYARAT, dinyatakan terus terang:
+    (a) aplikasi memakai outlet tambahan (auxiliary outlet), DAN
+    (b) sebuah nilai yang dipengaruhi pengguna mendarat di segmen PERTAMA
+        grup primer di dalam kurung.
+
+  PERBAIKAN
+  ---------
+  Perlakukan ':' seperti '(' dan ')' sudah diperlakukan — pada posisi tempat ia
+  struktural. Yang paling sempit: jangan lepas escape %3A untuk segmen, yaitu
+  pindahkan `.replace(/%3A/gi, ':')` dari `encodeUriString` (dipakai bersama
+  oleh query dan segmen) ke `encodeUriQuery` saja, tempat ':' memang tidak
+  struktural. Query dan fragment tidak berubah perilakunya.
+
+  Catatan: ini mengubah bentuk URL yang dihasilkan untuk segmen yang memuat
+  ':' , jadi bukan perubahan yang tak kasat mata — perlu dinilai sebagai
+  perubahan perilaku, bukan sekadar tambalan.
+
+  BUKAN untuk proses keamanan. Ini cacat kebenaran; jalur yang tepat adalah
+  isu publik, bukan security@angular.io.
+
+
+==============================================================================
+AREA DIPERIKSA, NEGATIF: skema keamanan DOM & sanitizer URL
+==============================================================================
+
+  core/src/sanitization/dom_security_schema.ts vs
+  compiler/src/schema/dom_security_schema.ts
+      Berkasnya sendiri menyatakan salah satunya SALINAN yang harus disinkronkan
+      manual — kandidat desync yang kuat. Dibandingkan dari `SECURITY_SCHEMA`
+      ke bawah: IDENTIK. Bersih.
+
+  Pencarian kunci case-mismatch: skema mendaftarkan nama camelCase
+  ('attributeName', 'allowFullscreen', 'referrerPolicy'), sedangkan header
+  berkas mengklaim semuanya di-lowercase untuk lookup. Diperiksa kedua sisi:
+  `registerContext` memakai `attr.toLowerCase()` dan `element.toLowerCase()`,
+  `checkSecurityContext` memakai `propName.toLowerCase()` dan
+  `tagName.toLowerCase()`. Konsisten. Bersih.
+
+  KONTROL POSITIF untuk F-06/F-17/F-20: skema ini memakai
+  `createNullObj = () => Object.create(null)` untuk SETIAP tingkat petanya.
+  Jadi penjaga terhadap rantai prototipe memang dikenal dan diterapkan di
+  paket ini — yang menguatkan bahwa ketiadaannya di tempat lain adalah
+  kelalaian, bukan gaya penulisan yang berbeda.
+
+  html_sanitizer.ts:199   `if (URI_ATTRS[lower]) value = _sanitizeUrl(value);`
+      Bentuk F-06 PERSIS, di dalam sanitizer itu sendiri, enam baris di bawah
+      `VALID_ATTRS.hasOwnProperty(lower)` di :193. TETAPI arahnya FAIL-SAFE:
+      nilai warisan selalu truthy, sehingga akibatnya adalah sanitasi TAMBAHAN,
+      bukan sanitasi yang dilewati. Dan `URI_ATTRS` adalah himpunan bagian
+      `VALID_ATTRS`, sehingga kuncinya sudah lolos hasOwnProperty di :193.
+      Inkonsistensi gaya, bukan kerentanan. Dicatat, tidak dilaporkan.
+
+  ATTRIBUTE_NO_BINDING: skema mendaftarkan animate/set/animateMotion/
+  animateTransform, sedangkan `SVG_ANIMATION_SENSITIVE_STATIC_VALUES` di
+  sanitization.ts hanya memuat animate dan set. Ditelusuri: yang tidak ada di
+  peta runtime jatuh ke `throw` tanpa syarat di akhir `ɵɵvalidateAttribute` —
+  jadi selisihnya justru LEBIH KETAT, dan memang begitu rancangannya (peta
+  runtime hanya memuat kasus yang boleh lolos bersyarat). Bersih.
+
+  CACAT DOKUMENTASI (bukan kerentanan, layak isu publik):
+      compiler/src/schema/dom_security_schema.ts:112
+      core/src/sanitization/dom_security_schema.ts:112
+        "Keep this in sync with SECURITY_SENSITIVE_ELEMENTS in
+         packages/core/src/sanitization/sanitization.ts"
+      Pengenal `SECURITY_SENSITIVE_ELEMENTS` TIDAK ADA di mana pun dalam
+      repositori — hanya dua komentar ini yang menyebutnya. Padanan yang
+      sebenarnya bernama `SVG_ANIMATION_SENSITIVE_STATIC_VALUES`. Sebuah
+      kewajiban sinkronisasi manual pada kode keamanan yang menunjuk ke nama
+      yang sudah tidak ada; justru rujukan seperti inilah yang membuat desync
+      lolos tanpa disadari.
+
+==============================================================================
 RINGKASAN
 ==============================================================================
 
@@ -2077,6 +2253,14 @@ RINGKASAN
           + pencocokan rute             dinilai server BUKAN      sisi-server;
                                         /admin, dirender Angular  komposisi belum
                                         SEBAGAI /admin            diuji ujung-ke-ujung
+  F-21    router/src/url_tree.ts        encodeUriSegment melepas RENDAH sbg kerentanan,
+          :513 encodeUriString          escape ':' yang dipakai  jelas sbg cacat
+          + parseParens                 parsernya sendiri sbg    kebenaran: segmen
+                                        pembatas outlet; ( dan ) primer HILANG saat
+                                        diescape di fungsi yg    URL dibaca ulang;
+                                        sama                     outlet bernama-dari-
+                                                                 data muncul. Prasyarat:
+                                                                 app pakai aux outlet
   F-20    core/src/transfer_state.ts    get() baca rantai        RENDAH: kunci dipilih
           :90 vs :111                   prototipe; hasKey() 20    developer. Kontrak
                                         baris di bawahnya pakai   yang dilanggar:

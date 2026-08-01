@@ -483,6 +483,35 @@ export const INKONSISTENSI_DIRI = [
 
 INKONSISTENSI_DIRI.push(
   {
+    id: 'G-28-escape-tak-lengkap',
+    hipotesis:
+      'Sebuah fungsi ENCODER mengescape sebagian karakter struktural dan MELEPAS ' +
+      'escape sebagian yang lain, padahal parser di berkas yang sama memperlakukan ' +
+      'keduanya sebagai struktural. Bentuk yang dicari: rantai .replace() yang ' +
+      'mengubah %XX kembali menjadi karakter literal, tepat di sebelah .replace() ' +
+      'yang melakukan kebalikannya.',
+    berkasPenuh: true,
+    prafilter: /replace\(\/%[0-9A-Fa-f]{2}\/g?i?\s*,\s*['"]/,
+    re: /\.replace\(\/%([0-9A-Fa-f]{2})\/g?i?,\s*['"](.)['"]\)/,
+    implementasi: 'analysis/tools/router-colon/probe.mjs (ditemukan lewat penelusuran, bukan pemindai)',
+    temuan:
+      'F-21. router/src/url_tree.ts:513 encodeUriString mengembalikan %3A menjadi ":", ' +
+      'sedangkan encodeUriSegment:548 — memanggilnya — mengescape "(" dan ")" JUSTRU ' +
+      'karena keduanya struktural. Parser di berkas yang sama (parseParens) memakai ' +
+      '":" sebagai pembatas nama outlet. Terkonfirmasi runtime pada artefak npm.',
+    triase:
+      'Pertanyaan yang memisahkan temuan dari desain: karakter yang dilepas escape-nya ' +
+      'itu, apakah GRAMATIKA MILIK PROYEK INI SENDIRI memberinya arti? Bukan apakah ' +
+      'RFC mengizinkannya. ":" memang sah dalam path menurut WHATWG — dan itulah ' +
+      'alasan escape-nya dilepas — tetapi router punya gramatika sendiri di atasnya. ' +
+      'Ukurannya adalah parser milik proyek itu, bukan spesifikasi luar.',
+    pelajaran:
+      'Sifat yang diuji harus SEMPIT. Uji pertama saya ("pohon hasil round-trip ' +
+      'identik") ikut menjatuhkan kasus tanpa titik dua sama sekali, karena grup ' +
+      'kurung berisi satu anak primer memang diratakan. Sifat yang benar adalah ' +
+      '"tidak ada NAMA OUTLET BARU" — itu memisahkan cacat dari normalisasi.',
+  },
+  {
     id: 'G-23-default-bertentangan',
     hipotesis:
       'SATU opsi diberi default BOOLEAN yang berbeda di dua tempat. Satu cabang ' +
