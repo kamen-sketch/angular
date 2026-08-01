@@ -1609,6 +1609,99 @@ F-17  Meta service: `META_KEYS_MAP[prop] || prop` membaca lewat rantai
   Keduanya dicatat karena keduanya adalah mode kegagalan yang sama: alat yang
   rusak menghasilkan keluaran yang terlihat seperti hasil.
 
+
+==============================================================================
+F-18  animations: SELF_TOKEN_REGEX kehilangan backslash — "s*" bukan kelas
+      whitespace, sehingga normalizeSelector menghasilkan selektor CSS cacat
+==============================================================================
+
+  BERKAS
+  ------
+  packages/animations/browser/src/dsl/animation_ast_builder.ts
+      :80   const SELF_TOKEN = ':self';
+      :81   const SELF_TOKEN_REGEX = new RegExp(`s*${SELF_TOKEN}s*,?`, 'g');
+      :589  const hasAmpersand = selector.split(/\s*,\s*/)      <- backslash BENAR di sini
+      :593  selector = selector.replace(SELF_TOKEN_REGEX, '');
+
+  Maksudnya tidak ambigu: buang `:self` beserta whitespace di sekitarnya dan
+  koma yang menyertainya. EMPAT BARIS DI ATASNYA penulisnya menuliskan kelas
+  whitespace dengan benar (`/\s*,\s*/`), jadi ia memang bermaksud whitespace —
+  bukan huruf "s" literal.
+
+  Yang benar-benar dibangun: /s*:selfs*,?/g — huruf "s" literal nol-atau-lebih,
+  ":self", huruf "s" literal nol-atau-lebih, koma opsional. Tidak pernah
+  memakan whitespace.
+
+  Diverifikasi ADA di artefak npm: @angular/animations/fesm2022/browser.mjs:178.
+  Sumber regex diambil programatik dari bundel, tidak diketik ulang.
+
+  HASIL — peramban sebagai penilai
+  --------------------------------
+  analysis/tools/animations-selfregex/probe.mjs
+  analysis/evidence/F-18-selfregex.png
+
+  Selektor yang dihasilkan regex terkirim, dan vonis querySelectorAll:
+
+      query(':self')              -> ""              DITOLAK (kosong)
+      query(':self, .card')       -> " .card"        sah
+      query(':self , .card')      -> " , .card"      DITOLAK SyntaxError
+      query('.card, :self')       -> ".card, "       DITOLAK SyntaxError
+      query('.card , :self')      -> ".card , "      DITOLAK SyntaxError
+      query('.cards, :self')      -> ".cards, "      DITOLAK SyntaxError
+      query(':self,.card')        -> ".card"         sah
+      query('.card, :self, .row') -> ".card,  .row"  sah
+
+  Benar secara semantik (sah DI PERAMBAN dan memilih himpunan elemen yang sama
+  dengan acuan): 4/8.
+
+  Kontrol negatifnya penting: bentuk yang paling lazim ditulis orang —
+  `query(':self, .card')` — kebetulan SELAMAT. Itulah sebabnya cacat ini bisa
+  bertahan lama tanpa terlihat.
+
+  DUA KOREKSI ATAS USULAN PERBAIKAN SAYA SENDIRI
+  ----------------------------------------------
+  Datanya menolak saya dua kali, dan keduanya dicatat di harness:
+
+  1. "Cukup tambahkan backslash" (/\s*:self\s*,?/g) -> 5/8. Masih meninggalkan
+     koma menggantung pada urutan "X, :self", karena `,?` hanya ada SESUDAH
+     token.
+  2. "Serap koma di kedua sisi" (/\s*,?\s*:self\s*,?\s*/g) -> 7/8. Menghasilkan
+     selektor yang SAH tetapi SALAH ARTI: `.card, :self, .row` menjadi
+     `.card.row` — elemen yang punya KEDUA kelas, bukan salah satu. Uji
+     "diterima peramban" saja TIDAK menangkap ini; perlu perbandingan himpunan
+     elemen. Itulah sebabnya harness ini punya kolom semantik.
+
+  PERBAIKAN YANG BENAR
+  --------------------
+  Bukan regex sama sekali. Pecah pada koma, buang token `:self`, gabungkan
+  kembali — persis yang SUDAH dilakukan baris `hasAmpersand` empat baris di
+  atasnya:
+
+      const bagian = selector.split(/\s*,\s*/);
+      const hasAmpersand = bagian.includes(SELF_TOKEN);
+      if (hasAmpersand) {
+        selector = bagian.filter((t) => t !== SELF_TOKEN && t !== '').join(', ');
+      }
+
+  Ini juga menghapus SELF_TOKEN_REGEX seluruhnya dan membuat kedua jalur
+  memakai satu sumber kebenaran.
+
+  DAMPAK — RENDAH, tanpa dimensi keamanan
+  ---------------------------------------
+  Selektor `query()` ditulis developer, bukan pengguna. Akibatnya
+  `querySelectorAll` melempar SyntaxError saat animasi dijalankan, atau
+  animasi diam-diam tidak mengenai elemen apa pun. Tidak ada dimensi keamanan:
+  tidak ada masukan tak-tepercaya, tidak ada kebocoran, tidak ada eskalasi.
+
+  BATAS BUKTI YANG DINYATAKAN
+  ---------------------------
+  `normalizeSelector` tidak diekspor, jadi harness ini MEREPRODUKSI fungsi itu
+  (baris 588-603) alih-alih memanggilnya, lalu menyerahkan vonis selektornya
+  kepada peramban sungguhan. Yang terbukti: regex terkirim (diambil dari
+  bundel npm) + logika fungsi itu menghasilkan selektor yang ditolak
+  querySelectorAll. Yang TIDAK saya amati langsung: lemparan dari dalam
+  pipeline animasi Angular yang berjalan penuh.
+
 ==============================================================================
 RINGKASAN
 ==============================================================================
@@ -1643,6 +1736,11 @@ RINGKASAN
           + pencocokan rute             dinilai server BUKAN      sisi-server;
                                         /admin, dirender Angular  komposisi belum
                                         SEBAGAI /admin            diuji ujung-ke-ujung
+  F-18    animations/browser/src/dsl/   `s*` bukan `\s*` di      RENDAH, tanpa dimensi
+          animation_ast_builder.ts:81   SELF_TOKEN_REGEX ->       keamanan: selektor
+                                        selektor cacat; 4/8       query() ditulis
+                                        bentuk query() wajar      developer, bukan
+                                        DITOLAK querySelectorAll  pengguna
   F-17    platform-browser/src/         META_KEYS_MAP[prop] ||   RENDAH: melempar
           browser/meta.ts:199           prop membaca rantai       InvalidCharacterError;
                                         prototipe -> nama         nama atribut selalu
