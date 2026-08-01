@@ -512,6 +512,42 @@ INKONSISTENSI_DIRI.push(
       '"tidak ada NAMA OUTLET BARU" — itu memisahkan cacat dari normalisasi.',
   },
   {
+    id: 'G-30-kewajiban-sinkron',
+    hipotesis:
+      'Bila kode SENDIRI menyatakan "jaga agar tetap sinkron dengan X", maka ada ' +
+      'dua tempat yang harus sepakat. Ketidaksepakatan di antara keduanya adalah ' +
+      'cacat LOGIKA — dan orakelnya datang dari kodenya sendiri, bukan dari selera ' +
+      'saya. Rujukan yang MENGGANTUNG (menunjuk sesuatu yang tidak ada) lebih buruk ' +
+      'lagi: kewajibannya tidak bisa dijalankan sama sekali.',
+    berkasPenuh: true,
+    prafilter: /keep\s+\w*\s*in\s+sync|is\s+an?\s+(?:exact\s+)?copy\s+of|mirrors?\s+the/i,
+    implementasi: 'analysis/regex-corpus/scan-declared-sync.mjs',
+    temuan:
+      '3630 berkas. 4 rujukan menggantung (2 di antaranya F-02 yang sudah dikenal, ' +
+      '1 derau "`if`", 1 BARU: F-23 `InjectFlags` "above" di core/src/di/interface/' +
+      'injector.ts yang enumnya sudah tidak ada di berkas itu). 2 pasangan berkas ' +
+      'yang dinyatakan harus sepakat — keduanya diperiksa dan SEPAKAT.',
+    mengapaBerbeda:
+      'INI SATU-SATUNYA POLA SAYA YANG BUKAN PENCOCOK BENTUK. G-22..G-29 semuanya ' +
+      'sintaktis: mereka hanya bisa melihat cacat yang punya tanda tangan teks. ' +
+      'Cacat logika tidak punya. G-30 memeriksa KESEPAKATAN, sehingga ia bisa ' +
+      'melihat penyimpangan berapa pun bentuknya. Ini jawaban langsung atas ' +
+      'pertanyaan "apakah korpus saya terlalu ketat untuk cacat logika".',
+    triase:
+      'Untuk tiap pasangan, tanyakan apa TEPATNYA yang harus sepakat — nilai ' +
+      'konstanta, daftar anggota, atau urutan cabang — lalu bandingkan HAL ITU. ' +
+      'F-23 menunjukkan mengapa perbandingan TEKSTUAL tidak cukup: kedua enum ' +
+      'menulis nilai yang sama dalam notasi berbeda (1 << 3 vs 0b1000), sehingga ' +
+      'diff teks akan menyatakan mereka berbeda padahal sepakat.',
+    pelajaran:
+      'Jalan pertama pemindai ini mengambil kata BerhurufBesar pertama dalam prosa ' +
+      'dan menghasilkan 8 "temuan", separuhnya kalimat biasa: "Security" dari ' +
+      '"DOM Security Schema", "Mirrors" dari "Mirrors the plugin interface", ' +
+      '"Array" dari "the Array.isArray check". Sekarang hanya pengenal yang ' +
+      'DITANDAI sebagai kode (dalam backtick) atau KONSTANTA_HURUF_BESAR yang ' +
+      'diterima. Turun ke 4, dan yang tersisa nyata.',
+  },
+  {
     id: 'G-29-penjaga-satu-arah',
     hipotesis:
       'Sebuah bahaya dijaga di sisi MASUK sebuah sistem tetapi tidak di sisi ' +

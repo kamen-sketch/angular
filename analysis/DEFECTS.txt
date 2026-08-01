@@ -2310,6 +2310,156 @@ AREA DIPERIKSA, NEGATIF: skema keamanan DOM & sanitizer URL
       lolos tanpa disadari.
 
 ==============================================================================
+AUDIT KORPUS — apakah alat-alat saya terlalu ketat untuk menemukan cacat LOGIKA?
+==============================================================================
+
+  Pertanyaan ini diajukan setelah korpus membesar. Jawabannya diukur, bukan
+  dinilai dari kesan, dan dua tebakan pertama saya sendiri TERBANTAH.
+
+  (1) SENSUS ASAL TEMUAN — 20 temuan
+  ----------------------------------
+      PENELUSURAN (membaca kode & mengikuti fitur) : 15
+        F-01 F-02 F-03 F-04 F-05 F-06 F-12 F-13 F-14 F-17 F-18 F-19 F-20 F-21 F-22
+      PEMINDAI (korpus G-xx)                       :  4
+        F-07 (scan-renamed-copies), F-09 & F-10 (G-15), F-11 (G-22)
+      FUZZER                                       :  1
+        F-08
+
+      Dan dari empat yang berasal pemindai, F-10 adalah saudara F-09 pada pola
+      yang sama — jadi kelas BARU yang benar-benar dilahirkan pemindai: tiga.
+
+      Ini sensus saya sendiri atas catatan saya sendiri, jadi bukan ukuran yang
+      netral. Tetapi arahnya terlalu curam untuk dijelaskan oleh kesalahan
+      penggolongan.
+
+  (2) MENGAPA — dan ini BUKAN soal penyaring yang terlalu ketat
+  -------------------------------------------------------------
+      Sebuah pemindai selalu ditulis SESUDAH kelasnya diketahui. Ia menyandikan
+      BENTUK yang sudah pernah dilihat. Karena itu, secara konstruksi, ia
+      menggeneralisasi dan mengukuhkan — ia tidak bisa MELAHIRKAN kelas baru.
+      Nilai terbesarnya sepanjang audit ini justru: (a) validasi-diri, dan
+      (b) mengubah "belum diperiksa" menjadi "diperiksa, bersih".
+
+      Lebih dalam lagi: SEMUA pemindai saya bersifat SINTAKTIS. Jangkar regex,
+      pembacaan rantai prototipe, penjaga menganggur, default boolean yang
+      bertentangan, salinan yang di-rename. Semua punya tanda tangan teks.
+      Cacat LOGIKA tidak punya. Tidak ada regex untuk "kondisi ini terbalik",
+      "seharusnya <= bukan <", atau "satu cabang enum terlewat". Melonggarkan
+      penyaring hanya menaikkan derau, bukan hasil.
+
+  (3) PERCOBAAN YANG MEMBANTAH DUA TEBAKAN SAYA
+  ----------------------------------------------
+      analysis/tools/router-fuzz/oracle-audit.mjs   (exit 0)
+
+      Fuzzer router MENEMUKAN F-08 tetapi MELEWATKAN F-21. Tiga hipotesis:
+        H1 orakelnya terlalu sempit
+        H2 alfabetnya terlalu sempit
+        H3 generatornya terlalu lemah secara STRUKTUR
+
+      Hasil, benih dan N (20.000) identik:
+
+        jalan                          orakel B   outlet-baru   URL ber-"%3A"
+        alfabet ASLI, generator datar     484          0              0
+        alfabet +%3A, generator datar     413          0          4.346
+        generator SADAR-GRAMATIKA       1.911      1.911         13.866
+
+      H1 SALAH — orakel "pohon berubah" sudah menandai 484 kasus sejak jalan
+                 pertama; ketajamannya tidak pernah kurang.
+      H2 SALAH SENDIRIAN — menambahkan %3A menaikkan URL yang memuatnya dari
+                 0 ke 4.346, dan temuan F-21 TETAP NOL.
+      H3 BENAR — begitu generatornya membangun bentuk gramatikal (grup kurung,
+                 outlet bernama, anak primer), 1.911 kasus muncul.
+
+      SEBABNYA: F-21 bukan sifat sebuah KARAKTER melainkan sifat sebuah
+      HUBUNGAN — titik dua terenkode, di segmen PERTAMA, milik outlet PRIMER,
+      DI DALAM kurung, BERSEBELAHAN dengan outlet bernama. Lima syarat
+      serentak. Peluang tujuh token acak menyusun diri seperti itu praktis nol,
+      berapa pun N-nya. Menaikkan N dari 20.000 ke 20.000.000 tidak menolong.
+
+      Catatan kejujuran: jalan PERTAMA percobaan ini pun salah. Orakel "himpunan
+      outlet berubah" menggabungkan dua arah berlawanan — outlet HILANG (tanda
+      tangan F-08) dan outlet MUNCUL (tanda tangan F-21) — lalu melaporkan 469
+      lawan 407 dan tidak memisahkan apa pun. Orakel harus BERARAH.
+
+  (4) JAWABANNYA
+  --------------
+      Ya, alat-alat saya terlalu ketat — tetapi bukan pada PENYARINGnya,
+      melainkan pada BENTUK yang mampu mereka bangkitkan dan kenali. Mereka
+      longgar dalam menilai dan sempit dalam membayangkan.
+
+      Arah yang produktif BUKAN melonggarkan pola, melainkan:
+        (a) orakel KESEPAKATAN — bila dua tempat harus setuju, ketidaksetujuan
+            adalah cacat logika tanpa perlu tanda tangan sintaktis;
+        (b) pembangkitan SADAR-STRUKTUR, bukan token acak (terbukti di atas);
+        (c) membaca ALASAN yang ditulis penjaga itu sendiri — F-22 lahir dari
+            sebuah komentar yang menjelaskan MENGAPA sesuatu berbahaya.
+
+      Butir (a) langsung diwujudkan sebagai G-30 di bawah ini.
+
+  (5) KEGAGALAN PROSES YANG DITEMUKAN AUDIT INI
+  ----------------------------------------------
+      Saat memeriksa area sanitization pada sesi ini, saya menuliskan rujukan
+      menggantung `SECURITY_SENSITIVE_ELEMENTS` sebagai temuan BARU. Itu sudah
+      tercatat sebagai F-02 sejak fase awal. Korpus yang membesar ternyata
+      melampaui daya ingat saya atas isinya sendiri, dan tidak ada mekanisme
+      yang mencegah pengulangan. G-30 kini menutup celah itu untuk kelas ini:
+      ia menemukan kembali F-02 sebagai jangkar validasi-diri, sehingga
+      instans berikutnya akan tampak sebagai pengulangan, bukan penemuan.
+
+
+==============================================================================
+F-23  Kewajiban sinkronisasi menunjuk enum yang tidak ada lagi di tempat itu
+      (`InjectFlags` "above") — instans KEDUA dari kelas F-02
+==============================================================================
+
+  BERKAS  packages/core/src/di/interface/injector.ts
+
+      :19  This enum is an exact copy of the `InjectFlags` enum above, ...
+      :20  ... The `InjectFlags` enum can
+      :21  be turned into a const enum when ViewEngine is removed (see TODO at
+           the `InjectFlags` enum
+      :24  Keep this enum in sync with `InjectFlags` enum above.
+      :26  export const enum InternalInjectFlags {
+
+  Tidak ada enum `InjectFlags` di berkas itu, dan tidak ada di seluruh
+  @angular/core. Yang tersisa dengan nama itu ada di paket LAIN:
+  packages/compiler/src/core.ts:85. Jadi "enum above" menunjuk ke sesuatu yang
+  sudah tidak ada di tempat yang ditunjuk. Komentar :21 bahkan menyebut
+  "when ViewEngine is removed" — ViewEngine SUDAH dihapus.
+
+  DITEMUKAN OLEH G-30, bukan oleh pembacaan manual.
+
+  KEWAJIBAN YANG SEBENARNYA — DIPERIKSA, DAN HASILNYA BERSIH
+  -----------------------------------------------------------
+  Pasangan yang benar-benar harus sepakat adalah lintas paket, dan taruhannya
+  nyata: compiler MEMANCARKAN bit flag ini ke dalam kode factory, core
+  MEMBACANYA saat runtime. Bila nilainya melenceng, DI menerima flag yang salah.
+
+      compiler/src/core.ts          core/src/di/interface/injector.ts
+      Default  = 0                  Default  = 0b0000   = 0
+      Host     = 1 << 0 = 1         Host     = 0b0001   = 1
+      Self     = 1 << 1 = 2         Self     = 0b0010   = 2
+      SkipSelf = 1 << 2 = 4         SkipSelf = 0b0100   = 4
+      Optional = 1 << 3 = 8         Optional = 0b1000   = 8
+      ForPipe  = 1 << 4 = 16        ForPipe  = 0b10000  = 16
+
+  SEPAKAT. Tidak ada cacat nilai. Yang cacat hanya rujukannya.
+
+  Perhatikan bahwa keduanya ditulis dalam NOTASI BERBEDA (pergeseran bit vs
+  biner literal), sehingga pemeriksaan tekstual apa pun akan menyatakan mereka
+  "berbeda". Kesepakatan hanya terlihat setelah nilainya dihitung — itulah
+  alasan orakel kesepakatan harus menilai MAKNA, bukan teks.
+
+  SIFAT   : cacat dokumentasi / bahaya pemeliharaan (sama seperti F-02)
+  DAMPAK  : tidak ada dampak runtime. Yang rusak adalah kontrol pemeliharaan:
+            peninjau berikutnya yang ingin menjalankan instruksi ":24" tidak
+            punya cara menemukan apa yang harus disinkronkan.
+  PERBAIKAN: ganti "the `InjectFlags` enum above" menjadi rujukan berkas yang
+            benar (packages/compiler/src/core.ts), atau hapus instruksinya bila
+            memang tidak berlaku lagi.
+  JALUR   : isu publik, bukan security@angular.io.
+
+==============================================================================
 RINGKASAN
 ==============================================================================
 
