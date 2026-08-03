@@ -99,9 +99,10 @@ code into [`error-codes.md`](./generated/error-codes.md) and checks the conventi
 two code spaces together: reserved ranges, no duplicate values, and that a code marked as having a
 guide actually has one. [20](./20-error-codes.md) reads the results.
 
-**This script currently exits non-zero on one real finding** — a negative value in the compile-time
-enum that makes a diagnostic report under the wrong code. It is described, with the fix, in
-[20 §3](./20-error-codes.md); the map reports it rather than changing framework code.
+It found one real defect — a negative value in the compile-time enum that made a diagnostic report
+under the wrong code — which is now fixed; see [20 §3](./20-error-codes.md). A second, related
+defect it surfaced is documented in [20 §4](./20-error-codes.md) and left open, because fixing it
+changes the message text of eight existing errors.
 
 ## Keeping the hand-written half honest
 

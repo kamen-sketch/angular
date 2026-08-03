@@ -8,6 +8,7 @@
 
 import ts from 'typescript';
 
+import {ErrorCode, ngErrorCode} from '../../src/ngtsc/diagnostics';
 import {runInEachFileSystem} from '../../src/ngtsc/file_system/testing';
 import {loadStandardTestFiles} from '../../src/ngtsc/testing';
 
@@ -1373,6 +1374,7 @@ runInEachFileSystem(() => {
 
         const diags = env.driveDiagnostics();
         expect(diags.length).toBe(1);
+        expect(diags[0].code).toBe(ngErrorCode(ErrorCode.CONFLICTING_HOST_DIRECTIVE_BINDING));
         expect(diags[0].messageText).toContain(
           'Input declared in DuplicateHostDir.inp is exposed under the following conflicting names: "alias", "inp", "alias2"',
         );

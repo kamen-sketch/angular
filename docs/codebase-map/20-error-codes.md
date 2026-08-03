@@ -104,39 +104,59 @@ guide when it is listed in `COMPILER_ERRORS_WITH_GUIDES` in
 the language service), and `ExtendedTemplateDiagnosticName` in the same directory gives each
 opt-in template check a string name for `tsconfig.json`, alongside its numeric code.
 
-## 3. A defect this analysis found
+## 3. A defect this analysis found, and fixed
 
-`ErrorCode.CONFLICTING_HOST_DIRECTIVE_BINDING` is declared as **`-8024`** — the only negative value
-in the compile-time enum, and the compile-time space does not use the sign for anything.
+`ErrorCode.CONFLICTING_HOST_DIRECTIVE_BINDING` was declared as **`-8024`** — the only negative
+value in the compile-time enum, where the sign means nothing.
 
-The consequence is mechanical. `ngErrorCode` builds its number by string concatenation:
+The consequence was mechanical, because `ngErrorCode` builds its number by string concatenation:
 
 ```
-ngErrorCode(8024)   → parseInt('-99' + '8024')  → -998024   ✓ prints as NG8024
-ngErrorCode(-8024)  → parseInt('-99' + '-8024') → -99       ✗ prints as TS-99
+ngErrorCode(8024)   → parseInt('-99' + '8024')  → -998024   prints as NG8024
+ngErrorCode(-8024)  → parseInt('-99' + '-8024') → -99       prints as TS-99
 ```
 
-`parseInt('-99-8024')` stops at the second `-` and yields `-99`. The diagnostic is therefore
+`parseInt('-99-8024')` stops at the second `-` and yields `-99`. The diagnostic was therefore
 emitted with TS code `-99` instead of `-998024`, and because `ERROR_CODE_MATCHER` requires digits
-between `TS-99` and the colon, the `TS…` → `NG…` rewrite does not match it either. The error
-surfaces to users as `TS-99` rather than `NG8024`.
+between `TS-99` and the colon, the `TS…` → `NG…` rewrite did not match it either — so the error
+surfaced to users as `TS-99` rather than `NG8024`.
 
 The code is live, not dead: it is raised from
 [`typecheck/src/oob.ts`](../../packages/compiler-cli/src/ngtsc/typecheck/src/oob.ts) when a host
-directive exposes an input or output twice under the same name. A guide page for it,
-`adev/src/content/reference/errors/NG8024.md`, already exists — but nothing the compiler emits will
-ever carry that code.
+directive exposes an input or output twice under the same name, and a guide page for it,
+`adev/src/content/reference/errors/NG8024.md`, already existed. The likely cause is the runtime
+convention leaking across: in a `RuntimeErrorCode` enum, `-8024` would correctly mean "this one has
+a guide".
 
-The likely cause is the runtime convention leaking across: in a `RuntimeErrorCode` enum, `-8024`
-would correctly mean "this one has a guide".
+The value is now `8024`, the public API golden is updated to match, and the existing spec for the
+diagnostic in `test/ngtsc/host_directives_spec.ts` now also asserts the emitted code so the
+regression cannot come back silently. The analyzer's "no negative compile-time codes" check keeps
+the whole enum honest.
 
-**The fix** is to change the value to `8024` and, if the guide should be linked, add
-`ErrorCode.CONFLICTING_HOST_DIRECTIVE_BINDING` to `COMPILER_ERRORS_WITH_GUIDES` in `docs.ts`. This
-map does not apply the fix — it only reports it — so
-`node docs/codebase-map/tools/analyze-error-codes.mjs` currently exits non-zero with this one
-finding.
+## 4. A second, related defect — still open
 
-## 4. Where to look when you see a code
+While confirming the fix above, the same confusion between "an `ErrorCode`" and "a TS diagnostic
+code" turned up one level higher, in `NgCompiler.addMessageTextDetails`
+([`core/src/compiler.ts`](../../packages/compiler-cli/src/ngtsc/core/src/compiler.ts)):
+
+```ts
+if (diag.code && COMPILER_ERRORS_WITH_GUIDES.has(ngErrorCode(diag.code))) {
+  // … messageText + `. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG${ngErrorCode(diag.code)}`
+}
+```
+
+`diag.code` is already a TS code: every diagnostic is built by `makeDiagnostic` or
+`makeTemplateDiagnostic`, both of which set `code: ngErrorCode(errorCode)`. Applying `ngErrorCode`
+a second time gives `parseInt('-99' + '-991001')` → `-99` for _every_ diagnostic, and
+`COMPILER_ERRORS_WITH_GUIDES` holds plain `ErrorCode` values, so the membership test is always
+false.
+
+The effect is that **no compile-time error ever gets its "Find more at …" link appended**, and
+`COMPILER_ERRORS_WITH_GUIDES` — 8 entries — is effectively dead. Fixing it needs the inverse
+conversion (TS code → `ErrorCode`) in both the lookup and the URL, and it changes the message text
+of 8 existing errors, so this map reports it rather than changing that behaviour unasked.
+
+## 5. Where to look when you see a code
 
 | Code shape                             | Space                     | Where it is declared                                          |
 | -------------------------------------- | ------------------------- | ------------------------------------------------------------- |
