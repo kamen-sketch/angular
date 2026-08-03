@@ -11,7 +11,12 @@ the instruction set that mutates them, then the schedulers that decide when inst
 - Entry point: [`packages/core/index.ts`](../../packages/core/index.ts) → `public_api.ts` → `src/core.ts`
 - Private surface for other Angular packages: `src/core_private_export.ts` (the `ɵ`-prefixed
   symbols) and `src/core_render3_private_export.ts` (the `ɵɵ` instruction set).
-- Secondary entry points: `testing/`, `rxjs-interop/`, `primitives/*`, `global/`, `schematics/`.
+- Secondary entry points: `testing/`, `rxjs-interop/`, `primitives/*`, `schematics/`, and
+  `global/` — which only re-exports `src/render3/global_utils_api.ts` so the `ng.*` debug helpers
+  get their own section in the API docs.
+- `third_party/` holds the vendored Trusted Types definitions (`trusted_types*.ts`) and
+  `@mcp-b/webmcp-types`; `resources/best-practices.md` is the Angular style guidance shipped with
+  the package for AI tooling.
 
 Full file/symbol listing: [`generated/index-packages-core.md`](./generated/index-packages-core.md).
 
@@ -32,21 +37,21 @@ query definitions.
 with a fixed header, and the header slot names are exported as numeric constants so that
 instruction code reads `lView[TVIEW]` rather than a property lookup:
 
-| Slot | Constant | Holds |
-| --- | --- | --- |
-| 0 | `HOST` | host `RElement` for component views |
-| 1 | `TVIEW` | the shared `TView` |
-| 2 | `FLAGS` | `LViewFlags` bitfield (`Dirty`, `CheckAlways`, `RefreshView`, `HasChildViewsToRefresh`, `Attached`, `Destroyed`, init-phase state …) |
-| 3–4 | `PARENT`, `NEXT` | position in the logical view tree |
-| 5 | `T_HOST` | the `TNode` this view is attached at |
-| 6 | `HYDRATION` | dehydrated-view payload during hydration |
-| 7 | `CLEANUP` | listener/teardown bookkeeping |
-| 8 | `CONTEXT` | component instance, or the embedded-view context |
-| 9–11 | `INJECTOR`, `ENVIRONMENT`, `RENDERER` | DI + rendering environment |
-| 12–13 | `CHILD_HEAD`, `CHILD_TAIL` | child view linked list |
-| 14–16 | `DECLARATION_VIEW`, `DECLARATION_COMPONENT_VIEW`, `DECLARATION_LCONTAINER` | where the template was *declared* (differs from where it is *inserted* for transplanted views) |
-| 17–26 | `PREORDER_HOOK_FLAGS`, `QUERIES`, `ID`, `EMBEDDED_VIEW_INJECTOR`, `ON_DESTROY_HOOKS`, `EFFECTS_TO_SCHEDULE`, `EFFECTS`, `REACTIVE_TEMPLATE_CONSUMER`, `AFTER_RENDER_SEQUENCES_TO_ADD`, `ANIMATIONS` | scheduling and reactivity bookkeeping |
-| 27+ | `HEADER_OFFSET` | the instruction slots: nodes, directive instances, pipes, bindings |
+| Slot  | Constant                                                                                                                                                                                            | Holds                                                                                                                                |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 0     | `HOST`                                                                                                                                                                                              | host `RElement` for component views                                                                                                  |
+| 1     | `TVIEW`                                                                                                                                                                                             | the shared `TView`                                                                                                                   |
+| 2     | `FLAGS`                                                                                                                                                                                             | `LViewFlags` bitfield (`Dirty`, `CheckAlways`, `RefreshView`, `HasChildViewsToRefresh`, `Attached`, `Destroyed`, init-phase state …) |
+| 3–4   | `PARENT`, `NEXT`                                                                                                                                                                                    | position in the logical view tree                                                                                                    |
+| 5     | `T_HOST`                                                                                                                                                                                            | the `TNode` this view is attached at                                                                                                 |
+| 6     | `HYDRATION`                                                                                                                                                                                         | dehydrated-view payload during hydration                                                                                             |
+| 7     | `CLEANUP`                                                                                                                                                                                           | listener/teardown bookkeeping                                                                                                        |
+| 8     | `CONTEXT`                                                                                                                                                                                           | component instance, or the embedded-view context                                                                                     |
+| 9–11  | `INJECTOR`, `ENVIRONMENT`, `RENDERER`                                                                                                                                                               | DI + rendering environment                                                                                                           |
+| 12–13 | `CHILD_HEAD`, `CHILD_TAIL`                                                                                                                                                                          | child view linked list                                                                                                               |
+| 14–16 | `DECLARATION_VIEW`, `DECLARATION_COMPONENT_VIEW`, `DECLARATION_LCONTAINER`                                                                                                                          | where the template was _declared_ (differs from where it is _inserted_ for transplanted views)                                       |
+| 17–26 | `PREORDER_HOOK_FLAGS`, `QUERIES`, `ID`, `EMBEDDED_VIEW_INJECTOR`, `ON_DESTROY_HOOKS`, `EFFECTS_TO_SCHEDULE`, `EFFECTS`, `REACTIVE_TEMPLATE_CONSUMER`, `AFTER_RENDER_SEQUENCES_TO_ADD`, `ANIMATIONS` | scheduling and reactivity bookkeeping                                                                                                |
+| 27+   | `HEADER_OFFSET`                                                                                                                                                                                     | the instruction slots: nodes, directive instances, pipes, bindings                                                                   |
 
 `HEADER_OFFSET` is why generated code says `ɵɵelement(0, …)` but the runtime writes to index 27:
 instruction indices are template-relative and translated exactly once, at the instruction boundary.
@@ -83,30 +88,36 @@ flags (`Off` / `OnlyDirtyViews` / `Exhaustive`).
 These are the `ɵɵ`-prefixed functions the compiler emits. Every one runs in two phases driven by
 `RenderFlags.Create` / `RenderFlags.Update`, and `all.ts` is the barrel the compiler links against.
 
-| File | Instructions / responsibility |
-| --- | --- |
-| `shared.ts` | The engine shared by all of them: `createLView`, `getOrCreateTView`, `executeTemplate`, `renderView`, directive resolution/instantiation, input setup, `elementStart`-family internals |
-| `element.ts`, `element_container.ts`, `text.ts`, `template.ts` | node creation (`ɵɵelement*`, `ɵɵelementContainer*`, `ɵɵtext`, `ɵɵtemplate`) |
-| `advance.ts` | `ɵɵadvance` — moves the selected index and flushes pending per-node work |
-| `property.ts`, `dom_property.ts`, `attribute.ts`, `aria_property.ts`, `two_way.ts` | binding writes, incl. `ɵɵtwoWayProperty`/`ɵɵtwoWayListener` |
-| `interpolation.ts`, `text_interpolation.ts`, `value_interpolation.ts` | the `ɵɵinterpolate*` families |
-| `styling.ts` (1,055 lines) | `ɵɵstyleProp`/`ɵɵclassProp`/`ɵɵstyleMap`/`ɵɵclassMap` and the styling reconciliation algorithm over the `TStylingKey` linked list |
-| `listener.ts` | `ɵɵlistener`/`ɵɵsyntheticHostListener`, wiring to `CLEANUP` |
-| `control_flow.ts` (633 lines) | `@if`/`@for`/`@switch` runtime: `ɵɵconditional`, `ɵɵrepeater*`, backed by `list_reconciliation.ts` |
-| `control.ts` | the newer `ɵɵdomElement`-style control instructions and block scaffolding |
-| `change_detection.ts` | `refreshView`, `detectChangesInternal`, `checkNoChangesInternal` (§4) |
-| `di.ts`, `di_attr.ts` | `ɵɵdirectiveInject`, `ɵɵinjectAttribute` |
-| `queries.ts`, `queries_signals.ts` | `ɵɵcontentQuery`/`ɵɵviewQuery` and their signal-based counterparts |
-| `projection.ts` | `ɵɵprojectionDef`/`ɵɵprojection` (content projection / `ng-content`) |
-| `i18n.ts` | `ɵɵi18n*` instructions delegating to `render3/i18n/` |
-| `animation.ts` | the `animate.enter`/`animate.leave` runtime (§9) |
-| `let_declaration.ts` | `@let` storage |
-| `foreign_component.ts` | interop entry point for embedding non-Angular components |
-| `element_validation.ts` | dev-mode unknown-element/property diagnostics |
-| `attach_source_locations.ts` | `ngSrc`-style debug source mapping for DevTools |
+| File                                                                               | Instructions / responsibility                                                                                                                                                                                                                                                                                                                                          |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shared.ts`                                                                        | The engine shared by all of them: `executeTemplate`, directive matching and instantiation (`findDirectiveDefMatches`, `createDirectivesInstances`, `invokeDirectivesHostBindings`), input writes (`setPropertyAndInputs`, `setDirectiveInput`, `setAllInputsForProperty`), `locateHostElement`, `elementLikeStartShared`/`elementLikeEndShared`, `handleUncaughtError` |
+| `render.ts`                                                                        | `renderView` — the creation-mode pass over a view                                                                                                                                                                                                                                                                                                                      |
+| `element.ts`, `element_container.ts`, `text.ts`, `template.ts`                     | node creation (`ɵɵelement*`, `ɵɵelementContainer*`, `ɵɵtext`, `ɵɵtemplate`)                                                                                                                                                                                                                                                                                            |
+| `advance.ts`                                                                       | `ɵɵadvance` — moves the selected index and flushes pending per-node work                                                                                                                                                                                                                                                                                               |
+| `property.ts`, `dom_property.ts`, `attribute.ts`, `aria_property.ts`, `two_way.ts` | binding writes, incl. `ɵɵtwoWayProperty`/`ɵɵtwoWayListener`                                                                                                                                                                                                                                                                                                            |
+| `interpolation.ts`, `text_interpolation.ts`, `value_interpolation.ts`              | the `ɵɵinterpolate*` families                                                                                                                                                                                                                                                                                                                                          |
+| `styling.ts` (1,055 lines)                                                         | `ɵɵstyleProp`/`ɵɵclassProp`/`ɵɵstyleMap`/`ɵɵclassMap` and the styling reconciliation algorithm over the `TStylingKey` linked list                                                                                                                                                                                                                                      |
+| `listener.ts`                                                                      | `ɵɵlistener`/`ɵɵsyntheticHostListener`, wiring to `CLEANUP`                                                                                                                                                                                                                                                                                                            |
+| `control_flow.ts` (633 lines)                                                      | `@if`/`@for`/`@switch` runtime: `ɵɵconditional`, `ɵɵrepeater*`, backed by `list_reconciliation.ts`                                                                                                                                                                                                                                                                     |
+| `control.ts`                                                                       | the newer `ɵɵdomElement`-style control instructions and block scaffolding                                                                                                                                                                                                                                                                                              |
+| `change_detection.ts`                                                              | `refreshView`, `detectChangesInternal`, `checkNoChangesInternal` (§4)                                                                                                                                                                                                                                                                                                  |
+| `di.ts`, `di_attr.ts`                                                              | `ɵɵdirectiveInject`, `ɵɵinjectAttribute`                                                                                                                                                                                                                                                                                                                               |
+| `queries.ts`, `queries_signals.ts`                                                 | `ɵɵcontentQuery`/`ɵɵviewQuery` and their signal-based counterparts                                                                                                                                                                                                                                                                                                     |
+| `projection.ts`                                                                    | `ɵɵprojectionDef`/`ɵɵprojection` (content projection / `ng-content`)                                                                                                                                                                                                                                                                                                   |
+| `i18n.ts`                                                                          | `ɵɵi18n*` instructions delegating to `render3/i18n/`                                                                                                                                                                                                                                                                                                                   |
+| `animation.ts`                                                                     | the `animate.enter`/`animate.leave` runtime (§9)                                                                                                                                                                                                                                                                                                                       |
+| `let_declaration.ts`                                                               | `@let` storage                                                                                                                                                                                                                                                                                                                                                         |
+| `foreign_component.ts`                                                             | interop entry point for embedding non-Angular components                                                                                                                                                                                                                                                                                                               |
+| `element_validation.ts`                                                            | dev-mode unknown-element/property diagnostics                                                                                                                                                                                                                                                                                                                          |
+| `attach_source_locations.ts`                                                       | `ngSrc`-style debug source mapping for DevTools                                                                                                                                                                                                                                                                                                                        |
 
-Supporting modules next to them: `node_manipulation.ts` (view insertion/removal/destruction — the
-biggest file in `render3/`), `dom_node_manipulation.ts`, `tnode_manipulation.ts`,
+View construction lives one directory up, in `src/render3/view/`: `construction.ts`
+(`createTView`, `getOrCreateComponentTView`, `createLView`, `createComponentLView`,
+`allocExpando`, `addToEndOfViewTree`), plus `elements.ts`, `directives.ts`, `container.ts`,
+`listeners.ts` and `directive_outputs.ts`.
+
+Supporting modules next to the instructions: `node_manipulation.ts` (view insertion/removal/
+destruction — the biggest file in `render3/`), `dom_node_manipulation.ts`, `tnode_manipulation.ts`,
 `node_selector_matcher.ts` (CSS selector matching for directives), `pure_function.ts` (the
 `ɵɵpureFunction*` memoisation slots), `pipe.ts`, `hooks.ts`, `di.ts` (node injector),
 `definition.ts` (`ɵɵdefineComponent` & friends), `component_ref.ts`, `view_ref.ts`, `hmr.ts`.
@@ -129,7 +140,7 @@ The traversal lives in `instructions/change_detection.ts` and is driven from `Ap
    a real producer change — this is how signal writes target a specific view;
 5. dev-mode exhaustive check-no-changes.
 
-It clears `HasChildViewsToRefresh | RefreshView` *before* refreshing, so work done during the refresh
+It clears `HasChildViewsToRefresh | RefreshView` _before_ refreshing, so work done during the refresh
 can re-dirty the view. If the view itself is not refreshed but has `HasChildViewsToRefresh`, it
 descends in `Targeted` mode with the active reactive consumer set to `null`.
 
@@ -159,7 +170,7 @@ flags settle (max 10 passes, else `INFINITE_CHANGE_DETECTION`). One pass:
 1. flush root effects (`rootEffectScheduler.flush()`);
 2. for each attached view, `detectChangesInternal` in `Global` mode if `ViewTreeGlobal` was requested
    and zoneless is off, otherwise `Targeted`;
-3. clear `ViewTreeCheck` (a `markForCheck()` *during* checking does not force another pass, for
+3. clear `ViewTreeCheck` (a `markForCheck()` _during_ checking does not force another pass, for
    backwards compatibility), then `syncDirtyFlagsWithViews()` and loop back if anything is still dirty;
 4. otherwise run `afterRenderManager.execute()` for the `AfterRender` flag.
 
@@ -181,7 +192,7 @@ Two layers, deliberately separated so the graph can be reused outside the render
 (records a dependency edge while a consumer is active), `producerIncrementEpoch`,
 `producerUpdateValueVersion`, `producerNotifyConsumers`, `consumerBeforeComputation` /
 `consumerAfterComputation` (the bracket around a tracked computation),
-`consumerPollProducersForChange` (the pull side that decides whether a dirty consumer *actually*
+`consumerPollProducersForChange` (the pull side that decides whether a dirty consumer _actually_
 changed), and `consumerDestroy`. Edges are `ReactiveLink` records held in intrusive linked lists, so
 adding/removing dependencies is allocation-light. Built on top: `signal.ts`, `computed.ts`,
 `linked_signal.ts`, `effect.ts` (`watch`), `equality.ts`, `untracked.ts`, `weak_ref.ts`.

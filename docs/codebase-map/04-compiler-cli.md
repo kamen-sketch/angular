@@ -2,7 +2,7 @@
 
 `@angular/compiler-cli` (2,549 files, ~226k lines — the largest package by file count, mostly
 tests and fixtures) is the bridge between TypeScript and `@angular/compiler`. It owns the
-`ts.Program`, decides *what* to compile, drives template type checking, and emits the transformed
+`ts.Program`, decides _what_ to compile, drives template type checking, and emits the transformed
 JavaScript and `.d.ts`. The Angular CLI consumes it through `NgtscProgram`/`NgCompiler`; the
 language service consumes the same `NgCompiler` in a long-lived, incremental configuration.
 
@@ -33,7 +33,7 @@ Full file/symbol listing: [`generated/index-packages-compiler-cli.md`](./generat
 ### 2.1 The compilation lifecycle
 
 `ngtsc/core/src/compiler.ts` holds **`NgCompiler`**, the object that coordinates everything. It is
-created from a *ticket* that describes how this compilation relates to the previous one:
+created from a _ticket_ that describes how this compilation relates to the previous one:
 
 - `freshCompilationTicket` — no previous state (a cold build);
 - `incrementalFromCompilerTicket` / `incrementalFromStateTicket` — reuse analysis from a previous
@@ -46,22 +46,22 @@ service can ask narrow questions without paying for a whole compilation.
 
 ### 2.2 Traits and `DecoratorHandler` (`ngtsc/transform/`, `ngtsc/annotations/`)
 
-Compilation is expressed as *traits*: a class plus a handler that knows how to compile one
+Compilation is expressed as _traits_: a class plus a handler that knows how to compile one
 decorator on it. `transform/src/api.ts` defines the contract, and every phase of the compiler is a
 method on it, called in this order:
 
-| Phase | Method | Purpose |
-| --- | --- | --- |
-| detect | `detect()` | does this handler apply to this class? returns `DetectResult` |
-| analyze | `analyze()` | statically evaluate the decorator metadata → `AnalysisOutput` + diagnostics |
-| symbol | `symbol()` | produce the `SemanticSymbol` used for incremental invalidation |
-| register | `register()` | populate registries (metadata, scope, injectable) |
-| index | `index()` | feed the indexer used by the language service |
-| resolve | `resolve()` | cross-class work that needs all classes registered (e.g. template scope) |
-| xi18n | `xi18n()` | contribute messages to an extraction bundle |
-| typeCheck | `typeCheck()` | add the class's template to the type-check context |
-| extendedTemplateCheck / templateSemanticsCheck | | the extra template diagnostics |
-| compile | `compileFull()` / `compilePartial()` / `compileLocal()` / `compileHmrUpdateDeclaration()` | emit the static fields |
+| Phase                                          | Method                                                                                    | Purpose                                                                     |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| detect                                         | `detect()`                                                                                | does this handler apply to this class? returns `DetectResult`               |
+| analyze                                        | `analyze()`                                                                               | statically evaluate the decorator metadata → `AnalysisOutput` + diagnostics |
+| symbol                                         | `symbol()`                                                                                | produce the `SemanticSymbol` used for incremental invalidation              |
+| register                                       | `register()`                                                                              | populate registries (metadata, scope, injectable)                           |
+| index                                          | `index()`                                                                                 | feed the indexer used by the language service                               |
+| resolve                                        | `resolve()`                                                                               | cross-class work that needs all classes registered (e.g. template scope)    |
+| xi18n                                          | `xi18n()`                                                                                 | contribute messages to an extraction bundle                                 |
+| typeCheck                                      | `typeCheck()`                                                                             | add the class's template to the type-check context                          |
+| extendedTemplateCheck / templateSemanticsCheck |                                                                                           | the extra template diagnostics                                              |
+| compile                                        | `compileFull()` / `compilePartial()` / `compileLocal()` / `compileHmrUpdateDeclaration()` | emit the static fields                                                      |
 
 `HandlerPrecedence` (`PRIMARY`, `SHARED`, `WEAK`) resolves what happens when several handlers match
 one class; `CompilationMode` (`FULL`, `PARTIAL`, `LOCAL`) selects which `compile*` method runs —
@@ -134,7 +134,7 @@ language service. `src/dom.ts` checks element/attribute names against the DOM sc
 
 - `ngtsc/incremental/` — `IncrementalCompilation` tracks per-file dependencies
   (`dependency_tracking.ts`) and reuses analysis when a file's semantic shape is unchanged.
-  `semantic_graph/` models each class as a `SemanticSymbol` whose *public shape* determines whether
+  `semantic_graph/` models each class as a `SemanticSymbol` whose _public shape_ determines whether
   dependents must be re-emitted, so a change to a method body does not invalidate consumers.
 - `ngtsc/program_driver/` — abstracts "update the program with these new shim files" so the same
   compiler works under `tsc`, the CLI's watch mode, and the language service.

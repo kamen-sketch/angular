@@ -52,6 +52,7 @@ template AST, the pipeline ingests it into an intermediate representation, runs 
 transformation phases over it, then reifies it into output AST.
 
 **IR — `pipeline/ir/src/`**
+
 - `operations.ts` — the doubly-linked `OpList<OpT>` all phases mutate in place.
 - `ops/create.ts` — creation-mode ops (`ElementStart`, `Template`, `Projection`, `DeferOp`,
   `RepeaterCreate`, `ConditionalCreate`, `I18nStart`, `Listener`, …).
@@ -79,19 +80,19 @@ kind, while `convertAst` lowers expression-parser AST into output AST.
 `Kind.Tmpl`, `Kind.Host` or `Kind.Both` so template and host-binding jobs share code safely. The
 order matters and is the best available documentation of the compiler's invariants. Roughly:
 
-| Stage | Phases |
-| --- | --- |
-| Normalisation | `resolveForeignContent`, `removeContentSelectors`, `optimizeRegularExpressions`, `parseHostStyleProperties`, `emitNamespaceChanges` |
-| i18n structure | `propagateI18nBlocks`, `wrapI18nIcus`, `createI18nContexts` |
-| Binding specialisation | `deduplicateTextBindings`, `specializeStyleBindings`, `specializeBindings`, `specializeControlProperties`, `convertAnimations`, `extractAttributes`, `parseExtractedStyles`, `removeEmptyBindings`, `collapseSingletonInterpolations`, `orderOps` |
-| Feature lowering | `generateConditionalExpressions`, `createPipes`, `configureDeferInstructions`, `insertIncrementalHydrationRuntime`, `createVariadicPipes`, `generateArrowFunctions`, `generatePureLiteralStructures`, `generateProjectionDefs`, `generateLocalLetReferences`, `generateVariables`, `saveAndRestoreView` |
-| Name/context resolution | `deleteAnyCasts`, `removeSafeNavigationMigration`, `resolveDollarEvent`, `generateTrackVariables`, `removeIllegalLetReferences`, `resolveNames`, `resolveDeferTargetNames`, `transformTwoWayBindingSet`, `optimizeTrackFns`, `resolveContexts`, `resolveSanitizers`, `liftLocalRefs` |
-| Expression cleanup | `expandSafeReads`, `stripNonrequiredParentheses`, `generateTemporaryVariables`, `optimizeVariables`, `optimizeStoreLet` |
-| i18n lowering | `convertI18nText`, `convertI18nBindings`, `removeUnusedI18nAttributesOps`, `assignI18nSlotDependencies`, `applyI18nExpressions` |
-| Slot allocation | `allocateSlots`, then `resolveI18nElementPlaceholders`, `resolveI18nExpressionPlaceholders`, `extractI18nMessages`, `collectI18nConsts`, `resolveI18nAttrSanitizers` |
-| Const collection | `collectConstExpressions`, `collectElementConsts`, `removeI18nContexts` |
-| Final layout | `countVariables`, `generateAdvance`, `nameFunctionsAndVariables`, `resolveDeferDepsFns`, `mergeNextContextExpressions`, `generateNgContainerOps`, `collapseEmptyInstructions`, `attachSourceLocations`, `disableBindings`, `extractPureFunctions` |
-| Emission | `reify` (ops → `ɵɵ` instruction calls), `chain` (merges consecutive compatible calls into `ɵɵelementStart(...).ɵɵelementEnd()`-style chains) |
+| Stage                   | Phases                                                                                                                                                                                                                                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Normalisation           | `resolveForeignContent`, `removeContentSelectors`, `optimizeRegularExpressions`, `parseHostStyleProperties`, `emitNamespaceChanges`                                                                                                                                                                     |
+| i18n structure          | `propagateI18nBlocks`, `wrapI18nIcus`, `createI18nContexts`                                                                                                                                                                                                                                             |
+| Binding specialisation  | `deduplicateTextBindings`, `specializeStyleBindings`, `specializeBindings`, `specializeControlProperties`, `convertAnimations`, `extractAttributes`, `parseExtractedStyles`, `removeEmptyBindings`, `collapseSingletonInterpolations`, `orderOps`                                                       |
+| Feature lowering        | `generateConditionalExpressions`, `createPipes`, `configureDeferInstructions`, `insertIncrementalHydrationRuntime`, `createVariadicPipes`, `generateArrowFunctions`, `generatePureLiteralStructures`, `generateProjectionDefs`, `generateLocalLetReferences`, `generateVariables`, `saveAndRestoreView` |
+| Name/context resolution | `deleteAnyCasts`, `removeSafeNavigationMigration`, `resolveDollarEvent`, `generateTrackVariables`, `removeIllegalLetReferences`, `resolveNames`, `resolveDeferTargetNames`, `transformTwoWayBindingSet`, `optimizeTrackFns`, `resolveContexts`, `resolveSanitizers`, `liftLocalRefs`                    |
+| Expression cleanup      | `expandSafeReads`, `stripNonrequiredParentheses`, `generateTemporaryVariables`, `optimizeVariables`, `optimizeStoreLet`                                                                                                                                                                                 |
+| i18n lowering           | `convertI18nText`, `convertI18nBindings`, `removeUnusedI18nAttributesOps`, `assignI18nSlotDependencies`, `applyI18nExpressions`                                                                                                                                                                         |
+| Slot allocation         | `allocateSlots`, then `resolveI18nElementPlaceholders`, `resolveI18nExpressionPlaceholders`, `extractI18nMessages`, `collectI18nConsts`, `resolveI18nAttrSanitizers`                                                                                                                                    |
+| Const collection        | `collectConstExpressions`, `collectElementConsts`, `removeI18nContexts`                                                                                                                                                                                                                                 |
+| Final layout            | `countVariables`, `generateAdvance`, `nameFunctionsAndVariables`, `resolveDeferDepsFns`, `mergeNextContextExpressions`, `generateNgContainerOps`, `collapseEmptyInstructions`, `attachSourceLocations`, `disableBindings`, `extractPureFunctions`                                                       |
+| Emission                | `reify` (ops → `ɵɵ` instruction calls), `chain` (merges consecutive compatible calls into `ɵɵelementStart(...).ɵɵelementEnd()`-style chains)                                                                                                                                                            |
 
 `emitTemplateFn`/`emitHostBindingFunction` then wrap the reified statements into the two-phase
 `function Tpl(rf, ctx) { if (rf & 1) {…} if (rf & 2) {…} }` shape (`maybeGenerateRfBlock`).

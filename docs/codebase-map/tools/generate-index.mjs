@@ -140,7 +140,10 @@ function renderFile(relPath, info) {
   }
   for (const n of info.named) {
     const from = n.from ? ` from \`${n.from}\`` : '';
-    const shown = n.items.slice(0, 24).map((i) => `\`${i}\``).join(', ');
+    const shown = n.items
+      .slice(0, 24)
+      .map((i) => `\`${i}\``)
+      .join(', ');
     const more = n.items.length > 24 ? `, …(+${n.items.length - 24})` : '';
     lines.push(`  - exports ${shown}${more}${from}`);
   }

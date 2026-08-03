@@ -15,16 +15,16 @@ Full file/symbol listing: [`generated/index-packages-common.md`](./generated/ind
 `common_module.ts` declares `CommonModule` and the `COMMON_DIRECTIVES`/`COMMON_PIPES` arrays; every
 directive is standalone, so the module is only a convenience re-export.
 
-| File | Exports | Notes |
-| --- | --- | --- |
-| `ng_if.ts` | `NgIf`, `NgIfContext` | template guards (`ngTemplateGuard_ngIf`, `ngTemplateContextGuard`) are what make `*ngIf` narrow types |
-| `ng_for_of.ts` | `NgForOf`, `NgForOfContext` | diffing via `IterableDiffers` from core, `trackBy` support |
-| `ng_switch.ts` | `NgSwitch`, `NgSwitchCase`, `NgSwitchDefault` | |
-| `ng_class.ts` / `ng_style.ts` | `NgClass`, `NgStyle` | delegate to the renderer's class/style APIs |
-| `ng_template_outlet.ts` | `NgTemplateOutlet` | |
-| `ng_component_outlet.ts` | `NgComponentOutlet` | dynamic component creation with input binding |
-| `ng_plural.ts` | `NgPlural`, `NgPluralCase` | uses `NgLocalization` |
-| `ng_optimized_image/` | `NgOptimizedImage`, `provideImgixLoader` &c. | see below |
+| File                          | Exports                                       | Notes                                                                                                 |
+| ----------------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `ng_if.ts`                    | `NgIf`, `NgIfContext`                         | template guards (`ngTemplateGuard_ngIf`, `ngTemplateContextGuard`) are what make `*ngIf` narrow types |
+| `ng_for_of.ts`                | `NgForOf`, `NgForOfContext`                   | diffing via `IterableDiffers` from core, `trackBy` support                                            |
+| `ng_switch.ts`                | `NgSwitch`, `NgSwitchCase`, `NgSwitchDefault` |                                                                                                       |
+| `ng_class.ts` / `ng_style.ts` | `NgClass`, `NgStyle`                          | delegate to the renderer's class/style APIs                                                           |
+| `ng_template_outlet.ts`       | `NgTemplateOutlet`                            |                                                                                                       |
+| `ng_component_outlet.ts`      | `NgComponentOutlet`                           | dynamic component creation with input binding                                                         |
+| `ng_plural.ts`                | `NgPlural`, `NgPluralCase`                    | uses `NgLocalization`                                                                                 |
+| `ng_optimized_image/`         | `NgOptimizedImage`, `provideImgixLoader` &c.  | see below                                                                                             |
 
 **`NgOptimizedImage`** is a subsystem of its own: `ng_optimized_image.ts` is the directive,
 `asserts.ts` + `error_helper.ts` hold the (extensive) dev-mode diagnostics, `lcp_image_observer.ts`

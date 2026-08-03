@@ -34,7 +34,7 @@ Two parallel stacks share a common base:
 - **Shared** — `abstract_control_directive.ts` (`AbstractControlDirective` — the read-only view
   every directive exposes), `control_container.ts`, `ng_control.ts`, `ng_control_status.ts` (the
   `ng-valid`/`ng-touched`/… host classes), `shared.ts` (`setUpControl`, `selectValueAccessor` and
-  the wiring between a control and its accessor), `validators.ts` (the validator *directives*
+  the wiring between a control and its accessor), `validators.ts` (the validator _directives_
   `required`, `minlength`, `pattern`, `email`, …), `abstract_form_group_directive.ts`,
   `ng_no_validate_directive.ts`, and the error-message modules (`template_driven_errors.ts`,
   `reactive_errors.ts`, `reactive_validation_error.ts`, `error_examples.ts`).
