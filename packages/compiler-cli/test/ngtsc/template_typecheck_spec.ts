@@ -9,7 +9,7 @@
 import ts from 'typescript';
 
 import {DiagnosticCategoryLabel} from '../../src/ngtsc/core/api';
-import {ErrorCode, ngErrorCode} from '../../src/ngtsc/diagnostics';
+import {ERROR_DETAILS_PAGE_BASE_URL, ErrorCode, ngErrorCode} from '../../src/ngtsc/diagnostics';
 import {absoluteFrom as _, getSourceFileOrError} from '../../src/ngtsc/file_system';
 import {runInEachFileSystem} from '../../src/ngtsc/file_system/testing';
 import {
@@ -4063,7 +4063,7 @@ runInEachFileSystem(() => {
         expect(diags.length).toBe(1);
         expect(diags[0].messageText).toBe(`'foo' is not a known element:
 1. If 'foo' is an Angular component, then verify that it is part of this module.
-2. To allow any element add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component.`);
+2. To allow any element add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG8001`);
       });
 
       it('should check for unknown elements in standalone components', () => {
@@ -4086,7 +4086,7 @@ runInEachFileSystem(() => {
         expect(diags.length).toBe(1);
         expect(diags[0].messageText).toBe(`'foo' is not a known element:
 1. If 'foo' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
-2. To allow any element add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component.`);
+2. To allow any element add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG8001`);
       });
 
       it('should check for unknown properties in standalone components', () => {
@@ -4138,7 +4138,7 @@ runInEachFileSystem(() => {
         expect(diags.length).toBe(1);
         expect(diags[0].messageText).toBe(`'my-foo' is not a known element:
 1. If 'my-foo' is an Angular component, then verify that it is part of this module.
-2. If 'my-foo' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@NgModule.schemas' of this component to suppress this message.`);
+2. If 'my-foo' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@NgModule.schemas' of this component to suppress this message. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG8001`);
       });
 
       it('should have a descriptive error for unknown elements that contain a dash in standalone components', () => {
@@ -4161,7 +4161,7 @@ runInEachFileSystem(() => {
         expect(diags.length).toBe(1);
         expect(diags[0].messageText).toBe(`'my-foo' is not a known element:
 1. If 'my-foo' is an Angular component, then verify that it is included in the '@Component.imports' of this component.
-2. If 'my-foo' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message.`);
+2. If 'my-foo' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@Component.schemas' of this component to suppress this message. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG8001`);
       });
 
       it('should check for unknown properties', () => {
@@ -4184,7 +4184,7 @@ runInEachFileSystem(() => {
         const diags = env.driveDiagnostics();
         expect(diags.length).toBe(1);
         expect(diags[0].messageText).toBe(
-          `Can't bind to 'foo' since it isn't a known property of 'div'.`,
+          `Can't bind to 'foo' since it isn't a known property of 'div'. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG8002`,
         );
       });
 
@@ -4208,7 +4208,7 @@ runInEachFileSystem(() => {
         const diags = env.driveDiagnostics();
         expect(diags.length).toBe(1);
         expect(diags[0].messageText).toBe(
-          `Can't bind to 'foo' since it isn't a known property of 'div'.`,
+          `Can't bind to 'foo' since it isn't a known property of 'div'. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG8002`,
         );
       });
 
@@ -4258,12 +4258,12 @@ runInEachFileSystem(() => {
         expect(diags.length).toBe(2);
         expect(diags[0].messageText).toBe(`'custom-element' is not a known element:
 1. If 'custom-element' is an Angular component, then verify that it is part of this module.
-2. If 'custom-element' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@NgModule.schemas' of this component to suppress this message.`);
+2. If 'custom-element' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@NgModule.schemas' of this component to suppress this message. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG8001`);
         expect(diags[1].messageText)
           .toBe(`Can't bind to 'foo' since it isn't a known property of 'custom-element'.
 1. If 'custom-element' is an Angular component and it has 'foo' input, then verify that it is part of this module.
 2. If 'custom-element' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@NgModule.schemas' of this component to suppress this message.
-3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component.`);
+3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG8002`);
       });
 
       it('should not produce diagnostics for custom-elements-style elements when using the CUSTOM_ELEMENTS_SCHEMA', () => {
@@ -4394,7 +4394,7 @@ runInEachFileSystem(() => {
         expect(diags.length).toBe(1);
         expect(diags[0].messageText).toBe(`'foo' is not a known element:
 1. If 'foo' is an Angular component, then verify that it is part of this module.
-2. To allow any element add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component.`);
+2. To allow any element add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG8001`);
       });
 
       it('should check for unknown elements without explicit namespace inside an SVG foreignObject', () => {
@@ -4424,7 +4424,7 @@ runInEachFileSystem(() => {
         expect(diags.length).toBe(1);
         expect(diags[0].messageText).toBe(`'foo' is not a known element:
 1. If 'foo' is an Angular component, then verify that it is part of this module.
-2. To allow any element add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component.`);
+2. To allow any element add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG8001`);
       });
 
       it('should allow math elements', () => {

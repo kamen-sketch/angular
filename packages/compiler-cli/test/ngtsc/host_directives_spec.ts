@@ -8,7 +8,7 @@
 
 import ts from 'typescript';
 
-import {ErrorCode, ngErrorCode} from '../../src/ngtsc/diagnostics';
+import {ERROR_DETAILS_PAGE_BASE_URL, ErrorCode, ngErrorCode} from '../../src/ngtsc/diagnostics';
 import {runInEachFileSystem} from '../../src/ngtsc/file_system/testing';
 import {loadStandardTestFiles} from '../../src/ngtsc/testing';
 
@@ -558,7 +558,7 @@ runInEachFileSystem(() => {
         expect(diags[0].messageText).toBe(`Type 'string' is not assignable to type 'number'.`);
         expect(diags[1].messageText).toBe(`Type 'string' is not assignable to type 'boolean'.`);
         expect(diags[2].messageText).toBe(
-          `Can't bind to 'valueAlias' since it isn't a known property of 'div'.`,
+          `Can't bind to 'valueAlias' since it isn't a known property of 'div'. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG8002`,
         );
       });
 

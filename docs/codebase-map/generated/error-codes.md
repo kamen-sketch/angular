@@ -343,7 +343,7 @@ a guide at angular.dev and `formatRuntimeError` appends a link to it.
 reported as TypeScript diagnostics with the code `-99<value>` and rendered as `NG<value>`.
 A guide is registered by adding the member to `COMPILER_ERRORS_WITH_GUIDES` in `docs.ts`.
 
-117 codes, 8 of them with a guide.
+117 codes, 9 of them with a guide.
 
 | Code | Name | Guide |
 | --- | --- | --- |
@@ -433,7 +433,7 @@ A guide is registered by adding the member to `COMPILER_ERRORS_WITH_GUIDES` in `
 | `NG8021` | `DEFER_TRIGGER_MISCONFIGURATION` | — |
 | `NG8022` | `FORM_FIELD_UNSUPPORTED_BINDING` | — |
 | `NG8023` | `MULTIPLE_MATCHING_COMPONENTS` | — |
-| `NG8024` | `CONFLICTING_HOST_DIRECTIVE_BINDING` | — |
+| `NG8024` | `CONFLICTING_HOST_DIRECTIVE_BINDING` | yes |
 | `NG8025` | `FOREIGN_COMPONENT_UNSUPPORTED_BINDING` | — |
 | `NG8026` | `INVALID_CONTENT_PLACEMENT` | — |
 | `NG8027` | `FOREIGN_COMPONENT_CONTENT_UNNECESSARY_FOR_CHILDREN` | — |

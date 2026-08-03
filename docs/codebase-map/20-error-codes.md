@@ -98,7 +98,7 @@ and rewritten to `NG8001`.
 **How a guide is registered.** Unlike the runtime space, the sign means nothing here. A code has a
 guide when it is listed in `COMPILER_ERRORS_WITH_GUIDES` in
 [`diagnostics/src/docs.ts`](../../packages/compiler-cli/src/ngtsc/diagnostics/src/docs.ts) — currently
-8 of the 117.
+9 of the 117.
 
 `NG10xxx` is reserved for diagnostics that are not errors (warnings and suggestions produced for
 the language service), and `ExtendedTemplateDiagnosticName` in the same directory gives each
@@ -133,7 +133,7 @@ diagnostic in `test/ngtsc/host_directives_spec.ts` now also asserts the emitted 
 regression cannot come back silently. The analyzer's "no negative compile-time codes" check keeps
 the whole enum honest.
 
-## 4. A second, related defect — still open
+## 4. A second, related defect — also fixed
 
 While confirming the fix above, the same confusion between "an `ErrorCode`" and "a TS diagnostic
 code" turned up one level higher, in `NgCompiler.addMessageTextDetails`
@@ -151,10 +151,28 @@ a second time gives `parseInt('-99' + '-991001')` → `-99` for _every_ diagnost
 `COMPILER_ERRORS_WITH_GUIDES` holds plain `ErrorCode` values, so the membership test is always
 false.
 
-The effect is that **no compile-time error ever gets its "Find more at …" link appended**, and
-`COMPILER_ERRORS_WITH_GUIDES` — 8 entries — is effectively dead. Fixing it needs the inverse
-conversion (TS code → `ErrorCode`) in both the lookup and the URL, and it changes the message text
-of 8 existing errors, so this map reports it rather than changing that behaviour unasked.
+The effect was that **no compile-time error ever got its "Find more at …" link appended**, and
+`COMPILER_ERRORS_WITH_GUIDES` was effectively dead.
+
+The fix adds the missing inverse conversion, `ngErrorCodeToErrorCode` in
+[`diagnostics/src/util.ts`](../../packages/compiler-cli/src/ngtsc/diagnostics/src/util.ts), and uses
+it for both the lookup and the rendered URL. Two details came out of activating a path that had
+never run:
+
+- **The separator.** The original code always prefixed `. `, which would have produced `..` after
+  the many messages that already end in a period. It now mirrors the runtime's `formatRuntimeError`
+  and only inserts a period when the message does not already end in punctuation.
+- **Message chains.** `messageText` is a `string | ts.DiagnosticMessageChain`, and the original
+  code concatenated it directly — a chain would have rendered as `[object Object]`. The link is now
+  appended to the chain's top-level message, which is where `ts.flattenDiagnosticMessageText` puts
+  it before the nested hints.
+
+Because the link is user-visible output, this changes the message of the nine codes in
+`COMPILER_ERRORS_WITH_GUIDES` — including the two most common compiler errors, `NG8001`
+("is not a known element") and `NG8002` ("Can't bind to …"). Thirty exact-match assertions across
+four spec files were updated to match; they interpolate `ERROR_DETAILS_PAGE_BASE_URL` rather than
+hard-coding the URL, because it resolves to `next.angular.dev` on pre-release builds and
+`v<major>.angular.dev` on releases.
 
 ## 5. Where to look when you see a code
 

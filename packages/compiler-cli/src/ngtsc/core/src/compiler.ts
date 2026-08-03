@@ -26,6 +26,7 @@ import {
   ErrorCode,
   isFatalDiagnosticError,
   ngErrorCode,
+  ngErrorCodeToErrorCode,
 } from '../../diagnostics';
 import {DocEntry, DocsExtractor} from '../../docs';
 import {checkForPrivateExports, ReferenceGraph} from '../../entry_point';
@@ -676,15 +677,27 @@ export class NgCompiler {
    */
   private addMessageTextDetails(diagnostics: ts.Diagnostic[]): ts.Diagnostic[] {
     return diagnostics.map((diag) => {
-      if (diag.code && COMPILER_ERRORS_WITH_GUIDES.has(ngErrorCode(diag.code))) {
-        return {
-          ...diag,
-          messageText:
-            diag.messageText +
-            `. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG${ngErrorCode(diag.code)}`,
-        };
+      // `diag.code` is already the `ts.Diagnostic` code produced by `ngErrorCode`, so it has to be
+      // converted back before it can be looked up or rendered.
+      const errorCode = diag.code ? ngErrorCodeToErrorCode(diag.code) : null;
+      if (errorCode === null || !COMPILER_ERRORS_WITH_GUIDES.has(errorCode)) {
+        return diag;
       }
-      return diag;
+
+      // Matches the runtime's `formatRuntimeError`: only add a separating period when the message
+      // does not already end in punctuation.
+      const appendDetails = (text: string) => {
+        const separator = /[.,;!?\n]$/.test(text) ? '' : '.';
+        return `${text}${separator} Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG${errorCode}`;
+      };
+
+      return {
+        ...diag,
+        messageText:
+          typeof diag.messageText === 'string'
+            ? appendDetails(diag.messageText)
+            : {...diag.messageText, messageText: appendDetails(diag.messageText.messageText)},
+      };
     });
   }
 
