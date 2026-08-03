@@ -52,10 +52,23 @@ const SOURCE_EXT = ['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.cjs'];
  * Top-level `export <kind> <name>` declarations. Angular source is formatted by Prettier, so
  * top-level declarations reliably start at column 0 and this stays accurate without a parser.
  */
-const DECL_RE =
-  /^export\s+(?:declare\s+)?(?:abstract\s+)?(?:async\s+)?(function\*?|class|interface|type|enum|const enum|const|let|var|namespace)\s+([A-Za-z_$][\w$]*)/gm;
+/**
+ * Angular's private surface is named with `ɵ` (`ɵɵdefineComponent`, `ɵsetClassMetadata`), and
+ * JavaScript's `\w` is ASCII-only — so the identifier pattern has to admit `ɵ` explicitly or the
+ * index silently omits every private symbol in the framework.
+ */
+const IDENTIFIER = String.raw`[A-Za-z_$ɵ][\w$ɵ]*`;
+
+const DECL_RE = new RegExp(
+  String.raw`^export\s+(?:declare\s+)?(?:abstract\s+)?(?:async\s+)?` +
+    String.raw`(function\*?|class|interface|type|enum|const enum|const|let|var|namespace)\s+(${IDENTIFIER})`,
+  'gm',
+);
 /** `export * from '...'` / `export * as ns from '...'`. */
-const STAR_RE = /^export\s+\*(?:\s+as\s+([\w$]+))?\s+from\s+['"]([^'"]+)['"]/gm;
+const STAR_RE = new RegExp(
+  String.raw`^export\s+\*(?:\s+as\s+(${IDENTIFIER}))?\s+from\s+['"]([^'"]+)['"]`,
+  'gm',
+);
 /** `export {a, b as c} from '...'` and bare `export {a, b}`. */
 const NAMED_RE = /^export\s*\{([^}]*)\}\s*(?:from\s*['"]([^'"]+)['"])?/gms;
 /** `export default ...`. */

@@ -158,6 +158,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 ## `packages/router/src/components/`
 
 - `packages/router/src/components/empty_outlet.ts` — 51 lines
+  - class: `ɵEmptyOutletComponent`
   - function: `standardizeConfig`
   - exports `ɵEmptyOutletComponent as EmptyOutletComponent`
 

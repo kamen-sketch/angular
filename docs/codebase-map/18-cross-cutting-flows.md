@@ -13,8 +13,8 @@ listings alone.
 1. `ngtsc` (`compiler-cli/src/ngtsc/core/src/compiler.ts`) finds the class and matches it to the
    component `DecoratorHandler` (`annotations/component/src/handler.ts`).
 2. `detect` → `analyze`: the decorator arguments are statically evaluated
-   (`ngtsc/partial_evaluator/`), `templateUrl`/`styleUrls` are resolved (`annotations/component/
-src/resources.ts`), and the template is parsed by `@angular/compiler`
+   (`ngtsc/partial_evaluator/`), `templateUrl`/`styleUrls` are resolved by
+   `annotations/component/src/resources.ts`, and the template is parsed by `@angular/compiler`
    (`ml_parser/` → `render3/r3_template_transform.ts`).
 3. `resolve`: the component's _scope_ — which directives and pipes its template may use — is
    computed by `ngtsc/scope/` from its NgModule or its standalone `imports`.

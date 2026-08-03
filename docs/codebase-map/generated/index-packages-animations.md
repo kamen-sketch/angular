@@ -203,8 +203,8 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 - `packages/animations/src/animation_event.ts` — 73 lines
   - interface: `AnimationEvent`
 - `packages/animations/src/animation_metadata.ts` — 1425 lines
-  - type: `AnimateTimings`
-  - interface: `AnimationOptions`, `AnimateChildOptions`, `AnimationMetadata`, `AnimationTriggerMetadata`, `AnimationStateMetadata`, `AnimationTransitionMetadata`, `AnimationReferenceMetadata`, `AnimationQueryMetadata`, `AnimationKeyframesSequenceMetadata`, `AnimationStyleMetadata`, `AnimationAnimateMetadata`, `AnimationAnimateChildMetadata`, `AnimationAnimateRefMetadata`, `AnimationSequenceMetadata`, `AnimationGroupMetadata`, `AnimationQueryOptions`, `AnimationStaggerMetadata`
+  - interface: `ɵStyleData`, `AnimationOptions`, `AnimateChildOptions`, `AnimationMetadata`, `AnimationTriggerMetadata`, `AnimationStateMetadata`, `AnimationTransitionMetadata`, `AnimationReferenceMetadata`, `AnimationQueryMetadata`, `AnimationKeyframesSequenceMetadata`, `AnimationStyleMetadata`, `AnimationAnimateMetadata`, `AnimationAnimateChildMetadata`, `AnimationAnimateRefMetadata`, `AnimationSequenceMetadata`, `AnimationGroupMetadata`, `AnimationQueryOptions`, `AnimationStaggerMetadata`
+  - type: `ɵStyleDataMap`, `AnimateTimings`
   - enum: `AnimationMetadataType`
   - const: `AUTO_STYLE`
   - function: `trigger`, `animate`, `group`, `sequence`, `style`, `state`, `keyframes`, `transition`, `animation`, `animateChild`, `useAnimation`, `query`, `stagger`
@@ -217,6 +217,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 - `packages/animations/src/errors.ts` — 60 lines
   - const enum: `RuntimeErrorCode`
 - `packages/animations/src/private_export.ts` — 13 lines
+  - const: `ɵPRE_STYLE`
   - exports `BrowserAnimationBuilder as ɵBrowserAnimationBuilder` from `./animation_builder`
   - exports `RuntimeErrorCode as ɵRuntimeErrorCode` from `./errors`
   - exports `AnimationGroupPlayer as ɵAnimationGroupPlayer` from `./players/animation_group_player`

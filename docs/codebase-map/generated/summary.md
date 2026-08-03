@@ -9,36 +9,36 @@ Counts cover first-party source only (see `ROOTS`/`SKIP_DIRS` in the generator).
 
 | Root | Files | Exported declarations | Lines |
 | --- | ---: | ---: | ---: |
-| `packages/` | 5364 | 12556 | 952,240 |
+| `packages/` | 5364 | 12815 | 952,240 |
 | `devtools/` | 315 | 518 | 48,341 |
 | `adev/` | 1049 | 1256 | 62,434 |
 | `modules/` | 121 | 135 | 7,144 |
 | `tools/` | 32 | 11 | 2,281 |
 | `integration/` | 149 | 83 | 4,407 |
 | `scripts/` | 10 | 18 | 1,175 |
-| **total** | **7040** | **14577** | **1,078,022** |
+| **total** | **7040** | **14836** | **1,078,022** |
 
 ## Per package / app
 
 | Group | Files | Exported declarations | Lines |
 | --- | ---: | ---: | ---: |
-| [`packages/core`](./index-packages-core.md) | 1089 | 2761 | 309,034 |
-| [`packages/compiler-cli`](./index-packages-compiler-cli.md) | 2549 | 5768 | 226,399 |
+| [`packages/core`](./index-packages-core.md) | 1089 | 2978 | 309,034 |
+| [`packages/compiler-cli`](./index-packages-compiler-cli.md) | 2549 | 5778 | 226,399 |
 | [`packages/compiler`](./index-packages-compiler.md) | 291 | 1280 | 90,411 |
-| [`packages/forms`](./index-packages-forms.md) | 190 | 482 | 69,487 |
+| [`packages/forms`](./index-packages-forms.md) | 190 | 508 | 69,487 |
 | [`devtools/projects`](./index-devtools-projects.md) | 256 | 453 | 44,922 |
 | [`adev/src`](./index-adev-src.md) | 788 | 780 | 43,030 |
 | [`packages/common`](./index-packages-common.md) | 186 | 562 | 42,636 |
-| [`packages/router`](./index-packages-router.md) | 114 | 362 | 39,045 |
+| [`packages/router`](./index-packages-router.md) | 114 | 363 | 39,045 |
 | [`packages/zone.js`](./index-packages-zone.js.md) | 260 | 138 | 37,615 |
 | [`packages/language-service`](./index-packages-language-service.md) | 90 | 215 | 37,153 |
 | [`adev/shared-docs`](./index-adev-shared-docs.md) | 254 | 474 | 18,934 |
-| [`packages/platform-server`](./index-packages-platform-server.md) | 38 | 83 | 16,623 |
+| [`packages/platform-server`](./index-packages-platform-server.md) | 38 | 84 | 16,623 |
 | [`packages/localize`](./index-packages-localize.md) | 103 | 128 | 14,667 |
-| [`packages/animations`](./index-packages-animations.md) | 61 | 186 | 13,455 |
+| [`packages/animations`](./index-packages-animations.md) | 61 | 189 | 13,455 |
 | [`packages/upgrade`](./index-packages-upgrade.md) | 45 | 134 | 13,288 |
 | [`packages/service-worker`](./index-packages-service-worker.md) | 56 | 125 | 13,244 |
-| [`packages/platform-browser`](./index-packages-platform-browser.md) | 60 | 80 | 10,878 |
+| [`packages/platform-browser`](./index-packages-platform-browser.md) | 60 | 81 | 10,878 |
 | [`packages/examples`](./index-packages-examples.md) | 134 | 129 | 6,670 |
 | [`modules/benchmarks`](./index-modules-benchmarks.md) | 84 | 93 | 5,228 |
 | [`packages/benchpress`](./index-packages-benchpress.md) | 43 | 35 | 5,012 |

@@ -118,7 +118,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - interface: `FormOptions`
   - function: `form`, `form`, `form`, `form`, `applyEach`, `applyEach`, `applyEach`, `apply`, `applyWhen`, `applyWhenValue`, `applyWhenValue`, `applyWhenValue`, `submit`, `submit`, `submit`, `schema`
 - `packages/forms/signals/src/api/symbols.ts` — 18 lines
-  - const: `FIELD_TREE`
+  - const: `ɵɵTYPE`, `FIELD_TREE`
 - `packages/forms/signals/src/api/transformed_value.ts` — 159 lines
   - interface: `ParseResult`, `TransformedValueOptions`, `TransformedValueSignal`
   - function: `transformedValue`
@@ -246,8 +246,8 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 - `packages/forms/signals/src/directive/control_native.ts` — 127 lines
   - function: `nativeControlCreate`
 - `packages/forms/signals/src/directive/form_field.ts` — 439 lines
+  - const: `ɵNgFieldDirective`, `FORM_FIELD`
   - interface: `FormFieldBindingOptions`
-  - const: `FORM_FIELD`
   - class: `FormField`
 - `packages/forms/signals/src/directive/form_root.ts` — 58 lines
   - class: `FormRoot`
@@ -429,6 +429,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 
 - `packages/forms/src/directives.ts` — 118 lines
   - const: `SHARED_FORM_DIRECTIVES`, `TEMPLATE_DRIVEN_DIRECTIVES`, `REACTIVE_DRIVEN_DIRECTIVES`
+  - class: `ɵInternalFormsSharedModule`
   - exports `CheckboxControlValueAccessor` from `./directives/checkbox_value_accessor`
   - exports `ControlValueAccessor` from `./directives/control_value_accessor`
   - exports `DefaultValueAccessor` from `./directives/default_value_accessor`
@@ -452,7 +453,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 - `packages/forms/src/errors.ts` — 41 lines
   - const enum: `RuntimeErrorCode`
 - `packages/forms/src/form_builder.ts` — 549 lines
-  - type: `ControlConfig`
+  - type: `ɵNullableFormControls`, `ɵNonNullableFormControls`, `ControlConfig`, `ɵElement`
   - class: `FormBuilder`, `NonNullableFormBuilder`, `UntypedFormBuilder`
 - `packages/forms/src/form_providers.ts` — 103 lines
   - class: `FormsModule`, `ReactiveFormsModule`
@@ -542,6 +543,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - const: `modelGroupProvider`
   - class: `NgModelGroup`
 - `packages/forms/src/directives/ng_no_validate_directive.ts` — 36 lines
+  - class: `ɵNgNoValidate`
   - exports `ɵNgNoValidate as NgNoValidate`
 - `packages/forms/src/directives/number_value_accessor.ts` — 78 lines
   - class: `NumberValueAccessor`
@@ -557,10 +559,11 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 - `packages/forms/src/directives/select_control_value_accessor.ts` — 303 lines
   - class: `SelectControlValueAccessor`, `NgSelectOption`
 - `packages/forms/src/directives/select_multiple_control_value_accessor.ts` — 279 lines
-  - class: `SelectMultipleControlValueAccessor`
+  - class: `SelectMultipleControlValueAccessor`, `ɵNgSelectMultipleOption`
   - exports `ɵNgSelectMultipleOption as NgSelectMultipleOption`
 - `packages/forms/src/directives/shared.ts` — 461 lines
-  - const: `CALL_SET_DISABLED_STATE`, `setDisabledStateDefault`
+  - interface: `ɵFormControlIntegration`
+  - const: `ɵFORM_CONTROL_INTEGRATION`, `CALL_SET_DISABLED_STATE`, `setDisabledStateDefault`
   - type: `SetDisabledStateOption`
   - function: `controlPath`, `setUpControlValueAccessor`, `cleanUpControl`, `setUpDisabledChangeHandler`, `setUpValidators`, `cleanUpValidators`, `setUpFormContainer`, `cleanUpFormContainer`, `isPropertyUpdated`, `isBuiltInAccessor`, `syncPendingControls`, `selectValueAccessor`, `removeListItem`, `_ngModelWarning`
 - `packages/forms/src/directives/template_driven_errors.ts` — 79 lines
@@ -596,21 +599,21 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 
 - `packages/forms/src/model/abstract_model.ts` — 1817 lines
   - const: `VALID`, `INVALID`, `PENDING`, `DISABLED`
-  - type: `FormControlStatus`, `FormHooks`
+  - type: `FormControlStatus`, `FormHooks`, `ɵIsAny`, `ɵTypedOrUntyped`, `ɵValue`, `ɵRawValue`, `ɵTokenize`, `ɵCoerceStrArrToNumArr`, `ɵNavigate`, `ɵWriteable`, `ɵGetProperty`
   - class: `ControlEvent`, `ValueChangeEvent`, `PristineChangeEvent`, `TouchedChangeEvent`, `StatusChangeEvent`, `FormSubmittedEvent`, `FormResetEvent`, `AbstractControl`
   - function: `pickValidators`, `pickAsyncValidators`, `isOptionsObj`, `assertControlPresent`, `assertAllValuesPresent`, `hasOwnControl`
   - interface: `AbstractControlOptions`
 - `packages/forms/src/model/form_array.ts` — 597 lines
+  - type: `ɵFormArrayValue`, `ɵFormArrayRawValue`, `UntypedFormArray`
   - class: `FormArray`
-  - type: `UntypedFormArray`
   - const: `UntypedFormArray`, `isFormArray`
 - `packages/forms/src/model/form_control.ts` — 640 lines
-  - interface: `FormControlState`, `FormControlOptions`, `FormControl`
+  - interface: `FormControlState`, `FormControlOptions`, `FormControl`, `ɵFormControlCtor`
   - const: `FormControl`, `UntypedFormControl`, `isFormControl`
   - type: `UntypedFormControl`
 - `packages/forms/src/model/form_group.ts` — 843 lines
+  - type: `ɵFormGroupArgumentValue`, `ɵFormGroupValue`, `ɵFormGroupRawValue`, `ɵOptionalKeys`, `UntypedFormGroup`
   - class: `FormGroup`, `FormRecord`
-  - type: `UntypedFormGroup`
   - const: `UntypedFormGroup`, `isFormGroup`, `isFormRecord`
   - interface: `FormRecord`
 

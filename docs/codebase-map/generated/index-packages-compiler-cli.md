@@ -193,7 +193,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 - `packages/compiler-cli/linker/src/file_linker/partial_linkers/partial_linker.ts` — 36 lines
   - interface: `LinkedDefinition`, `PartialLinker`
 - `packages/compiler-cli/linker/src/file_linker/partial_linkers/partial_linker_selector.ts` — 222 lines
-  - const: `declarationFunctions`
+  - const: `ɵɵngDeclareDirective`, `ɵɵngDeclareClassMetadata`, `ɵɵngDeclareComponent`, `ɵɵngDeclareFactory`, `ɵɵngDeclareInjectable`, `ɵɵngDeclareInjector`, `ɵɵngDeclareNgModule`, `ɵɵngDeclarePipe`, `ɵɵngDeclareClassMetadataAsync`, `ɵɵngDeclareService`, `declarationFunctions`
   - interface: `LinkerRange`
   - function: `createLinkerMap`
   - class: `PartialLinkerSelector`

@@ -71,7 +71,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 ## `packages/core/primitives/di/src/`
 
 - `packages/core/primitives/di/src/injection_token.ts` — 92 lines
-  - interface: `InjectionToken`
+  - interface: `ɵɵInjectableDeclaration`, `InjectionToken`
   - function: `defineInjectable`, `registerInjectable`
   - type: `Constructor`
 - `packages/core/primitives/di/src/injector.ts` — 50 lines
@@ -1500,6 +1500,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - function: `makeStateKey`, `retrieveTransferredState`
   - class: `TransferState`
 - `packages/core/src/type_checking.ts` — 14 lines
+  - function: `ɵassertType`
 - `packages/core/src/version.ts` — 31 lines
   - class: `Version`
   - const: `VERSION`
@@ -1584,11 +1585,13 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 - `packages/core/src/authoring/input/input_signal.ts` — 152 lines
   - interface: `InputOptions`, `InputSignalWithTransform`, `InputSignal`
   - type: `InputOptionsWithoutTransform`, `InputOptionsWithTransform`
+  - const: `ɵINPUT_SIGNAL_BRAND_READ_TYPE`, `ɵINPUT_SIGNAL_BRAND_WRITE_TYPE`
   - function: `createInputSignal`
 - `packages/core/src/authoring/input/input_signal_node.ts` — 52 lines
   - const: `REQUIRED_UNSET_VALUE`, `INPUT_SIGNAL_NODE`
   - interface: `InputSignalNode`
 - `packages/core/src/authoring/input/input_type_checking.ts` — 22 lines
+  - type: `ɵUnwrapInputSignalWriteType`, `ɵUnwrapDirectiveSignalInputs`
 
 
 
@@ -1746,6 +1749,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - const: `IDLE_SERVICE`
   - function: `provideIdleServiceWith`
 - `packages/core/src/defer/instructions.ts` — 887 lines
+  - function: `ɵɵdefer`, `ɵɵdeferWhen`, `ɵɵdeferPrefetchWhen`, `ɵɵdeferHydrateWhen`, `ɵɵdeferHydrateNever`, `ɵɵdeferOnIdle`, `ɵɵdeferPrefetchOnIdle`, `ɵɵdeferHydrateOnIdle`, `ɵɵdeferOnImmediate`, `ɵɵdeferPrefetchOnImmediate`, `ɵɵdeferHydrateOnImmediate`, `ɵɵdeferOnTimer`, `ɵɵdeferPrefetchOnTimer`, `ɵɵdeferHydrateOnTimer`, `ɵɵdeferOnHover`, `ɵɵdeferPrefetchOnHover`, `ɵɵdeferHydrateOnHover`, `ɵɵdeferOnInteraction`, `ɵɵdeferPrefetchOnInteraction`, `ɵɵdeferHydrateOnInteraction`, `ɵɵdeferOnViewport`, `ɵɵdeferPrefetchOnViewport`, `ɵɵdeferHydrateOnViewport`
 - `packages/core/src/defer/interfaces.ts` — 353 lines
   - interface: `DehydratedDeferBlock`, `TDeferBlockDetails`, `HydrateTimerTriggerDetails`, `HydrateViewportTriggerDetails`, `LDeferBlockDetails`, `DeferBlockConfig`, `DeferBlockDependencyInterceptor`
   - type: `DependencyResolverFn`, `DeferredLoadingBlockConfig`, `DeferredPlaceholderBlockConfig`, `HydrateTriggerDetails`
@@ -1757,7 +1761,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - class: `DehydratedBlockRegistry`
 - `packages/core/src/defer/rendering.ts` — 507 lines
   - const: `DEFER_BLOCK_DEPENDENCY_INTERCEPTOR`, `DEFER_BLOCK_CONFIG`
-  - function: `renderDeferBlockState`, `renderPlaceholder`, `renderDeferStateAfterResourceLoading`, `shouldTriggerDeferBlock`
+  - function: `renderDeferBlockState`, `renderPlaceholder`, `renderDeferStateAfterResourceLoading`, `ɵɵdeferEnableTimerScheduling`, `shouldTriggerDeferBlock`
 - `packages/core/src/defer/timer_scheduler.ts` — 231 lines
   - function: `onTimer`, `scheduleTimerTrigger`
   - class: `TimerScheduler`
@@ -1825,7 +1829,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - const: `THROW_IF_NOT_FOUND`, `NG_TEMP_TOKEN_PATH`, `SOURCE`
   - class: `RetrievingInjector`
   - type: `BackwardsCompatibleInjector`
-  - function: `injectInjectorOnly`, `injectInjectorOnly`, `injectInjectorOnly`, `inject`, `inject`, `inject`, `inject`, `inject`, `inject`, `inject`, `convertToBitFlags`, `injectArgs`, `attachInjectFlag`, `getInjectFlag`
+  - function: `injectInjectorOnly`, `injectInjectorOnly`, `injectInjectorOnly`, `ɵɵinject`, `ɵɵinject`, `ɵɵinject`, `ɵɵinject`, `ɵɵinject`, `ɵɵinject`, `ɵɵinvalidFactoryDep`, `inject`, `inject`, `inject`, `inject`, `inject`, `inject`, `inject`, `convertToBitFlags`, `injectArgs`, `attachInjectFlag`, `getInjectFlag`
   - exports `getCurrentInjector`, `setCurrentInjector` from `../../primitives/di`
 - `packages/core/src/di/injector_marker.ts` — 25 lines
   - const enum: `InjectorMarkers`
@@ -1862,8 +1866,8 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 ## `packages/core/src/di/interface/`
 
 - `packages/core/src/di/interface/defs.ts` — 259 lines
-  - interface: `InjectableType`, `InjectorType`, `InjectorTypeWithProviders`
-  - function: `getInjectableDef`, `isInjectable`, `getInheritedInjectableDef`, `getInjectorDef`
+  - interface: `ɵɵInjectableDeclaration`, `ɵɵInjectorDef`, `InjectableType`, `InjectorType`, `InjectorTypeWithProviders`
+  - function: `ɵɵdefineInjectable`, `ɵɵdefineInjector`, `getInjectableDef`, `isInjectable`, `getInheritedInjectableDef`, `getInjectorDef`
   - const: `NG_PROV_DEF`, `NG_INJ_DEF`
 - `packages/core/src/di/interface/injector.ts` — 82 lines
   - const enum: `DecoratorFlags`, `InternalInjectFlags`
@@ -1873,6 +1877,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - type: `StaticProvider`, `Provider`, `EnvironmentProviders`, `ProcessProvidersFunction`
   - function: `isEnvironmentProviders`
 - `packages/core/src/di/interface/service.ts` — 37 lines
+  - function: `ɵɵdefineService`
 
 
 
@@ -1911,7 +1916,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - function: `setIsI18nHydrationSupportEnabled`, `isI18nHydrationSupportEnabled`, `prepareI18nBlockForHydration`, `enablePrepareI18nBlockForHydrationImpl`, `isI18nHydrationEnabled`, `getOrComputeI18nChildren`, `trySerializeI18nBlock`, `claimDehydratedIcuCase`, `enableClaimDehydratedIcuCaseImpl`, `cleanupI18nHydrationData`
   - interface: `SerializedI18nBlock`
 - `packages/core/src/hydration/incremental_runtime.ts` — 82 lines
-  - function: `createDehydratedBlockRegistry`, `runIncrementalHydrationBootstrap`
+  - function: `createDehydratedBlockRegistry`, `runIncrementalHydrationBootstrap`, `ɵɵenableIncrementalHydrationRuntime`
 - `packages/core/src/hydration/interfaces.ts` — 306 lines
   - const: `REFERENCE_NODE_HOST`, `REFERENCE_NODE_BODY`, `NODE_NAVIGATION_STEP_FIRST_CHILD`, `NODE_NAVIGATION_STEP_NEXT_SIBLING`, `ELEMENT_CONTAINERS`, `TEMPLATES`, `CONTAINERS`, `MULTIPLIER`, `NUM_ROOT_NODES`, `TEMPLATE_ID`, `NODES`, `DISCONNECTED_NODES`, `I18N_DATA`, `DEFER_BLOCK_ID`, `DEFER_BLOCK_STATE`, `DEFER_PARENT_BLOCK_ID`, `DEFER_HYDRATE_TRIGGERS`, `DEFER_PREFETCH_TRIGGERS`
   - type: `NodeNavigationStep`
@@ -2104,13 +2109,13 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 - `packages/core/src/render3/def_getters.ts` — 88 lines
   - function: `getNgModuleDef`, `getNgModuleDefOrThrow`, `getComponentDef`, `getDirectiveDefOrThrow`, `getDirectiveDef`, `getPipeDef`, `isStandalone`
 - `packages/core/src/render3/definition.ts` — 777 lines
-  - function: `extractDirectiveDef`, `extractDefListOrFactory`
+  - function: `ɵɵdefineComponent`, `extractDirectiveDef`, `ɵɵdefineNgModule`, `ɵɵdefineDirective`, `ɵɵdefinePipe`, `extractDefListOrFactory`
   - const: `GENERATED_COMP_IDS`
 - `packages/core/src/render3/definition_factory.ts` — 38 lines
   - type: `FactoryFn`
   - function: `getFactoryDef`, `getFactoryDef`, `getFactoryDef`
 - `packages/core/src/render3/di.ts` — 1060 lines
-  - function: `setIncludeViewProviders`, `bloomAdd`, `getOrCreateNodeInjectorForNode`, `getInjectorIndex`, `getParentInjectorLocation`, `diPublicInInjector`, `injectAttributeImpl`, `getOrCreateInjectable`, `locateDirectiveOrProvider`, `getNodeInjectable`, `bloomHashBitOrFactory`, `bloomHasToken`, `getNodeInjectorLView`, `getNodeInjectorTNode`, `createNodeInjector`
+  - function: `setIncludeViewProviders`, `bloomAdd`, `getOrCreateNodeInjectorForNode`, `getInjectorIndex`, `getParentInjectorLocation`, `diPublicInInjector`, `injectAttributeImpl`, `getOrCreateInjectable`, `locateDirectiveOrProvider`, `getNodeInjectable`, `bloomHashBitOrFactory`, `bloomHasToken`, `getNodeInjectorLView`, `getNodeInjectorTNode`, `createNodeInjector`, `ɵɵgetInheritedFactory`
   - class: `NodeInjector`
 - `packages/core/src/render3/di_setup.ts` — 432 lines
   - function: `providersResolver`
@@ -2139,6 +2144,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - exports `enableProfiling` from `./debug/chrome_dev_tools_performance`
   - exports `DirectiveDebugMetadata`, `getComponent`, `getContext`, `getDirectiveMetadata`, `getDirectives`, `getHostElement`, `getInjector`, `getListeners`, `getOwningComponent`, `getRootComponents`, `Listener` from `./util/discovery_utils`
 - `packages/core/src/render3/hmr.ts` — 410 lines
+  - function: `ɵɵgetReplaceMetadataURL`, `ɵɵreplaceMetadata`
 - `packages/core/src/render3/hooks.ts` — 325 lines
   - function: `registerPreOrderHooks`, `registerPostOrderHooks`, `executeCheckHooks`, `executeInitAndCheckHooks`, `incrementInitPhaseFlags`
 - `packages/core/src/render3/index.ts` — 259 lines
@@ -2171,6 +2177,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - class: `LiveCollection`, `UniqueValueMultiKeyMap`
   - function: `reconcile`
 - `packages/core/src/render3/local_compilation.ts` — 32 lines
+  - function: `ɵɵgetComponentDepsFactory`
 - `packages/core/src/render3/metadata.ts` — 122 lines
   - function: `getAsyncClassMetadataFn`, `hasAsyncClassMetadata`, `setClassMetadataAsync`, `setClassMetadata`
 - `packages/core/src/render3/namespaces.ts` — 15 lines
@@ -2190,21 +2197,23 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 - `packages/core/src/render3/node_selector_matcher.ts` — 473 lines
   - function: `isInlineTemplate`, `isNodeMatchingSelector`, `isNodeMatchingSelectorList`, `getProjectAsAttrValue`, `isSelectorInSelectorList`, `stringifyCSSSelectorList`, `extractAttrsAndClassesFromSelector`
 - `packages/core/src/render3/pipe.ts` — 321 lines
+  - function: `ɵɵpipe`, `ɵɵpipeBind1`, `ɵɵpipeBind2`, `ɵɵpipeBind3`, `ɵɵpipeBind4`, `ɵɵpipeBindV`
 - `packages/core/src/render3/profiler.ts` — 61 lines
   - function: `setProfiler`
   - const: `profiler`
 - `packages/core/src/render3/pure_function.ts` — 488 lines
-  - function: `pureFunction1Internal`, `pureFunction2Internal`, `pureFunction3Internal`, `pureFunction4Internal`, `pureFunctionVInternal`
+  - function: `ɵɵpureFunction0`, `ɵɵpureFunction1`, `ɵɵpureFunction2`, `ɵɵpureFunction3`, `ɵɵpureFunction4`, `ɵɵpureFunction5`, `ɵɵpureFunction6`, `ɵɵpureFunction7`, `ɵɵpureFunction8`, `ɵɵpureFunctionV`, `pureFunction1Internal`, `pureFunction2Internal`, `pureFunction3Internal`, `pureFunction4Internal`, `pureFunctionVInternal`
 - `packages/core/src/render3/reactive_lview_consumer.ts` — 116 lines
   - interface: `ReactiveLViewConsumer`
   - function: `getOrBorrowReactiveLViewConsumer`, `maybeReturnReactiveLViewConsumer`, `getOrCreateTemporaryConsumer`, `viewShouldHaveReactiveConsumer`, `isReactiveLViewConsumer`
   - const: `REACTIVE_LVIEW_CONSUMER_NODE`, `TEMPORARY_CONSUMER_NODE`
 - `packages/core/src/render3/scope.ts` — 90 lines
+  - function: `ɵɵsetComponentScope`, `ɵɵsetNgModuleScope`
 - `packages/core/src/render3/standalone_service.ts` — 68 lines
   - class: `StandaloneService`
 - `packages/core/src/render3/state.ts` — 844 lines
   - enum: `CheckNoChangesMode`
-  - function: `specOnlyIsInstructionStateEmpty`, `getElementDepthCount`, `increaseElementDepthCount`, `decreaseElementDepthCount`, `getBindingsEnabled`, `isInSkipHydrationBlock`, `isSkipHydrationRootTNode`, `enterSkipHydrationBlock`, `leaveSkipHydrationBlock`, `getLView`, `getTView`, `getCurrentTNode`, `getCurrentTNodePlaceholderOk`, `getCurrentParentTNode`, `setCurrentTNode`, `isCurrentTNodeParent`, `setCurrentTNodeAsNotParent`, `getContextLView`, `isInCheckNoChangesMode`, `isExhaustiveCheckNoChanges`, `setIsInCheckNoChangesMode`, `isRefreshingViews`, `setIsRefreshingViews`, `getBindingRoot`, `getBindingIndex`, `setBindingIndex`, `nextBindingIndex`, `incrementBindingIndex`, `isInI18nBlock`, `setInI18nBlock`, `setBindingRootForHostBindings`, `getCurrentDirectiveIndex`, `setCurrentDirectiveIndex`, `getCurrentDirectiveDef`, `getCurrentQueryIndex`, `setCurrentQueryIndex`, `enterDI`, `enterView`, `leaveView`, `nextContextImpl`, `getSelectedIndex`, `setSelectedIndex`, `getSelectedTNode`, `namespaceHTMLInternal`, `getNamespace`, `wasLastNodeCreated`, `lastNodeWasCreated`
+  - function: `specOnlyIsInstructionStateEmpty`, `getElementDepthCount`, `increaseElementDepthCount`, `decreaseElementDepthCount`, `getBindingsEnabled`, `isInSkipHydrationBlock`, `isSkipHydrationRootTNode`, `ɵɵenableBindings`, `enterSkipHydrationBlock`, `ɵɵdisableBindings`, `leaveSkipHydrationBlock`, `getLView`, `getTView`, `ɵɵrestoreView`, `ɵɵresetView`, `getCurrentTNode`, `getCurrentTNodePlaceholderOk`, `getCurrentParentTNode`, `setCurrentTNode`, `isCurrentTNodeParent`, `setCurrentTNodeAsNotParent`, `getContextLView`, `isInCheckNoChangesMode`, `isExhaustiveCheckNoChanges`, `setIsInCheckNoChangesMode`, `isRefreshingViews`, `setIsRefreshingViews`, `getBindingRoot`, `getBindingIndex`, `setBindingIndex`, `nextBindingIndex`, `incrementBindingIndex`, `isInI18nBlock`, `setInI18nBlock`, `setBindingRootForHostBindings`, `getCurrentDirectiveIndex`, `setCurrentDirectiveIndex`, `getCurrentDirectiveDef`, `getCurrentQueryIndex`, `setCurrentQueryIndex`, `enterDI`, `enterView`, `leaveView`, `nextContextImpl`, `getSelectedIndex`, `setSelectedIndex`, `getSelectedTNode`, `ɵɵnamespaceSVG`, `ɵɵnamespaceMathML`, `ɵɵnamespaceHTML`, `namespaceHTMLInternal`, `getNamespace`, `wasLastNodeCreated`, `lastNodeWasCreated`
   - const: `leaveDI`
 - `packages/core/src/render3/tnode_manipulation.ts` — 344 lines
   - function: `getOrCreateTNode`, `getOrCreateTNode`, `getOrCreateTNode`, `getOrCreateTNode`, `getOrCreateTNode`, `getOrCreateTNode`, `getOrCreateTNode`, `getOrCreateTNode`, `createTNodeAtIndex`, `createTNode`, `createTNode`, `createTNode`, `createTNode`, `createTNode`, `createTNode`, `createTNode`, `createTNode`
@@ -2215,6 +2224,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - class: `ViewContext`
   - function: `injectViewContext`
 - `packages/core/src/render3/view_engine_compatibility_prebound.ts` — 22 lines
+  - function: `ɵɵtemplateRefExtractor`
 - `packages/core/src/render3/view_manipulation.ts` — 88 lines
   - function: `createAndRenderEmbeddedLView`, `shouldAddViewToDom`
 - `packages/core/src/render3/view_ref.ts` — 390 lines
@@ -2229,6 +2239,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - const enum: `AfterRenderPhase`
   - interface: `AfterRenderRef`
 - `packages/core/src/render3/after_render/hooks.ts` — 473 lines
+  - type: `ɵFirstAvailable`
   - interface: `AfterRenderOptions`
   - function: `afterEveryRender`, `afterEveryRender`, `afterEveryRender`, `afterNextRender`, `afterNextRender`, `afterNextRender`
   - const: `NOOP_AFTER_RENDER_REF`
@@ -2253,6 +2264,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - type: `InjectorProfilerEvent`
   - function: `getInjectorProfilerContext`, `setInjectorProfilerContext`, `setInjectorProfiler`, `injectorProfiler`, `emitProviderConfiguredEvent`, `emitInjectorToCreateInstanceEvent`, `emitInstanceCreatedByInjectorEvent`, `emitInjectEvent`, `emitEffectCreatedEvent`, `emitAfterRenderEffectPhaseCreatedEvent`, `runInInjectorProfilerContext`
 - `packages/core/src/render3/debug/set_debug_info.ts` — 27 lines
+  - function: `ɵsetClassDebugInfo`
 - `packages/core/src/render3/debug/special_providers.ts` — 28 lines
   - function: `registerSpecialProvider`, `getAllSpecialProviders`
 
@@ -2270,13 +2282,18 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 ## `packages/core/src/render3/features/`
 
 - `packages/core/src/render3/features/control_feature.ts` — 25 lines
+  - function: `ɵɵControlFeature`
 - `packages/core/src/render3/features/external_styles_feature.ts` — 43 lines
+  - function: `ɵɵExternalStylesFeature`
 - `packages/core/src/render3/features/host_directives_feature.ts` — 346 lines
+  - function: `ɵɵHostDirectivesFeature`
 - `packages/core/src/render3/features/inherit_definition_feature.ts` — 229 lines
-  - function: `getSuperType`
+  - function: `getSuperType`, `ɵɵInheritDefinitionFeature`
 - `packages/core/src/render3/features/ng_onchanges_feature.ts` — 142 lines
+  - const: `ɵɵNgOnChangesFeature`
   - function: `getNgOnChangesFeatureImpl`
 - `packages/core/src/render3/features/providers_feature.ts` — 59 lines
+  - function: `ɵɵProvidersFeature`
 
 
 
@@ -2307,7 +2324,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 ## `packages/core/src/render3/instructions/`
 
 - `packages/core/src/render3/instructions/advance.ts` — 85 lines
-  - function: `selectIndexInternal`
+  - function: `ɵɵadvance`, `selectIndexInternal`
 - `packages/core/src/render3/instructions/all.ts` — 68 lines
   - re-exports * from `../../defer/instructions`
   - re-exports * from `./advance`
@@ -2345,63 +2362,83 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - re-exports * from `./arrow_function`
   - exports `ɵgetUnknownElementStrictMode`, `ɵgetUnknownPropertyStrictMode`, `ɵsetUnknownElementStrictMode`, `ɵsetUnknownPropertyStrictMode` from `./element_validation`
 - `packages/core/src/render3/instructions/animation.ts` — 527 lines
-  - function: `runEnterAnimation`
+  - function: `ɵɵanimateEnter`, `runEnterAnimation`, `ɵɵanimateEnterListener`, `ɵɵanimateLeave`, `ɵɵanimateLeaveListener`
 - `packages/core/src/render3/instructions/aria_property.ts` — 57 lines
+  - function: `ɵɵariaProperty`
 - `packages/core/src/render3/instructions/arrow_function.ts` — 34 lines
+  - function: `ɵɵarrowFunction`
 - `packages/core/src/render3/instructions/attach_source_locations.ts` — 48 lines
+  - function: `ɵɵattachSourceLocations`
 - `packages/core/src/render3/instructions/attribute.ts` — 43 lines
+  - function: `ɵɵattribute`
 - `packages/core/src/render3/instructions/change_detection.ts` — 567 lines
   - const: `MAXIMUM_REFRESH_RERUNS`
   - function: `detectChangesInternal`, `checkNoChangesInternal`, `refreshView`
   - const enum: `ChangeDetectionMode`
 - `packages/core/src/render3/instructions/component_instance.ts` — 25 lines
+  - function: `ɵɵcomponentInstance`
 - `packages/core/src/render3/instructions/control.ts` — 394 lines
-  - function: `controlCreateInternal`, `controlUpdateInternal`
+  - function: `ɵɵcontrolCreate`, `controlCreateInternal`, `ɵɵcontrol`, `controlUpdateInternal`
 - `packages/core/src/render3/instructions/control_flow.ts` — 634 lines
+  - function: `ɵɵconditionalCreate`, `ɵɵconditionalBranchCreate`, `ɵɵconditional`, `ɵɵrepeaterTrackByIndex`, `ɵɵrepeaterTrackByIdentity`, `ɵɵrepeaterCreate`, `ɵɵrepeater`
   - class: `RepeaterContext`
 - `packages/core/src/render3/instructions/di.ts` — 86 lines
+  - function: `ɵɵdirectiveInject`, `ɵɵdirectiveInject`, `ɵɵdirectiveInject`, `ɵɵinvalidFactory`
 - `packages/core/src/render3/instructions/di_attr.ts` — 19 lines
+  - function: `ɵɵinjectAttribute`
 - `packages/core/src/render3/instructions/dom_property.ts` — 88 lines
+  - function: `ɵɵdomProperty`, `ɵɵsyntheticHostProperty`
 - `packages/core/src/render3/instructions/element.ts` — 390 lines
-  - function: `enableLocateOrCreateElementNodeImpl`
+  - function: `ɵɵelementStart`, `ɵɵelementEnd`, `ɵɵelement`, `ɵɵdomElementStart`, `ɵɵdomElementEnd`, `ɵɵdomElement`, `enableLocateOrCreateElementNodeImpl`
 - `packages/core/src/render3/instructions/element_container.ts` — 274 lines
-  - function: `enableLocateOrCreateElementContainerNodeImpl`
+  - function: `ɵɵelementContainerStart`, `ɵɵelementContainerEnd`, `ɵɵelementContainer`, `ɵɵdomElementContainerStart`, `ɵɵdomElementContainerEnd`, `ɵɵdomElementContainer`, `enableLocateOrCreateElementContainerNodeImpl`
 - `packages/core/src/render3/instructions/element_validation.ts` — 321 lines
-  - function: `validateElementIsKnown`, `isPropertyValid`, `handleUnknownPropertyError`, `reportUnknownPropertyError`, `getDeclarationComponentDef`, `isHostComponentStandalone`, `getTemplateLocationDetails`, `matchingSchemas`
+  - function: `ɵsetUnknownElementStrictMode`, `ɵgetUnknownElementStrictMode`, `ɵsetUnknownPropertyStrictMode`, `ɵgetUnknownPropertyStrictMode`, `validateElementIsKnown`, `isPropertyValid`, `handleUnknownPropertyError`, `reportUnknownPropertyError`, `getDeclarationComponentDef`, `isHostComponentStandalone`, `getTemplateLocationDetails`, `matchingSchemas`
   - const: `KNOWN_CONTROL_FLOW_DIRECTIVES`
 - `packages/core/src/render3/instructions/foreign_component.ts` — 252 lines
+  - function: `ɵɵforeignComponent`, `ɵɵforeignContent`, `ɵɵforeignContentFn`
 - `packages/core/src/render3/instructions/get_current_view.ts` — 23 lines
+  - function: `ɵɵgetCurrentView`
 - `packages/core/src/render3/instructions/i18n.ts` — 218 lines
+  - function: `ɵɵi18nStart`, `ɵɵi18nEnd`, `ɵɵi18n`, `ɵɵi18nAttributes`, `ɵɵi18nExp`, `ɵɵi18nApply`, `ɵɵi18nPostprocess`
 - `packages/core/src/render3/instructions/interpolation.ts` — 313 lines
   - function: `interpolationV`, `interpolation1`, `interpolation2`, `interpolation3`, `interpolation4`, `interpolation5`, `interpolation6`, `interpolation7`, `interpolation8`
 - `packages/core/src/render3/instructions/let_declaration.ts` — 72 lines
+  - function: `ɵɵdeclareLet`, `ɵɵstoreLet`, `ɵɵreadContextLet`
 - `packages/core/src/render3/instructions/listener.ts` — 180 lines
-  - function: `listenerInternal`
+  - function: `ɵɵlistener`, `ɵɵsyntheticHostListener`, `ɵɵdomListener`, `listenerInternal`
 - `packages/core/src/render3/instructions/mark_view_dirty.ts` — 53 lines
   - function: `markViewDirty`
 - `packages/core/src/render3/instructions/namespace.ts` — 10 lines
   - exports `ɵɵnamespaceHTML`, `ɵɵnamespaceMathML`, `ɵɵnamespaceSVG` from `../state`
 - `packages/core/src/render3/instructions/next_context.ts` — 25 lines
+  - function: `ɵɵnextContext`
 - `packages/core/src/render3/instructions/projection.ts` — 226 lines
-  - function: `matchingProjectionSlotIndex`
+  - function: `matchingProjectionSlotIndex`, `ɵɵprojectionDef`, `ɵɵprojection`
 - `packages/core/src/render3/instructions/property.ts` — 68 lines
-  - function: `setDirectiveInputsWhichShadowsStyling`
+  - function: `ɵɵproperty`, `setDirectiveInputsWhichShadowsStyling`
 - `packages/core/src/render3/instructions/queries.ts` — 106 lines
+  - function: `ɵɵcontentQuery`, `ɵɵviewQuery`, `ɵɵqueryRefresh`, `ɵɵloadQuery`
 - `packages/core/src/render3/instructions/queries_signals.ts` — 73 lines
+  - function: `ɵɵcontentQuerySignal`, `ɵɵviewQuerySignal`, `ɵɵqueryAdvance`
 - `packages/core/src/render3/instructions/render.ts` — 163 lines
   - function: `renderComponent`, `syncViewWithBlueprint`, `renderView`
 - `packages/core/src/render3/instructions/shared.ts` — 830 lines
   - function: `executeTemplate`, `createDirectivesInstances`, `saveResolvedLocalsInData`, `locateHostElement`, `applyRootElementTransform`, `applyRootElementTransformImpl`, `enableApplyRootElementTransformImpl`, `setPropertyAndInputs`, `setDomProperty`, `markDirtyIfOnPush`, `setNgReflectProperties`, `invokeDirectivesHostBindings`, `invokeHostBindingsInCreationMode`, `findDirectiveDefMatches`, `elementAttributeInternal`, `setElementAttribute`, `elementLikeStartShared`, `elementLikeEndShared`, `storePropertyBindingMetadata`, `loadComponentRenderer`, `handleUncaughtError`, `setAllInputsForProperty`, `setDirectiveInput`
 - `packages/core/src/render3/instructions/storage.ts` — 26 lines
+  - function: `ɵɵreference`
 - `packages/core/src/render3/instructions/styling.ts` — 1056 lines
-  - function: `styleStringParser`, `classStringParser`, `checkStylingProperty`, `checkStylingMap`, `wrapInStaticStylingKey`, `toStylingKeyValueArray`, `styleKeyValueArraySet`, `classKeyValueArraySet`, `hasStylingInputShadow`
+  - function: `ɵɵstyleProp`, `ɵɵclassProp`, `ɵɵstyleMap`, `styleStringParser`, `ɵɵclassMap`, `classStringParser`, `checkStylingProperty`, `checkStylingMap`, `wrapInStaticStylingKey`, `toStylingKeyValueArray`, `styleKeyValueArraySet`, `classKeyValueArraySet`, `hasStylingInputShadow`
 - `packages/core/src/render3/instructions/template.ts` — 412 lines
-  - function: `declareNoDirectiveHostTemplate`, `enableLocateOrCreateContainerAnchorImpl`
+  - function: `declareNoDirectiveHostTemplate`, `ɵɵtemplate`, `ɵɵdomTemplate`, `enableLocateOrCreateContainerAnchorImpl`
 - `packages/core/src/render3/instructions/text.ts` — 97 lines
-  - function: `enableLocateOrCreateTextNodeImpl`
+  - function: `ɵɵtext`, `enableLocateOrCreateTextNodeImpl`
 - `packages/core/src/render3/instructions/text_interpolation.ts` — 468 lines
+  - function: `ɵɵtextInterpolate`, `ɵɵtextInterpolate1`, `ɵɵtextInterpolate2`, `ɵɵtextInterpolate3`, `ɵɵtextInterpolate4`, `ɵɵtextInterpolate5`, `ɵɵtextInterpolate6`, `ɵɵtextInterpolate7`, `ɵɵtextInterpolate8`, `ɵɵtextInterpolateV`
 - `packages/core/src/render3/instructions/two_way.ts` — 87 lines
+  - function: `ɵɵtwoWayProperty`, `ɵɵtwoWayBindingSet`, `ɵɵtwoWayListener`
 - `packages/core/src/render3/instructions/value_interpolation.ts` — 330 lines
+  - function: `ɵɵinterpolate`, `ɵɵinterpolate1`, `ɵɵinterpolate2`, `ɵɵinterpolate3`, `ɵɵinterpolate4`, `ɵɵinterpolate5`, `ɵɵinterpolate6`, `ɵɵinterpolate7`, `ɵɵinterpolate8`, `ɵɵinterpolateV`
 - `packages/core/src/render3/instructions/write_to_directive_input.ts` — 73 lines
   - function: `writeToDirectiveInput`
 
@@ -2449,7 +2486,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - type: `CssSelector`, `CssSelectorList`, `ProjectionSlots`
   - const enum: `SelectorFlags`
 - `packages/core/src/render3/interfaces/public_definitions.ts` — 121 lines
-  - type: `CtorDependency`
+  - type: `ɵɵDirectiveDeclaration`, `ɵɵComponentDeclaration`, `ɵɵNgModuleDeclaration`, `ɵɵPipeDeclaration`, `ɵɵInjectorDeclaration`, `ɵɵFactoryDeclaration`, `CtorDependency`
 - `packages/core/src/render3/interfaces/query.ts` — 254 lines
   - interface: `TQueryMetadata`, `TQuery`, `TQueries`, `LQuery`, `LQueries`
   - const enum: `QueryFlags`
@@ -2492,6 +2529,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 - `packages/core/src/render3/jit/module_patch.ts` — 12 lines
   - function: `patchModuleCompilation`
 - `packages/core/src/render3/jit/partial.ts` — 231 lines
+  - function: `ɵɵngDeclareDirective`, `ɵɵngDeclareClassMetadata`, `ɵɵngDeclareClassMetadataAsync`, `ɵɵngDeclareComponent`, `ɵɵngDeclareFactory`, `ɵɵngDeclareInjectable`, `ɵɵngDeclareInjector`, `ɵɵngDeclareNgModule`, `ɵɵngDeclarePipe`, `ɵɵngDeclareService`
   - exports `FactoryTarget` from `../../compiler/compiler_facade`
 - `packages/core/src/render3/jit/pipe.ts` — 79 lines
   - function: `compilePipe`
@@ -2517,6 +2555,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 - `packages/core/src/render3/reactivity/after_render_effect.ts` — 457 lines
   - interface: `AfterRenderPhaseEffectNode`
   - class: `AfterRenderEffectSequence`
+  - type: `ɵFirstAvailableSignal`
   - function: `afterRenderEffect`, `afterRenderEffect`, `afterRenderEffect`
 - `packages/core/src/render3/reactivity/api.ts` — 58 lines
   - type: `Signal`, `ValueEqualityFn`
@@ -2538,8 +2577,9 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - interface: `SchedulableEffect`
   - class: `EffectScheduler`, `ZoneAwareEffectScheduler`
 - `packages/core/src/render3/reactivity/signal.ts` — 100 lines
+  - const: `ɵWRITABLE_SIGNAL`
   - interface: `WritableSignal`, `CreateSignalOptions`
-  - function: `signal`, `signalAsReadonlyFn`
+  - function: `ɵunwrapWritableSignal`, `signal`, `signalAsReadonlyFn`
 - `packages/core/src/render3/reactivity/untracked.ts` — 19 lines
   - function: `untracked`
 - `packages/core/src/render3/reactivity/view_effect_runner.ts` — 44 lines
@@ -2587,8 +2627,8 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 - `packages/core/src/render3/util/injector_utils.ts` — 63 lines
   - function: `hasParentInjector`, `getParentInjectorIndex`, `getParentInjectorViewOffset`, `getParentInjectorView`
 - `packages/core/src/render3/util/misc_utils.ts` — 61 lines
+  - function: `ɵɵresolveWindow`, `ɵɵresolveDocument`, `ɵɵresolveBody`, `maybeUnwrapFn`
   - const: `INTERPOLATION_DELIMITER`
-  - function: `maybeUnwrapFn`
 - `packages/core/src/render3/util/signal_debug.ts` — 197 lines
   - function: `getSignalGraph`
 - `packages/core/src/render3/util/stringify_utils.ts` — 65 lines
@@ -2664,7 +2704,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - function: `getInertBodyHelper`, `isDOMParserAvailable`
   - interface: `InertBodyHelper`
 - `packages/core/src/sanitization/sanitization.ts` — 415 lines
-  - function: `getUrlSanitizer`, `validateAgainstEventProperties`
+  - function: `ɵɵsanitizeHtml`, `ɵɵsanitizeStyle`, `ɵɵsanitizeUrl`, `ɵɵsanitizeResourceUrl`, `ɵɵsanitizeScript`, `ɵɵtrustConstantHtml`, `ɵɵtrustConstantResourceUrl`, `getUrlSanitizer`, `ɵɵsanitizeUrlOrResourceUrl`, `validateAgainstEventProperties`, `ɵɵvalidateAttribute`
 - `packages/core/src/sanitization/sanitizer.ts` — 28 lines
   - class: `Sanitizer`
 - `packages/core/src/sanitization/url_sanitizer.ts` — 49 lines

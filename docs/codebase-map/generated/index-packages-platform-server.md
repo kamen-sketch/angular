@@ -25,6 +25,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 ## `packages/platform-server/init/`
 
 - `packages/platform-server/init/index.ts` — 13 lines
+  - const: `ɵɵmoduleMarker`
 
 
 

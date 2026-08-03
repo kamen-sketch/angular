@@ -41,6 +41,7 @@ in the index for its package.
 | 16  | [`adev`](./16-adev.md)                                                     | angular.dev: the app, the content, the docs pipeline                                        |
 | 17  | [Tooling and infrastructure](./17-tooling-and-infrastructure.md)           | Bazel, goldens, benchmarks, integration tests, CI, repo conventions                         |
 | 18  | [Cross-cutting flows](./18-cross-cutting-flows.md)                         | five end-to-end traces that span packages                                                   |
+| 19  | [Layering and contracts](./19-layering-and-contracts.md)                   | the package dependency DAG and the 211-symbol compiler→runtime contract                     |
 
 Start with [01](./01-repo-layout.md) if you are new to the repository, or with
 [18](./18-cross-cutting-flows.md) if you already know roughly where things live and need to follow
@@ -68,6 +69,25 @@ regular expressions rather than a parser, which is reliable here because all sou
 Prettier-formatted with top-level declarations at column 0; the trade-off is that it indexes
 declared exports, not the full type signatures. For signatures, use the API goldens in
 [`goldens/public-api/`](../../goldens/public-api), which are checked against the built `.d.ts` in CI.
+
+## Derived analyses
+
+```bash
+node docs/codebase-map/tools/analyze-contracts.mjs
+```
+
+[`tools/analyze-contracts.mjs`](./tools/analyze-contracts.mjs) derives two things that cannot be
+read off the directory structure and writes them to `generated/`:
+
+- [`package-dependencies.md`](./generated/package-dependencies.md) — every cross-package import,
+  split by the area doing the importing (runtime / schematics / testing / tools) and by kind
+  (value / `import type` / dynamic), plus the runtime-only layering;
+- [`instruction-contract.md`](./generated/instruction-contract.md) — every symbol the compiler may
+  emit a reference to, resolved to the file in `packages/core` that declares it.
+
+The script exits non-zero if an emitted symbol has no declaration in `core`, i.e. if the compiler
+could generate a call into a runtime symbol that does not exist.
+[19](./19-layering-and-contracts.md) reads the results.
 
 ## Keeping the hand-written half honest
 

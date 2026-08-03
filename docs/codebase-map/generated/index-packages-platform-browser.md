@@ -47,6 +47,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - exports `provideAnimationsAsync` from `./providers`
 - `packages/platform-browser/animations/async/src/async_animation_renderer.ts` — 329 lines
   - class: `AsyncAnimationRendererFactory`, `DynamicDelegationRenderer`
+  - const: `ɵASYNC_ANIMATION_LOADING_SCHEDULER_FN`
 - `packages/platform-browser/animations/async/src/private_export.ts` — 13 lines
   - exports `AsyncAnimationRendererFactory as ɵAsyncAnimationRendererFactory`, `ɵASYNC_ANIMATION_LOADING_SCHEDULER_FN` from `./async_animation_renderer`
 - `packages/platform-browser/animations/async/src/providers.ts` — 80 lines
