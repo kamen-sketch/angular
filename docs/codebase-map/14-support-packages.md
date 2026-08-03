@@ -52,6 +52,7 @@ Compilable, testable example applications, one directory per documented area (`c
 `forms/`, `http/`, `router/`, `upgrade/`, `testing/`, `platform-browser/`, `service-worker/`,
 `injection-token/`). The code snippets embedded in the API reference on angular.dev are extracted
 from these files by region markers, so they are guaranteed to compile and are covered by e2e tests.
+`test-utils/` holds the shared e2e assertion helpers (`verifyNoBrowserErrors`) those tests use.
 
 ## 6. `packages/docs`
 

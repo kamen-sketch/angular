@@ -66,6 +66,8 @@ and the runner waits for zone stability.
 
 `bundles.bzl`/`tools.bzl` and the many `rollup-*.ts` files define the shipped bundle set — each
 `rollup-*.ts` is a thin entry point that pulls in exactly one patch so consumers can opt in
-(`zone.js/plugins/*`). `file-size-limit.json` + `check-file-size.js` guard bundle size in CI.
+(`zone.js/plugins/*`). `bundles/` and `fesm2015/` contain no sources: they are Bazel-only
+directories whose `BUILD.bazel` calls `generate_dist` to emit the published bundle formats from
+those entry points. `file-size-limit.json` + `check-file-size.js` guard bundle size in CI.
 Documentation for the patched API surface lives alongside the code in `STANDARD-APIS.md`,
 `NON-STANDARD-APIS.md`, `MODULE.md` and `DEVELOPER.md`.

@@ -121,6 +121,10 @@ destruction — the biggest file in `render3/`), `dom_node_manipulation.ts`, `tn
 `node_selector_matcher.ts` (CSS selector matching for directives), `pure_function.ts` (the
 `ɵɵpureFunction*` memoisation slots), `pipe.ts`, `hooks.ts`, `di.ts` (node injector),
 `definition.ts` (`ɵɵdefineComponent` & friends), `component_ref.ts`, `view_ref.ts`, `hmr.ts`.
+`deps_tracker/` holds the `DepsTracker` singleton that answers "which directives and pipes are in
+scope for this component" at runtime — the transitive NgModule scope, the standalone component
+scope, and their caches. It is what makes local (per-file) compilation and HMR possible, since in
+those modes the scope cannot be baked into the definition at build time.
 
 ## 4. Change detection
 
@@ -250,7 +254,44 @@ The decorator-based metadata (`@Component`, `@Directive`, `@Input`, `@NgModule`,
 `src/metadata/`, and `src/render3/jit/` compiles it at runtime when AOT output is not available
 (`jit/directive.ts`, `jit/module.ts`, `jit/injectable.ts`, `jit/environment.ts`).
 
-## 8. Deferred loading and hydration
+## 8. Three algorithms worth reading in full
+
+These are the parts of the runtime where the data layout _is_ the algorithm, and where reading the
+code without knowing the encoding is unproductive.
+
+**Styling (`instructions/styling.ts`, `interfaces/styling.ts`).** The problem it solves is
+priority: a class can be set by a static `class="…"` attribute, by `[class.x]`, by `[class]`, and
+by any number of directive host bindings, and the winner must be stable regardless of the order
+instructions happen to run in. The solution is a linked list threaded through `TData`, where each
+styling binding stores a `TStylingKey` — a property name for `ɵɵstyleProp`/`ɵɵclassProp`, `null`
+for a map binding (`ɵɵstyleMap`/`ɵɵclassMap`), or `false` for a binding that must be ignored
+because a directive shadows the `class`/`style` input. Static values are folded into the key as a
+`TStylingStatic` `KeyValueArray` so the list can be walked without a separate lookup. On the first
+update pass `stylingFirstUpdatePass` inserts the binding into the list at the right priority
+(`wrapInStaticStylingKey`, `collectStylingFromDirectives`, `collectStylingFromTAttrs`); afterwards
+`checkStylingProperty`/`checkStylingMap` only diff values, and `findStylingValue` walks the list to
+decide which binding currently owns a property before `updateStyling` touches the DOM.
+
+**Lifecycle hooks (`render3/hooks.ts`).** Hooks are not stored per directive instance; they are
+flattened into number/function pairs in `TView.preOrderHooks`, `contentHooks`, `viewHooks` and
+their `*CheckHooks` variants (`HookData`/`DestroyHookData` in `interfaces/view.ts`). Even indices
+are the `LView` index of the context to call the hook on, odd indices the function.
+`registerPreOrderHooks`/`registerPostOrderHooks` build these arrays during the first create pass.
+At runtime `executeInitAndCheckHooks` runs init hooks exactly once by tracking a two-bit init phase
+in `LView[FLAGS]` (`InitPhaseState`: OnInit → AfterContentInit → AfterViewInit → completed) and
+advancing it with `incrementInitPhaseFlags`; once the phase completes, only `executeCheckHooks`
+runs. This is why `ngOnInit` cannot re-run and why hook ordering is a property of the `TView`,
+not of the directive.
+
+**Queries (`render3/queries/`).** `query.ts` holds the `TQueries`/`LQueries` pair — again a
+static/instance split, so the matching predicates are computed once per template.
+`query_execution.ts` implements the decorator-based `@ViewChild`/`@ContentChildren` refresh that
+`refreshView` calls (`refreshContentQueries`, `executeViewQueryFn`), materialising results into
+`QueryList`s. `query_reactive.ts` implements the signal-based `viewChild()`/`contentChildren()`:
+the results are a computed signal whose dirtiness is driven by the same query bookkeeping, which is
+why signal queries do not need `QueryList.changes` subscriptions.
+
+## 9. Deferred loading and hydration
 
 **`src/defer/`** implements `@defer`. `instructions.ts` holds the `ɵɵdefer*` instructions;
 `interfaces.ts` defines `TDeferBlockDetails`/`LDeferBlockDetails` and `DeferBlockState`
@@ -270,7 +311,7 @@ the event-dispatch primitives), `i18n.ts`, and `incremental_runtime.ts` (hydrate
 `packages/core/primitives/event-dispatch/` is the standalone early-event-contract library that
 records events before the app bootstraps.
 
-## 9. Rendering-adjacent subsystems
+## 10. Rendering-adjacent subsystems
 
 - `src/render3/i18n/` — `i18nApply` op-code interpreter, ICU handling, `i18n_parse.ts`,
   `i18n_postprocess.ts`; `src/i18n/` holds locale data plumbing (`locale_data_api.ts`, `locale_en.ts`).
@@ -295,7 +336,7 @@ records events before the app bootstraps.
   stability signal SSR and `whenStable` rely on.
 - `src/profiler.ts` + `render3/profiler.ts` — the `ProfilerEvent` hooks DevTools consumes.
 
-## 10. Testing surface
+## 11. Testing surface
 
 `testing/src/` is the `@angular/core/testing` entry point: `test_bed.ts` (`TestBed`), the
 `TestBedCompiler` that recompiles overridden components, `component_fixture.ts`
@@ -306,7 +347,7 @@ records events before the app bootstraps.
 `packages/private/testing/` holds internal-only helpers (`useAutoTick`, `timeout`) that
 `AGENTS.md` points at for zoneless, async-first tests.
 
-## 11. Reading paths
+## 12. Reading paths
 
 - **"What happens on bootstrap?"** `bootstrapApplication` (defined in
   [`packages/platform-browser/src/browser.ts`](../../packages/platform-browser/src/browser.ts), not in

@@ -84,5 +84,8 @@ Internals:
   `array.ts`.
 - `signals/src/webmcp/` — exposes forms as Model-Context-Protocol tools (`registration.ts`,
   `tokens.ts`), pairing with `core`'s `src/webmcp/`.
-- `signals/src/compat/` + `signals/compat/` + `signals/src/controls/interop_ng_control.ts` —
-  interop so a signal form can drive a classic `ControlValueAccessor` and vice versa.
+- `signals/src/compat/validation_errors.ts`, `signals/src/controls/interop_ng_control.ts` and the
+  `@angular/forms/signals/compat` entry point (whose implementation is
+  `signals/compat/src/signal_form_control/signal_form_control.ts`) — interop, so a signal form can
+  drive a classic `ControlValueAccessor`, and a signal field can be consumed where an
+  `AbstractControl` is expected.

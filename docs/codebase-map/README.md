@@ -69,6 +69,20 @@ Prettier-formatted with top-level declarations at column 0; the trade-off is tha
 declared exports, not the full type signatures. For signatures, use the API goldens in
 [`goldens/public-api/`](../../goldens/public-api), which are checked against the built `.d.ts` in CI.
 
+## Keeping the hand-written half honest
+
+```bash
+node docs/codebase-map/tools/check-coverage.mjs
+```
+
+[`tools/check-coverage.mjs`](./tools/check-coverage.mjs) lists every subsystem directory that no
+map document mentions, and exits non-zero if there are any. "Subsystem" means a directory at depth
+one or two below `packages/`, `devtools/`, `adev/`, `modules/` or `tools/`, plus the direct
+children of each package's `src/` — the level the maps promise to explain. Anything deeper is left
+to the generated index. As of this commit the checker reports no gaps; when it reports one, either
+add a sentence about the new directory to the relevant map or, if it is a collection of leaves with
+no architecture of its own, add its name to `IGNORED_NAMES` in the script.
+
 ## Conventions used in the maps
 
 - Paths are given relative to the repository root, so they can be pasted into an editor directly.

@@ -44,7 +44,9 @@ image origin, `preload-link-creator.ts` emits `<link rel=preload>` for priority 
 ## 3. Locale data and formatting (`src/i18n/`)
 
 `locale_data.ts` + `locale_data_api.ts` expose the generated CLDR data (`packages/common/locales/`
-holds one generated file per locale plus `global/` variants); `format_date.ts` and
+holds one generated file per locale plus `global/` variants; those files are produced by
+`locales/generate-locales-tool/`, which reads the CLDR data set and emits the per-locale modules,
+the closure locale file and the currency tables); `format_date.ts` and
 `format_number.ts` implement `formatDate`/`formatNumber`/`formatCurrency`/`formatPercent` used by
 the pipes; `currencies.ts` carries the currency symbol/digit table; `localization.ts` defines
 `NgLocalization` and its default plural-rule implementation.

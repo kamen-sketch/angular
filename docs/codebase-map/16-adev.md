@@ -73,6 +73,9 @@ A component library used by both angular.dev and other Angular-team sites:
 
 ## 5. Site configuration
 
-`angular.json`, `firebase.json` (hosting and redirects), `tailwind.config.js`, the three
-`tsconfig*.json` files, and `adev/scripts/` for build/deploy helpers. `adev/src/llms.txt` and
+`angular.json`, `firebase.json` (hosting and redirects), `tailwind.config.js` and the three
+`tsconfig*.json` files. `adev/scripts/` holds the out-of-band maintenance jobs:
+`synonyms/` regenerates the Algolia search synonym list, and `update-cross-repo-docs/` pulls
+documentation assets from the CLI, CDK and Material repositories into this one (it is what the
+`cross-repo-adev-docs.yml` workflow runs). `adev/src/llms.txt` and
 `robots.txt` control machine access to the site.

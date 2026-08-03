@@ -82,4 +82,6 @@ against the real extension, against the demo app, and in tests.
 - `devtools/src/` — the standalone dev harness that hosts the panel UI next to a demo app in an
   iframe, so the extension can be developed without reloading a browser extension.
 - `devtools/cypress/` — end-to-end tests driving the harness.
-- `devtools/tools/` — build helpers.
+- `devtools/tools/angular-optimization/` — the esbuild plugin used when bundling the extension,
+  plus `ensure-no-linker-decl.mjs`, which fails the build if any partially-compiled
+  `ɵɵngDeclare*` call survives into the shipped bundle (the extension ships without the linker).

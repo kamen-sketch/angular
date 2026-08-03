@@ -24,7 +24,10 @@ changed repo-wide in one place.
 `tsec.bzl` (Trusted Types security checks — see `packages/tsec-exemption.json`),
 `node_loader/`, and `rules_angular_store/`.
 `tools/ng_benchmark.bzl` defines benchmark targets; `tools/symbol-extractor/` implements the
-payload-size golden tests that assert which symbols survive tree shaking; `tools/manual_api_docs/`
+payload-size golden tests that assert which symbols survive tree shaking (its
+`symbol_extractor_spec/` directory holds paired `.js`/`.json` fixtures — an input bundle and the
+symbol list it must extract); `tools/gulp-tasks/` is a single leftover task
+(`changelog-zonejs.js`) that generates the zone.js changelog; `tools/manual_api_docs/`
 generates API-doc JSON for things that are not TypeScript symbols (control-flow **blocks** like
 `@if`/`@defer` and built-in **elements** like `<ng-content>`); `tools/testing/` holds the browser
 test bootstrap; `tools/tslint/` holds custom lint rules.
