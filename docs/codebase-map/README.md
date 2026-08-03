@@ -43,6 +43,7 @@ in the index for its package.
 | 18  | [Cross-cutting flows](./18-cross-cutting-flows.md)                         | five end-to-end traces that span packages                                                   |
 | 19  | [Layering and contracts](./19-layering-and-contracts.md)                   | the package dependency DAG and the 211-symbol compiler→runtime contract                     |
 | 20  | [Error codes](./20-error-codes.md)                                         | the two `NG…` code spaces, their conventions, and the full catalogue                        |
+| 21  | [The public API surface](./21-api-surface.md)                              | the two records of the API, SemVer coverage, stability tiers and deprecations               |
 
 Start with [01](./01-repo-layout.md) if you are new to the repository, or with
 [18](./18-cross-cutting-flows.md) if you already know roughly where things live and need to follow
@@ -103,6 +104,14 @@ It found one real defect — a negative value in the compile-time enum that made
 under the wrong code — which is now fixed; see [20 §3](./20-error-codes.md). A second, related
 defect it surfaced is documented in [20 §4](./20-error-codes.md) and left open, because fixing it
 changes the message text of eight existing errors.
+
+```bash
+node docs/codebase-map/tools/analyze-api-surface.mjs
+```
+
+[`tools/analyze-api-surface.mjs`](./tools/analyze-api-surface.mjs) measures the public API from the
+goldens and the stability tags in source into [`api-surface.md`](./generated/api-surface.md), and
+fails if a symbol claims two stability tiers at once. [21](./21-api-surface.md) reads the results.
 
 ## Keeping the hand-written half honest
 
