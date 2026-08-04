@@ -1152,6 +1152,83 @@ Reachability therefore splits:
 The fix does not need the escape table: `rawIndex` can be derived rather than tracked, or the raw
 string consulted only at the candidate terminator.
 
+### 37. Every tools translation bundle is a plain object keyed by message id — `open`
+
+`packages/localize/src/utils/src/translations.ts:58`
+
+```js
+let translation = translations[message.id];
+if (message.legacyIds !== undefined) {
+  for (let i = 0; i < message.legacyIds.length && translation === undefined; i++) {
+    translation = translations[message.legacyIds[i]];
+  }
+}
+if (translation === undefined) {
+  throw new MissingTranslationError(message);
+}
+```
+
+The key is a message id — a developer's `@@custom-id`, or an `id` attribute read verbatim out of a
+translation file. The container is whatever the caller passed. The runtime builds it safely:
+
+```js
+// packages/localize/src/translate.ts:74
+$localize.TRANSLATIONS = Object.create(null);
+```
+
+with a comment explaining exactly why. Every parser in the tools package does not:
+
+| File                                 | Line                              |
+| ------------------------------------ | --------------------------------- |
+| `xliff1_translation_parser.ts`       | `:58`, `:78` — `translations: {}` |
+| `xliff2_translation_parser.ts`       | `:68`                             |
+| `xtb_translation_parser.ts`          | `:56`                             |
+| `arb_translation_parser.ts`          | `:77`                             |
+| `source_file_translation_handler.ts` | `:97`                             |
+
+Run against the real `translate`, one bundle of each kind, all three consequences reproduce:
+
+```
+--- read side: does a lookup for an inherited name miss? ---
+  constructor      tools {}: function <- FOUND        Object.create(null): undefined (ok)
+  toString         tools {}: function <- FOUND        Object.create(null): undefined (ok)
+  __proto__        tools {}: object   <- FOUND        Object.create(null): undefined (ok)
+
+--- what translate() does with id "constructor" ---
+  tools {}             TypeError (wrong): Cannot read properties of undefined (reading 'map')
+  Object.create(null)  MissingTranslationError (correct)
+
+--- write side: storing under "__proto__" ---
+  tools {}             stored as own key: false | readable back: false
+  Object.create(null)  stored as own key: true  | readable back: true
+
+--- duplicate detection (xliff1:128) ---
+  first sighting of real-id        -> accepted (ok)
+  first sighting of constructor    -> reported as DUPLICATE (wrong)
+  first sighting of toString       -> reported as DUPLICATE (wrong)
+```
+
+Three distinct failures, in increasing order of how badly they end:
+
+1. **Lookup finds a function.** `translations['constructor']` returns `Object.prototype.constructor`,
+   which is not `undefined`, so the guard at `:65` passes and `translation.placeholderNames.map`
+   throws a `TypeError` in place of the `MissingTranslationError` the caller handles. That handler
+   is `source_file_utils.ts:430`, which routes a missing translation to the configured
+   `missingTranslation` strategy — warn, error or ignore — so a build that was configured to
+   tolerate missing translations crashes instead.
+2. **Writes under `__proto__` vanish.** `bundle.translations[id] = translation`
+   (`xliff1_translation_parser.ts:167`) assigns through the inherited setter, reparenting the bundle
+   rather than storing the entry. No error, and the translation is simply absent afterwards.
+3. **A first sighting is reported as a duplicate.** `if (bundle.translations[id] !== undefined)`
+   (`:128`) is true on the very first `<trans-unit id="constructor">`, and the resulting
+   `ParseErrorLevel.ERROR` makes `TranslationLoader.loadBundle` throw
+   (`translation_loader.ts:78-82`). The whole translation file is rejected with
+   `Duplicated translations for message "constructor"` for a message that appears exactly once.
+
+This is the third instance of the same hazard in this review — see finding 15 for the jsaction parse
+cache, and `translate.ts:74` for the one place it is handled deliberately. The ids involved are
+ordinary English words, so no adversary is required; `@@constructor` is a plausible thing to type.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
