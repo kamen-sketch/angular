@@ -941,6 +941,57 @@ entities are not double-escaped — `<script>&"'` renders as `&lt;script&gt;&amp
 confirmed against the real function. The one `rawText` escape bypass (`xmb:46`) writes a constant
 DOCTYPE.
 
+### 33. A shared XML helper reports every format as XLIFF 1.2 — `open`
+
+`packages/localize/tools/src/translate/translation_files/translation_parsers/translation_utils.ts:130`
+
+```js
+if (rootElements.length > 1) {
+  xml.errors.push(
+    new ParseError(
+      xml.rootNodes[1].sourceSpan,
+      'Unexpected root node. XLIFF 1.2 files should only have a single <xliff> root node.',
+      ParseErrorLevel.WARNING,
+    ),
+  );
+}
+```
+
+`canParseXml` is a generic helper parameterised by `rootNodeName`, and it has three callers:
+
+| Caller                            | Call                                                         |
+| --------------------------------- | ------------------------------------------------------------ |
+| `xliff1_translation_parser.ts:36` | `canParseXml(filePath, contents, 'xliff', {version: '1.2'})` |
+| `xliff2_translation_parser.ts:35` | `canParseXml(filePath, contents, 'xliff', {version: '2.0'})` |
+| `xtb_translation_parser.ts:41`    | `canParseXml(filePath, contents, 'translationbundle', {})`   |
+
+Only the first matches the message. An XTB file with two `<translationbundle>` roots is told that
+"XLIFF 1.2 files should only have a single `<xliff>` root node" — wrong format _and_ wrong element
+name — and an XLIFF 2.0 file is told it is XLIFF 1.2.
+
+The parameter is in scope and the function's other two messages use it correctly (`:113`
+`` `The XML file does not contain a <${rootNodeName}> root node.` ``, `:123`
+`` `The <${rootNodeName}> node does not have the required attribute…` ``), so this is a line left
+behind when the helper was generalised out of the XLIFF 1.2 parser rather than a deliberate
+specialisation. Diagnostic text only; nothing downstream branches on it.
+
+Two things in the same file that look wrong and are not, checked because both would be worse than
+the above:
+
+- **`getInnerRange` asserts non-null on `endSourceSpan` (`:61`).** It is null only for
+  `INCOMPLETE_TAG_OPEN`, where `parser.ts:457-460` also pushes a `TreeError`. `ParseError`'s level
+  defaults to `ParseErrorLevel.ERROR` (`compiler/src/parse_util.ts:158`), `canParseXml` rejects on
+  any ERROR (`:104`), and `TranslationLoader.loadBundle` only calls `parse()` after `analyze()`
+  returned `canParse: true` (`translation_loader.ts:67-77`) — there is no forced-format path. So
+  the element tree handed to `parseInnerRange` never contains an unterminated tag.
+- **A self-closing `<target/>` produces an inverted lexer range.** `XmlTagDefinition.canSelfClose`
+  is `true`, so `<target/>` is valid XML with no error, and `parser.ts:453` sets `endSourceSpan` to
+  the _full_ start-tag span. `getInnerRange` then returns `startPos` = offset after `/>` and
+  `endPos` = offset of `<`, i.e. `startPos > endPos`. This is harmless: the cursor's
+  `state.offset >= this.end` test (`lexer.ts:1723`) yields `$EOF` on the first peek, the tokenizer
+  loop at `:230` never runs, and the result is zero nodes — which is the correct reading of an
+  empty translation.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
@@ -1162,18 +1213,20 @@ in-repo consumer, but that one still does something.
 
 Recorded so the same questions are not re-opened.
 
-| Question                                                                                            | Answer                                                                                                                                                                                                                                                           |
-| --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TEMPLATES = 't'` and `DEFER_HYDRATE_TRIGGERS = 't'` collide (`hydration/interfaces.ts:37`, `:48`)  | No. `deferBlockInfo` is a separate object stored in `context.deferBlocks` → `__nghDeferData__`; `ngh` goes to `__nghData__`. Two disjoint schemas each using the short key.                                                                                      |
-| Path compression round-trip                                                                         | Correct. `compress('b',[f,f,n])` → `"bf2n"` → `decompress` → `['b','f',2,'n',1]`.                                                                                                                                                                                |
-| `navigateBetween` discards empty paths (`node_lookup_utils.ts:278`)                                 | No. `![]` is `false`, so `!parentPath` catches only `null`. Recursion terminates at `parentElement == null`.                                                                                                                                                     |
-| `ngh="10\|25"` two-id encoding                                                                      | Correct in both read orders; the remaining id is written back, then the attribute removed.                                                                                                                                                                       |
-| `previousTNode.type === TNodeType.Element` uses `===` on a bitmask (`node_lookup_utils.ts:161`)     | Correct. `interfaces/node.ts` states combined values "should never be used for `TNode.type`".                                                                                                                                                                    |
-| Dev-only error text ships to production                                                             | No. Of 293 `RuntimeError` sites: 179 gate the argument, 36 sit in a lexical `ngDevMode` block, 51 are in transitively dev-only functions, 3 are registered through `ngDevMode ? […] : []`. Zero reachable.                                                       |
-| `isDevMode()` used internally                                                                       | Never — 0 sites. It is a function call, so it cannot be folded; the framework avoids its own public API here deliberately.                                                                                                                                       |
-| `untracked` restores the consumer if its callback throws (`untracked.ts:19`)                        | Yes, via `finally`; the comment says that is the point.                                                                                                                                                                                                          |
-| `defaultThrowError` in `signals/errors.ts:11` throws a message-less `Error`                         | Only before a platform exists. `publishSignalConfiguration()` (`application_ref.ts:73`) installs the real `RuntimeError` and `createPlatform` calls it (`platform.ts:47`). Signals used standalone — an entry point outside the public API — get the bare error. |
-| `producerAccessed`'s consecutive-read fast path does not refresh `lastReadVersion` (`graph.ts:232`) | Correct. The link was made earlier in the same run at the current version, and a producer cannot change version mid-computation because `producerUpdatesAllowed` rejects writes from a computation.                                                              |
+| Question                                                                                            | Answer                                                                                                                                                                                                                                                                                  |
+| --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TEMPLATES = 't'` and `DEFER_HYDRATE_TRIGGERS = 't'` collide (`hydration/interfaces.ts:37`, `:48`)  | No. `deferBlockInfo` is a separate object stored in `context.deferBlocks` → `__nghDeferData__`; `ngh` goes to `__nghData__`. Two disjoint schemas each using the short key.                                                                                                             |
+| Path compression round-trip                                                                         | Correct. `compress('b',[f,f,n])` → `"bf2n"` → `decompress` → `['b','f',2,'n',1]`.                                                                                                                                                                                                       |
+| `navigateBetween` discards empty paths (`node_lookup_utils.ts:278`)                                 | No. `![]` is `false`, so `!parentPath` catches only `null`. Recursion terminates at `parentElement == null`.                                                                                                                                                                            |
+| `ngh="10\|25"` two-id encoding                                                                      | Correct in both read orders; the remaining id is written back, then the attribute removed.                                                                                                                                                                                              |
+| `previousTNode.type === TNodeType.Element` uses `===` on a bitmask (`node_lookup_utils.ts:161`)     | Correct. `interfaces/node.ts` states combined values "should never be used for `TNode.type`".                                                                                                                                                                                           |
+| Dev-only error text ships to production                                                             | No. Of 293 `RuntimeError` sites: 179 gate the argument, 36 sit in a lexical `ngDevMode` block, 51 are in transitively dev-only functions, 3 are registered through `ngDevMode ? […] : []`. Zero reachable.                                                                              |
+| `isDevMode()` used internally                                                                       | Never — 0 sites. It is a function call, so it cannot be folded; the framework avoids its own public API here deliberately.                                                                                                                                                              |
+| `untracked` restores the consumer if its callback throws (`untracked.ts:19`)                        | Yes, via `finally`; the comment says that is the point.                                                                                                                                                                                                                                 |
+| `defaultThrowError` in `signals/errors.ts:11` throws a message-less `Error`                         | Only before a platform exists. `publishSignalConfiguration()` (`application_ref.ts:73`) installs the real `RuntimeError` and `createPlatform` calls it (`platform.ts:47`). Signals used standalone — an entry point outside the public API — get the bare error.                        |
+| `producerAccessed`'s consecutive-read fast path does not refresh `lastReadVersion` (`graph.ts:232`) | Correct. The link was made earlier in the same run at the current version, and a producer cannot change version mid-computation because `producerUpdatesAllowed` rejects writes from a computation.                                                                                     |
+| `extractIcuPlaceholders` mutates `braces.lastIndex` mid-iteration (`icu_parsing.ts:75`)             | Correct. Ran the real function over 17 inputs — the two doc examples, 4-deep nesting, unbalanced braces both ways, `{}`, names containing `{` and XML metacharacters. Every one re-joins to the exact input, none throws, and the piece count stays odd as the serializers assume.      |
+| `StateStack`'s `assert` (`icu_parsing.ts:177`) can be tripped by a malformed ICU                    | No. `'placeholder'` is never left on the stack: after it is pushed, the caller either pops it (name found) or replaces it via `nestedIcu` (name falsy). So `nestedIcu`'s precondition holds by construction, and the `else` branch at `:83` is never entered with a placeholder on top. |
 
 ---
 
