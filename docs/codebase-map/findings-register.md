@@ -1,0 +1,294 @@
+# Findings register
+
+A running record of every defect, gap and unverified oddity this review has found, with the
+evidence for each and its current status. Kept as a register rather than prose so that a finding
+can be checked off, disputed, or picked up by someone else without rereading the analysis.
+
+**Method rule (from review #14 onward):** pattern matching is used only to _locate_ candidate
+files. Every claim below about behaviour comes from reading the file itself. Earlier findings that
+came from a scan are marked, because four separate scans in this review produced numbers that had
+to be retracted once the code was read — see [§ Retractions](#retractions).
+
+Status values:
+
+| Status         | Meaning                                                            |
+| -------------- | ------------------------------------------------------------------ |
+| `fixed`        | changed in this branch                                             |
+| `open`         | confirmed, not changed                                             |
+| `unconfirmed`  | the code reads wrong, but the consequence has not been established |
+| `not-a-defect` | investigated and found correct; kept so it is not re-investigated  |
+
+---
+
+## Defects in framework code
+
+### 1. `CONFLICTING_HOST_DIRECTIVE_BINDING` was negative — `fixed`
+
+`packages/compiler-cli/src/ngtsc/diagnostics/src/error_code.ts`
+
+The compile-time error enum encodes "has a guide" as a negative value. This member was `-8024`, so
+the diagnostic reported under the wrong code. Changed to `8024`; the API golden was updated to
+match.
+
+Verified statically only — the test suite has never been run in this environment.
+
+### 2. Compile-time error guide links never rendered — `fixed`
+
+`packages/compiler-cli/src/ngtsc/core/src/compiler.ts`
+
+`addMessageTextDetails` could not map a `TS-99xxxx` diagnostic code back to its `ErrorCode`, so the
+`https://angular.dev/errors/NGxxxx` suffix was never appended for the eight errors that have a
+guide. Added `ngErrorCodeToErrorCode`, exported it, and rewrote the append path; 30 assertions
+across four spec files were updated and one regression test added.
+
+Verified statically only.
+
+### 3. Defer-block hydration failures never reject their promises — `open`
+
+`packages/core/src/defer/triggering.ts:539`
+
+```js
+for (const dehydratedBlockId in hydrationQueue) {
+  // `in`, over a string[]
+  blocksBeingHydrated.get(dehydratedBlockId)?.reject();
+}
+```
+
+`hydrationQueue` is `string[]`, so `for…in` yields the indices `"0"`, `"1"`, … while `hydrating` is
+keyed by block ids of the form `d<N>` (`hydration/annotate.ts:384`, carried on the `ngb`
+attribute). Every `.get()` returns `undefined` and the optional call swallows it, so no promise is
+ever rejected. The two neighbouring loops — `populateHydratingStateForQueue` (`:554`) and
+`DehydratedBlockRegistry.cleanup` (`registry.ts:66`) — both use `for…of`, so this is a single
+slip rather than a house style.
+
+It hangs rather than merely no-ops because a promise reference outlives its map entry:
+`hydration/utils.ts:624` captures `hydratingParentBlock.promise` for a nested block, and
+`triggering.ts:407` awaits it. When the parent's hydration takes the error path, the promise is
+neither rejected (this bug) nor reachable for later rejection (`registry.cleanup` deletes the
+entry), so the nested block waits forever: it never hydrates and `replayQueuedEventsFn` is never
+called, silently dropping queued user events. `pendingTasks.add()` happens after this point, so
+application stability is not affected — the failure is invisible.
+
+Confirmed by transcribing the path into a runnable model
+(`scratchpad/repro.mjs`): `for…in` leaves the promise `PENDING`, `for…of` leaves it `REJECTED`.
+
+**The one-word fix is not sufficient.** `packages/core/src/defer/triggering.ts` contains no `try`,
+`catch` or `.catch(` anywhere, and all six call sites invoke `triggerHydrationFromBlockName`
+fire-and-forget. Making the rejection fire would turn a silent hang into an unhandled rejection, so
+the await at `:407` (or each call site) needs a handler in the same change.
+
+No test covers this path; the function appears in
+`packages/core/test/bundling/hydration/bundle.golden_symbols.json`, so it does ship.
+
+### 4. `isInSkipHydrationBlock` tests the wrong node inside its own loop — `open`
+
+`packages/core/src/hydration/skip_hydration.ts:60`
+
+```js
+export function isInSkipHydrationBlock(tNode: TNode): boolean {
+  if (hasInSkipHydrationBlockFlag(tNode)) return true;        // (1)
+  let currentTNode: TNode | null = tNode.parent;
+  while (currentTNode) {
+    if (hasInSkipHydrationBlockFlag(tNode) ||                 // (2) `tNode`, not `currentTNode`
+        hasSkipHydrationAttrOnTNode(currentTNode)) {
+      return true;
+    }
+    currentTNode = currentTNode.parent;
+  }
+  return false;
+}
+```
+
+(2) re-tests the _argument_ on every iteration. (1) already returned for that case, so (2) is
+loop-invariant and always `false`: the walk only ever checks the `ngSkipHydration` **attribute** on
+ancestors, never the `inSkipHydrationBlock` **flag** on them. There is no reading under which
+repeating `tNode` is meaningful, so this is a slip rather than a deliberate shortcut.
+
+It matters because the two signals are not interchangeable. Reading both places that raise the flag:
+
+- `render3/tnode_manipulation.ts:289` — `createTNode` stamps it while the instruction state is
+  inside a skip-hydration root (`state.ts:263`, `skipHydrationRootTNode !== null`). Nodes stamped
+  this way also have an attribute-bearing ancestor, so the attribute walk finds them anyway.
+- `render3/node_manipulation.ts:1031` — `applyProjection` stamps the projected node at _apply_
+  time, and its comment says why: "If a parent `<ng-content>` is located within a skip hydration
+  block, annotate an actual node that is being projected with the same flag too." Projected content
+  is created in the **declaring** view, so its ancestor chain never reaches the `ngSkipHydration`
+  attribute. Here the flag is the only signal — and it is stamped on the projected **head** only.
+
+So a descendant of a projected head has neither the flag nor an attribute-bearing ancestor, and the
+predicate returns `false` for content that is in a skip-hydration block. Checking `currentTNode`
+would find the flag on the projected head and return `true`.
+
+Consumers of the predicate:
+
+| Site                                        | What the wrong answer would do                                                                                                                                                                                                       |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `linker/view_container_ref.ts:769`          | picks hydration mode instead of creation mode for a container the server never serialized; the next branch warns "Unexpected state: no hydration info available for a given TNode, which represents a view container" and falls back |
+| `hydration/annotate.ts:630`, `:719`, `:773` | serializer decides whether to emit a node path for projected content                                                                                                                                                                 |
+| `hydration/skip_hydration.ts:83`            | `isI18nInSkipHydrationBlock`                                                                                                                                                                                                         |
+
+Related, and evidence the author knew the predicate does not check the node itself:
+`isI18nInSkipHydrationBlock` (`:79`) ORs `hasSkipHydrationAttrOnTNode(parentTNode)` in front of the
+call, because `isInSkipHydrationBlock` starts its walk at `tNode.parent`. Its first operand,
+`hasInSkipHydrationBlockFlag(parentTNode)`, duplicates line (1) and is redundant.
+
+**Consequence not established.** The dead check is unambiguous from the code; whether a view
+container can in practice be a descendant of a projected head whose target is a skip-hydration
+block, and reach `view_container_ref.ts:769`, has not been demonstrated. No test was found for it.
+
+### 5. Three `InjectionToken` descriptions skip the `ngDevMode` guard — `open`
+
+| File                                                    | Token                                   |
+| ------------------------------------------------------- | --------------------------------------- |
+| `packages/core/src/application/application_init.ts:150` | `APP_INITIALIZER` (`@publicApi`)        |
+| `packages/core/src/application/application_ref.ts:62`   | `APP_BOOTSTRAP_LISTENER` (`@publicApi`) |
+| `packages/core/src/defer/idle_service.ts:54`            | `IDLE_SERVICE`                          |
+
+All three write `ngDevMode ? '…' : ''`. The other 100 such tokens in the repository write
+`typeof ngDevMode !== 'undefined' && ngDevMode ? … : ''`. `ng_dev_mode.ts` documents why the
+`typeof` matters: `ngDevMode` may be undeclared, and a bare reference then throws `ReferenceError`
+(angular/angular#31595).
+
+The risk is narrow, not theoretical: in an optimised build `ngDevMode` is substituted with `false`,
+and in an unoptimised one `util/empty.ts` defines it at module load — but `packages/core/package.json`
+declares `"sideEffects": false`, which permits a bundler to drop `empty.ts` when its exports are
+unused. No lint rule enforces the idiom; 100 of 103 sites follow it by discipline alone.
+
+Counts came from locating `new InjectionToken` occurrences and reading each one.
+
+### 6. `withIncrementalHydration()` registers incremental hydration twice — `open`
+
+`packages/platform-browser/src/hydration.ts:250` and `:289`
+
+`provideClientHydration` collects the features it was passed into `providers`:
+
+```ts
+for (const {ɵproviders, ɵkind} of features) {
+  featuresKind.add(ɵkind);
+  if (ɵproviders.length) providers.push(ɵproviders);
+}
+```
+
+and then separately adds incremental hydration by default:
+
+```ts
+featuresKind.has(HydrationFeatureKind.NoIncrementalHydration) ? [] : ɵwithIncrementalHydration(),
+providers,
+```
+
+The default branch tests only for `NoIncrementalHydration`. It never checks whether the caller
+already passed `withIncrementalHydration()`, so `provideClientHydration(withIncrementalHydration())`
+puts `ɵwithIncrementalHydration()` into the provider list twice — once from `providers`, once from
+the default. That call is exactly what the feature's own deprecation notice describes as
+now-redundant ("Since v22.0.0, incremental hydration is enabled by default"), so the redundant form
+is the one migrating applications still have.
+
+The duplicated set includes an `APP_BOOTSTRAP_LISTENER` (`hydration/api.ts:356`, `multi: true`), so
+`runIncrementalHydrationBootstrap` runs twice, and `processAndInitTriggers`
+(`defer/triggering.ts:655`) has no idempotence guard: `setIdleTriggers`, `setTimerTriggers` and
+`setViewportTriggers` each register a second callback per defer block — two `onIdle` callbacks, two
+timers, two `IntersectionObserver` registrations.
+
+**Severity is duplicated work, not double hydration.** `triggerHydrationFromBlockName` opens with
+`if (blocksBeingHydrated.has(blockName)) return;` (`:383`) and populates that map synchronously at
+`:402`, so the second firing returns early. `withEventReplay`, which is also inside the duplicated
+set, defends itself explicitly with `appsWithEventReplay.has(appRef)` (`event_replay.ts:107`,
+`:142`) — evidence that double registration was anticipated in one place and not the other.
+
+No dev-mode warning fires for passing the redundant feature; the only conflict check is
+`withIncrementalHydration()` together with `withNoIncrementalHydration()`.
+
+## Gaps in repository tooling and data
+
+### 7. `@deprecated` versions are parsed out of prose — `open`
+
+`generate_manifest.mts` takes the first number anywhere in the tag comment. Two live cases:
+`getLocaleCurrencyCode` renders as "deprecated since v4217" (from "ISO 4217"), and `ServerXhr` as
+"v23" when 23 is the intended _removal_ version. Fixing it is a design choice — require an explicit
+leading version, or correct the two comments — so it is recorded rather than changed.
+
+### 8. Three paths match no review group — `open`
+
+`docs/codebase-map` (111 files), `tools/bazel` (9), `goldens/vscode-extension` (2).
+`.pullapprove.yml` fails any pull request that matches no group, so these are latent blockers. The
+`tools/bazel` case is an enumeration style: `dev-infra` lists sibling directories one at a time.
+
+### 9. Five `{@example}` tags point at a file that does not exist — `open`
+
+`packages/private/testing/matchers/index.ts` (lines 28, 38, 48, 58, 78) reference
+`packages/examples/testing/ts/matchers.ts`. Nothing catches it because that package is not
+docs-extracted.
+
+### 10. Five example projects are referenced by nothing — `open`
+
+No build checks the reverse direction.
+
+### 11. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
+
+The analyzer required the `: o.ExternalReference` annotation, which the four type-checking entries
+at the end of `Identifiers` omit. They were never checked for resolution against `core` while the
+tool reported the contract complete. All four do resolve; the contract is now 215 symbols, not 211.
+
+## Observations recorded so that they are not re-investigated
+
+### 12. 63 `ɵ` names appear in the API goldens — `open`
+
+Across 25 of the 50 golden files, only 3 as declared entries. The other 60 sit inside the
+signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported class;
+`ɵTypedOrUntyped` and a dozen siblings typing `FormGroup<T>`). So the `ɵ` prefix means "rename
+freely" for `ɵMetadataOverrider` and "renaming this changes a public type" for `ɵTypedOrUntyped`,
+and nothing marks which is which.
+
+### 13. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
+
+`packages/core/src/hydration/utils.ts:141` vs `:152`. The comment describes handling `<comp ngh="" />`,
+but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty string, so
+`if (nghAttrValue !== '')` can never be false. Reading both writers in `annotate.ts` (`:232`, `:840`)
+confirms the framework never emits `ngh=""` — they write `index.toString()` or `"a|b"`. Dead code
+and a misleading comment, not a live bug.
+
+### 14. `removeDehydratedViewList` does not reset its container — `unconfirmed`
+
+`packages/core/src/hydration/cleanup.ts:56`. Its sibling `removeDehydratedViews` (`:53`) sets
+`lContainer[DEHYDRATED_VIEWS] = retainedViews` and explains why — "do not trigger the lookup process
+once again". `removeDehydratedViewList` removes the DOM nodes but leaves the array in place, so its
+entries keep a `firstChild` pointing at a detached node. Whether anything consults that container
+afterwards has not been established.
+
+### 15. `ɵdisableProfiling` has no consumer at all — `open`
+
+Exported from `core_private_export.ts:138`, absent from the `ng` global table (`enableProfiling` is
+present, its counterpart is not), and imported nowhere. `profiler.ts:73` is the only other mention.
+
+---
+
+## Not defects — investigated and cleared
+
+Recorded so the same questions are not re-opened.
+
+| Question                                                                                           | Answer                                                                                                                                                                                                     |
+| -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TEMPLATES = 't'` and `DEFER_HYDRATE_TRIGGERS = 't'` collide (`hydration/interfaces.ts:37`, `:48`) | No. `deferBlockInfo` is a separate object stored in `context.deferBlocks` → `__nghDeferData__`; `ngh` goes to `__nghData__`. Two disjoint schemas each using the short key.                                |
+| Path compression round-trip                                                                        | Correct. `compress('b',[f,f,n])` → `"bf2n"` → `decompress` → `['b','f',2,'n',1]`.                                                                                                                          |
+| `navigateBetween` discards empty paths (`node_lookup_utils.ts:278`)                                | No. `![]` is `false`, so `!parentPath` catches only `null`. Recursion terminates at `parentElement == null`.                                                                                               |
+| `ngh="10\|25"` two-id encoding                                                                     | Correct in both read orders; the remaining id is written back, then the attribute removed.                                                                                                                 |
+| `previousTNode.type === TNodeType.Element` uses `===` on a bitmask (`node_lookup_utils.ts:161`)    | Correct. `interfaces/node.ts` states combined values "should never be used for `TNode.type`".                                                                                                              |
+| Dev-only error text ships to production                                                            | No. Of 293 `RuntimeError` sites: 179 gate the argument, 36 sit in a lexical `ngDevMode` block, 51 are in transitively dev-only functions, 3 are registered through `ngDevMode ? […] : []`. Zero reachable. |
+| `isDevMode()` used internally                                                                      | Never — 0 sites. It is a function call, so it cannot be folded; the framework avoids its own public API here deliberately.                                                                                 |
+
+---
+
+## Retractions
+
+Numbers this review published and then had to withdraw, all from pattern matching rather than
+reading. Kept because they are the reason for the method rule at the top.
+
+| Claim                                                            | Corrected to          | Cause                                                                 |
+| ---------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------- |
+| 259 exports missing from the index                               | —                     | `\w` is ASCII-only and does not match `ɵ` (hit five separate times)   |
+| `core → platform-browser` and `compiler → core` dependency edges | do not exist          | `import` statements inside JSDoc samples                              |
+| `ApplicationRef` and `Injectable` are `@deprecated`              | they are not          | lazy `[\s\S]*?` ran past `*/`                                         |
+| `ɵmod` is a `core` export                                        | it is a property name | `\bas\s+(ɵ…)` matched the English "as" in "such as ɵmod"              |
+| `common` publishes 29 `ɵ` names                                  | 18                    | a bare-identifier line pattern counted `import` specifiers as exports |
+| 90 dev-only messages ship to production                          | 0                     | gating is at the call site and transitive, not at the message         |
+| 5 defer-block sites are ungated                                  | 3, then 0             | per-line gate test missed `&&` continuations onto the next line       |
