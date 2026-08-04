@@ -590,7 +590,7 @@ different functions called `enableProfiling`:
 | `ɵenableProfiling` | `src/profiler.ts:61`                                | private, no in-repo consumer, the one described here |
 
 The public one is unaffected. Sibling of
-[26](#26-ɵdisableprofiling-has-no-consumer-at-all), which is the same module's other half.
+[27](#27-ɵdisableprofiling-has-no-consumer-at-all), which is the same module's other half.
 
 ### 15. The jsaction parse cache is a plain object keyed by attribute text — `open`
 
@@ -704,32 +704,85 @@ someone drains it.
 Assigning through the object (`earlyJsactionData.d(...)` inside `h`) is the smaller fix; returning
 a mutable holder is the other.
 
+### 17. `EventDispatcher` patches events non-configurably, and reads a bare `ngDevMode` — `open`
+
+`packages/core/primitives/event-dispatch/src/event_dispatcher.ts`
+
+Two things in one file, both about this package being publishable on its own as
+`@angular/core/primitives/event-dispatch`.
+
+**Event patching is not idempotent.** `patchEventInstance` (`:172`) defaults to
+`configurable: false`, and `prepareEventForBubbling` (`:105`) redefines `stopPropagation` and
+`stopImmediatePropagation` on every `dispatchToDelegate`. On a real `Event` those methods live on
+the prototype, so the first patch creates an own property with `writable: false, configurable:
+false`, and a second one throws:
+
+```
+after 1st patch: {"value":"[fn]","writable":false,"enumerable":false,"configurable":false}
+2nd patch -> TypeError: Cannot redefine property: stopPropagation
+currentTarget re-patch -> ok (configurable: true)
+```
+
+The contrast is the evidence that re-entry was thought about once: `prepareEventForDispatch`
+(`:140`) passes `configurable: true` for `currentTarget` with the comment "`currentTarget` is going
+to get reassigned every dispatch", because the `while (eventInfoWrapper.getAction())` loop patches
+it repeatedly. Nothing gives the same treatment to the bubbling patches, which are outside that
+loop — so they are safe only while no `Event` object reaches `dispatchToDelegate` twice.
+**Whether that can happen has not been established**; the closest candidate is the requeue in
+`createReplayQueuedBlockEventsFn` (`hydration/event_replay.ts:309`), which keeps un-hydrated events
+across rounds but calls `invokeListeners` once per event.
+
+**A bare `ngDevMode` in a standalone package.** `:130` and `:135` read it directly:
+
+```js
+throw new Error(
+  PREVENT_DEFAULT_ERROR_MESSAGE + (ngDevMode ? PREVENT_DEFAULT_ERROR_MESSAGE_DETAILS : ''),
+);
+```
+
+The neighbouring import is types-only despite how it reads:
+
+```js
+// Necessary to make the `ngDevMode` global types available.
+import '../../../src/util/ng_dev_mode'; // 3p-only
+```
+
+`ng_dev_mode.ts` has no top-level statement — it declares the global and defines `initNgDevMode`,
+which something else must call — so importing it defines nothing at runtime. Inside an Angular
+application `ngDevMode` is initialised long before replay, so this is fine there. A consumer using
+the primitive on its own gets `ReferenceError: ngDevMode is not defined` from the patched
+`preventDefault`, replacing the intended message with an unrelated one, at exactly the moment the
+diagnostic was supposed to help.
+
+Also worth noting for the layering map: this primitive reaches up into `packages/core/src/` for
+that import, which no other primitive does.
+
 ## Gaps in repository tooling and data
 
-### 17. `@deprecated` versions are parsed out of prose — `open`
+### 18. `@deprecated` versions are parsed out of prose — `open`
 
 `generate_manifest.mts` takes the first number anywhere in the tag comment. Two live cases:
 `getLocaleCurrencyCode` renders as "deprecated since v4217" (from "ISO 4217"), and `ServerXhr` as
 "v23" when 23 is the intended _removal_ version. Fixing it is a design choice — require an explicit
 leading version, or correct the two comments — so it is recorded rather than changed.
 
-### 18. Three paths match no review group — `open`
+### 19. Three paths match no review group — `open`
 
 `docs/codebase-map` (111 files), `tools/bazel` (9), `goldens/vscode-extension` (2).
 `.pullapprove.yml` fails any pull request that matches no group, so these are latent blockers. The
 `tools/bazel` case is an enumeration style: `dev-infra` lists sibling directories one at a time.
 
-### 19. Five `{@example}` tags point at a file that does not exist — `open`
+### 20. Five `{@example}` tags point at a file that does not exist — `open`
 
 `packages/private/testing/matchers/index.ts` (lines 28, 38, 48, 58, 78) reference
 `packages/examples/testing/ts/matchers.ts`. Nothing catches it because that package is not
 docs-extracted.
 
-### 20. Five example projects are referenced by nothing — `open`
+### 21. Five example projects are referenced by nothing — `open`
 
 No build checks the reverse direction.
 
-### 21. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
+### 22. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
 
 The analyzer required the `: o.ExternalReference` annotation, which the four type-checking entries
 at the end of `Identifiers` omit. They were never checked for resolution against `core` while the
@@ -737,7 +790,7 @@ tool reported the contract complete. All four do resolve; the contract is now 21
 
 ## Observations recorded so that they are not re-investigated
 
-### 22. `createWatch` tracks its cleanup function; `effect()` does not — `open`
+### 23. `createWatch` tracks its cleanup function; `effect()` does not — `open`
 
 `packages/core/primitives/signals/src/watch.ts:118`
 
@@ -796,7 +849,7 @@ A method note: the first version of this test showed the cleanup never running a
 returns early unless a dependency actually changed (`watch.ts:113`), so the second `run()` was a
 no-op — the test had to move a signal between runs before it exercised anything.
 
-### 23. 63 `ɵ` names appear in the API goldens — `open`
+### 24. 63 `ɵ` names appear in the API goldens — `open`
 
 Across 25 of the 50 golden files, only 3 as declared entries. The other 60 sit inside the
 signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported class;
@@ -804,7 +857,7 @@ signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported
 freely" for `ɵMetadataOverrider` and "renaming this changes a public type" for `ɵTypedOrUntyped`,
 and nothing marks which is which.
 
-### 24. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
+### 25. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
 
 `packages/core/src/hydration/utils.ts:141` vs `:152`. The comment describes handling `<comp ngh="" />`,
 but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty string, so
@@ -812,7 +865,7 @@ but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty s
 confirms the framework never emits `ngh=""` — they write `index.toString()` or `"a|b"`. Dead code
 and a misleading comment, not a live bug.
 
-### 25. `removeDehydratedViewList` does not reset its container — `unconfirmed`
+### 26. `removeDehydratedViewList` does not reset its container — `unconfirmed`
 
 `packages/core/src/hydration/cleanup.ts:56`. Its sibling `removeDehydratedViews` (`:53`) sets
 `lContainer[DEHYDRATED_VIEWS] = retainedViews` and explains why — "do not trigger the lookup process
@@ -820,14 +873,14 @@ once again". `removeDehydratedViewList` removes the DOM nodes but leaves the arr
 entries keep a `firstChild` pointing at a detached node. Whether anything consults that container
 afterwards has not been established.
 
-### 26. `ɵdisableProfiling` has no consumer at all — `open`
+### 27. `ɵdisableProfiling` has no consumer at all — `open`
 
 Exported from `core_private_export.ts:138`, absent from the `ng` global table (`enableProfiling` is
 present, its counterpart is not), and imported nowhere. `profiler.ts:73` is the only other mention.
 
 ---
 
-### 27. The di primitive's `inject` contradicts its own limp-mode comment — `open`
+### 28. The di primitive's `inject` contradicts its own limp-mode comment — `open`
 
 `packages/core/primitives/di/src/injector.ts:22`
 
@@ -864,7 +917,7 @@ Recorded with [18](#18-createwatch-tracks-its-cleanup-function-effect-does-not) 
 [22](#22-ɵdisableprofiling-has-no-consumer-at-all): primitives published from an entry point
 outside the public API, with no in-repo consumer to keep them honest.
 
-### 28. `ɵsetAlternateWeakRefImpl` is a published no-op — `open`
+### 29. `ɵsetAlternateWeakRefImpl` is a published no-op — `open`
 
 `packages/core/primitives/signals/src/weak_ref.ts`
 
