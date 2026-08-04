@@ -590,7 +590,7 @@ different functions called `enableProfiling`:
 | `ɵenableProfiling` | `src/profiler.ts:61`                                | private, no in-repo consumer, the one described here |
 
 The public one is unaffected. Sibling of
-[27](#27-ɵdisableprofiling-has-no-consumer-at-all), which is the same module's other half.
+[28](#28-ɵdisableprofiling-has-no-consumer-at-all), which is the same module's other half.
 
 ### 15. The jsaction parse cache is a plain object keyed by attribute text — `open`
 
@@ -757,32 +757,64 @@ diagnostic was supposed to help.
 Also worth noting for the layering map: this primitive reaches up into `packages/core/src/` for
 that import, which no other primitive does.
 
+### 18. `Dispatcher`'s replay queue is never drained — `open`
+
+`packages/core/primitives/event-dispatch/src/dispatcher.ts:98`
+
+```js
+private scheduleEventInfoWrapperReplay(eventInfoWrapper: EventInfoWrapper) {
+  this.replayEventInfoWrappers.push(eventInfoWrapper);
+  if (this.eventReplayScheduled) return;
+  this.eventReplayScheduled = true;
+  Promise.resolve().then(() => {
+    this.eventReplayScheduled = false;
+    this.eventReplayer!(this.replayEventInfoWrappers);   // handed over, never cleared
+  });
+}
+```
+
+`replayEventInfoWrappers` is only ever pushed to (`:99`) and read (`:106`) — nothing in the file
+clears it, and `createEventReplayer` (`:115`) iterates without draining either. A second batch
+arriving after the microtask has run therefore replays the first batch again: push A, flush `[A]`,
+push B, flush `[A, B]`.
+
+**The path is dead, which is why this has not bitten.** `eventReplayer` is optional and the only
+`new Dispatcher(...)` in the repository — `event_dispatcher.ts:64` — passes just
+`{actionResolver}`. With it undefined, `dispatch`'s guard
+`if (this.eventReplayer && eventInfoWrapper.getIsReplay())` never holds and
+`scheduleEventInfoWrapperReplay` is never reached. Neither `Dispatcher` nor `createEventReplayer`
+is exported from the package index, so no consumer can supply one either.
+
+So: a latent double-replay in code that nothing can currently execute. Recorded because the queue
+and the flag read as if they were maintained, and the next person to wire an `eventReplayer` would
+inherit it.
+
 ## Gaps in repository tooling and data
 
-### 18. `@deprecated` versions are parsed out of prose — `open`
+### 19. `@deprecated` versions are parsed out of prose — `open`
 
 `generate_manifest.mts` takes the first number anywhere in the tag comment. Two live cases:
 `getLocaleCurrencyCode` renders as "deprecated since v4217" (from "ISO 4217"), and `ServerXhr` as
 "v23" when 23 is the intended _removal_ version. Fixing it is a design choice — require an explicit
 leading version, or correct the two comments — so it is recorded rather than changed.
 
-### 19. Three paths match no review group — `open`
+### 20. Three paths match no review group — `open`
 
 `docs/codebase-map` (111 files), `tools/bazel` (9), `goldens/vscode-extension` (2).
 `.pullapprove.yml` fails any pull request that matches no group, so these are latent blockers. The
 `tools/bazel` case is an enumeration style: `dev-infra` lists sibling directories one at a time.
 
-### 20. Five `{@example}` tags point at a file that does not exist — `open`
+### 21. Five `{@example}` tags point at a file that does not exist — `open`
 
 `packages/private/testing/matchers/index.ts` (lines 28, 38, 48, 58, 78) reference
 `packages/examples/testing/ts/matchers.ts`. Nothing catches it because that package is not
 docs-extracted.
 
-### 21. Five example projects are referenced by nothing — `open`
+### 22. Five example projects are referenced by nothing — `open`
 
 No build checks the reverse direction.
 
-### 22. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
+### 23. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
 
 The analyzer required the `: o.ExternalReference` annotation, which the four type-checking entries
 at the end of `Identifiers` omit. They were never checked for resolution against `core` while the
@@ -790,7 +822,7 @@ tool reported the contract complete. All four do resolve; the contract is now 21
 
 ## Observations recorded so that they are not re-investigated
 
-### 23. `createWatch` tracks its cleanup function; `effect()` does not — `open`
+### 24. `createWatch` tracks its cleanup function; `effect()` does not — `open`
 
 `packages/core/primitives/signals/src/watch.ts:118`
 
@@ -849,7 +881,7 @@ A method note: the first version of this test showed the cleanup never running a
 returns early unless a dependency actually changed (`watch.ts:113`), so the second `run()` was a
 no-op — the test had to move a signal between runs before it exercised anything.
 
-### 24. 63 `ɵ` names appear in the API goldens — `open`
+### 25. 63 `ɵ` names appear in the API goldens — `open`
 
 Across 25 of the 50 golden files, only 3 as declared entries. The other 60 sit inside the
 signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported class;
@@ -857,7 +889,7 @@ signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported
 freely" for `ɵMetadataOverrider` and "renaming this changes a public type" for `ɵTypedOrUntyped`,
 and nothing marks which is which.
 
-### 25. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
+### 26. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
 
 `packages/core/src/hydration/utils.ts:141` vs `:152`. The comment describes handling `<comp ngh="" />`,
 but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty string, so
@@ -865,7 +897,7 @@ but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty s
 confirms the framework never emits `ngh=""` — they write `index.toString()` or `"a|b"`. Dead code
 and a misleading comment, not a live bug.
 
-### 26. `removeDehydratedViewList` does not reset its container — `unconfirmed`
+### 27. `removeDehydratedViewList` does not reset its container — `unconfirmed`
 
 `packages/core/src/hydration/cleanup.ts:56`. Its sibling `removeDehydratedViews` (`:53`) sets
 `lContainer[DEHYDRATED_VIEWS] = retainedViews` and explains why — "do not trigger the lookup process
@@ -873,14 +905,14 @@ once again". `removeDehydratedViewList` removes the DOM nodes but leaves the arr
 entries keep a `firstChild` pointing at a detached node. Whether anything consults that container
 afterwards has not been established.
 
-### 27. `ɵdisableProfiling` has no consumer at all — `open`
+### 28. `ɵdisableProfiling` has no consumer at all — `open`
 
 Exported from `core_private_export.ts:138`, absent from the `ng` global table (`enableProfiling` is
 present, its counterpart is not), and imported nowhere. `profiler.ts:73` is the only other mention.
 
 ---
 
-### 28. The di primitive's `inject` contradicts its own limp-mode comment — `open`
+### 29. The di primitive's `inject` contradicts its own limp-mode comment — `open`
 
 `packages/core/primitives/di/src/injector.ts:22`
 
@@ -917,7 +949,7 @@ Recorded with [18](#18-createwatch-tracks-its-cleanup-function-effect-does-not) 
 [22](#22-ɵdisableprofiling-has-no-consumer-at-all): primitives published from an entry point
 outside the public API, with no in-repo consumer to keep them honest.
 
-### 29. `ɵsetAlternateWeakRefImpl` is a published no-op — `open`
+### 30. `ɵsetAlternateWeakRefImpl` is a published no-op — `open`
 
 `packages/core/primitives/signals/src/weak_ref.ts`
 
