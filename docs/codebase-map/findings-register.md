@@ -436,32 +436,93 @@ that actually occurred.
 state is errored. Unlike `update()`, it does not need the old value at all — the only thing
 consuming it is the equality check.
 
+### 12. Defer-trigger cleanups identify their registration by key, not by identity — `open`
+
+`packages/core/primitives/defer/src/triggers.ts`
+
+Each `on…` function returns a cleanup closure that captures the `DeferEventEntry` it created. The
+closures then decide what to tear down by asking whether _a_ registration exists for the element,
+never whether it is the one they belong to. `onViewport` guards with
+
+```js
+if (!viewportTriggers.get(trigger)?.has(key)) return;
+```
+
+which makes a second call to the same cleanup safe — and that is clearly what it is for — but not a
+call that arrives after the element has been registered again. `onHover` and `onInteraction` have
+no guard at all.
+
+Exercised against the real file, which has no imports and runs directly under Node's type
+stripping, with a stub `IntersectionObserver` and element (`scratchpad/viewport.mjs`,
+`scratchpad/hover.mjs`):
+
+```
+1. double cleanup, no re-registration
+   observers created: 1, disconnected: 1
+   trigger still registered: false                     ← correct
+
+2. re-register the same element, then call the stale cleanup
+   new callback fired before the stale cleanup: 1
+   new callback fired after  the stale cleanup: 0      ← the live registration is gone
+   trigger still registered afterwards: false
+```
+
+The two families fail differently, from the same cause:
+
+- **`onViewport` cancels the live registration.** The stale closure deletes the _new_ entry from
+  `viewportTriggers`, while the new `IntersectionObserver` keeps observing the element. The
+  observer callback checks `viewportTriggers.has(current.target)` before dispatching, so it now
+  finds nothing and the block never triggers on scroll. Silent.
+- **`onHover` / `onInteraction` leak listeners.** The stale closure removes the _old_ listener,
+  which is no longer attached, and then deletes the element from the map. The live listener stays
+  bound but is unreachable, so the next registration attaches a second full set:
+
+```
+after re-registration, listeners attached: 3
+after stale cleanup, listeners attached: 3
+new callback still fires: true
+after a third registration, listeners attached: 6
+```
+
+A guard on identity rather than presence — `viewportTriggers.get(trigger)?.get(key) !== entry` —
+closes both.
+
+**Reachability from Angular's own code is not established.** `DehydratedBlockRegistry.invokeTrigger-
+CleanupFns` runs each cleanup once and then drops the list, so the ordinary path does not produce a
+stale call. What is established is that the primitive's contract — "call the returned function to
+clean up" — is not safe under re-registration, and that the guard which exists was written for the
+adjacent case.
+
+Two smaller things in the same file: `triggerConfig.set(key, entry)` at `:172` is dead, because
+`:178` does it unconditionally on both branches; and `config.count` can go negative through the
+stale path, which is what stops the observer from being disconnected afterwards.
+
 ## Gaps in repository tooling and data
 
-### 12. `@deprecated` versions are parsed out of prose — `open`
+### 13. `@deprecated` versions are parsed out of prose — `open`
 
 `generate_manifest.mts` takes the first number anywhere in the tag comment. Two live cases:
 `getLocaleCurrencyCode` renders as "deprecated since v4217" (from "ISO 4217"), and `ServerXhr` as
 "v23" when 23 is the intended _removal_ version. Fixing it is a design choice — require an explicit
 leading version, or correct the two comments — so it is recorded rather than changed.
 
-### 13. Three paths match no review group — `open`
+### 14. Three paths match no review group — `open`
 
 `docs/codebase-map` (111 files), `tools/bazel` (9), `goldens/vscode-extension` (2).
 `.pullapprove.yml` fails any pull request that matches no group, so these are latent blockers. The
 `tools/bazel` case is an enumeration style: `dev-infra` lists sibling directories one at a time.
 
-### 14. Five `{@example}` tags point at a file that does not exist — `open`
+### 15. Five `{@example}` tags point at a file that does not exist — `open`
 
 `packages/private/testing/matchers/index.ts` (lines 28, 38, 48, 58, 78) reference
 `packages/examples/testing/ts/matchers.ts`. Nothing catches it because that package is not
 docs-extracted.
 
-### 15. Five example projects are referenced by nothing — `open`
+### 16. Five example projects are referenced by nothing — `open`
 
 No build checks the reverse direction.
 
-### 16. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
+### 17. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
 
 The analyzer required the `: o.ExternalReference` annotation, which the four type-checking entries
 at the end of `Identifiers` omit. They were never checked for resolution against `core` while the
@@ -469,7 +530,7 @@ tool reported the contract complete. All four do resolve; the contract is now 21
 
 ## Observations recorded so that they are not re-investigated
 
-### 17. `createWatch` tracks its cleanup function; `effect()` does not — `open`
+### 18. `createWatch` tracks its cleanup function; `effect()` does not — `open`
 
 `packages/core/primitives/signals/src/watch.ts:118`
 
@@ -528,7 +589,7 @@ A method note: the first version of this test showed the cleanup never running a
 returns early unless a dependency actually changed (`watch.ts:113`), so the second `run()` was a
 no-op — the test had to move a signal between runs before it exercised anything.
 
-### 18. 63 `ɵ` names appear in the API goldens — `open`
+### 19. 63 `ɵ` names appear in the API goldens — `open`
 
 Across 25 of the 50 golden files, only 3 as declared entries. The other 60 sit inside the
 signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported class;
@@ -536,7 +597,7 @@ signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported
 freely" for `ɵMetadataOverrider` and "renaming this changes a public type" for `ɵTypedOrUntyped`,
 and nothing marks which is which.
 
-### 19. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
+### 20. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
 
 `packages/core/src/hydration/utils.ts:141` vs `:152`. The comment describes handling `<comp ngh="" />`,
 but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty string, so
@@ -544,7 +605,7 @@ but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty s
 confirms the framework never emits `ngh=""` — they write `index.toString()` or `"a|b"`. Dead code
 and a misleading comment, not a live bug.
 
-### 20. `removeDehydratedViewList` does not reset its container — `unconfirmed`
+### 21. `removeDehydratedViewList` does not reset its container — `unconfirmed`
 
 `packages/core/src/hydration/cleanup.ts:56`. Its sibling `removeDehydratedViews` (`:53`) sets
 `lContainer[DEHYDRATED_VIEWS] = retainedViews` and explains why — "do not trigger the lookup process
@@ -552,14 +613,14 @@ once again". `removeDehydratedViewList` removes the DOM nodes but leaves the arr
 entries keep a `firstChild` pointing at a detached node. Whether anything consults that container
 afterwards has not been established.
 
-### 21. `ɵdisableProfiling` has no consumer at all — `open`
+### 22. `ɵdisableProfiling` has no consumer at all — `open`
 
 Exported from `core_private_export.ts:138`, absent from the `ng` global table (`enableProfiling` is
 present, its counterpart is not), and imported nowhere. `profiler.ts:73` is the only other mention.
 
 ---
 
-### 22. `ɵsetAlternateWeakRefImpl` is a published no-op — `open`
+### 23. `ɵsetAlternateWeakRefImpl` is a published no-op — `open`
 
 `packages/core/primitives/signals/src/weak_ref.ts`
 
