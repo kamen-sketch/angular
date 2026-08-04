@@ -497,32 +497,75 @@ Two smaller things in the same file: `triggerConfig.set(key, entry)` at `:172` i
 `:178` does it unconditionally on both branches; and `config.count` can go negative through the
 stale path, which is what stops the observer from being disconnected afterwards.
 
+### 13. The two copies of `ɵɵInjectableDeclaration` have drifted — `open`
+
+`packages/core/primitives/di/src/injection_token.ts:26`
+`packages/core/src/di/interface/defs.ts:37`
+
+The same interface is declared twice, and the copies no longer agree:
+
+| Field        | `core/src/di/interface/defs.ts`                                               | `core/primitives/di`                                 |
+| ------------ | ----------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `providedIn` | `InjectorType<any> \| 'root' \| 'platform' \| 'any' \| 'environment' \| null` | `Type<any> \| 'root' \| 'platform' \| 'any' \| null` |
+| `factory`    | required                                                                      | optional                                             |
+| `value`      | `T \| undefined`, required                                                    | optional                                             |
+
+`'environment'` is a real scope, not a leftover: `scope.ts:11` declares
+`InjectorScope = 'root' \| 'platform' \| 'environment'`, `r3_injector.ts:232` branches on it, and
+two injectables in core are declared with it — `cached_injector_service.ts:56` and
+`render3/standalone_service.ts:64`.
+
+The primitive's own `defineInjectable` accepts the scope its return type cannot hold, and reaches
+for a cast to bridge the two:
+
+```ts
+export function defineInjectable<T>(opts: {
+  providedIn?: Type<any> | 'root' | 'platform' | 'any' | 'environment' | null;  // accepts it
+  …
+}): ɵɵInjectableDeclaration<T> {
+  return {providedIn: (opts.providedIn as any) || null, …};                     // can't store it
+}
+```
+
+So the `as any` is not a stylistic shortcut; it is compensating for the drift. The gap has been
+felt elsewhere too — `environment_injector_spec.ts:154` writes `providedIn: 'environment' as any`.
+
+Core's copy is the authoritative one: it is marked `@codeGenApi` and carries the note "The
+ViewEngine compiler emits code with this type for injectables. This code is deployed to npm, and
+should be treated as public api." The primitive's copy is a narrower restatement behind
+`@angular/core/primitives`, which `contributing-docs/public-api-surface.md` excludes from the
+public API.
+
+This is the same shape as [7](#7-the-dom-security-schema-is-duplicated-with-nothing-enforcing-the-copies):
+two hand-maintained copies of one declaration with nothing keeping them equal. Here they have
+already diverged.
+
 ## Gaps in repository tooling and data
 
-### 13. `@deprecated` versions are parsed out of prose — `open`
+### 14. `@deprecated` versions are parsed out of prose — `open`
 
 `generate_manifest.mts` takes the first number anywhere in the tag comment. Two live cases:
 `getLocaleCurrencyCode` renders as "deprecated since v4217" (from "ISO 4217"), and `ServerXhr` as
 "v23" when 23 is the intended _removal_ version. Fixing it is a design choice — require an explicit
 leading version, or correct the two comments — so it is recorded rather than changed.
 
-### 14. Three paths match no review group — `open`
+### 15. Three paths match no review group — `open`
 
 `docs/codebase-map` (111 files), `tools/bazel` (9), `goldens/vscode-extension` (2).
 `.pullapprove.yml` fails any pull request that matches no group, so these are latent blockers. The
 `tools/bazel` case is an enumeration style: `dev-infra` lists sibling directories one at a time.
 
-### 15. Five `{@example}` tags point at a file that does not exist — `open`
+### 16. Five `{@example}` tags point at a file that does not exist — `open`
 
 `packages/private/testing/matchers/index.ts` (lines 28, 38, 48, 58, 78) reference
 `packages/examples/testing/ts/matchers.ts`. Nothing catches it because that package is not
 docs-extracted.
 
-### 16. Five example projects are referenced by nothing — `open`
+### 17. Five example projects are referenced by nothing — `open`
 
 No build checks the reverse direction.
 
-### 17. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
+### 18. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
 
 The analyzer required the `: o.ExternalReference` annotation, which the four type-checking entries
 at the end of `Identifiers` omit. They were never checked for resolution against `core` while the
@@ -530,7 +573,7 @@ tool reported the contract complete. All four do resolve; the contract is now 21
 
 ## Observations recorded so that they are not re-investigated
 
-### 18. `createWatch` tracks its cleanup function; `effect()` does not — `open`
+### 19. `createWatch` tracks its cleanup function; `effect()` does not — `open`
 
 `packages/core/primitives/signals/src/watch.ts:118`
 
@@ -589,7 +632,7 @@ A method note: the first version of this test showed the cleanup never running a
 returns early unless a dependency actually changed (`watch.ts:113`), so the second `run()` was a
 no-op — the test had to move a signal between runs before it exercised anything.
 
-### 19. 63 `ɵ` names appear in the API goldens — `open`
+### 20. 63 `ɵ` names appear in the API goldens — `open`
 
 Across 25 of the 50 golden files, only 3 as declared entries. The other 60 sit inside the
 signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported class;
@@ -597,7 +640,7 @@ signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported
 freely" for `ɵMetadataOverrider` and "renaming this changes a public type" for `ɵTypedOrUntyped`,
 and nothing marks which is which.
 
-### 20. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
+### 21. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
 
 `packages/core/src/hydration/utils.ts:141` vs `:152`. The comment describes handling `<comp ngh="" />`,
 but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty string, so
@@ -605,7 +648,7 @@ but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty s
 confirms the framework never emits `ngh=""` — they write `index.toString()` or `"a|b"`. Dead code
 and a misleading comment, not a live bug.
 
-### 21. `removeDehydratedViewList` does not reset its container — `unconfirmed`
+### 22. `removeDehydratedViewList` does not reset its container — `unconfirmed`
 
 `packages/core/src/hydration/cleanup.ts:56`. Its sibling `removeDehydratedViews` (`:53`) sets
 `lContainer[DEHYDRATED_VIEWS] = retainedViews` and explains why — "do not trigger the lookup process
@@ -613,14 +656,51 @@ once again". `removeDehydratedViewList` removes the DOM nodes but leaves the arr
 entries keep a `firstChild` pointing at a detached node. Whether anything consults that container
 afterwards has not been established.
 
-### 22. `ɵdisableProfiling` has no consumer at all — `open`
+### 23. `ɵdisableProfiling` has no consumer at all — `open`
 
 Exported from `core_private_export.ts:138`, absent from the `ng` global table (`enableProfiling` is
 present, its counterpart is not), and imported nowhere. `profiler.ts:73` is the only other mention.
 
 ---
 
-### 23. `ɵsetAlternateWeakRefImpl` is a published no-op — `open`
+### 24. The di primitive's `inject` contradicts its own limp-mode comment — `open`
+
+`packages/core/primitives/di/src/injector.ts:22`
+
+The module variable documents three states:
+
+```ts
+/**
+ * Current injector value used by `inject`.
+ * - `undefined`: it is an error to call `inject`
+ * - `null`: `inject` can be called but there is no injector (limp-mode).
+ * - Injector instance: Use the injector for resolution.
+ */
+let _currentInjector: Injector | undefined | null = undefined;
+```
+
+but `inject` collapses the first two:
+
+```ts
+const currentInjector = getCurrentInjector();
+if (!currentInjector) {
+  throw new Error('Current injector is not set.');
+}
+```
+
+`!null` is `true`, so the documented limp-mode throws exactly like the "it is an error" state, and
+the distinction the comment draws cannot be observed through this function.
+
+No consumer is affected today: core imports `Injector`, `InjectionToken`, `NotFound`, `isNotFound`
+and `getCurrentInjector` from this primitive, but **not `inject`** — it has its own in
+`di/injector_compatibility.ts`. `NotFoundError` is likewise never constructed anywhere in the
+repository, though `isNotFound` recognises it by name for throwers outside it.
+
+Recorded with [18](#18-createwatch-tracks-its-cleanup-function-effect-does-not) and
+[22](#22-ɵdisableprofiling-has-no-consumer-at-all): primitives published from an entry point
+outside the public API, with no in-repo consumer to keep them honest.
+
+### 25. `ɵsetAlternateWeakRefImpl` is a published no-op — `open`
 
 `packages/core/primitives/signals/src/weak_ref.ts`
 
