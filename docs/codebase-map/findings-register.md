@@ -873,6 +873,74 @@ untested behaviour rather than a decision that was recorded.
 Contrast with `translations.ts:56`, a few lines away, where the analogous hazard **is** handled
 deliberately and documented in a comment (see finding 15).
 
+### 32. `XmlFile` drops empty attributes, and its three callers disagree about that — `open`
+
+`packages/localize/tools/src/extract/translation_files/xml_file.ts:35`
+
+```js
+for (const [attrName, attrValue] of Object.entries(attributes)) {
+  if (attrValue) {
+    // truthiness, so '' is dropped exactly like undefined
+    this.output += ` ${attrName}="${escapeXml(attrValue)}"`;
+  }
+}
+```
+
+The attribute type is `string | undefined`, and the test conflates the two. That is not a neutral
+choice, because the three serializers built on this writer hold **opposite** conventions about it:
+
+- **XMB depends on the drop.** `xmb_translation_serializer.ts:77` passes
+  `{id, desc: message.description, meaning: message.meaning}` with no guard at all, and
+  `ParsedMessage` normalises both to `''` (`messages.ts:211`, `:212`). Every message without a
+  meaning relies on `''` being omitted rather than emitted as `meaning=""`.
+- **XLIFF 1 and 2 are written as if it does not happen.** `xliff2_translation_serializer.ts:148`,
+  `:166`, `:169` and `xliff1_translation_serializer.ts:124`, `:127` all guard with
+  `!== undefined` — a distinction that only means anything if `''` reaches the output. It does not.
+
+So one of the two conventions is wrong, and the writer cannot satisfy both.
+
+For the `disp`/`equiv-text` attributes the `!== undefined` guards are merely redundant: the producer
+already normalises at `tools/src/source_file_utils.ts:497`, `text: startPath.getSource() || undefined`.
+
+The value that _can_ be `''` is the placeholder **name**, which both XLIFF serializers pass
+unconditionally — `equiv: placeholderName` (`xliff2:160`) and `{id}` (`xliff1:119`). It reaches `''`
+because `parsePlaceholder` returns `block.split(ID_SEPARATOR)[0]` (`messages.ts:294`) and an empty
+`::` block makes that the empty string, while `parseMessage`'s destructuring default
+(`messages.ts:188`) only substitutes `computePlaceholderName(i)` for `undefined`:
+
+```
+parsePlaceholder('::x')            {"messagePart":"x","placeholderName":""}
+placeholder written  ':NAME:'   ->  ["NAME"]
+placeholder written  '::'       ->  [""]      <- default did NOT apply
+placeholder written  (no block) ->  ["PH"]    <- default DID apply
+```
+
+Run against the real `XmlFile`, the name then disappears from the output entirely:
+
+```
+xml.startTag('ph', {id: '0', equiv: '',     type: 'x'}, {selfClosing: true})  ->  <ph id="0" type="x"/>
+xml.startTag('ph', {id: '0', equiv: 'NAME', type: 'x'}, {selfClosing: true})  ->  <ph id="0" equiv="NAME" type="x"/>
+```
+
+That output does not survive its own reader. `MessageSerializer.visitElement` fetches the name with
+`getAttrOrThrow` (`message_serialization/message_serializer.ts:51`) against the configured
+`nameAttribute` — `equiv` for XLIFF 2 (`xliff2_translation_parser.ts:162`), `id` for XLIFF 1
+(`xliff1_translation_parser.ts:164`) — and `getAttrOrThrow` throws on a missing attribute
+(`translation_utils.ts:23-28`). Notably it throws only on `undefined`; `getAttribute` (`:31`)
+returns `''` for `equiv=""` quite happily. **The reader already draws the distinction the writer
+erases** — had the attribute been written as `equiv=""`, the round trip would have worked.
+
+Reachability is narrow: the compiler always emits a placeholder name, so an empty `::` block only
+comes from hand-written `$localize` tagged strings. The failure is at least loud — a `ParseError`
+at translate time, not silent corruption. Recorded because the fix is confined to one line and the
+`!== undefined` guards in both XLIFF serializers currently document an intent the writer does not
+honour.
+
+Cleared while reading the same file: `escapeXml` (`xml_file.ts:105`) replaces `&` **first**, so
+entities are not double-escaped — `<script>&"'` renders as `&lt;script&gt;&amp;&quot;&apos;`,
+confirmed against the real function. The one `rawText` escape bypass (`xmb:46`) writes a constant
+DOCTYPE.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
