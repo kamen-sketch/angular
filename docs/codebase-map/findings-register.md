@@ -292,32 +292,68 @@ involved above — `svg`, `math`, `mglyph`, `style`, `noscript`, `form`, `templa
 from `VALID_ELEMENTS`. What is established is narrower: this defence-in-depth layer does not do
 what its own comment says it does, and its failure mode is silent rather than the intended throw.
 
+### 9. The `DOMParser` fallback is handed markup meant for a different parser — `open`
+
+`packages/core/src/sanitization/inert_body.ts:37`
+
+```js
+getInertBodyElement(html: string): HTMLElement | null {
+  html = '<body><remove></remove>' + html;               // the parameter is reassigned
+  try {
+    const body = new window.DOMParser().parseFromString(…).body;
+    if (body === null) {
+      return this.inertDocumentHelper.getInertBodyElement(html);   // ← still the prefixed string
+    }
+    body.firstChild?.remove();                           // DOMParser path strips the sentinel
+    return body;
+  } catch {
+    return null;
+  }
+}
+```
+
+The `<remove>` sentinel exists only to stop `DOMParser` hoisting tags into `<head>`, and the
+`DOMParser` path deletes it again on the next line. The fallback path does not:
+`InertDocumentHelper` assigns the string to a `<template>` and returns it unchanged, so `<remove>`
+survives into the tree the sanitizer walks.
+
+Two effects, both from the sentinel that should not be there. `SanitizingHtmlSerializer` meets an
+element absent from `VALID_ELEMENTS`, sets `sanitizedSomething = true`, and `_sanitizeHtml` logs
+"sanitizing HTML stripped some content" for input from which nothing was stripped. And the mXSS
+comparison ([§ 8](#8-the-mxss-stabilization-loop-stops-one-round-trip-early)) then compares a
+prefixed string against an unprefixed one.
+
+Reachability is narrow: `isDOMParserAvailable()` must be true — otherwise `getInertBodyHelper`
+returns `InertDocumentHelper` directly and it correctly receives the raw html — while
+`parseFromString(…).body` returns `null`, the legacy iPad case the comment names. Not a security
+hole, since the sentinel is stripped by the whitelist either way.
+
 ## Gaps in repository tooling and data
 
-### 9. `@deprecated` versions are parsed out of prose — `open`
+### 10. `@deprecated` versions are parsed out of prose — `open`
 
 `generate_manifest.mts` takes the first number anywhere in the tag comment. Two live cases:
 `getLocaleCurrencyCode` renders as "deprecated since v4217" (from "ISO 4217"), and `ServerXhr` as
 "v23" when 23 is the intended _removal_ version. Fixing it is a design choice — require an explicit
 leading version, or correct the two comments — so it is recorded rather than changed.
 
-### 10. Three paths match no review group — `open`
+### 11. Three paths match no review group — `open`
 
 `docs/codebase-map` (111 files), `tools/bazel` (9), `goldens/vscode-extension` (2).
 `.pullapprove.yml` fails any pull request that matches no group, so these are latent blockers. The
 `tools/bazel` case is an enumeration style: `dev-infra` lists sibling directories one at a time.
 
-### 11. Five `{@example}` tags point at a file that does not exist — `open`
+### 12. Five `{@example}` tags point at a file that does not exist — `open`
 
 `packages/private/testing/matchers/index.ts` (lines 28, 38, 48, 58, 78) reference
 `packages/examples/testing/ts/matchers.ts`. Nothing catches it because that package is not
 docs-extracted.
 
-### 12. Five example projects are referenced by nothing — `open`
+### 13. Five example projects are referenced by nothing — `open`
 
 No build checks the reverse direction.
 
-### 13. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
+### 14. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
 
 The analyzer required the `: o.ExternalReference` annotation, which the four type-checking entries
 at the end of `Identifiers` omit. They were never checked for resolution against `core` while the
@@ -325,7 +361,7 @@ tool reported the contract complete. All four do resolve; the contract is now 21
 
 ## Observations recorded so that they are not re-investigated
 
-### 14. 63 `ɵ` names appear in the API goldens — `open`
+### 15. 63 `ɵ` names appear in the API goldens — `open`
 
 Across 25 of the 50 golden files, only 3 as declared entries. The other 60 sit inside the
 signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported class;
@@ -333,7 +369,7 @@ signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported
 freely" for `ɵMetadataOverrider` and "renaming this changes a public type" for `ɵTypedOrUntyped`,
 and nothing marks which is which.
 
-### 15. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
+### 16. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
 
 `packages/core/src/hydration/utils.ts:141` vs `:152`. The comment describes handling `<comp ngh="" />`,
 but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty string, so
@@ -341,7 +377,7 @@ but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty s
 confirms the framework never emits `ngh=""` — they write `index.toString()` or `"a|b"`. Dead code
 and a misleading comment, not a live bug.
 
-### 16. `removeDehydratedViewList` does not reset its container — `unconfirmed`
+### 17. `removeDehydratedViewList` does not reset its container — `unconfirmed`
 
 `packages/core/src/hydration/cleanup.ts:56`. Its sibling `removeDehydratedViews` (`:53`) sets
 `lContainer[DEHYDRATED_VIEWS] = retainedViews` and explains why — "do not trigger the lookup process
@@ -349,7 +385,7 @@ once again". `removeDehydratedViewList` removes the DOM nodes but leaves the arr
 entries keep a `firstChild` pointing at a detached node. Whether anything consults that container
 afterwards has not been established.
 
-### 17. `ɵdisableProfiling` has no consumer at all — `open`
+### 18. `ɵdisableProfiling` has no consumer at all — `open`
 
 Exported from `core_private_export.ts:138`, absent from the `ng` global table (`enableProfiling` is
 present, its counterpart is not), and imported nowhere. `profiler.ts:73` is the only other mention.

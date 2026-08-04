@@ -118,6 +118,28 @@ Anything here bypasses layer 2 by design.
 - **An injected `Sanitizer`** (`lView[ENVIRONMENT].sanitizer`) takes precedence over the built-in
   logic in every `ɵɵsanitize*` function — it is consulted first and its result is used as-is.
 
+### `DomSanitizer` is not the sanitizer bindings use
+
+This is worth stating plainly, because the names invite the opposite assumption. There are two
+distinct tokens:
+
+| Token                                     | Default                         | Reached by                                                                                                  |
+| ----------------------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `Sanitizer` (`sanitization/sanitizer.ts`) | `factory: () => null`           | `component_ref.ts:159` — `rootLViewInjector.get(Sanitizer, null)`, stored as `lView[ENVIRONMENT].sanitizer` |
+| `DomSanitizer` (`platform-browser`)       | `useExisting: DomSanitizerImpl` | application code that injects it                                                                            |
+
+Nothing in `platform-browser` provides `Sanitizer`, so in an ordinary application
+`lView[ENVIRONMENT].sanitizer` is **`null`** and every template binding takes the built-in path —
+`_sanitizeHtml` / `_sanitizeUrl`, promoted through the `angular` policy. `DomSanitizer` is a
+service an application calls itself; its output only re-enters a binding if the application puts it
+there. An application that wires `{provide: Sanitizer, useExisting: DomSanitizer}` moves the whole
+binding path onto the custom-sanitizer branch, and therefore onto `angular#unsafe-bypass`.
+
+`DomSanitizerImpl.sanitize` also handles only six of the seven `SecurityContext` members;
+`ATTRIBUTE_NO_BINDING` falls to `default:` and throws `Unexpected SecurityContext 6`. Nothing in
+the runtime calls it with that value — `ɵɵvalidateAttribute` never consults the injected sanitizer
+— so this is reachable only by an application passing a public enum member the service rejects.
+
 ## 5. Trusted Types promotion — two policies
 
 | Policy name             | File                                    | Used for                                                           |
