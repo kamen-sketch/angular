@@ -992,6 +992,90 @@ the above:
   loop at `:230` never runs, and the result is zero nodes — which is the correct reading of an
   empty translation.
 
+### 34. One `$localize` arity check raises a diagnostic, its twin crashes — `open`
+
+`packages/localize/tools/src/source_file_utils.ts:156`
+
+```js
+if (cooked.isCallExpression()) {
+  let call = cooked;
+  if (call.get('arguments').length === 0) {
+    // No arguments so perhaps it is a `__templateObject()` call.
+    call = unwrapLazyLoadHelperCall(call);
+  }
+  cooked = call.get('arguments')[0];
+  if (!cooked.isExpression()) {          // TypeError when there is still no argument
+```
+
+`unwrapLazyLoadHelperCall` does not guarantee it returns a call with arguments. Its last line
+(`:365`) is `return call` — the _original_ zero-argument call, the one whose emptiness sent us here.
+That path is taken whenever the helper's returned expression is neither a call (`:331`) nor an
+identifier (`:335`); `getReturnedExpression` accepts any expression, so a helper returning an array
+literal or a member expression lands there. `call.get('arguments')[0]` is then `undefined` and
+`.isExpression()` throws.
+
+The same situation on the outer call, 60 lines earlier, is handled properly:
+
+```js
+let cooked = call.get('arguments')[0];
+if (cooked === undefined) {
+  throw new BabelParseError(call.node, '`$localize` called without any arguments.');
+}
+```
+
+The difference is not cosmetic, because the two error types take different routes out. Every
+translate and extract plugin branches on the type — `es2015_translate_plugin.ts:55`:
+
+```js
+} catch (e) {
+  if (isBabelParseError(e)) {
+    throw buildCodeFrameError(fs, path, state.file, e);   // filename + code frame
+  } else {
+    throw e;                                              // raw, no location
+  }
+}
+```
+
+So the guarded case names the file and points at the offending `$localize` call, while this one
+surfaces as a bare `Cannot read properties of undefined (reading 'isExpression')` with nothing
+identifying which file or which call produced it — during a build that may be processing thousands
+of them.
+
+### 35. A dead optional chain in `getFileFromPath` — `open`
+
+`packages/localize/tools/src/source_file_utils.ts:509`
+
+```js
+function getFileFromPath(fs: PathManipulation, path: NodePath | undefined): AbsoluteFsPath | null {
+  // The file field is not guaranteed to be present for all node paths
+  const opts = (path?.hub as {file?: File}).file?.opts;
+```
+
+The parentheses end the optional chain. `?.` short-circuits only to the end of _its own_ chain, and
+`(path?.hub as T)` closes it, so `.file` is a fresh member access on whatever the parenthesised
+expression evaluated to. When that is `undefined`, it throws rather than short-circuiting:
+
+```
+as written       path undefined       -> TypeError: Cannot read properties of undefined (reading 'file')
+as written       path.hub undefined   -> TypeError: Cannot read properties of undefined (reading 'file')
+as written       path.hub present     -> {"filename":"x"}
+unbroken chain   path undefined       -> undefined
+unbroken chain   path.hub undefined   -> undefined
+unbroken chain   path.hub present     -> {"filename":"x"}
+```
+
+Both the signature (`path: NodePath | undefined`) and the comment above it say the author meant to
+tolerate a missing value here; the `?.` was the mechanism, and it does nothing. The `as {file?: File}`
+cast is what hides it — it replaces the type of `path?.hub`, which included `undefined`, with one
+that does not, so the compiler cannot flag the unguarded `.file`.
+
+Latent rather than live: `getLocation` is the only caller, and it passes `startPath` (non-optional)
+at `:485` and guards the optional one with `endPath &&` at `:491`. Whether `path.hub` itself can be
+`undefined` at runtime is the open half — the cast exists precisely because Babel's declared type
+for `hub` does not carry `file`, and this environment cannot install `@babel/core` (pinned at
+`8.0.1` in `package.json`; the registry is blocked) to check whether `hub` is optional there. So:
+the guard is provably inoperative, and how often it would need to fire is unresolved.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
