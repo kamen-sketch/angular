@@ -33,11 +33,11 @@ pass review until somebody edits the ownership config. That is why the analyzer 
 arguments — before adding a new top-level directory, it answers "will this block a PR?" without
 opening one.
 
-**Three areas currently match no group** (116 files):
+**Three areas currently match no group** (122 files):
 
 | Area                       | Files | Why                                                                                                                                                                                                                                                                      |
 | -------------------------- | ----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `docs/codebase-map`        |   105 | this map — a new top-level `docs/` directory the config has never seen                                                                                                                                                                                                   |
+| `docs/codebase-map`        |   111 | this map — a new top-level `docs/` directory the config has never seen                                                                                                                                                                                                   |
 | `tools/bazel`              |     9 | `dev-infra` enumerates `tools/<subdir>/**` one directory at a time and this one was never added; its `.bzl` files are covered by the catch-all `**/*.bzl`, so only `BUILD.bazel`, `node_loader/*.mjs`, `rollup/path-plugin.cjs` and `rules_angular_store/*` fall through |
 | `goldens/vscode-extension` |     2 | `dev-infra` claims `goldens/{*,.*}` (top level only) and `public-api` claims `goldens/public-api/**`, leaving this sibling directory uncovered                                                                                                                           |
 
@@ -67,7 +67,7 @@ files people usually edit.
 | `tooling-cli-shared-api` |         3 |           2 |
 | `code-ownership`         |         6 |           1 |
 
-The counts overlap — 10,878 assignments across 10,780 files — because a path can belong to several
+The counts overlap — 10,878 assignments across 10,786 files — because a path can belong to several
 groups, and each of them must approve.
 
 Two shapes stand out:

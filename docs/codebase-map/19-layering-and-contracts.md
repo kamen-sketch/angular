@@ -70,13 +70,13 @@ any future tooling that measures imports in this repository should do the same.
 ## 2. The compiler → runtime instruction contract
 
 [`packages/compiler/src/render3/r3_identifiers.ts`](../../packages/compiler/src/render3/r3_identifiers.ts)
-is the single table of everything the compiler may emit a reference to — **211 symbols**, all with
+is the single table of everything the compiler may emit a reference to — **215 symbols**, all with
 `moduleName: '@angular/core'`. It is the narrowest description of the compiler/runtime boundary in
 the repository: adding an instruction to the runtime is invisible to the compiler until it is
 listed here, and listing a symbol that the runtime does not export produces code that fails at
 load time rather than at build time.
 
-All 211 resolve to declarations in `packages/core`. Where they land:
+All 215 resolve to declarations in `packages/core`. Where they land:
 
 | Area                                  | Symbols | Implemented in                                                                                                                                                           |
 | ------------------------------------- | ------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -96,6 +96,7 @@ All 211 resolve to declarations in `packages/core`. Where they land:
 | Definitions (`ɵɵdefineComponent` …)   |       4 | `render3/definition.ts`                                                                                                                                                  |
 | Queries (decorator + signal)          |       7 | `instructions/queries.ts`, `instructions/queries_signals.ts`                                                                                                             |
 | Features (`ɵɵNgOnChangesFeature` …)   |       6 | `render3/features/*.ts`                                                                                                                                                  |
+| Template type checking                |       4 | `authoring/input/input_signal.ts`, `authoring/input/input_type_checking.ts`, `render3/reactivity/signal.ts`, `type_checking.ts`                                          |
 | DI                                    |      12 | `di/interface/defs.ts`, `di/interface/service.ts`, `di/injector_compatibility.ts`, `di/forward_ref.ts`, `instructions/di.ts`, `instructions/di_attr.ts`, `render3/di.ts` |
 | Everything else                       |      56 | one file per concern — see the generated table                                                                                                                           |
 
@@ -122,3 +123,17 @@ first version of this analyzer and the symbol-index generator used `[\w$]*` for 
 silently dropped every `ɵ`-prefixed export — 259 symbols, including `ɵɵdefineComponent` itself.
 Both now spell out `[\w$ɵ]*`. Any script in this repository that pattern-matches identifiers needs
 the same treatment.
+
+A second version of the same mistake cost four symbols. Most entries in `Identifiers` are written
+`static foo: o.ExternalReference = {name: …}`, and the analyzer required that annotation — but the
+four type-checking entries at the end of the class omit it and let the type be inferred:
+
+```ts
+// type-checking
+static InputSignalBrandWriteType = {name: 'ɵINPUT_SIGNAL_BRAND_WRITE_TYPE', moduleName: CORE};
+```
+
+They were therefore never checked for resolution against `core`. They do all resolve, so nothing
+was broken — but the contract was being reported as complete while four of its members went
+unverified, which is the more dangerous failure for a checker. The annotation is now optional in
+the pattern.

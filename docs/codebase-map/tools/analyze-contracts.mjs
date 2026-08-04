@@ -122,8 +122,12 @@ function buildDependencyGraph() {
 
 // The static field name can itself contain `ɵ` (e.g. `static ɵɵdefineInjectable`), and JavaScript's
 // `\w` is ASCII-only, so the field pattern has to spell out the non-ASCII characters it may hold.
+//
+// The `: o.ExternalReference` annotation is optional in the source — the four type-checking entries
+// at the end of `Identifiers` omit it and are inferred instead. Requiring it silently dropped them
+// from this contract, so they are matched either way.
 const IDENTIFIER_ENTRY =
-  /static\s+([\w$ɵ]+)\s*:\s*o\.ExternalReference\s*=\s*\{\s*name:\s*'([^']+)'\s*,\s*moduleName:\s*([\w$]+)/g;
+  /static\s+([\w$ɵ]+)\s*(?::\s*o\.ExternalReference\s*)?=\s*\{\s*name:\s*'([^']+)'\s*,\s*moduleName:\s*([\w$]+)/g;
 
 function emittedIdentifiers() {
   const file = join(PACKAGES, 'compiler', 'src', 'render3', 'r3_identifiers.ts');

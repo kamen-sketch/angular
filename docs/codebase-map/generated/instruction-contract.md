@@ -5,7 +5,7 @@
 
 # Compiler → runtime instruction contract
 
-`packages/compiler/src/render3/r3_identifiers.ts` declares 211 symbols the
+`packages/compiler/src/render3/r3_identifiers.ts` declares 215 symbols the
 compiler may emit references to. Every one of them must be declared in `packages/core`; this
 table resolves each to the file that declares it, grouped by that file. A symbol reached
 through a re-export alias (for example `setClassMetadata as ɵsetClassMetadata`) shows the
@@ -551,3 +551,27 @@ original name in the `via` column.
 | Emitted symbol | via |
 | --- | --- |
 | `ɵɵgetInheritedFactory` | — |
+
+## `packages/core/src/authoring/input/input_signal.ts` — 1
+
+| Emitted symbol | via |
+| --- | --- |
+| `ɵINPUT_SIGNAL_BRAND_WRITE_TYPE` | — |
+
+## `packages/core/src/authoring/input/input_type_checking.ts` — 1
+
+| Emitted symbol | via |
+| --- | --- |
+| `ɵUnwrapDirectiveSignalInputs` | — |
+
+## `packages/core/src/render3/reactivity/signal.ts` — 1
+
+| Emitted symbol | via |
+| --- | --- |
+| `ɵunwrapWritableSignal` | — |
+
+## `packages/core/src/type_checking.ts` — 1
+
+| Emitted symbol | via |
+| --- | --- |
+| `ɵassertType` | — |

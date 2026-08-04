@@ -5,7 +5,7 @@
 
 # Code ownership
 
-10780 tracked files matched against 14 file-matching review groups
+10786 tracked files matched against 14 file-matching review groups
 from `.pullapprove.yml`. See [`../24-ownership.md`](../24-ownership.md).
 
 ## Groups
@@ -34,13 +34,13 @@ from `.pullapprove.yml`. See [`../24-ownership.md`](../24-ownership.md).
 | `global-approvers` | 2 |
 | `required-minimum-review` | 1 |
 
-## Paths no group owns (116 files)
+## Paths no group owns (122 files)
 
 A pull request touching only these fails PullApprove with "At least one group must match this
 PR", so they have to be adopted by a group before they can be changed.
 
 | Area | Files |
 | --- | ---: |
-| `docs/codebase-map` | 105 |
+| `docs/codebase-map` | 111 |
 | `tools/bazel` | 9 |
 | `goldens/vscode-extension` | 2 |

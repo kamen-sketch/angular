@@ -41,12 +41,13 @@ in the index for its package.
 | 16  | [`adev`](./16-adev.md)                                                     | angular.dev: the app, the content, the docs pipeline                                        |
 | 17  | [Tooling and infrastructure](./17-tooling-and-infrastructure.md)           | Bazel, goldens, benchmarks, integration tests, CI, repo conventions                         |
 | 18  | [Cross-cutting flows](./18-cross-cutting-flows.md)                         | five end-to-end traces that span packages                                                   |
-| 19  | [Layering and contracts](./19-layering-and-contracts.md)                   | the package dependency DAG and the 211-symbol compiler→runtime contract                     |
+| 19  | [Layering and contracts](./19-layering-and-contracts.md)                   | the package dependency DAG and the 215-symbol compiler→runtime contract                     |
 | 20  | [Error codes](./20-error-codes.md)                                         | the two `NG…` code spaces, their conventions, and the full catalogue                        |
 | 21  | [The public API surface](./21-api-surface.md)                              | the two records of the API, SemVer coverage, stability tiers and deprecations               |
 | 22  | [The DevTools message protocol](./22-devtools-protocol.md)                 | the 48-event contract between the panel, the in-page agent and the extension shell          |
 | 23  | [Guides and the code they show](./23-docs-examples.md)                     | how angular.dev references real source, and what the docs build does and does not enforce   |
 | 24  | [Code ownership](./24-ownership.md)                                        | which review group owns which path, and the paths no group claims                           |
+| 25  | [The `ɵ` private surface](./25-private-surface.md)                         | the 588 symbols packages share with each other but not with applications                    |
 
 Start with [01](./01-repo-layout.md) if you are new to the repository, or with
 [18](./18-cross-cutting-flows.md) if you already know roughly where things live and need to follow
@@ -148,6 +149,17 @@ Pass paths as arguments to check a directory before it exists.
 
 **It currently reports this map's own directory as unowned**, along with `tools/bazel` and
 `goldens/vscode-extension`; see [24 §1](./24-ownership.md).
+
+```bash
+node docs/codebase-map/tools/analyze-private-surface.mjs
+```
+
+[`tools/analyze-private-surface.mjs`](./tools/analyze-private-surface.mjs) measures the
+`ɵ`-prefixed surface that packages expose to each other but not to applications — the coupling the
+goldens deliberately omit — into [`private-surface.md`](./generated/private-surface.md). It
+partitions each symbol by who actually reaches it (compiler-emitted, cross-package, internal,
+test-only, unused here) and exits non-zero if a package imports a `ɵ` symbol its provider does not
+export. [25](./25-private-surface.md) reads the results.
 
 ## Keeping the hand-written half honest
 
