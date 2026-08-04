@@ -540,32 +540,84 @@ This is the same shape as [7](#7-the-dom-security-schema-is-duplicated-with-noth
 two hand-maintained copies of one declaration with nothing keeping them equal. Here they have
 already diverged.
 
+### 14. `enableProfiling`'s support check stops guarding after the first call — `open`
+
+`packages/core/src/profiler.ts:61`
+
+The platform-support check and the log-once flag share a single condition:
+
+```js
+export function enableProfiling() {
+  if (
+    !warningLogged &&
+    (typeof performance === 'undefined' || !performance.mark || !performance.measure)
+  ) {
+    warningLogged = true;
+    console.warn('Performance API is not supported on this platform');
+    return;
+  }
+  enablePerfLogging = true;
+}
+```
+
+Once the warning has been logged, `!warningLogged` is `false`, so the whole condition is `false`
+regardless of platform support and execution falls through to `enablePerfLogging = true`. The
+second call enables exactly what the first one refused.
+
+Run against the real file, which has no imports, with `globalThis.performance` deleted
+(`scratchpad/proftest.mjs`):
+
+```
+warnings logged: 1 ["Performance API is not supported on this platform"]
+1st enableProfiling() + measure -> no error
+2nd enableProfiling() + measure -> ReferenceError: performance is not defined
+```
+
+`startMeasuring` then reaches `performance.mark` on a platform that has no `performance`. Gating
+only the `console.warn` on `warningLogged`, and returning on any unsupported platform, fixes it.
+
+**Scope is narrow, and worth stating precisely.** This module has **no consumer anywhere in the
+repository**: `enableProfiling`, `disableProfiling`, `startMeasuring`, `stopMeasuring` and
+`PERFORMANCE_MARK_PREFIX` are re-exported from `core_private_export.ts:137-143` as `ɵ` symbols and
+nothing — in `packages/`, `adev/`, `devtools/` or `modules/` — imports any of them.
+
+There is also a name collision to be aware of before touching either. `@angular/core` exports two
+different functions called `enableProfiling`:
+
+| Symbol             | Implementation                                      | Status                                               |
+| ------------------ | --------------------------------------------------- | ---------------------------------------------------- |
+| `enableProfiling`  | `render3/debug/chrome_dev_tools_performance.ts:375` | `@publicApi v21.0`, returns a teardown function      |
+| `ɵenableProfiling` | `src/profiler.ts:61`                                | private, no in-repo consumer, the one described here |
+
+The public one is unaffected. Sibling of
+[24](#24-ɵdisableprofiling-has-no-consumer-at-all), which is the same module's other half.
+
 ## Gaps in repository tooling and data
 
-### 14. `@deprecated` versions are parsed out of prose — `open`
+### 15. `@deprecated` versions are parsed out of prose — `open`
 
 `generate_manifest.mts` takes the first number anywhere in the tag comment. Two live cases:
 `getLocaleCurrencyCode` renders as "deprecated since v4217" (from "ISO 4217"), and `ServerXhr` as
 "v23" when 23 is the intended _removal_ version. Fixing it is a design choice — require an explicit
 leading version, or correct the two comments — so it is recorded rather than changed.
 
-### 15. Three paths match no review group — `open`
+### 16. Three paths match no review group — `open`
 
 `docs/codebase-map` (111 files), `tools/bazel` (9), `goldens/vscode-extension` (2).
 `.pullapprove.yml` fails any pull request that matches no group, so these are latent blockers. The
 `tools/bazel` case is an enumeration style: `dev-infra` lists sibling directories one at a time.
 
-### 16. Five `{@example}` tags point at a file that does not exist — `open`
+### 17. Five `{@example}` tags point at a file that does not exist — `open`
 
 `packages/private/testing/matchers/index.ts` (lines 28, 38, 48, 58, 78) reference
 `packages/examples/testing/ts/matchers.ts`. Nothing catches it because that package is not
 docs-extracted.
 
-### 17. Five example projects are referenced by nothing — `open`
+### 18. Five example projects are referenced by nothing — `open`
 
 No build checks the reverse direction.
 
-### 18. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
+### 19. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
 
 The analyzer required the `: o.ExternalReference` annotation, which the four type-checking entries
 at the end of `Identifiers` omit. They were never checked for resolution against `core` while the
@@ -573,7 +625,7 @@ tool reported the contract complete. All four do resolve; the contract is now 21
 
 ## Observations recorded so that they are not re-investigated
 
-### 19. `createWatch` tracks its cleanup function; `effect()` does not — `open`
+### 20. `createWatch` tracks its cleanup function; `effect()` does not — `open`
 
 `packages/core/primitives/signals/src/watch.ts:118`
 
@@ -632,7 +684,7 @@ A method note: the first version of this test showed the cleanup never running a
 returns early unless a dependency actually changed (`watch.ts:113`), so the second `run()` was a
 no-op — the test had to move a signal between runs before it exercised anything.
 
-### 20. 63 `ɵ` names appear in the API goldens — `open`
+### 21. 63 `ɵ` names appear in the API goldens — `open`
 
 Across 25 of the 50 golden files, only 3 as declared entries. The other 60 sit inside the
 signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported class;
@@ -640,7 +692,7 @@ signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported
 freely" for `ɵMetadataOverrider` and "renaming this changes a public type" for `ɵTypedOrUntyped`,
 and nothing marks which is which.
 
-### 21. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
+### 22. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
 
 `packages/core/src/hydration/utils.ts:141` vs `:152`. The comment describes handling `<comp ngh="" />`,
 but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty string, so
@@ -648,7 +700,7 @@ but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty s
 confirms the framework never emits `ngh=""` — they write `index.toString()` or `"a|b"`. Dead code
 and a misleading comment, not a live bug.
 
-### 22. `removeDehydratedViewList` does not reset its container — `unconfirmed`
+### 23. `removeDehydratedViewList` does not reset its container — `unconfirmed`
 
 `packages/core/src/hydration/cleanup.ts:56`. Its sibling `removeDehydratedViews` (`:53`) sets
 `lContainer[DEHYDRATED_VIEWS] = retainedViews` and explains why — "do not trigger the lookup process
@@ -656,14 +708,14 @@ once again". `removeDehydratedViewList` removes the DOM nodes but leaves the arr
 entries keep a `firstChild` pointing at a detached node. Whether anything consults that container
 afterwards has not been established.
 
-### 23. `ɵdisableProfiling` has no consumer at all — `open`
+### 24. `ɵdisableProfiling` has no consumer at all — `open`
 
 Exported from `core_private_export.ts:138`, absent from the `ng` global table (`enableProfiling` is
 present, its counterpart is not), and imported nowhere. `profiler.ts:73` is the only other mention.
 
 ---
 
-### 24. The di primitive's `inject` contradicts its own limp-mode comment — `open`
+### 25. The di primitive's `inject` contradicts its own limp-mode comment — `open`
 
 `packages/core/primitives/di/src/injector.ts:22`
 
@@ -700,7 +752,7 @@ Recorded with [18](#18-createwatch-tracks-its-cleanup-function-effect-does-not) 
 [22](#22-ɵdisableprofiling-has-no-consumer-at-all): primitives published from an entry point
 outside the public API, with no in-repo consumer to keep them honest.
 
-### 25. `ɵsetAlternateWeakRefImpl` is a published no-op — `open`
+### 26. `ɵsetAlternateWeakRefImpl` is a published no-op — `open`
 
 `packages/core/primitives/signals/src/weak_ref.ts`
 
