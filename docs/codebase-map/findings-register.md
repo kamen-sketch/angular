@@ -559,19 +559,47 @@ present, its counterpart is not), and imported nowhere. `profiler.ts:73` is the 
 
 ---
 
+### 22. `ɵsetAlternateWeakRefImpl` is a published no-op — `open`
+
+`packages/core/primitives/signals/src/weak_ref.ts`
+
+The whole file:
+
+```ts
+export function setAlternateWeakRefImpl(impl: unknown) {
+  // TODO: remove this function
+}
+```
+
+It takes an argument, ignores it, and does nothing — yet it is still published twice: from
+`packages/core/primitives/signals/index.ts:63`, and from `core_private_export.ts:25` as
+`ɵsetAlternateWeakRefImpl`. Nothing in the repository calls it.
+
+That combination is worse than an unused export. The name promises the ability to swap in a
+`WeakRef` implementation — exactly the hook an environment without native `WeakRef` would reach
+for — and a caller outside this repository gets silence rather than an error or a warning. The
+`TODO` says the intent is removal, so the function is waiting on a deprecation rather than on a
+decision.
+
+Related to [21](#21-ɵdisableprofiling-has-no-consumer-at-all): both are private exports with no
+in-repo consumer, but that one still does something.
+
 ## Not defects — investigated and cleared
 
 Recorded so the same questions are not re-opened.
 
-| Question                                                                                           | Answer                                                                                                                                                                                                     |
-| -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TEMPLATES = 't'` and `DEFER_HYDRATE_TRIGGERS = 't'` collide (`hydration/interfaces.ts:37`, `:48`) | No. `deferBlockInfo` is a separate object stored in `context.deferBlocks` → `__nghDeferData__`; `ngh` goes to `__nghData__`. Two disjoint schemas each using the short key.                                |
-| Path compression round-trip                                                                        | Correct. `compress('b',[f,f,n])` → `"bf2n"` → `decompress` → `['b','f',2,'n',1]`.                                                                                                                          |
-| `navigateBetween` discards empty paths (`node_lookup_utils.ts:278`)                                | No. `![]` is `false`, so `!parentPath` catches only `null`. Recursion terminates at `parentElement == null`.                                                                                               |
-| `ngh="10\|25"` two-id encoding                                                                     | Correct in both read orders; the remaining id is written back, then the attribute removed.                                                                                                                 |
-| `previousTNode.type === TNodeType.Element` uses `===` on a bitmask (`node_lookup_utils.ts:161`)    | Correct. `interfaces/node.ts` states combined values "should never be used for `TNode.type`".                                                                                                              |
-| Dev-only error text ships to production                                                            | No. Of 293 `RuntimeError` sites: 179 gate the argument, 36 sit in a lexical `ngDevMode` block, 51 are in transitively dev-only functions, 3 are registered through `ngDevMode ? […] : []`. Zero reachable. |
-| `isDevMode()` used internally                                                                      | Never — 0 sites. It is a function call, so it cannot be folded; the framework avoids its own public API here deliberately.                                                                                 |
+| Question                                                                                            | Answer                                                                                                                                                                                                                                                           |
+| --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TEMPLATES = 't'` and `DEFER_HYDRATE_TRIGGERS = 't'` collide (`hydration/interfaces.ts:37`, `:48`)  | No. `deferBlockInfo` is a separate object stored in `context.deferBlocks` → `__nghDeferData__`; `ngh` goes to `__nghData__`. Two disjoint schemas each using the short key.                                                                                      |
+| Path compression round-trip                                                                         | Correct. `compress('b',[f,f,n])` → `"bf2n"` → `decompress` → `['b','f',2,'n',1]`.                                                                                                                                                                                |
+| `navigateBetween` discards empty paths (`node_lookup_utils.ts:278`)                                 | No. `![]` is `false`, so `!parentPath` catches only `null`. Recursion terminates at `parentElement == null`.                                                                                                                                                     |
+| `ngh="10\|25"` two-id encoding                                                                      | Correct in both read orders; the remaining id is written back, then the attribute removed.                                                                                                                                                                       |
+| `previousTNode.type === TNodeType.Element` uses `===` on a bitmask (`node_lookup_utils.ts:161`)     | Correct. `interfaces/node.ts` states combined values "should never be used for `TNode.type`".                                                                                                                                                                    |
+| Dev-only error text ships to production                                                             | No. Of 293 `RuntimeError` sites: 179 gate the argument, 36 sit in a lexical `ngDevMode` block, 51 are in transitively dev-only functions, 3 are registered through `ngDevMode ? […] : []`. Zero reachable.                                                       |
+| `isDevMode()` used internally                                                                       | Never — 0 sites. It is a function call, so it cannot be folded; the framework avoids its own public API here deliberately.                                                                                                                                       |
+| `untracked` restores the consumer if its callback throws (`untracked.ts:19`)                        | Yes, via `finally`; the comment says that is the point.                                                                                                                                                                                                          |
+| `defaultThrowError` in `signals/errors.ts:11` throws a message-less `Error`                         | Only before a platform exists. `publishSignalConfiguration()` (`application_ref.ts:73`) installs the real `RuntimeError` and `createPlatform` calls it (`platform.ts:47`). Signals used standalone — an entry point outside the public API — get the bare error. |
+| `producerAccessed`'s consecutive-read fast path does not refresh `lastReadVersion` (`graph.ts:232`) | Correct. The link was made earlier in the same run at the current version, and a producer cannot change version mid-computation because `producerUpdatesAllowed` rejects writes from a computation.                                                              |
 
 ---
 
