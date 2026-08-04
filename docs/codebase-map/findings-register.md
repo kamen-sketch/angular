@@ -387,32 +387,81 @@ computation rather than with distinct dependencies. The realistic trigger is a c
 one signal inside a loop over others — `rows().map(r => r.qty() * unitPrice())` alternates, so
 `unitPrice` gets a fresh link per row.
 
+### 11. `linkedSignal.set()` passes the internal `ERRORED` sentinel to a user's `equal` — `open`
+
+`packages/core/primitives/signals/src/linked_signal.ts:106`
+
+`update()` guards the errored state explicitly, and says why:
+
+```js
+export function linkedSignalUpdateFn(node, updater) {
+  producerUpdateValueVersion(node);
+  // update() on a linked signal can't work if the current state is ERRORED, as there's no value.
+  if (node.value === ERRORED) throw node.error;
+  signalUpdateFn(node, updater);
+  producerMarkClean(node);
+}
+```
+
+`set()` has no such guard:
+
+```js
+export function linkedSignalSetFn(node, newValue) {
+  producerUpdateValueVersion(node);
+  signalSetFn(node, newValue); // → if (!node.equal(node.value, newValue)) …
+  producerMarkClean(node);
+}
+```
+
+When the computation has thrown, `node.value` holds the `ERRORED` symbol, so `signalSetFn`
+(`signal.ts:91`) calls `node.equal(ERRORED, newValue)`. `ValueEqualityFn<T>` is declared
+`(a: T, b: T) => boolean`, so this hands a `Symbol` to a function typed to receive the signal's
+value — a type violation visible only at runtime.
+
+Run against the real sources (`scratchpad/linkederr.mjs`), for a `linkedSignal` whose computation
+threw:
+
+| equality function                 | `set()`                                                                  | `update()`                            |
+| --------------------------------- | ------------------------------------------------------------------------ | ------------------------------------- |
+| default (`Object.is`)             | succeeds                                                                 | throws the original computation error |
+| `(a, b) => a.id === b.id`         | succeeds, but `a` is `Symbol(ERRORED)`                                   | throws the original error             |
+| `(a, b) => a.id.toFixed(0) === …` | **`TypeError: Cannot read properties of undefined (reading 'toFixed')`** | throws the original error             |
+
+The default case is safe by luck: `Object.is` accepts anything, and property reads on a `Symbol`
+yield `undefined` rather than throwing, so the second row survives too. Any `equal` that calls a
+method on its first argument fails, with a message naming neither the linked signal nor the error
+that actually occurred.
+
+`set()` is also the natural way to recover from a failed computation, which is exactly when the
+state is errored. Unlike `update()`, it does not need the old value at all — the only thing
+consuming it is the equality check.
+
 ## Gaps in repository tooling and data
 
-### 11. `@deprecated` versions are parsed out of prose — `open`
+### 12. `@deprecated` versions are parsed out of prose — `open`
 
 `generate_manifest.mts` takes the first number anywhere in the tag comment. Two live cases:
 `getLocaleCurrencyCode` renders as "deprecated since v4217" (from "ISO 4217"), and `ServerXhr` as
 "v23" when 23 is the intended _removal_ version. Fixing it is a design choice — require an explicit
 leading version, or correct the two comments — so it is recorded rather than changed.
 
-### 12. Three paths match no review group — `open`
+### 13. Three paths match no review group — `open`
 
 `docs/codebase-map` (111 files), `tools/bazel` (9), `goldens/vscode-extension` (2).
 `.pullapprove.yml` fails any pull request that matches no group, so these are latent blockers. The
 `tools/bazel` case is an enumeration style: `dev-infra` lists sibling directories one at a time.
 
-### 13. Five `{@example}` tags point at a file that does not exist — `open`
+### 14. Five `{@example}` tags point at a file that does not exist — `open`
 
 `packages/private/testing/matchers/index.ts` (lines 28, 38, 48, 58, 78) reference
 `packages/examples/testing/ts/matchers.ts`. Nothing catches it because that package is not
 docs-extracted.
 
-### 14. Five example projects are referenced by nothing — `open`
+### 15. Five example projects are referenced by nothing — `open`
 
 No build checks the reverse direction.
 
-### 15. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
+### 16. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
 
 The analyzer required the `: o.ExternalReference` annotation, which the four type-checking entries
 at the end of `Identifiers` omit. They were never checked for resolution against `core` while the
@@ -420,7 +469,7 @@ tool reported the contract complete. All four do resolve; the contract is now 21
 
 ## Observations recorded so that they are not re-investigated
 
-### 16. 63 `ɵ` names appear in the API goldens — `open`
+### 17. 63 `ɵ` names appear in the API goldens — `open`
 
 Across 25 of the 50 golden files, only 3 as declared entries. The other 60 sit inside the
 signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported class;
@@ -428,7 +477,7 @@ signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported
 freely" for `ɵMetadataOverrider` and "renaming this changes a public type" for `ɵTypedOrUntyped`,
 and nothing marks which is which.
 
-### 17. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
+### 18. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
 
 `packages/core/src/hydration/utils.ts:141` vs `:152`. The comment describes handling `<comp ngh="" />`,
 but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty string, so
@@ -436,7 +485,7 @@ but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty s
 confirms the framework never emits `ngh=""` — they write `index.toString()` or `"a|b"`. Dead code
 and a misleading comment, not a live bug.
 
-### 18. `removeDehydratedViewList` does not reset its container — `unconfirmed`
+### 19. `removeDehydratedViewList` does not reset its container — `unconfirmed`
 
 `packages/core/src/hydration/cleanup.ts:56`. Its sibling `removeDehydratedViews` (`:53`) sets
 `lContainer[DEHYDRATED_VIEWS] = retainedViews` and explains why — "do not trigger the lookup process
@@ -444,7 +493,7 @@ once again". `removeDehydratedViewList` removes the DOM nodes but leaves the arr
 entries keep a `firstChild` pointing at a detached node. Whether anything consults that container
 afterwards has not been established.
 
-### 19. `ɵdisableProfiling` has no consumer at all — `open`
+### 20. `ɵdisableProfiling` has no consumer at all — `open`
 
 Exported from `core_private_export.ts:138`, absent from the `ng` global table (`enableProfiling` is
 present, its counterpart is not), and imported nowhere. `profiler.ts:73` is the only other mention.
