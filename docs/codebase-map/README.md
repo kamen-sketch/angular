@@ -44,6 +44,7 @@ in the index for its package.
 | 19  | [Layering and contracts](./19-layering-and-contracts.md)                   | the package dependency DAG and the 211-symbol compiler→runtime contract                     |
 | 20  | [Error codes](./20-error-codes.md)                                         | the two `NG…` code spaces, their conventions, and the full catalogue                        |
 | 21  | [The public API surface](./21-api-surface.md)                              | the two records of the API, SemVer coverage, stability tiers and deprecations               |
+| 22  | [The DevTools message protocol](./22-devtools-protocol.md)                 | the 48-event contract between the panel, the in-page agent and the extension shell          |
 
 Start with [01](./01-repo-layout.md) if you are new to the repository, or with
 [18](./18-cross-cutting-flows.md) if you already know roughly where things live and need to follow
@@ -112,6 +113,16 @@ node docs/codebase-map/tools/analyze-api-surface.mjs
 [`tools/analyze-api-surface.mjs`](./tools/analyze-api-surface.mjs) measures the public API from the
 goldens and the stability tags in source into [`api-surface.md`](./generated/api-surface.md), and
 fails if a symbol claims two stability tiers at once. [21](./21-api-surface.md) reads the results.
+
+```bash
+node docs/codebase-map/tools/analyze-devtools-protocol.mjs
+```
+
+[`tools/analyze-devtools-protocol.mjs`](./tools/analyze-devtools-protocol.mjs) checks that every
+event declared in the DevTools protocol is wired at both ends, across both the typed `MessageBus`
+and the extension shell's untyped port envelope, into
+[`devtools-protocol.md`](./generated/devtools-protocol.md). [22](./22-devtools-protocol.md) reads
+the results.
 
 ## Keeping the hand-written half honest
 
