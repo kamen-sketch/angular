@@ -590,34 +590,94 @@ different functions called `enableProfiling`:
 | `ɵenableProfiling` | `src/profiler.ts:61`                                | private, no in-repo consumer, the one described here |
 
 The public one is unaffected. Sibling of
-[24](#24-ɵdisableprofiling-has-no-consumer-at-all), which is the same module's other half.
+[25](#25-ɵdisableprofiling-has-no-consumer-at-all), which is the same module's other half.
+
+### 15. The jsaction parse cache is a plain object keyed by attribute text — `open`
+
+`packages/core/primitives/event-dispatch/src/cache.ts:14`
+
+```js
+const parseCache: {[key: string]: {[key: string]: string | undefined}} = {};
+
+export function getParsed(text: string) {
+  return parseCache[text];
+}
+export function setParsed(text, parsed) {
+  parseCache[text] = parsed;
+}
+```
+
+The key is the raw `jsaction` attribute value, and the object carries `Object.prototype`, so
+attribute values that happen to name a prototype member are not ordinary keys. Run against the real
+file (`scratchpad/cachetest.mjs`):
+
+```
+getParsed("click:foo"     ) -> undefined          truthy: false
+getParsed("constructor"   ) -> function Object    truthy: true
+getParsed("toString"      ) -> function toString  truthy: true
+getParsed("hasOwnProperty") -> function …         truthy: true
+getParsed("__proto__"     ) -> {}                 truthy: true
+```
+
+Two consequences, both silent.
+
+**Reads skip parsing.** `parseActions` (`action_resolver.ts:259`) does
+`actionMap = cache.getParsed(jsactionAttribute); if (!actionMap) { …parse… }`. A truthy inherited
+member makes it skip the parse and store the inherited function as the element's action map, so an
+element whose whole attribute is `constructor`, `toString`, `valueOf` or `hasOwnProperty` never
+gets its actions bound.
+
+**Writes poison the cache.** `setParsed('__proto__', …)` sets the _prototype_ of `parseCache`
+rather than a key, which leaks the stored map across unrelated keys:
+
+```
+after setParsed("__proto__", {click:"x"}):
+  getParsed("__proto__") -> {"click":"x"}
+  getParsed("click")     -> "x"        ← a different attribute's lookup now resolves
+```
+
+So one element carrying `jsaction="__proto__"` can silently disable a second element carrying
+`jsaction="click"`, whose action map becomes the string `"x"`.
+
+**Not reachable through Angular's own attributes.** `setJSActionAttributes`
+(`core/src/event_delegation_utils.ts:39-44`) always writes `eventType + ':;'` per event, so the
+values Angular generates contain a colon and a semicolon and can never equal a bare prototype
+member name. The hazard belongs to hand-authored `jsaction` attributes — the general use of this
+package, which is published as `@angular/core/primitives/event-dispatch`.
+
+`Object.create(null)` closes both, and the repository already uses exactly that idiom for the same
+reason: `dom_security_schema.ts:63` defines `createNullObj = () => Object.create(null)` for its
+attribute-keyed lookups.
+
+Separately, `parseCache` is never bounded or cleared, so it grows with the number of distinct
+attribute strings seen. Small for Angular's generated values; unbounded in principle.
 
 ## Gaps in repository tooling and data
 
-### 15. `@deprecated` versions are parsed out of prose — `open`
+### 16. `@deprecated` versions are parsed out of prose — `open`
 
 `generate_manifest.mts` takes the first number anywhere in the tag comment. Two live cases:
 `getLocaleCurrencyCode` renders as "deprecated since v4217" (from "ISO 4217"), and `ServerXhr` as
 "v23" when 23 is the intended _removal_ version. Fixing it is a design choice — require an explicit
 leading version, or correct the two comments — so it is recorded rather than changed.
 
-### 16. Three paths match no review group — `open`
+### 17. Three paths match no review group — `open`
 
 `docs/codebase-map` (111 files), `tools/bazel` (9), `goldens/vscode-extension` (2).
 `.pullapprove.yml` fails any pull request that matches no group, so these are latent blockers. The
 `tools/bazel` case is an enumeration style: `dev-infra` lists sibling directories one at a time.
 
-### 17. Five `{@example}` tags point at a file that does not exist — `open`
+### 18. Five `{@example}` tags point at a file that does not exist — `open`
 
 `packages/private/testing/matchers/index.ts` (lines 28, 38, 48, 58, 78) reference
 `packages/examples/testing/ts/matchers.ts`. Nothing catches it because that package is not
 docs-extracted.
 
-### 18. Five example projects are referenced by nothing — `open`
+### 19. Five example projects are referenced by nothing — `open`
 
 No build checks the reverse direction.
 
-### 19. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
+### 20. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
 
 The analyzer required the `: o.ExternalReference` annotation, which the four type-checking entries
 at the end of `Identifiers` omit. They were never checked for resolution against `core` while the
@@ -625,7 +685,7 @@ tool reported the contract complete. All four do resolve; the contract is now 21
 
 ## Observations recorded so that they are not re-investigated
 
-### 20. `createWatch` tracks its cleanup function; `effect()` does not — `open`
+### 21. `createWatch` tracks its cleanup function; `effect()` does not — `open`
 
 `packages/core/primitives/signals/src/watch.ts:118`
 
@@ -684,7 +744,7 @@ A method note: the first version of this test showed the cleanup never running a
 returns early unless a dependency actually changed (`watch.ts:113`), so the second `run()` was a
 no-op — the test had to move a signal between runs before it exercised anything.
 
-### 21. 63 `ɵ` names appear in the API goldens — `open`
+### 22. 63 `ɵ` names appear in the API goldens — `open`
 
 Across 25 of the 50 golden files, only 3 as declared entries. The other 60 sit inside the
 signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported class;
@@ -692,7 +752,7 @@ signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported
 freely" for `ɵMetadataOverrider` and "renaming this changes a public type" for `ɵTypedOrUntyped`,
 and nothing marks which is which.
 
-### 22. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
+### 23. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
 
 `packages/core/src/hydration/utils.ts:141` vs `:152`. The comment describes handling `<comp ngh="" />`,
 but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty string, so
@@ -700,7 +760,7 @@ but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty s
 confirms the framework never emits `ngh=""` — they write `index.toString()` or `"a|b"`. Dead code
 and a misleading comment, not a live bug.
 
-### 23. `removeDehydratedViewList` does not reset its container — `unconfirmed`
+### 24. `removeDehydratedViewList` does not reset its container — `unconfirmed`
 
 `packages/core/src/hydration/cleanup.ts:56`. Its sibling `removeDehydratedViews` (`:53`) sets
 `lContainer[DEHYDRATED_VIEWS] = retainedViews` and explains why — "do not trigger the lookup process
@@ -708,14 +768,14 @@ once again". `removeDehydratedViewList` removes the DOM nodes but leaves the arr
 entries keep a `firstChild` pointing at a detached node. Whether anything consults that container
 afterwards has not been established.
 
-### 24. `ɵdisableProfiling` has no consumer at all — `open`
+### 25. `ɵdisableProfiling` has no consumer at all — `open`
 
 Exported from `core_private_export.ts:138`, absent from the `ng` global table (`enableProfiling` is
 present, its counterpart is not), and imported nowhere. `profiler.ts:73` is the only other mention.
 
 ---
 
-### 25. The di primitive's `inject` contradicts its own limp-mode comment — `open`
+### 26. The di primitive's `inject` contradicts its own limp-mode comment — `open`
 
 `packages/core/primitives/di/src/injector.ts:22`
 
@@ -752,7 +812,7 @@ Recorded with [18](#18-createwatch-tracks-its-cleanup-function-effect-does-not) 
 [22](#22-ɵdisableprofiling-has-no-consumer-at-all): primitives published from an entry point
 outside the public API, with no in-repo consumer to keep them honest.
 
-### 26. `ɵsetAlternateWeakRefImpl` is a published no-op — `open`
+### 27. `ɵsetAlternateWeakRefImpl` is a published no-op — `open`
 
 `packages/core/primitives/signals/src/weak_ref.ts`
 
