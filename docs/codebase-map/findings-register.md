@@ -9,6 +9,10 @@ files. Every claim below about behaviour comes from reading the file itself. Ear
 came from a scan are marked, because four separate scans in this review produced numbers that had
 to be retracted once the code was read — see [§ Retractions](#retractions).
 
+Numbers are stable identifiers assigned in the order findings were confirmed, not positions. A
+finding is filed under the section that classifies it, so the numbering within a section can skip —
+findings referenced elsewhere keep the number they were published under.
+
 Status values:
 
 | Status         | Meaning                                                            |
@@ -803,6 +807,71 @@ is exported from the package index, so no consumer can supply one either.
 So: a latent double-replay in code that nothing can currently execute. Recorded because the queue
 and the flag read as if they were maintained, and the next person to wire an `eventReplayer` would
 inherit it.
+
+### 31. The compiler emits i18n descriptions that `$localize` truncates on read-back — `open`
+
+`packages/localize/src/utils/src/messages.ts:253`
+
+```js
+const [meaningAndDesc, customId] = meaningDescAndId.split(ID_SEPARATOR, 2);
+let [meaning, description]: (string | undefined)[] = meaningAndDesc.split(MEANING_SEPARATOR, 2);
+```
+
+The same metadata block has two parsers, and they disagree. The compiler's
+`parseI18nMeta` (`packages/compiler/src/render3/view/i18n/meta.ts:317`) splits on the **first**
+separator and keeps the whole remainder:
+
+```js
+const idIndex = meta.indexOf(I18N_ID_SEPARATOR);
+const descIndex = meta.indexOf(I18N_MEANING_SEPARATOR);
+[meaningAndDesc, customId] =
+  idIndex > -1 ? [meta.slice(0, idIndex), meta.slice(idIndex + 2)] : [meta, ''];
+[meaning, description] =
+  descIndex > -1
+    ? [meaningAndDesc.slice(0, descIndex), meaningAndDesc.slice(descIndex + 1)]
+    : ['', meaningAndDesc];
+```
+
+`slice` keeps everything after the separator; `split(sep, 2)` discards it. So a description
+containing a second `|` survives the compiler and is dropped by `$localize`.
+
+The two are not independent — they are the write and read halves of one wire format.
+`LocalizedString.serializeI18nHead` (`packages/compiler/src/output/output_ast.ts:759`) takes the
+compiler's parse and re-joins it with the same separators, and `parseMetadata` is what reads that
+string back.
+
+Round-trip measured by running both real functions against each other (compiler `parseI18nMeta`
+verbatim, `serializeI18nHead` mirrored, then `parseMetadata`):
+
+| `i18n="…"` in the template          | compiler reads meaning/description/id             | `$localize` reads back                        |
+| ----------------------------------- | ------------------------------------------------- | --------------------------------------------- |
+| `meaning\|plain description`        | `"meaning"` / `"plain description"` / `""`        | same                                          |
+| `meaning\|Click here \| then there` | `"meaning"` / `"Click here \| then there"` / `""` | `"meaning"` / `"Click here "` — **truncated** |
+| `A \| B \| C`                       | `"A "` / `" B \| C"` / `""`                       | `"A "` / `" B "` — **truncated**              |
+| `meaning\|desc@@my-id`              | `"meaning"` / `"desc"` / `"my-id"`                | same                                          |
+| `meaning\|desc@@id@@extra`          | `"meaning"` / `"desc"` / `"id@@extra"`            | id `"id"` — **truncated**                     |
+
+A single `|` in a description is not a divergence — both halves treat the leading segment as the
+meaning, which is the documented ambiguity of the format. The divergence starts at the **second**
+separator.
+
+Impact runs to the translators, not to the runtime. `parseMetadata` feeds `parseMessage`
+(`messages.ts:181`), whose `description` (`:212`) is what the extraction serializers write out —
+XLIFF1 `:77`, XLIFF2 `:83`, XMB `:77`, ARB `:56`. So `i18n="date|Sort by date | descending"`
+reaches the translator as the note "Sort by date ". Message **lookup** is unaffected: the id is
+`customId || computeMsgId(messageString, meaning)` (`:202`), and neither input is truncated in the
+realistic cases — `meaning` is the leading segment, so it is always intact.
+
+The `customId` row is the same root cause with an unrealistic trigger (`@@` inside an id), and the
+`parsePlaceholder` variant (`:290`) is not reachable at all: its `associatedMessageId` is
+`computeMsgId` output, which is decimal digits.
+
+No test pins the current behaviour — `messages_spec.ts` covers `:meaning|description:`,
+`:meaning|:`, and `:meaning|@@id:`, but nothing with a separator inside a field. So this is
+untested behaviour rather than a decision that was recorded.
+
+Contrast with `translations.ts:56`, a few lines away, where the analogous hazard **is** handled
+deliberately and documented in a comment (see finding 15).
 
 ## Gaps in repository tooling and data
 
