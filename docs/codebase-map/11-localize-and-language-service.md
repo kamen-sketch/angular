@@ -47,6 +47,24 @@ Three CLIs, all built on Babel:
 `src/source_file_utils.ts` and `src/diagnostics.ts` are shared across all three.
 `schematics/` holds the `ng add @angular/localize` schematic.
 
+### 1.3 Findings in this package
+
+Read file by file; the evidence for each is in the
+[findings register](./findings-register.md). Worth knowing before changing anything here:
+
+| #   | Where                                                  | What                                                                            |
+| --- | ------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| 31  | `src/utils/src/messages.ts:253`                        | metadata parser truncates where the compiler's `parseI18nMeta` does not         |
+| 32  | `tools/…/extract/…/xml_file.ts:35`                     | empty attributes dropped; the three serializers disagree about whether they are |
+| 33  | `tools/…/translation_parsers/translation_utils.ts:130` | one message names XLIFF 1.2 for all three formats                               |
+| 34  | `tools/src/source_file_utils.ts:156`                   | arity check crashes where its twin raises a diagnostic                          |
+| 35  | `tools/src/source_file_utils.ts:509`                   | optional chain broken by parentheses                                            |
+| 36  | `src/utils/src/messages.ts:344`                        | `findEndOfBlock` desyncs on escapes longer than two raw characters              |
+| 37  | `src/utils/src/translations.ts:58`                     | tools bundles are plain objects keyed by message id                             |
+
+The register also clears `icu_parsing.ts`, `escapeXml`, and two things in `translation_utils.ts`
+that look wrong and are not.
+
 ## 2. `packages/language-service` (90 files, ~37k lines)
 
 A TypeScript language-service plugin (`src/ts_plugin.ts`) that adds Angular template awareness to
