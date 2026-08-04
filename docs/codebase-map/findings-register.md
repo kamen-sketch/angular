@@ -714,8 +714,8 @@ Two things in one file, both about this package being publishable on its own as
 **Event patching is not idempotent.** `patchEventInstance` (`:172`) defaults to
 `configurable: false`, and `prepareEventForBubbling` (`:105`) redefines `stopPropagation` and
 `stopImmediatePropagation` on every `dispatchToDelegate`. On a real `Event` those methods live on
-the prototype, so the first patch creates an own property with `writable: false, configurable:
-false`, and a second one throws:
+the prototype, so the first patch creates an own property that is neither writable nor
+configurable, and a second one throws:
 
 ```
 after 1st patch: {"value":"[fn]","writable":false,"enumerable":false,"configurable":false}
