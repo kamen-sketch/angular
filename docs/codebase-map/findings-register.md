@@ -198,32 +198,64 @@ set, defends itself explicitly with `appsWithEventReplay.has(appRef)` (`event_re
 No dev-mode warning fires for passing the redundant feature; the only conflict check is
 `withIncrementalHydration()` together with `withNoIncrementalHydration()`.
 
+### 7. The DOM security schema is duplicated with nothing enforcing the copies — `open`
+
+`packages/core/src/sanitization/dom_security_schema.ts`
+`packages/compiler/src/schema/dom_security_schema.ts`
+
+The table that assigns a `SecurityContext` to each `tag|attribute` pair — 48 pairs, the document
+that decides whether a binding is sanitized at all ([26](./26-security-sinks.md)) — exists twice.
+The two files are currently **byte-for-byte identical** (`diff` reports no difference), and both
+carry the banner:
+
+```
+//        DO NOT EDIT THIS LIST OF SECURITY SENSITIVE PROPERTIES WITHOUT A SECURITY REVIEW!
+```
+
+Nothing keeps them equal. Neither is generated from the other, and no test compares them — the
+files that mention `SECURITY_SCHEMA` under `test/` exercise sanitizer behaviour, not schema
+equality.
+
+The copies are load-bearing at different times: the compiler's copy decides which `ɵɵsanitize*`
+call to emit, and core's copy answers `getSecurityContext` at runtime for host bindings and for
+`ɵɵvalidateAttribute`. A one-sided edit therefore does not fail loudly — it produces a build where
+the compiler and the runtime disagree about whether a sink needs sanitizing.
+
+Making the drift likelier: the core copy's `@see` correctly points at the compiler copy, but the
+**compiler copy's `@see` points at itself** (`../../../compiler/src/schema/dom_security_schema.ts`
+resolves to its own path from `packages/compiler/src/schema/`), so a reader who opens the compiler
+copy is never told a second copy exists.
+
+`sanitization.ts:320` carries a third "keep this in sync" comment, for
+`SVG_ANIMATION_SENSITIVE_STATIC_VALUES`, with the same absence of enforcement — though that table
+was checked and is consistent (see [26 §8](./26-security-sinks.md)).
+
 ## Gaps in repository tooling and data
 
-### 7. `@deprecated` versions are parsed out of prose — `open`
+### 8. `@deprecated` versions are parsed out of prose — `open`
 
 `generate_manifest.mts` takes the first number anywhere in the tag comment. Two live cases:
 `getLocaleCurrencyCode` renders as "deprecated since v4217" (from "ISO 4217"), and `ServerXhr` as
 "v23" when 23 is the intended _removal_ version. Fixing it is a design choice — require an explicit
 leading version, or correct the two comments — so it is recorded rather than changed.
 
-### 8. Three paths match no review group — `open`
+### 9. Three paths match no review group — `open`
 
 `docs/codebase-map` (111 files), `tools/bazel` (9), `goldens/vscode-extension` (2).
 `.pullapprove.yml` fails any pull request that matches no group, so these are latent blockers. The
 `tools/bazel` case is an enumeration style: `dev-infra` lists sibling directories one at a time.
 
-### 9. Five `{@example}` tags point at a file that does not exist — `open`
+### 10. Five `{@example}` tags point at a file that does not exist — `open`
 
 `packages/private/testing/matchers/index.ts` (lines 28, 38, 48, 58, 78) reference
 `packages/examples/testing/ts/matchers.ts`. Nothing catches it because that package is not
 docs-extracted.
 
-### 10. Five example projects are referenced by nothing — `open`
+### 11. Five example projects are referenced by nothing — `open`
 
 No build checks the reverse direction.
 
-### 11. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
+### 12. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
 
 The analyzer required the `: o.ExternalReference` annotation, which the four type-checking entries
 at the end of `Identifiers` omit. They were never checked for resolution against `core` while the
@@ -231,7 +263,7 @@ tool reported the contract complete. All four do resolve; the contract is now 21
 
 ## Observations recorded so that they are not re-investigated
 
-### 12. 63 `ɵ` names appear in the API goldens — `open`
+### 13. 63 `ɵ` names appear in the API goldens — `open`
 
 Across 25 of the 50 golden files, only 3 as declared entries. The other 60 sit inside the
 signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported class;
@@ -239,7 +271,7 @@ signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported
 freely" for `ɵMetadataOverrider` and "renaming this changes a public type" for `ɵTypedOrUntyped`,
 and nothing marks which is which.
 
-### 13. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
+### 14. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
 
 `packages/core/src/hydration/utils.ts:141` vs `:152`. The comment describes handling `<comp ngh="" />`,
 but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty string, so
@@ -247,7 +279,7 @@ but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty s
 confirms the framework never emits `ngh=""` — they write `index.toString()` or `"a|b"`. Dead code
 and a misleading comment, not a live bug.
 
-### 14. `removeDehydratedViewList` does not reset its container — `unconfirmed`
+### 15. `removeDehydratedViewList` does not reset its container — `unconfirmed`
 
 `packages/core/src/hydration/cleanup.ts:56`. Its sibling `removeDehydratedViews` (`:53`) sets
 `lContainer[DEHYDRATED_VIEWS] = retainedViews` and explains why — "do not trigger the lookup process
@@ -255,7 +287,7 @@ once again". `removeDehydratedViewList` removes the DOM nodes but leaves the arr
 entries keep a `firstChild` pointing at a detached node. Whether anything consults that container
 afterwards has not been established.
 
-### 15. `ɵdisableProfiling` has no consumer at all — `open`
+### 16. `ɵdisableProfiling` has no consumer at all — `open`
 
 Exported from `core_private_export.ts:138`, absent from the `ng` global table (`enableProfiling` is
 present, its counterpart is not), and imported nowhere. `profiler.ts:73` is the only other mention.

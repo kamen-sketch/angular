@@ -48,6 +48,10 @@ in the index for its package.
 | 23  | [Guides and the code they show](./23-docs-examples.md)                     | how angular.dev references real source, and what the docs build does and does not enforce   |
 | 24  | [Code ownership](./24-ownership.md)                                        | which review group owns which path, and the paths no group claims                           |
 | 25  | [The `ɵ` private surface](./25-private-surface.md)                         | the 588 symbols packages share with each other but not with applications                    |
+| 26  | [Security sinks](./26-security-sinks.md)                                   | every sink a bound value can reach, and the five layers of checks in front of them          |
+
+A companion [findings register](./findings-register.md) records the defects and gaps this map
+turned up, with the evidence and status of each.
 
 Start with [01](./01-repo-layout.md) if you are new to the repository, or with
 [18](./18-cross-cutting-flows.md) if you already know roughly where things live and need to follow
