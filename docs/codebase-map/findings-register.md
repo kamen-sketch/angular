@@ -469,7 +469,66 @@ tool reported the contract complete. All four do resolve; the contract is now 21
 
 ## Observations recorded so that they are not re-investigated
 
-### 17. 63 `ɵ` names appear in the API goldens — `open`
+### 17. `createWatch` tracks its cleanup function; `effect()` does not — `open`
+
+`packages/core/primitives/signals/src/watch.ts:118`
+
+`run()` opens the consumer context and then runs the user's cleanup inside it:
+
+```js
+const prevConsumer = consumerBeforeComputation(node);
+try {
+  node.cleanupFn(); // ← the active consumer is the watch
+  node.cleanupFn = NOOP_CLEANUP_FN;
+  node.fn(registerOnCleanup);
+} finally {
+  consumerAfterComputation(node, prevConsumer);
+}
+```
+
+so any signal read while tearing down becomes a dependency of the watch. `destroyWatchNode`
+(`:86`) runs the same user function with no consumer active, so the identical callback is tracked
+on one path and untracked on the other.
+
+Confirmed against the real sources (`scratchpad/watchcleanup.mjs`). A signal read **only** inside
+the cleanup appears in the watch's dependency list after the second run, ahead of the one the body
+reads — cleanup runs first — and changing it schedules the watch:
+
+```
+after first run  deps: [ 'usedByFn' ]
+after second run deps: [ 'readOnlyInCleanup', 'usedByFn' ]
+active consumer while cleanup ran: the watch
+setting the cleanup-only signal scheduled the watch 1 time(s)
+
+active consumer while cleanup ran on destroy(): none
+```
+
+**This does not reach applications.** The public `effect()` does not use `createWatch`; it has its
+own `EffectNode`, whose `cleanup()` (`render3/reactivity/effect.ts:239`) untracks explicitly:
+
+```js
+const prevConsumer = setActiveConsumer(null);
+try { while (this.cleanupFns.length) this.cleanupFns.pop()!(); }
+finally { this.cleanupFns = []; setActiveConsumer(prevConsumer); }
+```
+
+and both `ROOT_EFFECT_NODE.destroy` and `VIEW_EFFECT_NODE.destroy` route through that same method,
+so the public API is consistent on both paths.
+
+`createWatch` has **no callers in this repository** — it is only re-exported from
+`packages/core/primitives/signals/index.ts`, and `contributing-docs/public-api-surface.md`
+excludes `@angular/core/primitives` from the public API. So this is two implementations of one
+concept disagreeing, where the supported one is right and the other is reachable only from outside
+the repository.
+
+Recorded rather than reported as a defect, and worth knowing before anyone re-bases `effect()` on
+the primitive.
+
+A method note: the first version of this test showed the cleanup never running at all. `run()`
+returns early unless a dependency actually changed (`watch.ts:113`), so the second `run()` was a
+no-op — the test had to move a signal between runs before it exercised anything.
+
+### 18. 63 `ɵ` names appear in the API goldens — `open`
 
 Across 25 of the 50 golden files, only 3 as declared entries. The other 60 sit inside the
 signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported class;
@@ -477,7 +536,7 @@ signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported
 freely" for `ɵMetadataOverrider` and "renaming this changes a public type" for `ɵTypedOrUntyped`,
 and nothing marks which is which.
 
-### 18. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
+### 19. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
 
 `packages/core/src/hydration/utils.ts:141` vs `:152`. The comment describes handling `<comp ngh="" />`,
 but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty string, so
@@ -485,7 +544,7 @@ but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty s
 confirms the framework never emits `ngh=""` — they write `index.toString()` or `"a|b"`. Dead code
 and a misleading comment, not a live bug.
 
-### 19. `removeDehydratedViewList` does not reset its container — `unconfirmed`
+### 20. `removeDehydratedViewList` does not reset its container — `unconfirmed`
 
 `packages/core/src/hydration/cleanup.ts:56`. Its sibling `removeDehydratedViews` (`:53`) sets
 `lContainer[DEHYDRATED_VIEWS] = retainedViews` and explains why — "do not trigger the lookup process
@@ -493,7 +552,7 @@ once again". `removeDehydratedViewList` removes the DOM nodes but leaves the arr
 entries keep a `firstChild` pointing at a detached node. Whether anything consults that container
 afterwards has not been established.
 
-### 20. `ɵdisableProfiling` has no consumer at all — `open`
+### 21. `ɵdisableProfiling` has no consumer at all — `open`
 
 Exported from `core_private_export.ts:138`, absent from the `ng` global table (`enableProfiling` is
 present, its counterpart is not), and imported nowhere. `profiler.ts:73` is the only other mention.
