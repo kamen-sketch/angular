@@ -728,9 +728,24 @@ The contrast is the evidence that re-entry was thought about once: `prepareEvent
 to get reassigned every dispatch", because the `while (eventInfoWrapper.getAction())` loop patches
 it repeatedly. Nothing gives the same treatment to the bubbling patches, which are outside that
 loop — so they are safe only while no `Event` object reaches `dispatchToDelegate` twice.
-**Whether that can happen has not been established**; the closest candidate is the requeue in
-`createReplayQueuedBlockEventsFn` (`hydration/event_replay.ts:309`), which keeps un-hydrated events
-across rounds but calls `invokeListeners` once per event.
+
+**Reachability, traced afterwards: closed in the npm build, open in the Google-internal one.** Four
+routes were checked.
+
+| Route                                                    | Result                                                                                                                                                                                                                                                                                                               |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| One type registered in both phases by the early contract | Closed. `BUBBLE_EVENT_TYPES` (52) and `CAPTURE_EVENT_TYPES` (5) are disjoint, and `event_replay.ts:251` classifies each type into exactly one bucket.                                                                                                                                                                |
+| Two containers both ancestors of the target              | Closed. `initEventReplay` (`event_replay.ts:208`) builds exactly one `EventContractContainer`.                                                                                                                                                                                                                       |
+| The same type registered twice on one contract           | Closed. `addEvent` returns early on `eventType in this.eventHandlers`.                                                                                                                                                                                                                                               |
+| **Fan-out in `replayEarlyEventInfos`**                   | **The live route.** `eventcontract.ts:214` expands one early `EventInfo` through `getEventTypesForBrowserEventType` and calls `handleEventInfo` per result, and `cloneEventInfo` (`event_info.ts:167`) copies the wrapper while keeping the _same_ `event` object. Two results therefore dispatch one `Event` twice. |
+
+That last route is gated by a build flag. `browserEventTypeToExtraEventTypes` is only populated when
+`getBrowserEventType(eventType) !== eventType`, which holds for exactly `mouseenter`, `mouseleave`,
+`pointerenter` and `pointerleave` — and those four are exactly `MOUSE_SPECIAL_EVENT_TYPES`, which
+`addEvent` refuses to register while `MOUSE_SPECIAL_SUPPORT` is `false`. `event_contract_defines.ts`
+sets it `false` for the published package and marks the `true` variant `g3-only`. So the fan-out
+table is always empty here, and reachable where that flag is on and both the base and derived types
+are registered.
 
 **A bare `ngDevMode` in a standalone package.** `:130` and `:135` read it directly:
 
@@ -897,13 +912,45 @@ but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty s
 confirms the framework never emits `ngh=""` — they write `index.toString()` or `"a|b"`. Dead code
 and a misleading comment, not a live bug.
 
-### 27. `removeDehydratedViewList` does not reset its container — `unconfirmed`
+### 27. `removeDehydratedViewList` leaves entries that suppress DOM insertion — `open`
 
-`packages/core/src/hydration/cleanup.ts:56`. Its sibling `removeDehydratedViews` (`:53`) sets
-`lContainer[DEHYDRATED_VIEWS] = retainedViews` and explains why — "do not trigger the lookup process
-once again". `removeDehydratedViewList` removes the DOM nodes but leaves the array in place, so its
-entries keep a `firstChild` pointing at a detached node. Whether anything consults that container
-afterwards has not been established.
+`packages/core/src/hydration/cleanup.ts:56`
+
+Its sibling `removeDehydratedViews` (`:53`) sets `lContainer[DEHYDRATED_VIEWS] = retainedViews` and
+explains why — "do not trigger the lookup process once again". `removeDehydratedViewList` removes
+the DOM nodes but leaves the array in place, and `removeDehydratedView` (`:71`) never nulls
+`dehydratedView.firstChild`, so each entry keeps a live reference to a node that is no longer in the
+document.
+
+**The container is consulted afterwards.** This entry previously said that was unestablished; it is
+now traced. `applyDeferBlockState` calls `findMatchingDehydratedViewForDeferBlock`
+(`defer/rendering.ts:222`), which reads `lContainer[DEHYDRATED_VIEWS]` directly and matches on the
+serialized block state. The result is then passed straight into the insertion decision:
+
+```js
+addLViewToLContainer(
+  lContainer,
+  embeddedLView,
+  viewIndex,
+  shouldAddViewToDom(activeBlockTNode, dehydratedView),
+);
+```
+
+and `shouldAddViewToDom` (`render3/view_manipulation.ts:80`) is
+
+```js
+return !dehydratedView || dehydratedView.firstChild === null || hasInSkipHydrationBlockFlag(tNode);
+```
+
+A stale entry is neither absent nor null-headed, so it returns `false` and the freshly created view
+is **not attached to the DOM** — while the nodes it was meant to reuse have already been removed.
+The block renders nothing.
+
+Reached through the error path at `defer/triggering.ts:469`, which calls `removeDehydratedViewList`
+and breaks out of the hydration loop. It fires only when the state subsequently applied matches the
+state the server serialized, since that is the match key; a different state finds nothing and
+attaches normally. Setting `firstChild = null` in `removeDehydratedView`, or resetting the array as
+the sibling does, closes it.
 
 ### 28. `ɵdisableProfiling` has no consumer at all — `open`
 
