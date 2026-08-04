@@ -590,7 +590,7 @@ different functions called `enableProfiling`:
 | `ɵenableProfiling` | `src/profiler.ts:61`                                | private, no in-repo consumer, the one described here |
 
 The public one is unaffected. Sibling of
-[25](#25-ɵdisableprofiling-has-no-consumer-at-all), which is the same module's other half.
+[26](#26-ɵdisableprofiling-has-no-consumer-at-all), which is the same module's other half.
 
 ### 15. The jsaction parse cache is a plain object keyed by attribute text — `open`
 
@@ -652,32 +652,84 @@ attribute-keyed lookups.
 Separately, `parseCache` is never bounded or cleared, so it grows with the number of distinct
 attribute strings seen. Small for Angular's generated values; unbounded in principle.
 
+### 16. `registerDispatcher` on the early event contract has no effect — `open`
+
+`packages/core/primitives/event-dispatch/src/earlyeventcontract.ts:68`
+
+The early contract builds its handler around a local binding and then publishes that binding as a
+property:
+
+```js
+export function createEarlyJsactionData(container: HTMLElement) {
+  const q: EventInfo[] = [];
+  const d = (eventInfo: EventInfo) => {
+    q.push(eventInfo);
+  };
+  const h = (event: Event) => {
+    d(createEventInfoFromParameters(…));   // ← the closed-over `const d`
+  };
+  return {c: container, q, et: [], etc: [], d, h};
+}
+
+export function registerDispatcher(earlyJsactionData, dispatcher) {
+  earlyJsactionData.d = dispatcher;        // ← replaces the property, not the binding
+}
+```
+
+`h` calls the `const d` it captured, so replacing `.d` cannot change where events go. The intent is
+stated plainly in the interface docs — `d` is "Dispatcher handler. Initializes to populating `q`",
+and `q` is "List used to push `EventInfo` objects **if the dispatcher is not registered**" — and
+that switchover never happens.
+
+Run against the real file (`scratchpad/earlytest.mjs`), registering a dispatcher and then firing a
+click through the handler the contract installed:
+
+```
+events delivered to the new dispatcher : 0
+events still pushed onto the queue `q` : 1
+```
+
+**Angular does not depend on it.** `EventContract.replayEarlyEvents` (`eventcontract.ts:192`) reads
+`earlyJsactionData.q` directly, replays it, then calls `removeAllEventListeners` — it never invokes
+`.d`. And `hydration/event_replay.ts:223` calls a _different_ `registerDispatcher`, the one in
+`event_dispatcher.ts` re-exported at `index.ts:13`. There are three functions of that name in this
+package.
+
+It is still reachable from outside: `registerAppScopedDispatcher` wraps the ineffective one
+(`bootstrap_app_scoped.ts:56`) and is exported from the package index at `index.ts:21`.
+`registerGlobalDispatcher` (`bootstrap_global.ts:35`) wraps it too, though that one is not on the
+index. A consumer calling either gets silence — no error, no events, and a queue that grows until
+someone drains it.
+
+Assigning through the object (`earlyJsactionData.d(...)` inside `h`) is the smaller fix; returning
+a mutable holder is the other.
+
 ## Gaps in repository tooling and data
 
-### 16. `@deprecated` versions are parsed out of prose — `open`
+### 17. `@deprecated` versions are parsed out of prose — `open`
 
 `generate_manifest.mts` takes the first number anywhere in the tag comment. Two live cases:
 `getLocaleCurrencyCode` renders as "deprecated since v4217" (from "ISO 4217"), and `ServerXhr` as
 "v23" when 23 is the intended _removal_ version. Fixing it is a design choice — require an explicit
 leading version, or correct the two comments — so it is recorded rather than changed.
 
-### 17. Three paths match no review group — `open`
+### 18. Three paths match no review group — `open`
 
 `docs/codebase-map` (111 files), `tools/bazel` (9), `goldens/vscode-extension` (2).
 `.pullapprove.yml` fails any pull request that matches no group, so these are latent blockers. The
 `tools/bazel` case is an enumeration style: `dev-infra` lists sibling directories one at a time.
 
-### 18. Five `{@example}` tags point at a file that does not exist — `open`
+### 19. Five `{@example}` tags point at a file that does not exist — `open`
 
 `packages/private/testing/matchers/index.ts` (lines 28, 38, 48, 58, 78) reference
 `packages/examples/testing/ts/matchers.ts`. Nothing catches it because that package is not
 docs-extracted.
 
-### 19. Five example projects are referenced by nothing — `open`
+### 20. Five example projects are referenced by nothing — `open`
 
 No build checks the reverse direction.
 
-### 20. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
+### 21. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
 
 The analyzer required the `: o.ExternalReference` annotation, which the four type-checking entries
 at the end of `Identifiers` omit. They were never checked for resolution against `core` while the
@@ -685,7 +737,7 @@ tool reported the contract complete. All four do resolve; the contract is now 21
 
 ## Observations recorded so that they are not re-investigated
 
-### 21. `createWatch` tracks its cleanup function; `effect()` does not — `open`
+### 22. `createWatch` tracks its cleanup function; `effect()` does not — `open`
 
 `packages/core/primitives/signals/src/watch.ts:118`
 
@@ -744,7 +796,7 @@ A method note: the first version of this test showed the cleanup never running a
 returns early unless a dependency actually changed (`watch.ts:113`), so the second `run()` was a
 no-op — the test had to move a signal between runs before it exercised anything.
 
-### 22. 63 `ɵ` names appear in the API goldens — `open`
+### 23. 63 `ɵ` names appear in the API goldens — `open`
 
 Across 25 of the 50 golden files, only 3 as declared entries. The other 60 sit inside the
 signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported class;
@@ -752,7 +804,7 @@ signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported
 freely" for `ɵMetadataOverrider` and "renaming this changes a public type" for `ɵTypedOrUntyped`,
 and nothing marks which is which.
 
-### 23. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
+### 24. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
 
 `packages/core/src/hydration/utils.ts:141` vs `:152`. The comment describes handling `<comp ngh="" />`,
 but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty string, so
@@ -760,7 +812,7 @@ but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty s
 confirms the framework never emits `ngh=""` — they write `index.toString()` or `"a|b"`. Dead code
 and a misleading comment, not a live bug.
 
-### 24. `removeDehydratedViewList` does not reset its container — `unconfirmed`
+### 25. `removeDehydratedViewList` does not reset its container — `unconfirmed`
 
 `packages/core/src/hydration/cleanup.ts:56`. Its sibling `removeDehydratedViews` (`:53`) sets
 `lContainer[DEHYDRATED_VIEWS] = retainedViews` and explains why — "do not trigger the lookup process
@@ -768,14 +820,14 @@ once again". `removeDehydratedViewList` removes the DOM nodes but leaves the arr
 entries keep a `firstChild` pointing at a detached node. Whether anything consults that container
 afterwards has not been established.
 
-### 25. `ɵdisableProfiling` has no consumer at all — `open`
+### 26. `ɵdisableProfiling` has no consumer at all — `open`
 
 Exported from `core_private_export.ts:138`, absent from the `ng` global table (`enableProfiling` is
 present, its counterpart is not), and imported nowhere. `profiler.ts:73` is the only other mention.
 
 ---
 
-### 26. The di primitive's `inject` contradicts its own limp-mode comment — `open`
+### 27. The di primitive's `inject` contradicts its own limp-mode comment — `open`
 
 `packages/core/primitives/di/src/injector.ts:22`
 
@@ -812,7 +864,7 @@ Recorded with [18](#18-createwatch-tracks-its-cleanup-function-effect-does-not) 
 [22](#22-ɵdisableprofiling-has-no-consumer-at-all): primitives published from an entry point
 outside the public API, with no in-repo consumer to keep them honest.
 
-### 27. `ɵsetAlternateWeakRefImpl` is a published no-op — `open`
+### 28. `ɵsetAlternateWeakRefImpl` is a published no-op — `open`
 
 `packages/core/primitives/signals/src/weak_ref.ts`
 
