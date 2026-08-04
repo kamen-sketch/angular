@@ -1076,6 +1076,82 @@ for `hub` does not carry `file`, and this environment cannot install `@babel/cor
 `8.0.1` in `package.json`; the registry is blocked) to check whether `hub` is optional there. So:
 the guard is provably inoperative, and how often it would need to fire is unresolved.
 
+### 36. `findEndOfBlock` desynchronises on any escape longer than two raw characters — `open`
+
+`packages/localize/src/utils/src/messages.ts:344`
+
+```js
+for (let cookedIndex = 1, rawIndex = 1; cookedIndex < cooked.length; cookedIndex++, rawIndex++) {
+  if (raw[rawIndex] === '\\') {
+    rawIndex++; // one extra, whatever the escape's real length
+  } else if (cooked[cookedIndex] === BLOCK_MARKER) {
+    return cookedIndex;
+  }
+}
+```
+
+The loop walks `cooked` and `raw` in lockstep, consulting `raw` only to tell an escaped `\:` from a
+real block terminator. An escape always costs one character in `cooked`, so the compensation is a
+single extra `rawIndex++`. That is right for `\n`, `\t`, `\0`, `\\` and `\:` — two raw characters —
+and wrong for every longer form. After one of those, `rawIndex` lags, `raw[rawIndex]` no longer
+points at the character it is being asked about, and a later `\:` stops being recognised as escaped.
+
+Measured with the real function, each block containing one escape followed by an escaped colon:
+
+| escape in the block | raw length | result                               |
+| ------------------- | ---------- | ------------------------------------ |
+| none                | –          | ok                                   |
+| `\n`                | 2          | ok                                   |
+| `\0`                | 2          | ok                                   |
+| `\x41`              | 4          | **wrong** — block ends 2 chars early |
+| `\u0041`            | 6          | **wrong** — block ends 2 chars early |
+| `\u{41}`            | 7          | **wrong** — block ends 2 chars early |
+
+The consequence is not confined to metadata. The block terminator is where the _message_ starts, so
+an early return moves text out of the block and into the message:
+
+```
+raw     ":Caf\u00e9\: hello:MESSAGE"
+cooked  ":Café: hello:MESSAGE"
+parsed  {"text":" hello:MESSAGE","description":"Café"}
+        expected: text "MESSAGE", description "Café: hello"
+```
+
+That is the rendered user-facing string — the tail of the developer's description leaks into the UI.
+It also changes `messageString`, and therefore `computeMsgId` (`messages.ts:202`), so the translation
+lookup misses as well. Both `parseMetadata` and `parsePlaceholder` reach it through `splitBlock`
+(`:323`), and the pass-through runtime reaches it through `stripBlock`
+(`src/localize/src/localize.ts:180`), so extraction, translation and untranslated rendering are all
+affected.
+
+**The compiler supplies half the trigger on its own.** `escapeColons`
+(`compiler/src/output/output_ast.ts:830`) rewrites _every_ colon in a metadata block as `\:`:
+
+```js
+const escapeColons = (str: string): string => str.replace(/:/g, '\\:');
+```
+
+so any `i18n` description containing a colon — `i18n="Note: check the date"` — is emitted with the
+`\:` this bug mishandles. What it does not supply is the preceding long escape: `escapeSlashes`
+(`:828`) only doubles backslashes and `escapeForTemplateLiteral` (`:831`) only handles the backtick
+and `${`, so the compiler's own output stays clean, as the first row of the end-to-end run confirms.
+
+Reachability therefore splits:
+
+- **Unconditional.** A hand-written `$localize` whose metadata block contains a `\x`/`\u` escape and
+  a colon hits this with no build tooling involved.
+- **Conditional, and the reason this is filed as a defect rather than a curiosity.** Escaping
+  non-ASCII to `\uXXXX` is ordinary minifier behaviour, and `@angular/localize/tools` is designed to
+  run over bundled output — that is what the `__makeTemplateObject` and lazy-helper handling in
+  `source_file_utils.ts` exists for. A description reading `Café: hello` would then arrive as
+  `:Caf\u00e9\: hello:` and corrupt exactly as shown above. **I could not verify which tool in the
+  CLI pipeline, if any, actually emits that escape** — `node_modules` is absent and the registry is
+  blocked in this environment — so treat the second row of the run above as a demonstration of the
+  mechanism, not as evidence that a released build produces it.
+
+The fix does not need the escape table: `rawIndex` can be derived rather than tracked, or the raw
+string consulted only at the candidate terminator.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
