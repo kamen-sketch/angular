@@ -592,7 +592,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 
 ## `packages/compiler-cli/src/ngtsc/core/src/`
 
-- `packages/compiler-cli/src/ngtsc/core/src/compiler.ts` — 1929 lines
+- `packages/compiler-cli/src/ngtsc/core/src/compiler.ts` — 1942 lines
   - enum: `CompilationTicketKind`
   - interface: `FreshCompilationTicket`, `IncrementalTypeScriptCompilationTicket`, `IncrementalResourceCompilationTicket`
   - type: `CompilationTicket`
@@ -646,13 +646,13 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - exports `ErrorCode` from `./src/error_code`
   - exports `ERROR_DETAILS_PAGE_BASE_URL`, `DOC_PAGE_BASE_URL` from `./src/error_details_base_url`
   - exports `ExtendedTemplateDiagnosticName` from `./src/extended_template_diagnostic_name`
-  - exports `ngErrorCode`, `replaceTsWithNgInErrors` from `./src/util`
+  - exports `ngErrorCode`, `ngErrorCodeToErrorCode`, `replaceTsWithNgInErrors` from `./src/util`
 
 
 
 ## `packages/compiler-cli/src/ngtsc/diagnostics/src/`
 
-- `packages/compiler-cli/src/ngtsc/diagnostics/src/docs.ts` — 25 lines
+- `packages/compiler-cli/src/ngtsc/diagnostics/src/docs.ts` — 26 lines
   - const: `COMPILER_ERRORS_WITH_GUIDES`
 - `packages/compiler-cli/src/ngtsc/diagnostics/src/error.ts` — 127 lines
   - class: `FatalDiagnosticError`
@@ -663,8 +663,8 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - const: `DOC_PAGE_BASE_URL`, `ERROR_DETAILS_PAGE_BASE_URL`
 - `packages/compiler-cli/src/ngtsc/diagnostics/src/extended_template_diagnostic_name.ts` — 38 lines
   - enum: `ExtendedTemplateDiagnosticName`
-- `packages/compiler-cli/src/ngtsc/diagnostics/src/util.ts` — 29 lines
-  - function: `replaceTsWithNgInErrors`, `ngErrorCode`
+- `packages/compiler-cli/src/ngtsc/diagnostics/src/util.ts` — 49 lines
+  - function: `replaceTsWithNgInErrors`, `ngErrorCode`, `ngErrorCodeToErrorCode`
 
 
 
@@ -6069,8 +6069,8 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
   - class: `NgtscTestEnvironment`
 - `packages/compiler-cli/test/ngtsc/extended_template_diagnostics_spec.ts` — 260 lines _(spec)_
 - `packages/compiler-cli/test/ngtsc/hmr_spec.ts` — 1024 lines _(spec)_
-- `packages/compiler-cli/test/ngtsc/host_bindings_type_check_spec.ts` — 989 lines _(spec)_
-- `packages/compiler-cli/test/ngtsc/host_directives_spec.ts` — 1488 lines _(spec)_
+- `packages/compiler-cli/test/ngtsc/host_bindings_type_check_spec.ts` — 990 lines _(spec)_
+- `packages/compiler-cli/test/ngtsc/host_directives_spec.ts` — 1490 lines _(spec)_
 - `packages/compiler-cli/test/ngtsc/imports_spec.ts` — 180 lines _(spec)_
 - `packages/compiler-cli/test/ngtsc/incremental_error_spec.ts` — 750 lines _(spec)_
   - function: `writeTwoComponentSystem`, `writeRandomFile`
@@ -6080,7 +6080,7 @@ See [`../README.md`](../README.md) for how this index relates to the hand-writte
 - `packages/compiler-cli/test/ngtsc/local_compilation_spec.ts` — 2671 lines _(spec)_
 - `packages/compiler-cli/test/ngtsc/ls_typecheck_helpers_spec.ts` — 228 lines _(spec)_
 - `packages/compiler-cli/test/ngtsc/monorepo_spec.ts` — 135 lines _(spec)_
-- `packages/compiler-cli/test/ngtsc/ngtsc_spec.ts` — 11770 lines _(spec)_
+- `packages/compiler-cli/test/ngtsc/ngtsc_spec.ts` — 11795 lines _(spec)_
 - `packages/compiler-cli/test/ngtsc/scope_spec.ts` — 709 lines _(spec)_
 - `packages/compiler-cli/test/ngtsc/selectorless_spec.ts` — 1190 lines _(spec)_
 - `packages/compiler-cli/test/ngtsc/service_spec.ts` — 128 lines _(spec)_

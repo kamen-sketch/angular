@@ -9,21 +9,21 @@ Counts cover first-party source only (see `ROOTS`/`SKIP_DIRS` in the generator).
 
 | Root | Files | Exported declarations | Lines |
 | --- | ---: | ---: | ---: |
-| `packages/` | 5364 | 12815 | 952,240 |
+| `packages/` | 5364 | 12816 | 952,302 |
 | `devtools/` | 315 | 518 | 48,341 |
 | `adev/` | 1049 | 1256 | 62,434 |
 | `modules/` | 121 | 135 | 7,144 |
 | `tools/` | 32 | 11 | 2,281 |
 | `integration/` | 149 | 83 | 4,407 |
 | `scripts/` | 10 | 18 | 1,175 |
-| **total** | **7040** | **14836** | **1,078,022** |
+| **total** | **7040** | **14837** | **1,078,084** |
 
 ## Per package / app
 
 | Group | Files | Exported declarations | Lines |
 | --- | ---: | ---: | ---: |
 | [`packages/core`](./index-packages-core.md) | 1089 | 2978 | 309,034 |
-| [`packages/compiler-cli`](./index-packages-compiler-cli.md) | 2549 | 5778 | 226,399 |
+| [`packages/compiler-cli`](./index-packages-compiler-cli.md) | 2549 | 5779 | 226,461 |
 | [`packages/compiler`](./index-packages-compiler.md) | 291 | 1280 | 90,411 |
 | [`packages/forms`](./index-packages-forms.md) | 190 | 508 | 69,487 |
 | [`devtools/projects`](./index-devtools-projects.md) | 256 | 453 | 44,922 |
