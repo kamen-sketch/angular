@@ -328,32 +328,91 @@ returns `InertDocumentHelper` directly and it correctly receives the raw html �
 `parseFromString(…).body` returns `null`, the legacy iPad case the comment names. Not a security
 hole, since the sentinel is stripped by the whitelist either way.
 
+### 10. A computed's dependency list keeps one link per read, not per dependency — `open`
+
+`packages/core/primitives/signals/src/graph.ts:256`
+
+`producerAccessed` collapses a repeated read three ways. Two are always available — the same
+producer twice in a row (`:232`), and the incremental-rebuild fast path (`:246`). The third catches
+a _non-consecutive_ repeat:
+
+```js
+const prevConsumerLink = node.consumersTail;
+if (
+  prevConsumerLink !== undefined &&
+  prevConsumerLink.consumer === activeConsumer &&
+  (!isRecomputing || prevConsumerLink.knownValidAtEpoch === epoch)
+) {
+  return;
+}
+```
+
+It tests `node.consumersTail` — the **producer's consumers list**. Only live consumers are inserted
+there (`producerAccessed` ends with `if (isLive) producerAddLiveConsumer(...)`), so for a consumer
+that is not live while it computes, this check can never fire and every read allocates a link.
+
+Verified against the real `graph.ts`, imported through Node's type stripping
+(`scratchpad/graphdeps.mjs`). Reading `A B A` produces the dependency list `[A, B, A]` for a
+non-live consumer and `[A, B]` for a live one; `A B A B A` gives `[A, B, A, B, A]` versus `[A, B]`.
+
+**This is not confined to unobserved computeds.** `createComputed` (`computed.ts:70`) orders its
+getter as
+
+```js
+producerUpdateValueVersion(node); // the computation runs here
+producerAccessed(node); // the consumer's back-link is created only afterwards
+```
+
+so a computed has no consumers during its _first_ computation and is therefore never live for it,
+even when a template or effect is what triggered the read. And the duplicates persist: on later
+computations the incremental-rebuild fast path matches each stale link in turn and reuses it, so
+the list never shrinks while the read pattern repeats.
+
+Measured with a computed read by an always-live consumer, reading two signals in a loop
+(`scratchpad/graphfirst.mjs`, `scratchpad/graphdup.mjs`):
+
+| reads per computation | links held | 200 dependency polls |
+| --------------------: | ---------: | -------------------: |
+|                     2 |          2 |              0.15 ms |
+|                    20 |         20 |              0.45 ms |
+|                   200 |        200 |              1.44 ms |
+|                 2,000 |      2,000 |              1.04 ms |
+|                20,000 |     20,000 |             12.89 ms |
+
+A consumer that is live throughout holds 2 links at every size.
+
+**Severity is memory and polling cost, not correctness.** `consumerPollProducersForChange` walks
+the whole list, so the cost of checking whether a computed is stale scales with reads per
+computation rather than with distinct dependencies. The realistic trigger is a computed that reads
+one signal inside a loop over others — `rows().map(r => r.qty() * unitPrice())` alternates, so
+`unitPrice` gets a fresh link per row.
+
 ## Gaps in repository tooling and data
 
-### 10. `@deprecated` versions are parsed out of prose — `open`
+### 11. `@deprecated` versions are parsed out of prose — `open`
 
 `generate_manifest.mts` takes the first number anywhere in the tag comment. Two live cases:
 `getLocaleCurrencyCode` renders as "deprecated since v4217" (from "ISO 4217"), and `ServerXhr` as
 "v23" when 23 is the intended _removal_ version. Fixing it is a design choice — require an explicit
 leading version, or correct the two comments — so it is recorded rather than changed.
 
-### 11. Three paths match no review group — `open`
+### 12. Three paths match no review group — `open`
 
 `docs/codebase-map` (111 files), `tools/bazel` (9), `goldens/vscode-extension` (2).
 `.pullapprove.yml` fails any pull request that matches no group, so these are latent blockers. The
 `tools/bazel` case is an enumeration style: `dev-infra` lists sibling directories one at a time.
 
-### 12. Five `{@example}` tags point at a file that does not exist — `open`
+### 13. Five `{@example}` tags point at a file that does not exist — `open`
 
 `packages/private/testing/matchers/index.ts` (lines 28, 38, 48, 58, 78) reference
 `packages/examples/testing/ts/matchers.ts`. Nothing catches it because that package is not
 docs-extracted.
 
-### 13. Five example projects are referenced by nothing — `open`
+### 14. Five example projects are referenced by nothing — `open`
 
 No build checks the reverse direction.
 
-### 14. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
+### 15. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
 
 The analyzer required the `: o.ExternalReference` annotation, which the four type-checking entries
 at the end of `Identifiers` omit. They were never checked for resolution against `core` while the
@@ -361,7 +420,7 @@ tool reported the contract complete. All four do resolve; the contract is now 21
 
 ## Observations recorded so that they are not re-investigated
 
-### 15. 63 `ɵ` names appear in the API goldens — `open`
+### 16. 63 `ɵ` names appear in the API goldens — `open`
 
 Across 25 of the 50 golden files, only 3 as declared entries. The other 60 sit inside the
 signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported class;
@@ -369,7 +428,7 @@ signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported
 freely" for `ɵMetadataOverrider` and "renaming this changes a public type" for `ɵTypedOrUntyped`,
 and nothing marks which is which.
 
-### 16. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
+### 17. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
 
 `packages/core/src/hydration/utils.ts:141` vs `:152`. The comment describes handling `<comp ngh="" />`,
 but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty string, so
@@ -377,7 +436,7 @@ but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty s
 confirms the framework never emits `ngh=""` — they write `index.toString()` or `"a|b"`. Dead code
 and a misleading comment, not a live bug.
 
-### 17. `removeDehydratedViewList` does not reset its container — `unconfirmed`
+### 18. `removeDehydratedViewList` does not reset its container — `unconfirmed`
 
 `packages/core/src/hydration/cleanup.ts:56`. Its sibling `removeDehydratedViews` (`:53`) sets
 `lContainer[DEHYDRATED_VIEWS] = retainedViews` and explains why — "do not trigger the lookup process
@@ -385,7 +444,7 @@ once again". `removeDehydratedViewList` removes the DOM nodes but leaves the arr
 entries keep a `firstChild` pointing at a detached node. Whether anything consults that container
 afterwards has not been established.
 
-### 18. `ɵdisableProfiling` has no consumer at all — `open`
+### 19. `ɵdisableProfiling` has no consumer at all — `open`
 
 Exported from `core_private_export.ts:138`, absent from the `ng` global table (`enableProfiling` is
 present, its counterpart is not), and imported nowhere. `profiler.ts:73` is the only other mention.
