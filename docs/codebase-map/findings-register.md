@@ -230,32 +230,94 @@ copy is never told a second copy exists.
 `SVG_ANIMATION_SENSITIVE_STATIC_VALUES`, with the same absence of enforcement — though that table
 was checked and is consistent (see [26 §8](./26-security-sinks.md)).
 
+### 8. The mXSS stabilization loop stops one round-trip early — `open`
+
+`packages/core/src/sanitization/html_sanitizer.ts:312`
+
+```js
+// mXSS protection. Repeatedly parse the document to make sure it stabilizes, so that a browser
+// trying to auto-correct incorrect HTML cannot cause formerly inert HTML to become dangerous.
+let mXSSAttempts = 5;
+let parsedHtml = unsafeHtml;
+
+do {
+  if (mXSSAttempts === 0) throw new Error('Failed to sanitize html because the input is unstable');
+  mXSSAttempts--;
+
+  unsafeHtml = parsedHtml;
+  parsedHtml = inertBodyElement!.innerHTML;                       // (a) previous round's element
+  inertBodyElement = inertBodyHelper.getInertBodyElement(unsafeHtml); // (b) parses (a)'s input
+} while (unsafeHtml !== parsedHtml);
+```
+
+(a) reads `innerHTML` from the element parsed in the _previous_ iteration, while `unsafeHtml` has
+already advanced to that element's output. The two are one step out of phase, so the comparison
+always succeeds on the second iteration:
+
+| iteration | `unsafeHtml` | `parsedHtml`                  | `inertBodyElement` | loop test          |
+| --------- | ------------ | ----------------------------- | ------------------ | ------------------ |
+| 1         | `H0`         | `serialize(parse(H0))` = `H1` | `parse(H0)`        | `H0 !== H1`        |
+| 2         | `H1`         | `serialize(parse(H0))` = `H1` | `parse(H1)`        | `H1 !== H1` → exit |
+
+The serializer is then handed `parse(H1)` without anything having checked that `H1` is stable.
+Swapping (a) and (b) — parse first, then read back — makes it converge properly.
+
+Verified by transcribing the loop with a synthetic parser of known fixpoint
+(`scratchpad/mxss.mjs`):
+
+```
+as written                              round-trips: 2   serializer receives parse of "b"   stable? false
+with getInertBodyElement() before .innerHTML   round-trips: 3   serializer receives parse of "c"   stable? true
+as written, markup that never stabilizes (a<->b)   threw "input is unstable"? false
+```
+
+Two consequences follow. The loop performs exactly **one** meaningful round-trip rather than
+iterating to a fixpoint, and `mXSSAttempts` is dead: the budget is never spent and
+`Failed to sanitize html because the input is unstable` cannot be thrown, even for markup that
+oscillates forever.
+
+The shortfall is reachable in a real parser. Round-tripping test vectors through
+`document.implementation.createHTMLDocument().body.innerHTML` in the Chromium in this environment:
+
+| markup                                             | round-trips to a fixpoint |
+| -------------------------------------------------- | ------------------------: |
+| `<b>hi</b>`                                        |                         1 |
+| `<noscript><p title="</noscript>…">`               |                         2 |
+| `<svg><foreignObject><p></foreignObject>…`         |                         2 |
+| `<math><mtext><table><mglyph><style><!--</style>…` |                     **3** |
+
+**Not demonstrated to be exploitable, and should not be read as an XSS report.** The element and
+attribute whitelist in `SanitizingHtmlSerializer` is the primary control, and it strips every tag
+involved above — `svg`, `math`, `mglyph`, `style`, `noscript`, `form`, `template` are all absent
+from `VALID_ELEMENTS`. What is established is narrower: this defence-in-depth layer does not do
+what its own comment says it does, and its failure mode is silent rather than the intended throw.
+
 ## Gaps in repository tooling and data
 
-### 8. `@deprecated` versions are parsed out of prose — `open`
+### 9. `@deprecated` versions are parsed out of prose — `open`
 
 `generate_manifest.mts` takes the first number anywhere in the tag comment. Two live cases:
 `getLocaleCurrencyCode` renders as "deprecated since v4217" (from "ISO 4217"), and `ServerXhr` as
 "v23" when 23 is the intended _removal_ version. Fixing it is a design choice — require an explicit
 leading version, or correct the two comments — so it is recorded rather than changed.
 
-### 9. Three paths match no review group — `open`
+### 10. Three paths match no review group — `open`
 
 `docs/codebase-map` (111 files), `tools/bazel` (9), `goldens/vscode-extension` (2).
 `.pullapprove.yml` fails any pull request that matches no group, so these are latent blockers. The
 `tools/bazel` case is an enumeration style: `dev-infra` lists sibling directories one at a time.
 
-### 10. Five `{@example}` tags point at a file that does not exist — `open`
+### 11. Five `{@example}` tags point at a file that does not exist — `open`
 
 `packages/private/testing/matchers/index.ts` (lines 28, 38, 48, 58, 78) reference
 `packages/examples/testing/ts/matchers.ts`. Nothing catches it because that package is not
 docs-extracted.
 
-### 11. Five example projects are referenced by nothing — `open`
+### 12. Five example projects are referenced by nothing — `open`
 
 No build checks the reverse direction.
 
-### 12. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
+### 13. `analyze-contracts.mjs` skipped four emitted symbols — `fixed`
 
 The analyzer required the `: o.ExternalReference` annotation, which the four type-checking entries
 at the end of `Identifiers` omit. They were never checked for resolution against `core` while the
@@ -263,7 +325,7 @@ tool reported the contract complete. All four do resolve; the contract is now 21
 
 ## Observations recorded so that they are not re-investigated
 
-### 13. 63 `ɵ` names appear in the API goldens — `open`
+### 14. 63 `ɵ` names appear in the API goldens — `open`
 
 Across 25 of the 50 golden files, only 3 as declared entries. The other 60 sit inside the
 signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported class;
@@ -271,7 +333,7 @@ signatures of public symbols (`ɵfac`/`ɵɵFactoryDeclaration` on every exported
 freely" for `ɵMetadataOverrider` and "renaming this changes a public type" for `ɵTypedOrUntyped`,
 and nothing marks which is which.
 
-### 14. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
+### 15. Dead guard and stale comment in `retrieveHydrationInfoImpl` — `open`
 
 `packages/core/src/hydration/utils.ts:141` vs `:152`. The comment describes handling `<comp ngh="" />`,
 but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty string, so
@@ -279,7 +341,7 @@ but line 141 (`if (!nghAttrValue) return null;`) already returns for the empty s
 confirms the framework never emits `ngh=""` — they write `index.toString()` or `"a|b"`. Dead code
 and a misleading comment, not a live bug.
 
-### 15. `removeDehydratedViewList` does not reset its container — `unconfirmed`
+### 16. `removeDehydratedViewList` does not reset its container — `unconfirmed`
 
 `packages/core/src/hydration/cleanup.ts:56`. Its sibling `removeDehydratedViews` (`:53`) sets
 `lContainer[DEHYDRATED_VIEWS] = retainedViews` and explains why — "do not trigger the lookup process
@@ -287,7 +349,7 @@ once again". `removeDehydratedViewList` removes the DOM nodes but leaves the arr
 entries keep a `firstChild` pointing at a detached node. Whether anything consults that container
 afterwards has not been established.
 
-### 16. `ɵdisableProfiling` has no consumer at all — `open`
+### 17. `ɵdisableProfiling` has no consumer at all — `open`
 
 Exported from `core_private_export.ts:138`, absent from the `ng` global table (`enableProfiling` is
 present, its counterpart is not), and imported nowhere. `profiler.ts:73` is the only other mention.

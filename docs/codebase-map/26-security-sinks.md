@@ -53,10 +53,10 @@ Both files carry this banner:
 
 Two things the table says about itself:
 
-- **`SCRIPT` has no entries.** `// NB: no SCRIPT contexts here, they are never allowed due to the
-parser stripping them.` The `SecurityContext.SCRIPT` enum member exists and `ɵɵsanitizeScript`
-  exists, but nothing in the schema routes to them — that path is reachable only through an
-  explicitly bypassed value.
+- **`SCRIPT` has no entries** — "no SCRIPT contexts here, they are never allowed due to the parser
+  stripping them." The `SecurityContext.SCRIPT` enum member exists and `ɵɵsanitizeScript` exists,
+  but nothing in the schema routes to them; that path is reachable only through an explicitly
+  bypassed value.
 - **Two entries are known-unnecessary**: `img|src` and `video|src` are commented as "safe and
   should be removed but they require a G3 clean-up as a small number of tests fail."
 
