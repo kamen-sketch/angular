@@ -46,6 +46,7 @@ in the index for its package.
 | 21  | [The public API surface](./21-api-surface.md)                              | the two records of the API, SemVer coverage, stability tiers and deprecations               |
 | 22  | [The DevTools message protocol](./22-devtools-protocol.md)                 | the 48-event contract between the panel, the in-page agent and the extension shell          |
 | 23  | [Guides and the code they show](./23-docs-examples.md)                     | how angular.dev references real source, and what the docs build does and does not enforce   |
+| 24  | [Code ownership](./24-ownership.md)                                        | which review group owns which path, and the paths no group claims                           |
 
 Start with [01](./01-repo-layout.md) if you are new to the repository, or with
 [18](./18-cross-cutting-flows.md) if you already know roughly where things live and need to follow
@@ -134,6 +135,19 @@ node docs/codebase-map/tools/analyze-docs-examples.mjs
 `#docregion` markers they name, into [`docs-examples.md`](./generated/docs-examples.md). It also
 reports the reverse — example projects nothing references, which no build checks.
 [23](./23-docs-examples.md) reads the results.
+
+```bash
+node docs/codebase-map/tools/analyze-ownership.mjs [path…]
+```
+
+[`tools/analyze-ownership.mjs`](./tools/analyze-ownership.mjs) matches every tracked file against
+the review groups in `.pullapprove.yml` into [`ownership.md`](./generated/ownership.md), and exits
+non-zero for any path no group claims — which `.pullapprove.yml` turns into a failing pull request.
+Pass paths as arguments to check a directory before it exists.
+[24](./24-ownership.md) reads the results.
+
+**It currently reports this map's own directory as unowned**, along with `tools/bazel` and
+`goldens/vscode-extension`; see [24 §1](./24-ownership.md).
 
 ## Keeping the hand-written half honest
 
