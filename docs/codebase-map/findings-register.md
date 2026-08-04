@@ -487,9 +487,9 @@ after a third registration, listeners attached: 6
 A guard on identity rather than presence — `viewportTriggers.get(trigger)?.get(key) !== entry` —
 closes both.
 
-**Reachability from Angular's own code is not established.** `DehydratedBlockRegistry.invokeTrigger-
-CleanupFns` runs each cleanup once and then drops the list, so the ordinary path does not produce a
-stale call. What is established is that the primitive's contract — "call the returned function to
+**Reachability from Angular's own code is not established.** `invokeTriggerCleanupFns` on
+`DehydratedBlockRegistry` runs each cleanup once and then drops the list, so the ordinary path does
+not produce a stale call. What is established is that the primitive's contract — "call the returned function to
 clean up" — is not safe under re-registration, and that the guard which exists was written for the
 adjacent case.
 
