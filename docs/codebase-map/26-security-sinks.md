@@ -214,8 +214,28 @@ framework and does not touch the DOM at all: **a caller-supplied string used as 
 object that carries `Object.prototype`**. The read then returns an inherited function or object
 instead of missing, and a truthiness or `!= null` guard lets it through.
 
-The repository already knows this pattern and fixes it in three places, each with a comment saying
-why — so the instances below are omissions rather than an unrecognised risk:
+A closely related shape shows up often enough to name separately: **calling `hasOwnProperty`
+_through_ an object whose keys come from outside**, rather than via `Object.hasOwn` or
+`Object.prototype.hasOwnProperty.call`. A key of that name shadows the method and the call throws.
+Five sightings so far:
+
+| Site                                                        | Key source                       | Status                                               |
+| ----------------------------------------------------------- | -------------------------------- | ---------------------------------------------------- |
+| `service-worker/worker/src/driver.ts:420`                   | push payload (`msg.data.json()`) | **defect** — [register § 46](./findings-register.md) |
+| `core/src/transfer_state.ts:111` (`hasKey`)                 | SSR payload (`JSON.parse`)       | § 12 — needs a developer-chosen `StateKey`           |
+| `upgrade/src/common/src/downgrade_component_adapter.ts:142` | AngularJS `$attrs`               | unverified — see below                               |
+| `core/src/transfer_state.ts:90` (`get`)                     | a `StateKey` string              | bare index, disagrees with `hasKey`                  |
+| `localize`, `format_date.ts:279`                            | —                                | correct: both use `Object.hasOwn`                    |
+
+The `upgrade` sighting is the one I could not settle. `setupInputs` tests
+`attrs.hasOwnProperty(inputBinding.attr)`, and `attrs` is the AngularJS `$attrs` object, typed here
+only as `[key: string]: any` (`common/src/angular1.ts:120-123`). Whether a `has-own-property`
+attribute normalises to an own property that shadows the method depends on AngularJS's `$compile`,
+and **AngularJS is not installed in this environment**, so the trigger is unconfirmed. Recorded as a
+shape to check rather than as a finding.
+
+The repository already knows the prototype-chain pattern and fixes it in three places, each with a
+comment saying why — so the instances below are omissions rather than an unrecognised risk:
 
 | Hardened                                    | How                                                                     |
 | ------------------------------------------- | ----------------------------------------------------------------------- |
