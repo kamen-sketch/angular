@@ -1254,6 +1254,68 @@ This is the third instance of the same hazard in this review — see finding 15 
 cache, and `translate.ts:74` for the one place it is handled deliberately. The ids involved are
 ordinary English words, so no adversary is required; `@@constructor` is a plausible thing to type.
 
+### 38. `createMouseSpecialEvent` hands the application an event with no methods — `open`
+
+`packages/core/primitives/event-dispatch/src/event.ts:421`
+
+```js
+const copy = {};
+for (const property in e) {
+  if (property === 'srcElement' || property === 'target') continue;
+  const value = e[key];
+  if (typeof value === 'function') continue; // every method is skipped
+  copy[key] = value;
+}
+```
+
+The result is a plain object, and `action_resolver.ts:190` installs it as the `EventInfo`'s event
+(`setEvent(eventInfo, copiedEvent)`), so it is what a `mouseenter`/`mouseleave` handler receives.
+Skipping functions is deliberate — you cannot copy a method onto a plain object and have it work on
+the copy — but nothing puts substitutes back.
+
+The sibling factory ten lines down does. `recreateTouchEventAsClick` (`:495`) runs the same loop and
+then reinstalls working stand-ins at `:521` and `:523`:
+
+```js
+click['defaultPrevented'] = false;
+click['preventDefault'] = syntheticPreventDefault;
+click['_propagationStopped'] = false;
+click['stopPropagation'] = syntheticStopPropagation;
+```
+
+Run in Chromium against a real `MouseEvent`, the difference is exactly that:
+
+```
+  preventDefault             real Event: function | createMouseSpecialEvent: undefined | recreateTouchEventAsClick: function
+  stopPropagation            real Event: function | createMouseSpecialEvent: undefined | recreateTouchEventAsClick: function
+  stopImmediatePropagation   real Event: function | createMouseSpecialEvent: undefined | recreateTouchEventAsClick: undefined
+  composedPath               real Event: function | createMouseSpecialEvent: undefined | recreateTouchEventAsClick: undefined
+
+  direct copy.preventDefault() -> TypeError: copy.preventDefault is not a function
+  instanceof Event: real=true copy=false
+  data properties copied: 45
+```
+
+So a handler calling `event.preventDefault()` throws, and the library's own
+`eventLib.preventDefault` (`:111`) fails silently instead — its fallback is
+`e.returnValue = false`, which on a plain object sets an ignored property. `stopPropagation` (`:104`)
+degrades the same way through `cancelBubble`.
+
+**Not reachable in the published build**, which is why it has not bitten:
+
+- `MOUSE_SPECIAL_SUPPORT` is a hard `false` in the 3p build
+  (`event_contract_defines.ts`; the `goog.define` form is g3-only), and `EventContract.addEvent`
+  returns early for the mouse special types when it is false (`eventcontract.ts:157`).
+- The one `new ActionResolver` in the package (`event_dispatcher.ts:63`) passes only
+  `{clickModSupport}`, so `syntheticMouseEventSupport` keeps its `false` default and the branch
+  guarding this call (`action_resolver.ts:164`) never opens.
+- Neither `ActionResolver` nor `createMouseSpecialEvent` is exported from `index.ts`, so a
+  standalone consumer of `@angular/core/primitives/event-dispatch` cannot enable it either.
+
+Only `test/dispatcher_test.ts:317` constructs a resolver with the flag on. Recorded for the same
+reason as finding 18: two factories in one file, written to the same shape, and only one of them
+restores what the copy loop removes.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
