@@ -2013,6 +2013,64 @@ Cleared in the same pass: the regex is **not** a backtracking risk despite the r
 class. Timed on the real pattern, 5000-character inputs of digits, dots, mixed dots-and-digits, and
 a near-miss all completed in under 0.05 ms.
 
+### 49. The node-injector bloom filter reads the wrong slot for a non-ASCII string token — `open`
+
+`packages/core/src/render3/di.ts:830`
+
+The write side masks the hash; the read side does not.
+
+```js
+// bloomAdd (:160, :173)                    // bloomHashBitOrFactory (:829-831)
+if (typeof type === 'string') {
+  if (typeof token === 'string') {
+    id = type.charCodeAt(0) || 0;
+    return token.charCodeAt(0) || 0; // <- no & BLOOM_MASK
+  }
+}
+const bloomHash = id & BLOOM_MASK;
+```
+
+Every other path through `bloomHashBitOrFactory` applies the mask — the numeric-id branch does it
+explicitly at `:838`. Only the string branch omits it.
+
+The bit position survives the omission, because `1 << n` in JavaScript uses `n & 31`, so `bloomAdd`
+and `bloomHasToken` compute the same `mask`. **The bucket index does not.** Both sides derive it as
+`bloomHash >> BLOOM_BUCKET_BITS`, and the filter is only 8 slots wide
+(`NodeInjectorOffset.BLOOM_SIZE = 8`):
+
+```
+token               code    write bucket  read bucket  found?
+ascii "myT"         109     3             3            yes
+latin-1 max "ÿto"   255     7             7            yes
+latin ext "āto"     257     0             8 (out of bloom)  NO  <-- never matches
+cyrillic "Ярл"      1071    1             33 (out of bloom) NO
+cjk "配置"           37197   2             1162 (out of bloom) NO
+emoji "🔧t"         55357   1             1729 (out of bloom) NO
+```
+
+The boundary is exact: the read leaves the filter as soon as `charCodeAt(0) >= 256`, because
+`8 << 5 = 256`.
+
+What the read hits depends on how far it overshoots. For a first character in U+0100–U+011F the
+index is `injectorIndex + 8`, which is `NodeInjectorOffset.TNODE`/`PARENT` — a real number holding
+the encoded parent-injector location, so the test returns whatever bit the parent encoding happens
+to have there. Beyond that it is past the end of the injector, reads `undefined`, and
+`undefined & mask` is `0` — a definite miss.
+
+The consequence is a missed provider, not a crash. `lookupTokenUsingNodeInjector` (`:513`) uses the
+result to decide whether this node's injector is worth searching; a `false` sends resolution to the
+parent. So a node-level `providers: [{provide: '配置', useValue: …}]` is invisible to a child
+injecting `@Inject('配置')`, and the token resolves from an ancestor or throws — while the identical
+code with an ASCII token works.
+
+String tokens are legacy but supported, and a non-Latin one is an ordinary choice for an application
+written in a non-Latin language. Nothing covers it: a scan of `packages/core` for
+`@Inject('…')` with a first character at or above U+0100 finds **zero** occurrences, in `src` or
+`test`.
+
+Adding `& BLOOM_MASK` to `:830` makes the two sides agree; the numeric branch three lines below is
+already the model.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
