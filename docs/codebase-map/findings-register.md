@@ -1316,6 +1316,35 @@ Only `test/dispatcher_test.ts:317` constructs a resolver with the flag on. Recor
 reason as finding 18: two factories in one file, written to the same shape, and only one of them
 restores what the copy loop removes.
 
+**And unlike the other dead subsystem in this file, it ships.** `event.ts` carries a second body of
+unreachable code — the a11y-click machinery, whose entry point `addA11yClickSupport`
+(`action_resolver.ts:282`) has no production caller either; the only hits in `packages/core` are in
+`test/dispatcher_test.ts`. Checking both against the eight bundle goldens:
+
+| Symbol                              | In any golden bundle                                 |
+| ----------------------------------- | ---------------------------------------------------- |
+| `isActionKeyEvent`                  | no                                                   |
+| `isValidActionKeyTarget`            | no                                                   |
+| `IDENTIFIER_TO_KEY_TRIGGER_MAPPING` | no                                                   |
+| `updateEventInfoForA11yClick`       | no                                                   |
+| `NATIVELY_FOCUSABLE_ELEMENTS`       | no                                                   |
+| `isSpaceKeyEvent`                   | no                                                   |
+| `recreateTouchEventAsClick`         | no                                                   |
+| `getTouchData`                      | no                                                   |
+| `isMouseSpecialEvent`               | **yes** — `hydration/bundle.golden_symbols.json:728` |
+| `createMouseSpecialEvent`           | **yes** — `:450`                                     |
+
+The difference is how each is guarded. Nothing references the a11y functions at all until
+`addA11yClickSupport` is called, so they drop cleanly. The mouse-special pair is referenced directly
+inside `if (this.syntheticMouseEventSupport)` (`action_resolver.ts:164`) — an instance field assigned
+in a constructor, which a bundler cannot fold away the way it can a module-level `false`. So the
+branch is provably dead by inspection and provably alive to the optimiser.
+
+That lands in the one place the file argues it must not: `eventcontract.ts:28-30` states the binary
+compiled from this code "MUST be kept as small as possible" because it is inlined into the page.
+Making `syntheticMouseEventSupport` fold — deriving it from `MOUSE_SPECIAL_SUPPORT` rather than from
+a constructor argument — would remove both symbols and make the correctness question above moot.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
