@@ -1703,13 +1703,17 @@ That one is development-only — `PreconnectLinkChecker`'s constructor calls
 `assertDevMode('preconnect link checker')` — so a `PRECONNECT_CHECK_BLOCKLIST` written that way
 silently fails to suppress the warning it was added for.
 
-**Reinforced by two sibling predicates elsewhere in the framework**, both of which get this right —
-which is why the missing `i` reads as an oversight rather than a choice.
+**Reinforced by three sibling predicates elsewhere in the framework**, each of which covers at
+least as much — which is why the missing `i` reads as an oversight rather than a choice. The full
+four-way comparison is in [26 § 14](./26-security-sinks.md); this site is the weakest of the four,
+and the only one backing a production `RuntimeError`.
 `JsonpClientBackend.isAllowedJsonpUrl` (`common/http/src/jsonp.ts:303`) is the _same regex with the
 flag_: `/^https?:\/\//i`. And `xsrfInterceptorFn` (`common/http/src/xsrf.ts:106-109`) avoids a regex
 altogether, using `new URL(req.url, locationOrigin)` with a comment stating the reason — "We can use
 `new URL` to normalize a relative URL like `//something.com`" — the exact protocol-relative case
-`isAbsoluteUrl` misses.
+`isAbsoluteUrl` misses. A third, `_stripOrigin` (`common/src/location/location.ts:331`), uses
+`new RegExp('^(https?:)?//')`, which catches the protocol-relative form though not the uppercase
+one.
 
 **Cleared: the CSS `url()` sink is sound.** `generatePlaceholder`
 (`ng_optimized_image.ts:729-743`) interpolates the `placeholder` input into

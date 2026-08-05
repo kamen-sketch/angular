@@ -404,3 +404,59 @@ What remains is that cross-origin HTTP(S) targets pass, which the wording above 
 reader to expect. It matters for an application that relays third-party content into push payloads;
 `scope.fetch(urlToOpen)` under the `sendRequest` operation (`:466`) is the same reach without any
 user interaction.
+
+## 14. "Is this URL absolute?" — four answers
+
+Four places in the framework decide whether a URL is absolute, and each guards something: whether an
+`ngSrc` may be concatenated into a CDN path, whether a JSONP `<script src>` is allowed, whether a
+base href carries an origin to strip, and whether an XSRF token may be attached. No two of them
+answer the same way.
+
+| Site                                                 | Test                              | `HTTPS://` | `//host` | `ftp://` |
+| ---------------------------------------------------- | --------------------------------- | ---------- | -------- | -------- |
+| `common/src/directives/ng_optimized_image/url.ts:16` | `/^https?:\/\//`                  | no         | no       | no       |
+| `common/http/src/jsonp.ts:303`                       | `/^https?:\/\//i`                 | **yes**    | no       | no       |
+| `common/src/location/location.ts:331`                | `new RegExp('^(https?:)?//')`     | no         | **yes**  | no       |
+| `common/http/src/xsrf.ts:106`                        | `new URL(url, origin)` comparison | **yes**    | **yes**  | **yes**  |
+
+Measured against all four:
+
+```
+which inputs the four disagree on:
+  HTTPS://evil.example/x    2/4 say absolute
+  HtTpS://evil.example/x    2/4 say absolute
+  //evil.example/x          2/4 say absolute
+  ftp://evil.example/x      1/4 say absolute
+```
+
+Only the `new URL` form is correct on every input, and it is the only one that does not use a regex.
+The `location.ts` copy carries a `DO NOT REFACTOR!` comment explaining that its odd
+`new RegExp(...)` construction works around a Closure Compiler bug — evidence this predicate has
+been revisited without the set ever being reconciled.
+
+The one that guards the most is the weakest: `url.ts:16` is the only one whose miss is recorded as a
+defect ([register § 43](./findings-register.md)), because it backs a production `RuntimeError`.
+
+### Where base-href containment actually comes from
+
+`joinWithSlash` (`common/src/location/util.ts:18`) is what turns an app path into an external URL,
+through `PathLocationStrategy.prepareExternalUrl` (`location_strategy.ts:153`). It performs no
+containment of its own:
+
+```
+base="/"      path="//evil.example/x"   -> "//evil.example/x"        ORIGIN=https://evil.example
+base="/app/"  path="//evil.example/x"   -> "/app//evil.example/x"    same origin
+base="/app"   path="//evil.example/x"   -> "/app//evil.example/x"    same origin
+base=""       path="https://evil.example/x" -> "https://evil.example/x"  ORIGIN=https://evil.example
+```
+
+Containment is incidental: it holds only when the base href has a path segment to prefix. With
+`<base href="/">` — the most common value — there is none.
+
+That is not a live defect, because the values reaching it are already normalised. `RouterLink`
+composes `prepareExternalUrl(serializeUrl(urlTree))` (`router/src/directives/router_link.ts:580`),
+and the serializer collapses a leading `//` into an ordinary first segment (§ 11). The same is true
+of every `NavigationStateManager` call site. **The guarantee lives in the router's serializer, not
+in `joinWithSlash`** — so an application calling `Location.go` or `Location.prepareExternalUrl`
+directly with an unnormalised string has nothing between it and a protocol-relative URL. Both are
+`@publicApi`, as is `Location.joinWithSlash` itself (`location.ts:292`).
