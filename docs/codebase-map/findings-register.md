@@ -2347,6 +2347,57 @@ decision.
 Related to [21](#21-ɵdisableprofiling-has-no-consumer-at-all): both are private exports with no
 in-repo consumer, but that one still does something.
 
+### 51. `ShadowCss` placeholders collide with author selectors — `open`
+
+`packages/compiler/src/shadow_css.ts:924`
+
+The emulated-encapsulation rewriter protects structurally significant text by swapping it for
+sentinel strings and restoring them afterwards. There are three layers of these:
+
+| Layer                       | Sentinels                                                                   |
+| --------------------------- | --------------------------------------------------------------------------- |
+| `escapeInStrings` (`:1180`) | `%COMMA_IN_PLACEHOLDER%`, `%SEMI_IN_PLACEHOLDER%`, `%COLON_IN_PLACEHOLDER%` |
+| `processRules` (`:1075`)    | `%COMMENT%`, `%BLOCK%`                                                      |
+| `SafeSelector` (`:924`)     | `__ph-<n>__`, `__esc-ph-<n>__`                                              |
+
+`SafeSelector.restore` (`:957`) rewrites **every** `__ph-<digits>__` it finds, without distinguishing
+the ones it created from text the author wrote. Run against the real `ShadowCss`:
+
+```
+class named like a ph    .__ph-0__ { color: red; }
+                      -> .undefined[sc] { color: red; }
+
+ph name + attr           [title="x"] .__ph-0__ { color: red; }
+                      -> [title="x"][sc]   .[title="x"][sc] { color: red; }
+
+esc-ph name + escape     .a\:b .__esc-ph-0__ { color: red; }
+                      -> .a\:b[sc]   .\:[sc] { color: red; }
+```
+
+The first loses the class entirely — `placeholders[0]` is `undefined`, and the selector becomes
+`.undefined`. The other two graft an unrelated placeholder's contents into the author's selector.
+
+Filed as an observation, not a defect: a class named `__ph-0__` is not something anyone writes, and
+component CSS is authored alongside the component, so there is no trust boundary to cross here —
+controlling the stylesheet already means controlling the component. It is recorded because
+placeholder-substitution parsers fail this way generically, and the restore step has no guard.
+
+**Cleared in the same pass, and worth recording because it looks broken.** `SafeSelector`'s
+constructor matches attribute selectors with `/(\[[^\]]*\])/g` (`:932`), a pattern that cannot
+span a `]` inside a quoted value. That turns out not to matter: `escapeInStrings` runs first, from
+`processRules` (`:1076`), and it is a proper quote-state machine (`:1183-1202`) that has already
+replaced any `]`-adjacent structural characters inside strings before a selector is ever handed to
+`SafeSelector`. Verified end to end:
+
+```
+attr value w/ ]          [title="a]b"] { color: red; }     -> [title="a]b"][sc] { color: red; }
+attr value w/ ] and ,    [title="a],[x"] { color: red; }   -> [title="a],[x"][sc] { color: red; }
+comma inside attr        [title="a,b"] { color: red; }     -> [title="a,b"][sc] { color: red; }
+```
+
+Also confirmed correct on the same run: escaped-colon classes (`.foo\:blue`), `:nth-child(2n + 1)`
+both standalone and in a compound selector, and comma-separated selector lists.
+
 ### 47. A kebab-cased input alias silently shadows its camelCase sibling — `open`
 
 `packages/elements/src/utils.ts:89`
