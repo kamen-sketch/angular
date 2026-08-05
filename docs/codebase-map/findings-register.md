@@ -924,6 +924,20 @@ choice, because the three serializers built on this writer hold **opposite** con
 
 So one of the two conventions is wrong, and the writer cannot satisfy both.
 
+**Angular's other XML writer resolves it the opposite way.** The compiler ships its own serializer
+for these same formats, and `_serializeAttributes`
+(`compiler/src/i18n/serializers/xml_helper.ts:36-41`) emits every key it is given:
+
+```js
+const strAttrs = Object.keys(attrs)
+  .map((name: string) => `${name}="${attrs[name]}"`)
+  .join(' ');
+```
+
+No truthiness test — an empty value becomes `name=""`. So across one toolchain, for one file format,
+the compiler-side writer emits empty attributes and the localize-side writer discards them, and the
+reader (`getAttrOrThrow`, above) is built for the compiler's behaviour.
+
 For the `disp`/`equiv-text` attributes the `!== undefined` guards are merely redundant: the producer
 already normalises at `tools/src/source_file_utils.ts:497`, `text: startPath.getSource() || undefined`.
 
@@ -2391,6 +2405,33 @@ decision.
 
 Related to [21](#21-ɵdisableprofiling-has-no-consumer-at-all): both are private exports with no
 in-repo consumer, but that one still does something.
+
+### 53. `escapeXml` is duplicated verbatim across two packages — `open`
+
+`packages/compiler/src/i18n/serializers/xml_helper.ts:118`
+`packages/localize/tools/src/extract/translation_files/xml_file.ts:97`
+
+Both the `_ESCAPED_CHARS` table and the `escapeXml` body are character-identical; the only textual
+difference in either file is the `export` keyword on the compiler's copy. Compared
+programmatically, `_ESCAPED_CHARS` matches exactly, and the function bodies match once `export` is
+discounted.
+
+```js
+const _ESCAPED_CHARS: [RegExp, string][] = [
+  [/&/g, '&amp;'], [/"/g, '&quot;'], [/'/g, '&apos;'], [/</g, '&lt;'], [/>/g, '&gt;'],
+];
+```
+
+Nothing keeps them aligned — no shared import, no test comparing them, neither generated from the
+other. Both are correct today (the `&` replacement is first, so entities are not double-escaped, as
+verified for the localize copy in finding 32), which is exactly when a duplicate is easiest to let
+drift.
+
+Same shape as [finding 7](#7-the-dom-security-schema-is-duplicated-with-nothing-enforcing-the-copies),
+where the two copies of the DOM security schema are byte-identical with nothing enforcing it. This
+one matters less — a missed XML entity is an encoding bug, not a security-context bug — but it is
+the second unenforced duplicate found in this review, and both sit on the compiler/runtime boundary
+where a shared module would be awkward.
 
 ### 51. `ShadowCss` placeholders collide with author selectors — `open`
 
