@@ -1345,6 +1345,64 @@ compiled from this code "MUST be kept as small as possible" because it is inline
 Making `syntheticMouseEventSupport` fold — deriving it from `MOUSE_SPECIAL_SUPPORT` rather than from
 a constructor argument — would remove both symbols and make the correctness question above moot.
 
+### 39. An unpaired quote in a date format is deleted, and the rest becomes date data — `open`
+
+`packages/common/src/i18n/format_date.ts:38`
+
+```js
+const DATE_FORMATS_SPLIT =
+  /((?:[^BEGHLMOSWYZabcdhmswyz']+)|(?:'(?:[^']|'')*')|(?:G{1,5}|y{1,4}|…|O{1,4}))([\s\S]*)/;
+```
+
+The pattern has no `^`. `formatDate`'s tokenizer (`:100-113`) calls `exec` and keeps only group 1
+(the token) and group 2 (the remainder), so **anything before the match position is discarded** —
+it is in neither capture group and nothing else looks at it.
+
+Exactly one character can fail to start a match. Alternative 1 accepts everything outside
+`BEGHLMOSWYZabcdhmswyz'`, and every excluded letter begins a token in alternative 3, so the only way
+to reach the end of the alternation is an apostrophe with no closing partner. When that happens the
+apostrophe is deleted and the text it was meant to quote is re-tokenised as format specifiers.
+
+Run against the real regex and the real loop:
+
+| format           | renders as              | what the tokens are                      |
+| ---------------- | ----------------------- | ---------------------------------------- |
+| `'Week' w`       | `Week <w>`              | correct — quote is paired                |
+| `'Week w`        | `<W>eek <w>`            | `W` = week-of-month                      |
+| `'Updated`       | `Up<d><a>te<d>`         | `d` = day, `a` = AM/PM                   |
+| `'Est. delivery` | `<E><s>t. <d>eliver<y>` | `E` = weekday, `s` = seconds, `y` = year |
+| `MMM d 'yy`      | `<MMM> <d> <yy>`        | the apostrophe is simply gone            |
+
+So `formatDate(d, "'Updated", 'en')` returns something like `Up15AMte15` rather than `Updated`, with
+no error in any mode. Dropping a closing quote is an ordinary typo, and the failure is silent and
+produces plausible-looking output — digits and weekday names embedded in what should be literal
+text — so it is the kind of thing that reaches production.
+
+The file already validates formats, which is why this reads as an oversight rather than a decision:
+`assertValidDateFormat` (`:153`) runs under `ngDevMode` and throws `SUSPICIOUS_DATE_FORMAT` for the
+much subtler `Y`-versus-`y` mix-up. The same error code would fit here.
+
+Anchoring the pattern with `^` would also fix it without a new check: the tokenizer's `else` branch
+(`:109-112`) already pushes an unmatched remainder as a single literal part, which is the sensible
+reading of a malformed tail.
+
+**Cleared while measuring this**: `MAX_DATE_FORMAT_LENGTH = 256` (`:40`, enforced at `:94`) is not
+guarding catastrophic backtracking. The nested quantifier `(?:[^']|'')*` looks like the classic
+shape, but the two branches are disjoint on their first character, so there is nothing to backtrack
+over. Timed on the real regex, well past the limit:
+
+```
+  quotes x256          len=256    iterations=1      0.3ms
+  quotes x4096         len=4096   iterations=1      0.0ms
+  open quote + junk    len=4096   iterations=1      0.1ms
+  alternating          len=4096   iterations=2048   8.0ms
+  all tokens           len=4080   iterations=4080   20.5ms
+```
+
+Linear in the number of tokens, not exponential in length. (`parts = parts.concat(…)` inside the
+loop is quadratic in allocations, which is what the last two rows show; at the 256-char limit it is
+immaterial.)
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
