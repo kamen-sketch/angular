@@ -2130,6 +2130,51 @@ unnoticed — but nothing requires or suggests the quotes.
 Tracking whether the parser is inside parentheses, rather than testing the position of `url(`, would
 handle both cases and still honour the `foo_URL()` intent.
 
+### 52. The expression lexer accepts a number with several decimal points — `open`
+
+`packages/compiler/src/expression_parser/lexer.ts:486`
+
+`scanNumber`'s loop treats a period as "not simple" and keeps going, without recording that one has
+already been seen:
+
+```js
+} else if (this.peek === chars.$PERIOD) {
+  simple = false;
+} else if (isExponentStart(this.peek)) {
+```
+
+So the scan consumes every period it meets, and `parseFloat` — which stops at the second one —
+silently truncates. Run against the real `Lexer`:
+
+```
+input       tokens (type=value)        error?
+"1.5"       Number="1.5"               NO
+"1.2.3"     Number="1.2"               NO
+"1.2.3.4"   Number="1.2"               NO
+"1.2e3.4"   Number="1200"              NO
+"1__0"      Error="Invalid numeric separator…"  yes
+"1_"        Error="Invalid numeric separator…"  yes
+```
+
+`{{ 1.2.3 }}` compiles and renders `1.2`. The same text is a syntax error in TypeScript and
+JavaScript, so a template expression accepts what the host language rejects, and produces a
+plausible-looking wrong number rather than a diagnostic.
+
+The contrast is inside this one function. Numeric separators, added later, are validated
+carefully — `:479-484` checks for a digit on both sides and raises `Invalid numeric separator`, which
+is why `1__0` and `1_` fail correctly. A repeated decimal point gets no such check.
+
+The token's span is also inconsistent with its value: `Number="1.2"` covers the whole `1.2.3` range
+(`newNumberToken(start, this.index, value)` at `:504`), so anything reading the token's source extent
+— the language service, error underlining — sees three characters more than the value accounts for.
+
+A `seenPeriod` flag alongside the existing `hasSeparators` would match how the rest of the function
+already works. Not a security issue; a mistyped literal that fails silently instead of loudly.
+
+Confirmed correct on the same run: `.5`, `1_000`, `1e3`, and `1e1_0` (a separator inside an
+exponent) all lex to the right values, and `0x1f` is not silently accepted as hex — it lexes as
+`0` followed by an identifier, which the parser then rejects.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
