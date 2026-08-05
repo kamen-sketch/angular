@@ -656,6 +656,31 @@ attribute-keyed lookups.
 Separately, `parseCache` is never bounded or cleared, so it grows with the number of distinct
 attribute strings seen. Small for Angular's generated values; unbounded in principle.
 
+**A second plain object in the same flow**, added after reading `action_resolver.ts` in full. The
+map `parseCache` stores is itself built as `{}` (`action_resolver.ts:261`), and its keys are the
+event types parsed out of the attribute (`:270`), not the whole attribute string — a different key
+space from the one above, so it needs checking separately. It is milder in both directions:
+
+- **Writes.** `actionMap[type] = action` assigns a **string**, and assigning a primitive to
+  `__proto__` is a silent no-op rather than a reparenting. So `jsaction="__proto__:handler"` simply
+  loses that one mapping — own keys `[]`, prototype untouched — and the loss is then cached by
+  `setParsed`. `constructor:handler` and `toString:handler` create ordinary shadowing own keys and
+  work correctly. (Object semantics exercised directly; the parse loop's real imports pull in the
+  DOM.)
+- **Reads.** `actionMap[getEventType(eventInfo)]` (`:233`) would return an inherited function for an
+  event type named `toString`, `constructor` or `valueOf`, and `setAction` (`:235`) would store that
+  function where the rest of the code expects an action-name string. **Not reachable through
+  Angular**: `collectDomEventsInfo` filters with `isEarlyEventType` (`hydration/event_replay.ts:248`),
+  and `EARLY_EVENT_TYPES` (`event_type.ts:375`) is a fixed allowlist of real DOM event names, none
+  of which is an `Object.prototype` member. A standalone consumer calling `EventContract.addEvent`
+  (`eventcontract.ts:152`), which accepts any string, is not protected.
+
+Cleared while checking this: `EMPTY_ACTION_MAP` (`:22`) is a process-wide singleton and a parsed map
+is shared by every element with the same attribute text (`:274`, `:276`), so anything mutating a map
+in place would corrupt unrelated elements. Nothing does — `populateClickOnlyAction`
+(`a11y_click.ts:46-64`), the only code handed the map from outside, reads `actionMap[CLICKONLY]`
+twice and writes solely to the `EventInfo`.
+
 ### 16. `registerDispatcher` on the early event contract has no effect — `open`
 
 `packages/core/primitives/event-dispatch/src/earlyeventcontract.ts:68`
