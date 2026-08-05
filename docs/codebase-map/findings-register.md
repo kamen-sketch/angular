@@ -1860,6 +1860,64 @@ otherwise called out.
 The `RegExp` branch (`:584`) is unaffected: a caller-supplied `RegExp` is used as-is, anchors and
 all.
 
+### 46. The service worker calls `hasOwnProperty` through the push payload — `open`
+
+`packages/service-worker/worker/src/driver.ts:420`
+
+```js
+const desc = data.notification as {[key: string]: string | undefined};
+let options: {[key: string]: string | undefined} = {};
+NOTIFICATION_OPTION_NAMES.filter((name) => desc.hasOwnProperty(name)).forEach(
+  (name) => (options[name] = desc[name]),
+);
+await this.scope.registration.showNotification(desc['title']!, options);
+```
+
+`desc` is `data.notification`, and `data` is `msg.data.json()` (`:338`) — a `JSON.parse` result whose
+keys come from the push message. Reaching `hasOwnProperty` **through** that object means a payload
+key of the same name shadows the method:
+
+```
+handlePush (uses desc.hasOwnProperty):
+  ordinary             options={"body":"there","title":"Hi"}
+  shadows hasOwnProp   THREW TypeError: desc.hasOwnProperty is not a function
+  shadows w/ number    THREW TypeError: desc.hasOwnProperty is not a function
+  __proto__ key        options={"title":"Hi"}
+```
+
+The throw happens before `showNotification` at `:423`, so **no notification appears at all**. It is
+not silent — `handlePush` is passed to `msg.waitUntil` (`:338`) so the rejection surfaces — but the
+user simply never sees the push. The `PUSH` broadcast at `:411` has already gone out by then, so a
+running client still receives the data; only the notification is lost.
+
+What makes this a defect rather than a nitpick is that **the sibling function twenty lines down does
+it correctly, and says so in a comment**:
+
+```js
+// The filter uses `name in notification` because the properties are on the prototype so
+// hasOwnProperty does not work here
+NOTIFICATION_OPTION_NAMES.filter((name) => name in notification).forEach(   // :432
+```
+
+`handleClick` reached the right construct for a different reason — it reads a live `Notification`
+whose fields are on the prototype — but the effect is that the two halves of the same feature filter
+the same option list two different ways, and only one of them survives a hostile key. Run against
+the identical objects, `handleClick`'s filter returns `{"title":"Hi"}` for every payload above.
+
+Either `Object.prototype.hasOwnProperty.call(desc, name)` or `Object.hasOwn(desc, name)` fixes it;
+the repository already uses `Object.hasOwn` for exactly this shape in
+`localize/src/utils/src/messages.ts` and `common/src/i18n/format_date.ts:279`.
+
+Reachability is limited by who writes the payload: the application's own VAPID-authenticated push
+server. It matters where that server relays third-party content into the notification object — a
+chat or comment feed — and not otherwise. Recorded because the fix is one call and the correct form
+is already present in the same file.
+
+Noted while reading the same path: `msg.data.json()` is evaluated **synchronously** as the argument
+to `handlePush` (`:338`), outside any `try`, so a non-JSON push payload throws `SyntaxError` out of
+the `push` listener before `waitUntil` is ever called. The Push API permits text payloads
+(`event.data.text()`); Angular's service worker requires JSON without saying so at that boundary.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`

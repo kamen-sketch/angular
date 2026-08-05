@@ -365,3 +365,42 @@ Neither is reachable through framework-generated keys: `makeCacheKey`
 (`common/http/src/transfer_cache.ts:410`) hashes with SHA-256, so a key is always hex. Both need a
 developer's own `makeStateKey('constructor')` or `makeStateKey('hasOwnProperty')`. Recorded here
 rather than in the register for that reason.
+
+## 13. Service worker — the notification-click navigation sink
+
+`notificationclick` is the one place the service worker turns message data into a navigation.
+`Driver.handleClick` (`service-worker/worker/src/driver.ts:440`) resolves the URL and then, by
+`operation`, calls `clients.openWindow`, `client.navigate`, or `scope.fetch`:
+
+```js
+const urlToOpen = new URL(onActionClick?.url ?? '', this.scope.registration.scope).href;
+```
+
+The documentation states the constraint as a callout —
+`adev/src/content/ecosystem/service-workers/push-notifications.md:50`: "**IMPORTANT:** URLs are
+resolved relative to the service worker's registration scope." That is true of the resolution
+algorithm and false as a containment guarantee: `new URL` ignores the base whenever the first
+argument is already absolute.
+
+```
+""                         -> https://app.example.com/myapp/           in scope origin
+"detail/1"                 -> https://app.example.com/myapp/detail/1   in scope origin
+"/other"                   -> https://app.example.com/other            in scope origin
+"//evil.example/x"         -> https://evil.example/x                   LEAVES ORIGIN
+"https://evil.example/x"   -> https://evil.example/x                   LEAVES ORIGIN
+"javascript:alert(1)"      -> javascript:alert(1)                      LEAVES ORIGIN
+```
+
+Two things keep this off the register as a defect:
+
+- **The payload author is the application's own push server**, authenticated with VAPID. Sending
+  users to an external URL from a notification is a legitimate feature, not obviously an escape.
+- **The dangerous schemes are stopped by the platform, not by Angular.** `Clients.openWindow` is
+  specified to reject a URL whose scheme is not HTTP(S), and a client cannot be navigated to a
+  `javascript:` URL. So the `javascript:` and `data:` rows above are resolved by `new URL` but
+  refused at the call.
+
+What remains is that cross-origin HTTP(S) targets pass, which the wording above does not lead a
+reader to expect. It matters for an application that relays third-party content into push payloads;
+`scope.fetch(urlToOpen)` under the `sendRequest` operation (`:466`) is the same reach without any
+user interaction.
