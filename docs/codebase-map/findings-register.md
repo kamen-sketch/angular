@@ -1795,6 +1795,71 @@ misconfigured or hostile cookie writer to trigger.
 (`platform-browser/src/browser/browser_adapter.ts:82`), equally unguarded, but not on a request
 path.
 
+### 45. `Validators.pattern` anchors textually, so an alternation is not anchored — `open`
+
+`packages/forms/src/validators.ts:573`
+
+```js
+if (typeof pattern === 'string') {
+  regexStr = '';
+  if (pattern.charAt(0) !== '^') regexStr += '^';
+  regexStr += pattern;
+  if (pattern.charAt(pattern.length - 1) !== '$') regexStr += '$';
+  regex = new RegExp(regexStr);
+}
+```
+
+The anchors are concatenated onto the pattern text. Regular expressions do not compose that way, and
+two ordinary patterns come out unanchored:
+
+- **A top-level alternation.** `|` binds looser than concatenation, so `cat|dog` compiles to
+  `^cat|dog$`, which reads as `(^cat)|(dog$)` — one branch anchored at the start, the other at the
+  end, neither at both.
+- **A trailing escaped dollar.** `charAt(length - 1)` sees the `$` of `price\$` and concludes the
+  pattern is already end-anchored, so nothing is appended and `^price\$` matches any string that
+  merely _begins_ `price$`.
+
+This is not a theoretical divergence, because the template-driven directive binds the **same
+attribute the browser validates natively**. `PatternValidator`'s selector is `[pattern][ngModel]`
+(and the reactive equivalents), and its host binding reflects the value straight back onto the
+element — `host: {'[attr.pattern]': '_enabled ? pattern : null'}`
+(`forms/src/directives/validators.ts:677`). So one string is compiled twice: by Angular as
+`^cat|dog$`, and by the browser as `^(?:cat|dog)$`, which is what WHATWG specifies. Run in Chromium,
+comparing Angular's compiled regex against the browser's own `validity.patternMismatch` for the same
+attribute:
+
+```
+pattern="cat|dog"
+   value="cat"              Angular=valid    browser=valid
+   value="catxxx"           Angular=valid    browser=invalid   <-- DIVERGES
+   value="xxxdog"           Angular=valid    browser=invalid   <-- DIVERGES
+pattern="yes|no"
+   value="DROP TABLE;no"    Angular=valid    browser=invalid   <-- DIVERGES
+   value="yes--"            Angular=valid    browser=invalid   <-- DIVERGES
+pattern="price\$"
+   value="price$XXX"        Angular=valid    browser=invalid   <-- DIVERGES
+
+divergences: 5
+```
+
+**Every divergence runs the same way** — Angular accepts what the browser rejects. For a validator
+that is the wrong direction: `Validators.pattern('yes|no')` reads as a two-value allowlist and
+admits `DROP TABLE;no`.
+
+Wrapping the pattern as `^(?:…)$` fixes all three cases at once and matches the platform. Both
+existing `charAt` tests become unnecessary — `^(?:^ok$)$` still matches exactly `ok`, so a
+pre-anchored pattern needs no special case.
+
+The mechanism is documented; the consequence is not. The JSDoc (`:407-410`) states that "the `^`
+character is prepended and the `$` character is appended … (if not already present)", which
+describes what the code does without noting that this leaves alternations open. That omission stands
+out because the same doc block carries a whole subsection on a _subtler_ hazard — that a `RegExp`
+with the `g` or `y` flag gives different answers on consecutive calls — so sharp edges here are
+otherwise called out.
+
+The `RegExp` branch (`:584`) is unaffected: a caller-supplied `RegExp` is used as-is, anchors and
+all.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
