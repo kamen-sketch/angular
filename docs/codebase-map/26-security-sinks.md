@@ -234,6 +234,7 @@ Collected sites where the key is caller- or data-supplied and the map is not har
 | `localize/tools/…/*_translation_parser.ts`                           | message id from a translation file     | **defect** — [register § 37](./findings-register.md)                                    |
 | `common/src/i18n/currencies.ts` via `locale_data_api.ts:771`, `:799` | currency code                          | cleared — every read after the guard is a numeric index, and functions have none        |
 | `common/src/i18n/format_date.ts:319`, `:332`, `:599`                 | `role`/`type`/`tagName`                | cleared — every key is `.toUpperCase()`d, and no `Object.prototype` member is uppercase |
+| `core/src/transfer_state.ts:90` (`get`)                              | a `StateKey` string                    | not reachable via framework keys — see § 12                                             |
 
 Two properties decide whether a site is exploitable, and both are worth checking first:
 
@@ -330,3 +331,37 @@ control failing:
   divergence: the browser resolves `%2e%2e` and `..` identically in `pushState` — `/a/%2e%2e/b`
   resolves to `/b` whether or not the router decoded it first — so the address bar ends in the same
   place either way.
+
+## 12. SSR state transfer — the inlined `<script>`
+
+`platform-server/src/transfer_state.ts:93` builds a `<script type="application/json">` whose text is
+the serialized `TransferState` and appends it to `<body>`. `<script>` is a raw-text element, so HTML
+serialization does **not** escape its contents — whatever `toJson` produces lands verbatim in the
+SSR response.
+
+The guard is in `TransferState.toJson` (`core/src/transfer_state.ts:146`), with a comment naming the
+risk:
+
+```js
+// Escape script tag to avoid break out of <script> tag in serialized output.
+return JSON.stringify(this.store).replace(/</g, '\u003C').replace(/\//g, '\u002F');
+```
+
+Escaping `<` outright is sufficient: no close tag can form if no `<` survives. Verified by driving
+eight payloads through a real serialize-and-reparse in Chromium — close tags in several casings,
+a self-closing variant, the comment-nesting trick, a pre-escaped `\u003C`, and a lone backslash.
+**0 breakouts, and every payload round-tripped exactly** through `JSON.parse`.
+
+Two accessor notes on the store itself, checked because it is a plain object that on the client is
+replaced wholesale by `JSON.parse` of the payload:
+
+- `get` (`:90`) indexes bare while `hasKey` (`:111`) uses `hasOwnProperty`, so the two disagree:
+  `get('constructor', DEFAULT)` returns the `Object` function where `hasKey('constructor')` correctly
+  says `false`.
+- `hasKey` calls `this.store.hasOwnProperty(...)` through the store, so a stored key of that name
+  shadows the method — `TypeError: this.store.hasOwnProperty is not a function`.
+
+Neither is reachable through framework-generated keys: `makeCacheKey`
+(`common/http/src/transfer_cache.ts:410`) hashes with SHA-256, so a key is always hex. Both need a
+developer's own `makeStateKey('constructor')` or `makeStateKey('hasOwnProperty')`. Recorded here
+rather than in the register for that reason.
