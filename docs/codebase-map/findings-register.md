@@ -1953,6 +1953,66 @@ to `handlePush` (`:338`), outside any `try`, so a non-JSON push payload throws `
 the `push` listener before `waitUntil` is ever called. The Push API permits text payloads
 (`event.data.text()`); Angular's service worker requires JSON without saying so at that boundary.
 
+### 48. A malformed animation timing yields `NaN` with no error reported — `open`
+
+`packages/animations/browser/src/util.ts:68`
+
+```js
+const PARSE_TIME_EXPRESSION_REGEX =
+  /^(-?[\.\d]+)(m?s)(?:\s+(-?[\.\d]+)(m?s))?(?:\s+([-a-z]+(?:\(.+?\))?))?$/i;
+```
+
+The numeric group is a character **class** — any mix of `.` and digits, in any order, including a run
+with no digit at all. `.s`, `...s` and `.....ms` all match, so the `matches === null` gate at `:80`
+never fires, and `parseFloat` then returns `NaN`:
+
+```
+input                duration    delay    errors
+"1s"                 1000        0        (none)
+".5s"                500         0        (none)
+"-1s"                -1000       0        invalidTimingValue("-1s"), negativeStepValue()
+"abc"                0           0        invalidTimingValue("abc")
+"1x"                 0           0        invalidTimingValue("1x")
+"...s"               NaN         0        (none)   <-- NaN, no error
+".s"                 NaN         0        (none)   <-- NaN, no error
+".....ms"            NaN         0        (none)   <-- NaN, no error
+"-.s"                NaN         0        (none)   <-- NaN, no error
+```
+
+Six of twenty probes produce `NaN` silently. The contrast in that table is the point: `"abc"` and
+`"1x"` are rejected with a collected `invalidTimingValue` error, which is exactly what should happen
+to `".s"`. The second guard does not catch it either — `duration < 0` is `false` for `NaN`
+(`:103`), so the negative-value branch is skipped and no error is appended.
+
+`NaN` then reaches the player unchanged: `web_animations_player.ts:43` reads
+`options['duration']` straight into `_duration` and `:116` passes the options object to
+`element.animate`. Checked in Chromium:
+
+```
+duration=1000   -> ok, effect duration = 1000
+duration=0      -> ok, effect duration = 0
+duration=NaN    -> TypeError: Failed to execute 'animate' on 'Element': duration must be non-negative…
+duration=-1     -> TypeError: Failed to execute 'animate' on 'Element': duration must be non-negative…
+```
+
+So the failure mode changes: an input the parser is built to report becomes an unhandled `TypeError`
+at animation time instead, naming the Web Animations API rather than the offending timing string.
+
+`resolveTimingValue` (`:40-46`) carries the same class in its own pattern
+(`/^(-?[\.\d]+)(m?s)/`) and returns `NaN` the same way; its `return 0` fallback only covers a
+complete non-match.
+
+Requiring a digit — `-?\d*\.?\d+` or similar — closes both. Worth noting the class is also loose in
+a harmless direction: `"1.2.3s"` parses as `1200`, because `parseFloat` stops at the second dot.
+
+Not a security issue and not attacker-reachable — animation timings come from component metadata.
+It is a developer-experience defect of the kind this file otherwise handles carefully, collecting
+errors rather than throwing.
+
+Cleared in the same pass: the regex is **not** a backtracking risk despite the repeated character
+class. Timed on the real pattern, 5000-character inputs of digits, dots, mixed dots-and-digits, and
+a near-miss all completed in under 0.05 ms.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
