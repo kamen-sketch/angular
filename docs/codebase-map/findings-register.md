@@ -1542,6 +1542,98 @@ duplicate-placeholder cleanup target the pattern rather than the result.
   both, and the final guards (`typeof digits === 'number'`, `currency[Symbol] || code`) fall back
   correctly. Safe, though by two layers of luck rather than by design.
 
+### 42. The second locale registry is a plain object, and `constructor` reaches it — `open`
+
+`packages/core/src/i18n/locale_data_api.ts:111`
+
+Locale lookup consults two registries. The first is hardened, deliberately and with a comment:
+
+```js
+/**
+ * This const is used to store the locale data registered with `registerLocaleData`.
+ * Use `Object.create(null)` to prevent prototype pollution.
+ */
+let LOCALE_DATA: {[localeId: string]: any} = /* @__PURE__ */ Object.create(null);   // :18
+```
+
+The second is not:
+
+```js
+export function getLocaleData(normalizedLocale: string): any {
+  if (!(normalizedLocale in LOCALE_DATA)) {
+    const globalLocaleData =
+      global.ng && global.ng.common && global.ng.common.locales &&
+      global.ng.common.locales[normalizedLocale];       // <- plain object
+    // Only cache global locale data when an entry is actually found, to avoid
+    // caching missing lookups. In SSR this cache is process-wide across requests,
+    // so caching `undefined` would retain attacker-controlled locale identifiers
+    // indefinitely. …
+    if (globalLocaleData !== undefined) {
+      LOCALE_DATA[normalizedLocale] = globalLocaleData;
+    }
+    return globalLocaleData;
+  }
+  return LOCALE_DATA[normalizedLocale];
+}
+```
+
+`global.ng.common.locales` is created by the generated global locale files as a bare literal —
+`global.ng.common.locales ??= {}` (`common/locales/generate-locales-tool/locale-global-file.ts:31`),
+which is what ships in `@angular/common/locales/global/*.js` for apps that load locale data by
+script tag. So the truthiness guard at `:117` does not stop an inherited member: it is not
+`undefined`, so it is returned **and cached**.
+
+`normalizeLocale` (`:183`) lowercases and maps `_` to `-`, which turns out to disqualify almost
+every candidate — but not all of them:
+
+```
+  constructor        -> constructor        STILL an inherited name
+  __proto__          -> --proto--          no longer matches
+  toString           -> tostring           no longer matches
+  hasOwnProperty     -> hasownproperty     no longer matches
+  __defineGetter__   -> --definegetter--   no longer matches
+```
+
+`constructor` is the only member of `Object.prototype` that is all-lowercase and free of
+underscores, so it is the one key that survives normalisation. Run against the real functions:
+
+```
+findLocaleData(locale):
+  "fr"             returned ["fr","…real fr data…"]
+  "constructor"    returned function Object
+  "__proto__"      MISSING_LOCALE_DATA: Missing locale data for the locale "__proto__".
+  "zz-ZZ"          MISSING_LOCALE_DATA: Missing locale data for the locale "zz-ZZ".
+
+LOCALE_DATA after those lookups (the process-wide SSR cache):
+  fr=["fr","…real fr data…"]  constructor=function Object
+
+what a consumer then does with it (common/locale_data_api.ts:528):
+  data[NumberFormats][Currency] -> TypeError: Cannot read properties of undefined (reading '2')
+```
+
+Two things follow, and the second is the reason this is filed here rather than as a curiosity.
+
+1. **The wrong error, in the wrong place.** `findLocaleData` exists to raise `MISSING_LOCALE_DATA`
+   for an unknown locale. For this one string it returns the `Object` function instead, and the
+   failure surfaces later as a `TypeError` inside number or date formatting, naming neither the
+   locale nor the cause. Every index into the returned "data" is numeric, and numeric properties of
+   a function are all `undefined`, so this degrades to crashes rather than to wrong values — there
+   is no path to execution here.
+2. **It defeats the mitigation written directly above it.** The comment at `:112-116` reasons about
+   SSR, a process-wide cache, and "attacker-controlled locale identifiers" being retained
+   indefinitely. That is exactly what happens: `LOCALE_DATA['constructor'] = Object` is written on
+   the first such request and never removed (only `unregisterAllLocaleData` clears it). The
+   author's threat model is already the right one; the fix addressed caching `undefined` and left
+   the truthy-inherited case open.
+
+It is bounded — `constructor` is the only reachable name, so this is one stale entry, not unbounded
+growth — and it needs an app that loads locale data via the global script-tag files, which is a
+documented supported form. Locale strings commonly come from a URL segment or `Accept-Language`, so
+reaching it does not require anything unusual.
+
+The fix mirrors what the file already does one screen up: build the global registry with
+`Object.create(null)`, or gate the read with `Object.hasOwn`.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
