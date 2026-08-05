@@ -2189,6 +2189,62 @@ Confirmed correct on the same run: `.5`, `1_000`, `1e3`, and `1e1_0` (a separato
 exponent) all lex to the right values, and `0x1f` is not silently accepted as hex — it lexes as
 `0` followed by an identifier, which the parser then rejects.
 
+### 54. A decimal character reference is scanned with hex digits — `open`
+
+`packages/compiler/src/ml_parser/lexer.ts:711`
+
+`_consumeEntity` decides hex-versus-decimal from the `x` prefix, then scans the digits with a
+predicate that does not know which it picked:
+
+```js
+const isHex = this._attemptCharCode(chars.$x) || this._attemptCharCode(chars.$X);
+const codeStart = this._cursor.clone();
+this._attemptCharCodeUntilFn(isDigitEntityEnd);          // :711
+…
+const charCode = parseInt(strNum, isHex ? 16 : 10);      // :725
+```
+
+```js
+function isDigitEntityEnd(code: number): boolean {       // :1517
+  return code === chars.$SEMICOLON || code === chars.$EOF || !chars.isAsciiHexDigit(code);
+}
+```
+
+The scan consumes **hex** digits in both modes, so a decimal reference swallows `a`–`f` and then
+hands them to `parseInt(…, 10)`, which stops at the first one. Nothing reports the discarded tail:
+the semicolon check at `:712` already passed, so the error branch is skipped.
+
+`&#12ab;` therefore scans `12ab`, parses `12`, and emits U+000C — losing `ab` entirely. The browser
+keeps them. Chromium, on the same inputs:
+
+| Source       | Browser (HTML spec) | Angular's path                       |
+| ------------ | ------------------- | ------------------------------------ |
+| `&#12ab;`    | `` + literal `ab;`  | `` — **`ab;` silently dropped**      |
+| `&#12;`      | ``                  | ``                                   |
+| `&#x12ab;`   | U+12AB              | U+12AB                               |
+| `&#xD800;`   | U+FFFD              | lone surrogate U+D800                |
+| `&#0;`       | U+FFFD              | U+0000                               |
+| `&#1114112;` | U+FFFD              | parse error (`fromCodePoint` throws) |
+
+Three divergences beyond the first. The spec replaces surrogates, `0`, and out-of-range values with
+U+FFFD; `String.fromCodePoint` (`:726`) returns the surrogate and the NUL happily, and only throws
+past U+10FFFF — where the `catch` at `:727` turns it into a parse error, which is at least loud.
+
+The one that matters is `&#12ab;`, because it is the only one that silently discards author text.
+Making `isDigitEntityEnd` take `isHex` and fall back to `isDigit` fixes it: the scan would stop at
+`a`, the `;` check would fail, and the existing `_unparsableEntityErrorMsg` path would fire.
+
+**Verification note.** The browser column was measured in Chromium via `DOMParser`. The Angular
+column is read from the source path above plus the two JavaScript primitives it depends on, checked
+directly — `parseInt('12ab', 10) === 12` and `String.fromCodePoint` for each code point. The
+tokenizer itself was not executed: its constructor takes function-typed parameters
+(`_getTagDefinition: (tagName: string) => TagDefinition`) that the scratch desugarer used elsewhere
+in this review cannot rewrite, and staging it fully was not worth the cost.
+
+Confirmed correct nearby: the named-entity lookup at `:745` uses
+`NAMED_ENTITIES.hasOwnProperty(name) && NAMED_ENTITIES[name]`, the right form for the plain-object
+table — unlike several sites in [26 § 9](./26-security-sinks.md).
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
