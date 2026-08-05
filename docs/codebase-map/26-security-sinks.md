@@ -206,3 +206,45 @@ properties; it trusts layer 1 to have emitted the right call.
   while the schema's SVG `ATTRIBUTE_NO_BINDING` list also names `animateMotion` and
   `animateTransform`. Checked and consistent: the latter two contribute only `attributeName`, which
   is never bindable, so they need no entry in the static-value table.
+
+## 9. A second sink class: untrusted keys into shared maps
+
+Everything above concerns values flowing into the DOM. A separate sink shape recurs across the
+framework and does not touch the DOM at all: **a caller-supplied string used as a property key on an
+object that carries `Object.prototype`**. The read then returns an inherited function or object
+instead of missing, and a truthiness or `!= null` guard lets it through.
+
+The repository already knows this pattern and fixes it in three places, each with a comment saying
+why — so the instances below are omissions rather than an unrecognised risk:
+
+| Hardened                                    | How                                                                     |
+| ------------------------------------------- | ----------------------------------------------------------------------- |
+| `core/src/i18n/locale_data_api.ts:18`       | `LOCALE_DATA = Object.create(null)` — "to prevent prototype pollution"  |
+| `localize/src/translate.ts:74`              | `Object.create(null)`, with a comment naming `__proto__` explicitly     |
+| `sanitization/dom_security_schema.ts:63`    | `createNullObj = () => Object.create(null)` for attribute-keyed lookups |
+| `common/src/i18n/format_date.ts:37`, `:575` | `NAMED_FORMATS`, `DATE_FORMATS` both `Object.create(null)`              |
+
+Collected sites where the key is caller- or data-supplied and the map is not hardened:
+
+| Site                                                                 | Key comes from                         | Status                                                                                  |
+| -------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------- |
+| `core/src/i18n/locale_data_api.ts:111`                               | locale string (URL, `Accept-Language`) | **defect** — [register § 42](./findings-register.md)                                    |
+| `event-dispatch/src/cache.ts:14`                                     | `jsaction` attribute text              | **defect** — [register § 15](./findings-register.md)                                    |
+| `event-dispatch/src/action_resolver.ts:261`                          | event types parsed from the attribute  | **defect (mild)** — register § 15                                                       |
+| `localize/tools/…/*_translation_parser.ts`                           | message id from a translation file     | **defect** — [register § 37](./findings-register.md)                                    |
+| `common/src/i18n/currencies.ts` via `locale_data_api.ts:771`, `:799` | currency code                          | cleared — every read after the guard is a numeric index, and functions have none        |
+| `common/src/i18n/format_date.ts:319`, `:332`, `:599`                 | `role`/`type`/`tagName`                | cleared — every key is `.toUpperCase()`d, and no `Object.prototype` member is uppercase |
+
+Two properties decide whether a site is exploitable, and both are worth checking first:
+
+- **What normalisation runs on the key.** Uppercasing immunises completely; there is no uppercase
+  member of `Object.prototype`. Lowercasing does not — `constructor` survives it. Angular's
+  `normalizeLocale` also maps `_` to `-`, which is what disqualifies `__proto__` and the
+  `__define*__` family and leaves `constructor` as the sole reachable name in § 42.
+- **What the code does with the result.** A numeric index into the returned value (`currency[0]`,
+  `data[14]`) is `undefined` on both a function and `Object.prototype`, so the damage stops at a
+  fallback or a `TypeError`. A _call_, or a string index, carries further.
+
+None of the instances found in this review reach code execution. They produce crashes, silently
+dropped entries, and — where the value is cached, as in § 42 — a stale entry that outlives the
+request that created it.
