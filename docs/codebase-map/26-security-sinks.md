@@ -248,3 +248,30 @@ Two properties decide whether a site is exploitable, and both are worth checking
 None of the instances found in this review reach code execution. They produce crashes, silently
 dropped entries, and — where the value is cached, as in § 42 — a stale entry that outlives the
 request that created it.
+
+## 10. `NgOptimizedImage` — the CSS `url()` and image-URL sinks
+
+`NgOptimizedImage` writes three things the rest of this document does not cover, because none of
+them go through a `ɵɵsanitize*` call: the `src` and `srcset` attributes (via
+`Renderer2.setAttribute`, which no sanitizer intercepts) and a CSS `url(...)` in
+`[style.background-image]`.
+
+| Sink                       | Guard                                                                  | Verified                                                                        |
+| -------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `[style.background-image]` | `escapeCssUrl` (`ng_optimized_image/url.ts:50`)                        | 14 adversarial placeholders through a real Chromium CSS parser, 0 breakouts     |
+| `src` / `srcset`           | the loader builds the URL; `isAbsoluteUrl` rejects an absolute `ngSrc` | guard is leaky — [register § 43](./findings-register.md) — but no origin escape |
+
+Two structural notes that matter more than either guard:
+
+- **The style write is a single CSSOM property assignment.** `DomRenderer2.setStyle`
+  (`platform-browser/src/dom/dom_renderer.ts:424-433`) calls `el.style.setProperty(…)` or assigns
+  `el.style[prop]`, neither of which can introduce a sibling declaration however the value is
+  shaped. `escapeCssUrl` is defence in depth over that, not the only barrier.
+- **The image loaders concatenate, they do not parse.** Every built-in loader interpolates `ngSrc`
+  into a path segment of the configured CDN origin, so a scheme-like prefix in `ngSrc` becomes part
+  of the path rather than a new origin. That is what keeps § 43's leaky guard from being a
+  redirect primitive.
+
+`img|src` is in the security schema (§ 2.1) but is one of the two entries commented there as "safe
+and should be removed", so the fact that `NgOptimizedImage` bypasses sanitization by writing the
+attribute through the renderer does not lose a control that was doing work.

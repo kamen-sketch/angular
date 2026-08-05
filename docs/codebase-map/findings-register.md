@@ -1634,6 +1634,88 @@ reaching it does not require anything unusual.
 The fix mirrors what the file already does one screen up: build the global registry with
 `Object.create(null)`, or gate the read with `Object.hasOwn`.
 
+### 43. `isAbsoluteUrl` misses uppercase and protocol-relative URLs — `open`
+
+`packages/common/src/directives/ng_optimized_image/url.ts:16`
+
+```js
+export function isAbsoluteUrl(src: string): boolean {
+  return /^https?:\/\//.test(src);
+}
+```
+
+No `i` flag, and no protocol-relative form. URL schemes are case-insensitive (RFC 3986 § 3.1) and
+browsers accept `HTTPS://example.com/a.png`, so the predicate answers "no" for URLs that are
+absolute.
+
+Three consumers, and two of them are guards:
+
+| Site                                 | Role                                                                                           |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `image_loaders/image_loader.ts:107`  | **production guard** — rejects an absolute `ngSrc` before it is concatenated into the CDN path |
+| `image_loaders/netlify_loader.ts:84` | decides whether `ngSrc` is a remote URL or a site-relative path                                |
+| `url.ts:23` (`extractHostname`)      | feeds the preconnect blocklist                                                                 |
+
+The first one throws a `RuntimeError` regardless of `ngDevMode` — only its message is gated — so it
+is live in production. What it lets through:
+
+```
+ngSrc                            isAbsoluteUrl  guard
+https://evil.example/x.png       true           THROWS (rejected)
+HTTPS://evil.example/x.png       false          passes through
+HtTpS://evil.example/x.png       false          passes through
+//evil.example/x.png             false          passes through
+```
+
+**This does not become an origin escape**, and that is worth stating plainly, because a guard whose
+job is rejecting absolute URLs sounds like it should be one. Every loader concatenates into a path
+rather than parsing, so the scheme-looking prefix ends up as a path segment. Checked against all
+three concatenating loaders:
+
+```
+  ngSrc="HTTPS://evil.example/x.png"
+    cloudinary   https://cdn.example.com/image/upload/f_auto,q_auto/HTTPS://evil.example/x.png  same origin
+    cloudflare   https://cdn.example.com/cdn-cgi/image/format=auto/HTTPS://evil.example/x.png   same origin
+    imgix        https://cdn.example.com/HTTPS://evil.example/x.png?auto=format                 same origin
+```
+
+So the defect is that the guard fails to do its stated job: instead of the clear
+`INVALID_LOADER_ARGUMENTS` error explaining that `ngSrc` must be relative, the developer gets a
+silently malformed URL and a broken image. (Whether a CDN then treats a path segment beginning
+`HTTPS://` as a remote-fetch instruction is that CDN's semantics, not Angular's.)
+
+The Netlify loader inverts a meaning rather than losing an error. It has no absolute-URL guard by
+design — remote URLs are a supported feature, passed through `url.searchParams.set('url', …)`, which
+encodes them — but `:84` uses the same predicate to decide whether to prepend `/`. An
+`HTTPS://…` value is judged non-absolute and not `/`-prefixed, so it is rewritten as
+`url=/HTTPS://…`: a remote image silently becomes a path on your own site.
+
+`extractHostname` returns its argument unchanged whenever the predicate says "not absolute", so
+blocklist entries in either form never match:
+
+```
+  https://cdn.example.com/a.png    -> "cdn.example.com"
+  HTTPS://cdn.example.com/a.png    -> "HTTPS://cdn.example.com/a.png"
+  //cdn.example.com/a.png          -> "//cdn.example.com/a.png"
+```
+
+That one is development-only — `PreconnectLinkChecker`'s constructor calls
+`assertDevMode('preconnect link checker')` — so a `PRECONNECT_CHECK_BLOCKLIST` written that way
+silently fails to suppress the warning it was added for.
+
+**Cleared: the CSS `url()` sink is sound.** `generatePlaceholder`
+(`ng_optimized_image.ts:729-743`) interpolates the `placeholder` input into
+`` `url("${escapeCssUrl(input)}")` `` and hands it to the `[style.background-image]` host binding.
+Style-prop bindings carry no sanitizer, so `escapeCssUrl` (`url.ts:50`) is the guard. It escapes
+backslashes first, strips the four characters that terminate a CSS string token, and escapes the
+closing quote. Driven through a real Chromium CSS parser with 14 adversarial placeholders — quote
+and paren breakouts, `\22` CSS escapes, trailing backslashes, and all four terminators — **0
+breaches**: a sentinel `background-color` was never altered. Note also that the write path is
+`el.style.setProperty` / `el.style[prop] = value` (`platform-browser/src/dom/dom_renderer.ts:424-433`),
+a single-property CSSOM assignment that structurally cannot introduce a sibling declaration. So
+`escapeCssUrl` is defence in depth over a boundary that already holds, and it is correct on its own
+terms.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
