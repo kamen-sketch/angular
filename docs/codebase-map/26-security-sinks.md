@@ -275,3 +275,58 @@ Two structural notes that matter more than either guard:
 `img|src` is in the security schema (§ 2.1) but is one of the two entries commented there as "safe
 and should be removed", so the fact that `NgOptimizedImage` bypasses sanitization by writing the
 attribute through the renderer does not lose a control that was doing work.
+
+## 11. The router URL sink — measured, and it holds
+
+`DefaultUrlSerializer` (`router/src/url_tree.ts:447`) is the one place a string from the address bar
+becomes application state and then becomes an address-bar string again. Two properties matter: a
+value must survive the round trip unchanged, and a hostile URL must not be able to escape the
+origin. Both were tested by running the real serializer and parser (staged into the scratchpad with
+parameter properties desugared for `node --experimental-strip-types`).
+
+**Round trip — lossless.** Every character with structural meaning in a URL was pushed through
+all six positions and read back — the separators, the parenthesis pair, percent, plus, space,
+quote, backslash, and the pre-encoded forms of slash and hash:
+
+| Position           | Result               |
+| ------------------ | -------------------- |
+| path segment       | lossless (24 probes) |
+| matrix param key   | lossless             |
+| matrix param value | lossless             |
+| query param key    | lossless             |
+| query param value  | lossless             |
+| fragment           | lossless             |
+
+The only mismatches were the empty string — an empty segment or an empty param key, which the
+parser's `+`-quantified patterns (`SEGMENT_RE` and friends, `:584-607`) cannot express.
+
+The encoders look asymmetric and are not: `encodeUriSegment` (`:548`) deliberately un-encodes `%26`
+back to `&`, and `encodeUriQuery` (`:528`) un-encodes `%3B` to `;`. Each un-encoded character is
+absent from the exclusion set of the pattern that parses that position, so both survive.
+
+**Hostile input — collapses to a same-origin path, and is stable.** 18 URLs shaped for
+redirect or confusion, checked for `serialize(parse(u))` and then for stability under a second pass:
+
+```
+//evil.example/path        -> "/evil.example/path"    stable
+///evil.example/path       -> "/evil.example/path"    stable
+https://evil.example/x     -> "/https:"               stable
+/\/evil.example            -> "/%5C/evil.example"     stable
+/%2e%2e/admin              -> "/../admin"             stable
+
+rewritten by one pass: 10/18   unstable on second pass: 0
+```
+
+No input produced an oscillation, and no input kept an authority component: a leading `//` becomes an
+ordinary first segment. Confirmed at the write end too — `history.pushState` resolved every one of
+these against the document without the origin changing.
+
+Recorded as informational, not defects, because each is a degenerate input degrading rather than a
+control failing:
+
+- `/a//b` serializes to `/a` — an empty segment truncates the rest of the path.
+- `/a?=v` drops the parameter, since an empty query key cannot round-trip.
+- `/%2e%2e/admin` serializes as `/../admin`, decoding the escape. This does **not** create a
+  divergence: the browser resolves `%2e%2e` and `..` identically in `pushState` — `/a/%2e%2e/b`
+  resolves to `/b` whether or not the router decoded it first — so the address bar ends in the same
+  place either way.
