@@ -1403,6 +1403,65 @@ Linear in the number of tokens, not exponential in length. (`parts = parts.conca
 loop is quadratic in allocations, which is what the last two rows show; at the 256-char limit it is
 immaterial.)
 
+### 40. `toDate` reads an 8-digit ISO date as a millisecond timestamp — `open`
+
+`packages/common/src/i18n/format_date.ts:948`
+
+```js
+const parsedNb = parseFloat(value);
+
+// any string that only contains numbers, like "1234" but not like "1234hello"
+if (!isNaN((value as any) - parsedNb)) {
+  return new Date(parsedNb);
+}
+
+let match: RegExpMatchArray | null;
+if ((match = value.match(ISO8601_DATE_REGEX))) {
+  return isoStringToDate(match);
+}
+```
+
+`ISO8601_DATE_REGEX` (`:33`) is written to accept the ISO 8601 **basic** format — the `-?` between
+each component is deliberate, and the pattern matches `20150101` as year 2015, month 01, day 01.
+But a string of digits never gets that far: the numeric-timestamp branch above it accepts anything
+that coerces to a number, and `20150101` does.
+
+```
+does ISO8601_DATE_REGEX itself accept the basic format?
+  20150101         yes -> y=2015 m=01 d=01
+
+what toDate actually returns:
+  "2015"             short-ISO   2015-01-01T00:00:00.000Z
+  "2015-01-01"       short-ISO   2015-01-01T00:00:00.000Z
+  "20150101"         TIMESTAMP   1970-01-01T05:35:50.101Z   <- 20150101 ms after the epoch
+  "20150101T120000"  ISO8601     2015-01-01T12:00:00.000Z
+```
+
+The last two rows are the same calendar date written two ways, and only one of them survives.
+`20150101T120000` reaches the ISO branch solely because the `T` makes the numeric coercion `NaN`;
+strip the time and the identical date silently becomes 1970.
+
+This is reachable from `DatePipe`: `transform` calls `formatDate` (`date_pipe.ts:275`), which calls
+`toDate` (`:93`), and `formatDate` is itself public API (`goldens/public-api/common/index.api.md:183`).
+A compact `YYYYMMDD` date from a backend is an ordinary thing to bind, and the result is a
+plausible-looking 1970 date rather than an error.
+
+The ordering is not gratuitous — a 13-digit epoch string like `1420070400000` would otherwise be
+mangled by the ISO pattern, which would read it as year 142007040, month 00, day 00. So the numeric
+branch does need to come first; it is simply too broad, catching the one width that is also a valid
+basic-format date.
+
+Two smaller things confirmed in the same run:
+
+- **The comment's own example is wrong.** `:950` offers `"1234"` as a string that "only contains
+  numbers" and should become a timestamp. It never reaches that line — `/^(\d{4}…)$/` at `:936`
+  claims it first and returns the **year 1234**.
+- **The guard and the value disagree on non-decimal literals.** The test coerces the whole string
+  (`value - parsedNb`) while the result uses `parseFloat`, which stops at the first non-decimal
+  character. So `"0x10"` passes the guard as 16 and is then constructed from 0 — `new Date(0)`.
+  Same for `"0b101"` and `"0o17"`. Exotic input, but it shows the two halves of the branch are not
+  measuring the same thing.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
