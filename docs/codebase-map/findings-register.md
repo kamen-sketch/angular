@@ -2071,6 +2071,65 @@ written in a non-Latin language. Nothing covers it: a scan of `packages/core` fo
 Adding `& BLOOM_MASK` to `:830` makes the two sides agree; the numeric branch three lines below is
 already the model.
 
+### 50. `[style]` throws on a data URL unless `url(` starts the value — `open`
+
+`packages/core/src/render3/styling/styling_parser.ts:267`
+
+`consumeStyleValue` stops at a `;`, which is correct — except inside a quoted string or a `url(…)`.
+The quote case is handled anywhere in the value (`:265`). The `url(` case is not:
+
+```js
+} else if (
+  startIndex === i - 4 && // We have seen only 4 characters so far "URL(" (Ignore "foo_URL()")
+  ch3 === CharCode.U && ch2 === CharCode.R && ch1 === CharCode.L &&
+  ch === CharCode.OPEN_PAREN
+) {
+  lastChIndex = i = consumeQuotedText(text, CharCode.CLOSE_PAREN, i, endIndex);
+}
+```
+
+`startIndex === i - 4` requires `url(` to be the **first four characters of the value**. The comment
+explains the intent — don't treat `foo_URL()` as a url — but the test it chose is positional, so it
+also excludes every `url()` that is not first.
+
+A `;` inside an unquoted `url()` is not exotic: `data:image/png;base64,…` contains one. Run against
+the real parser:
+
+```
+### url at value start
+    background-image: url(data:image/png;base64,iVBORw0KGgo=)
+      background-image:   "url(data:image/png;base64,iVBORw0KGgo=)"        ok
+
+### shorthand, url not first
+    background: #fff url(data:image/png;base64,iVBORw0KGgo=) no-repeat
+      background:         "#fff url(data:image/png"
+      <THREW>:            "malformed: expected separator"
+
+### two urls
+    background: url(data:…), url(data:…)
+      background:         "url(data:image/png;base64,iVBORw0KGgo=), url(d…"
+      <THREW>:            "malformed: expected separator"
+
+### shorthand, quoted url
+    background: #fff url("data:image/png;base64,…") no-repeat              ok
+```
+
+Two ordinary shapes fail. A `background` shorthand — colour before image — puts `url(` at offset 5,
+and a multi-image `background` puts the _second_ `url(` anywhere but the start, so even a value that
+begins correctly breaks on its second image.
+
+The failure is not truncation. The value stops mid-URL, and the leftover `base64,…) no-repeat`
+then fails `consumeSeparator` (`:239`), which throws. In development that is
+`malformedStyleError` naming the offset. **In production it is `new Error()` with no message at
+all** (`:317`), from a `[style]` binding — so an application hits a bare, unattributed error.
+
+Reached from `ɵɵstyleMap` via `styleStringParser` (`instructions/styling.ts:149-153`), i.e. any
+`[style]="…"` bound to a string. Quoting the URL avoids it, which is why this has plausibly gone
+unnoticed — but nothing requires or suggests the quotes.
+
+Tracking whether the parser is inside parentheses, rather than testing the position of `url(`, would
+handle both cases and still honour the `foo_URL()` intent.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
