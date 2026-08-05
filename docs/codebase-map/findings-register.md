@@ -1462,6 +1462,85 @@ Two smaller things confirmed in the same run:
   Same for `"0b101"` and `"0o17"`. Exotic input, but it shows the two halves of the branch are not
   measuring the same thing.
 
+### 41. `formatCurrency` substitutes the currency symbol into an unescaped `replace` — `open`
+
+`packages/common/src/i18n/format_number.ts:203`
+
+```js
+return (
+  res
+    .replace(CURRENCY_CHAR, currency)
+    // if we have 2 time the currency character, the second one is ignored
+    .replace(CURRENCY_CHAR, '')
+    .trim()
+);
+```
+
+`CURRENCY_CHAR` is `¤`, and `res` is the formatted number still carrying the placeholder from the
+locale pattern — for `en` that pattern is `¤#,##0.00`
+(`packages/core/src/i18n/locale_en.ts:20`), so `res` is `¤1,234.00` with exactly one `¤`. Two
+separate problems come out of these two lines.
+
+**A real currency code renders with no symbol.** Angular's own generated table contains
+
+```js
+"XXX":["¤"]   // packages/common/src/i18n/currencies.ts
+```
+
+`XXX` is the ISO 4217 code for "no currency", and its symbol _is_ the placeholder character. So the
+first `replace` swaps `¤` for `¤` — leaving the string unchanged — and the second one, whose job is
+to strip a _duplicate_ placeholder, strips the symbol that was just installed:
+
+```
+code     symbol     formatCurrency output
+USD      "$"        "$1,234.00"
+CAD      "CA$"      "CA$1,234.00"
+XXX      "¤"        "1,234.00"        <- symbol gone
+UNKNOWN  "UNKNOWN"  "UNKNOWN1,234.00"
+```
+
+The comment describes the case it was written for — a pattern containing two placeholders — and does
+not anticipate the replacement itself being one.
+
+**The replacement string is never escaped.** `String.prototype.replace` interprets `$&`, `` $` ``,
+`$'` and `$$` in the replacement, and `currency` reaches this line verbatim from
+`CurrencyPipe.transform`, whose `display` parameter is typed
+`'code' | 'symbol' | 'symbol-narrow' | string | boolean` and documented as accepting a custom string
+— `currency = display` (`pipes/number_pipe.ts`). `currencyCode` reaches it the same way when
+`display` is `'code'`.
+
+```
+  display="US$"                -> "US$1,234.00"          ok
+  display="$$"                 -> "$1,234.00"            ok by accident ($$ is an escaped $)
+  display="$&"                 -> "1,234.00"             inserts the match, then it is stripped
+  display="$`"                 -> "1,234.00"             inserts the text before the match
+  display="$'"                 -> "1,234.001,234.00"     inserts the text after the match
+```
+
+The `$'` row duplicates the amount. This is corruption of a money value, not just a cosmetic
+problem — though it needs a currency label containing `$` followed by one of four characters, so it
+is far less likely to be hit than the `XXX` case above. Both are fixed by the same change: escape
+the replacement (or use a function replacement, which never interprets `$`) and make the
+duplicate-placeholder cleanup target the pattern rather than the result.
+
+**Cleared in the same pass**, each checked because it looked wrong:
+
+- **`parseNumber`'s overflow boundary** (`:444`, `integerLen > MAX_DIGITS` with `MAX_DIGITS = 22`)
+  looked like an off-by-one, since `1e21` yields `integerLen === 22` and a `digits` array of length
+  1. It is correct: `roundNumber`'s fraction-padding loop (`:505`) runs `fractionLen` from `-21` up
+     to `0` and pushes the 21 missing zeros. Verified against the real functions —
+     `1e21` → `1,000,000,000,000,000,000,000`, `9e21` → `9,000,000,000,000,000,000,000`,
+     `1e22` → `1E+22`.
+- **`digitsInfo` with `minFrac > maxFrac`** (e.g. `'1.5-2'`) is not silently accepted. The
+  correction at `:77` only fires when the max part is absent, but `roundNumber` throws
+  `INVALID_NUMBER_OF_DIGITS_AFTER_FRACTION` at `:458` for the explicit case.
+- **`getNumberOfCurrencyDigits` and `getCurrencySymbol` index `CURRENCIES_EN` with a caller-supplied
+  code** (`locale_data_api.ts:799`, `:771`), and that table is a plain object literal. Inherited
+  names return a function or `Object.prototype`, both truthy, so the `|| CURRENCIES_EN[code] || []`
+  guard does not stop them — but every read that follows is a numeric index, which is `undefined` on
+  both, and the final guards (`typeof digits === 'number'`, `currency[Symbol] || code`) fall back
+  correctly. Safe, though by two layers of luck rather than by design.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
