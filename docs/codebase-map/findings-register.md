@@ -1502,8 +1502,9 @@ UNKNOWN  "UNKNOWN"  "UNKNOWN1,234.00"
 The comment describes the case it was written for — a pattern containing two placeholders — and does
 not anticipate the replacement itself being one.
 
-**The replacement string is never escaped.** `String.prototype.replace` interprets `$&`, `` $` ``,
-`$'` and `$$` in the replacement, and `currency` reaches this line verbatim from
+**The replacement string is never escaped.** `String.prototype.replace` interprets the four
+substitution forms — `$&`, `$'`, `$$`, and dollar-backtick — in the replacement, and `currency`
+reaches this line verbatim from
 `CurrencyPipe.transform`, whose `display` parameter is typed
 `'code' | 'symbol' | 'symbol-narrow' | string | boolean` and documented as accepting a custom string
 — `currency = display` (`pipes/number_pipe.ts`). `currencyCode` reaches it the same way when
