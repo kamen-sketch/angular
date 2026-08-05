@@ -1703,6 +1703,14 @@ That one is development-only — `PreconnectLinkChecker`'s constructor calls
 `assertDevMode('preconnect link checker')` — so a `PRECONNECT_CHECK_BLOCKLIST` written that way
 silently fails to suppress the warning it was added for.
 
+**Reinforced by two sibling predicates elsewhere in the framework**, both of which get this right —
+which is why the missing `i` reads as an oversight rather than a choice.
+`JsonpClientBackend.isAllowedJsonpUrl` (`common/http/src/jsonp.ts:303`) is the _same regex with the
+flag_: `/^https?:\/\//i`. And `xsrfInterceptorFn` (`common/http/src/xsrf.ts:106-109`) avoids a regex
+altogether, using `new URL(req.url, locationOrigin)` with a comment stating the reason — "We can use
+`new URL` to normalize a relative URL like `//something.com`" — the exact protocol-relative case
+`isAbsoluteUrl` misses.
+
 **Cleared: the CSS `url()` sink is sound.** `generatePlaceholder`
 (`ng_optimized_image.ts:729-743`) interpolates the `placeholder` input into
 `` `url("${escapeCssUrl(input)}")` `` and hands it to the `[style.background-image]` host binding.
@@ -1715,6 +1723,77 @@ breaches**: a sentinel `background-color` was never altered. Note also that the 
 a single-property CSSOM assignment that structurally cannot introduce a sibling declaration. So
 `escapeCssUrl` is defence in depth over a boundary that already holds, and it is correct on its own
 terms.
+
+### 44. A malformed XSRF cookie throws out of the interceptor — `open`
+
+`packages/common/src/cookie.ts:16`
+
+```js
+export function parseCookieValue(cookieStr: string, name: string): string | null {
+  name = encodeURIComponent(name);
+  for (const cookie of cookieStr.split(';')) {
+    …
+    if (cookieName.trim() === name) {
+      return decodeURIComponent(cookieValue);   // throws on a malformed escape
+    }
+  }
+  return null;
+}
+```
+
+`decodeURIComponent` raises `URIError` for a `%` that is not followed by two hex digits, or for an
+escape sequence that decodes to a lone surrogate. Run against the real function:
+
+```
+normal token           "XSRF-TOKEN=abc123"          returned "abc123"
+url-encoded token      "XSRF-TOKEN=a%2Bb%3D"        returned "a+b="
+base64 with padding    "XSRF-TOKEN=YWJjMTIz=="      returned "YWJjMTIz=="
+literal percent        "XSRF-TOKEN=100%"            THREW URIError: URI malformed
+percent + 1 hex        "XSRF-TOKEN=ab%4"            THREW URIError: URI malformed
+percent + non-hex      "XSRF-TOKEN=ab%zz"           THREW URIError: URI malformed
+lone surrogate esc     "XSRF-TOKEN=%ED%A0%80"       THREW URIError: URI malformed
+```
+
+Nothing on the path catches it. `HttpXsrfCookieExtractor.getToken` (`http/src/xsrf.ts:72`) calls it
+bare, and the interceptor calls `getToken` at `:119` — **three lines after a `try`/`catch` that ends
+at `:117`**:
+
+```js
+try {
+  const locationHref = inject(PlatformLocation).href;
+  const {origin: locationOrigin} = new URL(locationHref);
+  const {origin: requestOrigin} = new URL(req.url, locationOrigin);
+  if (locationOrigin !== requestOrigin) return next(req);
+} catch {
+  // Handle invalid URLs gracefully.
+  return next(req);
+}
+
+const token = inject(HttpXsrfTokenExtractor).getToken(); // :119 — outside
+```
+
+That is the shape of the finding: the function guards one untrusted input and not the other, and
+both arrive from outside the application. The URL is wrapped with a comment saying malformed input
+should degrade gracefully; the cookie, which is at least as exposed, is not. The natural fix is the
+same treatment — a token that cannot be decoded should behave like an absent one, which the
+`token != null` check at `:123` already handles.
+
+The consequence is not a lost token but a failed request. The `URIError` propagates out of the
+interceptor, so **every mutating same-origin request fails** — `POST`, `PUT`, `PATCH`, `DELETE`;
+`GET` and `HEAD` return early at `:100` and are unaffected — with a message naming neither cookies
+nor XSRF.
+
+Reachability is the honest weak point and worth stating plainly. The token is normally written by
+the server, and the common encodings are safe: alphanumeric tokens, percent-encoded tokens, and
+base64 all decode cleanly (the third row above is base64 with `=` padding, which survives). What is
+needed is a raw `%` in the cookie value. That comes from a server that emits unencoded random bytes,
+or from any same-site writer of that cookie name — a sibling subdomain, since cookies are shared
+across a domain when `Domain` is set. So: a denial of write access, cheap to fix, needing a
+misconfigured or hostile cookie writer to trigger.
+
+`parseCookieValue` has one other caller — `BrowserDomAdapter.getCookie`
+(`platform-browser/src/browser/browser_adapter.ts:82`), equally unguarded, but not on a request
+path.
 
 ## Gaps in repository tooling and data
 
