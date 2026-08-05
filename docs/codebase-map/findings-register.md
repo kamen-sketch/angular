@@ -2135,6 +2135,46 @@ decision.
 Related to [21](#21-ɵdisableprofiling-has-no-consumer-at-all): both are private exports with no
 in-repo consumer, but that one still does something.
 
+### 47. A kebab-cased input alias silently shadows its camelCase sibling — `open`
+
+`packages/elements/src/utils.ts:89`
+
+```js
+inputs.forEach(({propName, templateName, transform}) => {
+  attributeToPropertyInputs[camelToDashCase(templateName)] = [propName, transform];
+});
+```
+
+`camelToDashCase` (`:28`) only rewrites `[A-Z]`, so a `templateName` that is already kebab-cased
+passes through unchanged and lands on the same key as its camelCase equivalent. Nothing detects the
+duplicate — the last input written wins, and the map is what `observedAttributes` is derived from
+(`create-custom-element.ts:146`):
+
+```
+camel + kebab alias    observedAttributes=["foo-bar"]            SHADOWED: fooBar
+distinct inputs        observedAttributes=["foo-bar","baz-qux"]  ok
+case-only difference   observedAttributes=["foobar","foo-bar"]   ok
+```
+
+So a component declaring both `@Input() fooBar` and `@Input('foo-bar') other` exposes one attribute,
+and one of the two inputs can never be set from markup. Filed as an observation rather than a defect
+because the trigger is an unusual authoring choice and the symptom — an input that ignores its
+attribute — shows up on first use.
+
+Two smaller things from the same pass, recorded so they are not re-checked:
+
+- `camelToDashCase` produces a **leading dash** for a PascalCase alias: `FooBar` → `-foo-bar`,
+  `ID` → `-i-d`. Legal enough for `setAttribute`, but not what an author would write.
+  `kebabToCamelCase` inverts every case tested except a name that was already kebab-cased — the
+  collision above.
+- `attributeChangedCallback` (`create-custom-element.ts:187`) destructures
+  `attributeToPropertyInputs[attrName]!` with a non-null assertion, and the map is a plain `{}`. An
+  inherited name throws `TypeError: function is not iterable` — but so does any unknown name
+  (`undefined is not iterable`), and the browser only dispatches for names in `observedAttributes`,
+  so the prototype exposure adds no reachable hazard over a plain typo. Unlike the sites in
+  [26 § 9](./26-security-sinks.md), these keys are component input names, authored in the
+  component, not supplied by a caller.
+
 ## Not defects — investigated and cleared
 
 Recorded so the same questions are not re-opened.
