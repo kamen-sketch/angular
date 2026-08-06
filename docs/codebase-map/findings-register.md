@@ -2298,6 +2298,51 @@ plausibly never been hit.
 - `createLazyProperty` (`xtb.ts:68`) writes with `Object.defineProperty`, which creates an own
   property even for `__proto__`, so the translation map cannot be reparented by a hostile message id.
 
+### 56. The partial evaluator cannot fold `??`, though the compiler emits it — `open`
+
+`packages/compiler-cli/src/ngtsc/partial_evaluator/src/interpreter.ts:68`
+
+`BINARY_OPERATORS` covers arithmetic, comparison, bitwise, shifts, `**`, and both short-circuiting
+boolean operators:
+
+```js
+[ts.SyntaxKind.AmpersandAmpersandToken, referenceBinaryOp((a, b) => a && b)],
+[ts.SyntaxKind.BarBarToken, referenceBinaryOp((a, b) => a || b)],
+```
+
+`ts.SyntaxKind.QuestionQuestionToken` is not in the map, and nothing else in the file handles it —
+`a ?? b` is a binary expression, not the conditional form `visitConditionalExpression` (`:559`)
+takes. So `visitBinaryExpression` falls to its guard:
+
+```js
+if (!this.BINARY_OPERATORS.has(tokenKind)) {
+  return DynamicValue.fromUnsupportedSyntax(node); // :595-596
+}
+```
+
+The value becomes dynamic, and wherever a static one is required the developer gets
+`This syntax is not supported.` (`partial_evaluator/src/diagnostics.ts:153`) pointing at the `??`.
+
+The asymmetry is what makes this a defect rather than a documented limit: **the same compiler emits
+`??` happily.** `typescript_ast_factory.ts:72` maps `'??'` to `QuestionQuestionToken` for code
+generation. So the toolchain can write the operator and cannot read it — while `||`, which differs
+only in treating `0` and `''` as absent, folds fine. A developer switching
+`SELECTOR || 'app-x'` to the more correct `SELECTOR ?? 'app-x'` in decorator metadata turns a
+working build into a compile error.
+
+`??` has been in TypeScript since 3.7, and this table already carries `**`, so the omission is not a
+matter of the evaluator targeting an older language level.
+
+**A related gap, smaller and worth recording alongside it.** `visitPropertyAccessExpression`
+(`:349`) never consults `node.questionDotToken`, so `a?.b` is evaluated exactly like `a.b`. When
+`a` resolves statically to `null` or `undefined`, no branch of `accessHelper` matches and it returns
+`DynamicValue.fromUnknown` (`:438`) — where the answer `undefined` was statically knowable. Much
+less likely to be hit than the `??` case, since it needs a decorator to access a property of a
+value the compiler has already proven null.
+
+No test covers either: the partial evaluator's test directory contains no nullish-coalescing or
+optional-chaining case.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
