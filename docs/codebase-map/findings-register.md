@@ -2245,6 +2245,59 @@ Confirmed correct nearby: the named-entity lookup at `:745` uses
 `NAMED_ENTITIES.hasOwnProperty(name) && NAMED_ENTITIES[name]`, the right form for the plain-object
 table — unlike several sites in [26 § 9](./26-security-sinks.md).
 
+### 55. i18n placeholder signatures can collide across different elements — `open`
+
+`packages/compiler/src/i18n/serializers/placeholder.ts:123`
+
+`PlaceholderRegistry` gives identical content the same placeholder name by hashing a "signature",
+and the hash concatenates attributes without escaping the separator it uses:
+
+```js
+private _hashTag(tag: string, attrs: {[k: string]: string}, isVoid: boolean): string {
+  const start = `<${tag}`;
+  const strAttrs = Object.keys(attrs).sort().map((name) => ` ${name}=${attrs[name]}`).join('');
+  const end = isVoid ? '/>' : `></${tag}>`;
+  return start + strAttrs + end;
+}
+```
+
+An attribute _value_ containing ` name=value` reproduces the boundary the join uses, so two
+structurally different elements hash the same:
+
+```
+two attrs            "<a href=x y=z></a>"
+one attr w/ space    "<a href=x y=z></a>"   COLLIDES with two attrs
+```
+
+`<a href="x" y="z">` and `<a href="x y=z">` are both ordinary markup. Because
+`getStartTagPlaceholderName` returns the cached name whenever the signature matches (`:55-57`), the
+second element is assigned the first's placeholder — so within one i18n message the two become
+indistinguishable, and a translation reinstating that placeholder gets the wrong element.
+
+The repository already knows this failure mode and guards it elsewhere. `makeCacheKey` in the
+localize transfer cache (`common/http/src/transfer_cache.ts:424-427`) joins its fields with `\0` and
+explains why in a comment: "a shifted field boundary … collapse to the same string and thus the same
+hash. `\0` cannot occur in a valid url or in encoded params, so the field boundaries can't be
+forged by field content." The same reasoning applies here and no such separator is used.
+
+Not security-relevant — the colliding markup is authored in the template, so there is no boundary
+crossed — and it needs an attribute value shaped like another attribute, which is why it has
+plausibly never been hit.
+
+**Cleared in the same pass**, all checked because the untrusted-key sweep flags this shape:
+
+- `_generateUniqueName` (`:151`) uses `hasOwnProperty` — the correct form for its plain-object
+  counter table.
+- `TAG_TO_PLACEHOLDER_NAMES[upperTag]` (`:60`, `:75`) is a bare index, but the key is
+  `.toUpperCase()`d and no `Object.prototype` member is uppercase.
+- Every signature written into `_signatureToName` carries a fixed prefix — `<` for tags, `@` for
+  blocks, `PH: ` for placeholders — so none can equal an inherited name.
+- `XtbParser._msgIdToHtml` (`xtb.ts:130`) and `I18nToHtmlVisitor` (`translation_bundle.ts:192`) both
+  use `hasOwnProperty`; `TranslationBundle.has` (`:76`) uses `in`, which does walk the prototype
+  chain, but its key is always a message digest — hex or decimal — so it cannot reach one.
+- `createLazyProperty` (`xtb.ts:68`) writes with `Object.defineProperty`, which creates an own
+  property even for `__proto__`, so the translation map cannot be reparented by a hostile message id.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
