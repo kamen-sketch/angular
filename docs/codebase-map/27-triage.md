@@ -149,20 +149,39 @@ noted.
 segment, a cookie, a push payload, a translation file. The question is not whether a defect exists
 but whether untrusted data reaches something that matters.
 
-| Finding                                           | Taint source                             | What it reaches                           | Security sink?    |
-| ------------------------------------------------- | ---------------------------------------- | ----------------------------------------- | ----------------- |
-| [45](./findings-register.md) `Validators.pattern` | form control value (end user)            | a validation verdict used as an allowlist | **yes**           |
-| [42](./findings-register.md) locale registry      | URL segment / `Accept-Language`          | process-wide cache, then a `TypeError`    | denial of service |
-| [44](./findings-register.md) XSRF cookie          | cookie (any same-site writer)            | every mutating request fails              | denial of service |
-| [46](./findings-register.md) SW push payload      | push message                             | notification silently suppressed          | availability      |
-| [50](./findings-register.md) `[style]`            | a bound style string                     | an unmessaged `Error`                     | denial of service |
-| [40](./findings-register.md) `toDate`             | API response                             | rendered text                             | no — wrong output |
-| [49](./findings-register.md) bloom filter         | _none_ — the token is developer-authored | DI resolution                             | no taint at all   |
+| Finding                                           | Taint source                             | What it reaches                           | Sink                | Blast radius          |
+| ------------------------------------------------- | ---------------------------------------- | ----------------------------------------- | ------------------- | --------------------- |
+| [45](./findings-register.md) `Validators.pattern` | form control value (end user)            | a validation verdict used as an allowlist | **security**        | that form submission  |
+| [42](./findings-register.md) locale registry      | URL segment / `Accept-Language`          | a `TypeError` during render               | availability        | one SSR request → 500 |
+| [44](./findings-register.md) XSRF cookie          | cookie (any same-site writer)            | every mutating request fails              | availability        | one browser           |
+| [46](./findings-register.md) SW push payload      | push message                             | notification silently suppressed          | availability        | one device            |
+| [50](./findings-register.md) `[style]`            | a bound style string                     | an unmessaged `Error`                     | availability        | one browser tab       |
+| [40](./findings-register.md) `toDate`             | API response                             | rendered text                             | none — wrong output | one view              |
+| [49](./findings-register.md) bloom filter         | _none_ — the token is developer-authored | DI resolution                             | none — no taint     | —                     |
 
-**Exactly one finding puts untrusted data in front of a security decision: 45.** The rest are
-denial of service or wrong output. **No finding in this review is taint reaching an injection
-sink** — every injection sink that was driven adversarially held, which is recorded in
-[26 § 9–14](./26-security-sinks.md).
+**Exactly one finding puts untrusted data in front of a security decision: 45.** The rest are wrong
+output or availability faults.
+
+**None of the availability faults is a server-level denial of service**, and the distinction matters
+for how they are prioritised:
+
+- **44 and 50 never touch a server.** `parseCookieValue` and the style parser both run in the
+  browser, so the failure is confined to the tab it happens in. For 44 the _trigger_ can be global —
+  a server emitting a token with a raw `%` breaks every client — but the failure is still each
+  browser failing on its own, not the server falling over.
+- **42 is the only one with a server-side component, and it is still per-request.** `LOCALE_DATA` is
+  genuinely module-level and shared across requests in an SSR process, so the poisoned entry
+  persists. But it is keyed `constructor` and answers only lookups for that same key — a request for
+  `fr` is unaffected — and `constructor` is the _only_ reachable inherited name, so there is no
+  unbounded growth either. The `TypeError` is raised inside the render, which the server awaits, so
+  it becomes a 500 for that request rather than a process exit.
+
+So the honest reading is: one wrong form verdict, one failed request, one broken tab. Nothing here
+takes down a service. That is why 42 and 44 sit in tier 2 despite being attacker-reachable — the
+cost of hitting them is bounded, and bounded per victim.
+
+**No finding in this review is taint reaching an injection sink** — every injection sink that was
+driven adversarially held, which is recorded in [26 § 9–14](./26-security-sinks.md).
 
 That is why 45 leads the tier-1 list. Its shipping evidence is direct: `Validators.pattern` and the
 `PatternValidator` directive are both in the published API
