@@ -139,11 +139,57 @@ Verified against both the cases that must match and the case the comment cares a
   (the DOM security schema, `escapeXml`). Both are correct today. The action is a test that compares
   the copies, not an edit to either.
 
-## Blocked
+## Taint to sink
 
-Everything above is **statically verified only**. `pnpm bazel test` cannot run in this environment:
-`registry.npmjs.org` returns `403 Host not in allowlist` and `bcr.bazel.build` is blocked, so
-neither dependencies nor Bazel's module registry are reachable. That also covers the two
-compiler-cli fixes already committed on this branch ([§ 1](./findings-register.md),
-[§ 2](./findings-register.md)) — they need
-`pnpm bazel test //packages/compiler-cli/test/ngtsc:ngtsc` before they can be trusted.
+Version under review: **22.2.0-next.0**, commit `d684c4dc`. This repository is the release source,
+so the paths below are the shipped ones; where a symbol's presence in a build is in question it is
+noted.
+
+"Taint" here means data the application does not author — end-user input, an HTTP response, a URL
+segment, a cookie, a push payload, a translation file. The question is not whether a defect exists
+but whether untrusted data reaches something that matters.
+
+| Finding                                           | Taint source                             | What it reaches                           | Security sink?    |
+| ------------------------------------------------- | ---------------------------------------- | ----------------------------------------- | ----------------- |
+| [45](./findings-register.md) `Validators.pattern` | form control value (end user)            | a validation verdict used as an allowlist | **yes**           |
+| [42](./findings-register.md) locale registry      | URL segment / `Accept-Language`          | process-wide cache, then a `TypeError`    | denial of service |
+| [44](./findings-register.md) XSRF cookie          | cookie (any same-site writer)            | every mutating request fails              | denial of service |
+| [46](./findings-register.md) SW push payload      | push message                             | notification silently suppressed          | availability      |
+| [50](./findings-register.md) `[style]`            | a bound style string                     | an unmessaged `Error`                     | denial of service |
+| [40](./findings-register.md) `toDate`             | API response                             | rendered text                             | no — wrong output |
+| [49](./findings-register.md) bloom filter         | _none_ — the token is developer-authored | DI resolution                             | no taint at all   |
+
+**Exactly one finding puts untrusted data in front of a security decision: 45.** The rest are
+denial of service or wrong output. **No finding in this review is taint reaching an injection
+sink** — every injection sink that was driven adversarially held, which is recorded in
+[26 § 9–14](./26-security-sinks.md).
+
+That is why 45 leads the tier-1 list. Its shipping evidence is direct: `Validators.pattern` and the
+`PatternValidator` directive are both in the published API
+(`goldens/public-api/forms/index.api.md:1020`, `:842`), and `patternValidator` appears in 2 of the
+bundling goldens. `bloomHashBitOrFactory` appears in all 8, core DI being unconditional.
+`styleStringParser` and `toDate` appear in none — but that is tree-shaking in those particular test
+applications, none of which uses a `[style]` map binding or `DatePipe`; `formatDate` is public API
+and ships for any application that imports it.
+
+## Blocked, and on what exactly
+
+Not on Bazel specifically — on the environment's **network egress allowlist**, which blocks every
+route to a released build:
+
+```
+registry.npmjs.org      403  Host not in allowlist: registry.npmjs.org.
+                             Add this host to your network egress settings to allow access.
+bcr.bazel.build         blocked  (Bazel's module registry)
+unpkg.com               000      (connection refused)
+cdn.jsdelivr.net        000      (connection refused)
+```
+
+`registry.npmjs.org` is in the proxy's `noProxy` list, so those requests go direct and are refused
+upstream; the proxy is not the thing saying no. There are no vendored `node_modules` and no
+prebuilt `@angular/*` artifacts on disk.
+
+So neither `pnpm bazel test` nor `npm install @angular/forms` can run here, and the findings —
+including the two compiler-cli fixes already committed on this branch — remain **statically
+verified only**. The error message names the fix: adding `registry.npmjs.org` to the environment's
+egress settings would make an npm-installed verification possible without Bazel.
