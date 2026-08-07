@@ -24,9 +24,29 @@ Three questions, in this order:
 
 ### 1. `Validators.pattern` accepts what it should reject — [§ 45](./findings-register.md)
 
-The only finding in this review where a correctness bug becomes a **security** bug depending on how
-an application uses it. `Validators.pattern('yes|no')` compiles to `^yes|no$`, i.e.
-`(^yes)|(no$)`, and admits `DROP TABLE;no`. No attacker precondition — ordinary use.
+`Validators.pattern('yes|no')` compiles to `^yes|no$`, i.e. `(^yes)|(no$)`, so neither branch is
+anchored at both ends and the validator accepts `catxxx` for `cat|dog`. No attacker precondition —
+it misfires on ordinary use.
+
+**Calibrating the impact honestly**, because it is easy to overstate:
+
+- **This is not a vulnerability in Angular.** Client-side validation is a user-experience control,
+  not an enforcement boundary; a server that trusts it is already broken independently of this bug.
+  What the defect does is make an application's _existing_ missing server-side validation easier to
+  walk past — it does not create the exposure.
+- **The realistic damage is data integrity.** An alternation is the natural way to write an enum
+  constraint — `draft|published`, `US|CA|MX` — and those fields silently accept arbitrary text that
+  then gets stored.
+- **The frequency is low.** Surveying every `Validators.pattern(…)` in `adev/` and `packages/forms`:
+  all are character classes (`[a-zA-Z ]+`, `[aA]*`, `\d{5}`, `[a-zA-Z]+`). **Not one uses a
+  top-level alternation**, which is the shape that breaks.
+
+**What still makes it tier 1 is not severity — it is that the framework contradicts both its own
+documentation and the platform.** The JSDoc states that `^` and `$` are added, so a reader
+reasonably expects anchoring. The directive's selector is `[pattern][ngModel]` and it reflects the
+value back onto the element, so the browser validates the identical string as `^(?:…)$`. On one
+element, two engines return different verdicts for one attribute, and the developer wrote nothing
+wrong. That is a framework defect regardless of how often it fires, and the fix is one line.
 
 **Fix** (`packages/forms/src/validators.ts:573-586`) — replace the two `charAt` tests with the form
 WHATWG specifies for the native `pattern` attribute:
@@ -149,18 +169,21 @@ noted.
 segment, a cookie, a push payload, a translation file. The question is not whether a defect exists
 but whether untrusted data reaches something that matters.
 
-| Finding                                           | Taint source                             | What it reaches                           | Sink                | Blast radius          |
-| ------------------------------------------------- | ---------------------------------------- | ----------------------------------------- | ------------------- | --------------------- |
-| [45](./findings-register.md) `Validators.pattern` | form control value (end user)            | a validation verdict used as an allowlist | **security**        | that form submission  |
-| [42](./findings-register.md) locale registry      | URL segment / `Accept-Language`          | a `TypeError` during render               | availability        | one SSR request → 500 |
-| [44](./findings-register.md) XSRF cookie          | cookie (any same-site writer)            | every mutating request fails              | availability        | one browser           |
-| [46](./findings-register.md) SW push payload      | push message                             | notification silently suppressed          | availability        | one device            |
-| [50](./findings-register.md) `[style]`            | a bound style string                     | an unmessaged `Error`                     | availability        | one browser tab       |
-| [40](./findings-register.md) `toDate`             | API response                             | rendered text                             | none — wrong output | one view              |
-| [49](./findings-register.md) bloom filter         | _none_ — the token is developer-authored | DI resolution                             | none — no taint     | —                     |
+| Finding                                           | Taint source                             | What it reaches                  | Sink                       | Blast radius          |
+| ------------------------------------------------- | ---------------------------------------- | -------------------------------- | -------------------------- | --------------------- |
+| [45](./findings-register.md) `Validators.pattern` | form control value (end user)            | a client-side validation verdict | integrity, not enforcement | that form submission  |
+| [42](./findings-register.md) locale registry      | URL segment / `Accept-Language`          | a `TypeError` during render      | availability               | one SSR request → 500 |
+| [44](./findings-register.md) XSRF cookie          | cookie (any same-site writer)            | every mutating request fails     | availability               | one browser           |
+| [46](./findings-register.md) SW push payload      | push message                             | notification silently suppressed | availability               | one device            |
+| [50](./findings-register.md) `[style]`            | a bound style string                     | an unmessaged `Error`            | availability               | one browser tab       |
+| [40](./findings-register.md) `toDate`             | API response                             | rendered text                    | none — wrong output        | one view              |
+| [49](./findings-register.md) bloom filter         | _none_ — the token is developer-authored | DI resolution                    | none — no taint            | —                     |
 
-**Exactly one finding puts untrusted data in front of a security decision: 45.** The rest are wrong
-output or availability faults.
+**No finding in this review is a vulnerability in Angular.** 45 comes closest — it is the only one
+where untrusted input reaches a decision an application might be relying on — but a client-side
+validation verdict is a user-experience control, not an enforcement boundary. It makes an
+application's own missing server-side validation easier to walk past; it does not create the
+exposure. The rest are wrong output or availability faults.
 
 **None of the availability faults is a server-level denial of service**, and the distinction matters
 for how they are prioritised:
