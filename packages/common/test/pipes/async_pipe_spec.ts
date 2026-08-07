@@ -294,6 +294,26 @@ describe('AsyncPipe', () => {
     it('should throw when given an invalid object', () => {
       expect(() => pipe.transform('some bogus object' as any)).toThrowError();
     });
+
+    it('should keep throwing the same error when the invalid object is passed again', () => {
+      // The pipe is impure, so `transform` runs on every change detection pass. If the first
+      // failure left `_obj` assigned, later passes would silently return null and hide the error.
+      expect(() => pipe.transform('some bogus object' as any)).toThrowError();
+      expect(() => pipe.transform('some bogus object' as any)).toThrowError();
+    });
+
+    it('should still work after being given an invalid object', (done) => {
+      expect(() => pipe.transform('some bogus object' as any)).toThrowError();
+
+      const emitter = new EventEmitter<string>();
+      expect(pipe.transform(emitter)).toBe(null);
+      emitter.emit('recovered');
+
+      setTimeout(() => {
+        expect(pipe.transform(emitter)).toBe('recovered');
+        done();
+      }, 0);
+    });
   });
 
   it('should be available as a standalone pipe', async () => {

@@ -827,7 +827,10 @@ export function bloomHashBitOrFactory(
 ): number | Function | undefined {
   ngDevMode && assertDefined(token, 'token must be defined');
   if (typeof token === 'string') {
-    return token.charCodeAt(0) || 0;
+    // Mask exactly as the numeric-id branch below does. `bloomAdd` masks whatever this returns
+    // before deriving the bucket, so an unmasked value here sends the read to a bucket outside the
+    // 8-slot filter for any token whose first character is U+0100 or above.
+    return (token.charCodeAt(0) || 0) & BLOOM_MASK;
   }
   const tokenId: number | undefined =
     // First check with `hasOwnProperty` so we don't get an inherited ID.

@@ -378,7 +378,7 @@ export class Validators {
    * ```ts
    * const control = new FormControl('1', Validators.pattern('[a-zA-Z ]*'));
    *
-   * console.log(control.errors); // {pattern: {requiredPattern: '^[a-zA-Z ]*$', actualValue: '1'}}
+   * console.log(control.errors); // {pattern: {requiredPattern: '^(?:[a-zA-Z ]*)$', actualValue: '1'}}
    * ```
    *
    * ```html
@@ -405,9 +405,11 @@ export class Validators {
    * ```
    *
    * @param pattern A regular expression to be used as is to test the values, or a string.
-   * If a string is passed, the `^` character is prepended and the `$` character is
-   * appended to the provided string (if not already present), and the resulting regular
-   * expression is used to test the values.
+   * If a string is passed, it is wrapped in a non-capturing group and anchored at both ends —
+   * `^(?:pattern)$` — and the resulting regular expression is used to test the values. The
+   * grouping matters for patterns containing a top-level alternation: `'cat|dog'` becomes
+   * `^(?:cat|dog)$`, so both branches are anchored, which is the same expression the browser
+   * builds for the equivalent HTML5 `pattern` attribute.
    *
    * @returns A validator function that returns an error map with the
    * `pattern` property if the validation check fails, otherwise `null`.
@@ -571,14 +573,12 @@ export function patternValidator(pattern: string | RegExp): ValidatorFn {
   let regex: RegExp;
   let regexStr: string;
   if (typeof pattern === 'string') {
-    regexStr = '';
-
-    if (pattern.charAt(0) !== '^') regexStr += '^';
-
-    regexStr += pattern;
-
-    if (pattern.charAt(pattern.length - 1) !== '$') regexStr += '$';
-
+    // Wrap the pattern in a non-capturing group before anchoring it. Appending `^` and `$` to the
+    // raw string anchors only the first and last branch of a top-level alternation, so `cat|dog`
+    // would compile to `(^cat)|(dog$)` and accept `catxxx`. Grouping first is also what the WHATWG
+    // spec prescribes for the native `pattern` attribute, so this validator and the browser now
+    // agree on the same string.
+    regexStr = `^(?:${pattern})$`;
     regex = new RegExp(regexStr);
   } else {
     regexStr = pattern.toString();

@@ -12,7 +12,7 @@ import {NgtscProgram} from '../../src/ngtsc/program';
 import {CompilerOptions} from '../../src/transformers/api';
 import {createCompilerHost} from '../../src/transformers/compiler_host';
 
-import {ErrorCode, ngErrorCode} from '../../src/ngtsc/diagnostics';
+import {ERROR_DETAILS_PAGE_BASE_URL, ErrorCode, ngErrorCode} from '../../src/ngtsc/diagnostics';
 import {absoluteFrom} from '../../src/ngtsc/file_system';
 import {runInEachFileSystem} from '../../src/ngtsc/file_system/testing';
 import {loadStandardTestFiles} from '../../src/ngtsc/testing';
@@ -3778,7 +3778,7 @@ runInEachFileSystem((os: string) => {
           const errors = env.driveDiagnostics();
           expect(errors.length).toBe(1);
           expect(ts.flattenDiagnosticMessageText(errors[0].messageText, '\n')).toBe(
-            `No suitable injection token for parameter 'notInjectable' of class 'Test'.\n` +
+            `No suitable injection token for parameter 'notInjectable' of class 'Test'. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG2003\n` +
               `  Consider using the @Inject decorator to specify an injection token.`,
           );
           expect(errors[0].relatedInformation!.length).toBe(1);
@@ -3804,7 +3804,7 @@ runInEachFileSystem((os: string) => {
           const errors = env.driveDiagnostics();
           expect(errors.length).toBe(1);
           expect(ts.flattenDiagnosticMessageText(errors[0].messageText, '\n')).toBe(
-            `No suitable injection token for parameter 'notInjectable' of class 'Test'.\n` +
+            `No suitable injection token for parameter 'notInjectable' of class 'Test'. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG2003\n` +
               `  Consider using the @Inject decorator to specify an injection token.`,
           );
           expect(errors[0].relatedInformation!.length).toBe(1);
@@ -3837,7 +3837,7 @@ runInEachFileSystem((os: string) => {
           const diags = env.driveDiagnostics();
           expect(diags.length).toBe(1);
           expect(ts.flattenDiagnosticMessageText(diags[0].messageText, '\n')).toBe(
-            `No suitable injection token for parameter 'param' of class 'MyService'.\n` +
+            `No suitable injection token for parameter 'param' of class 'MyService'. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG2003\n` +
               `  Consider changing the type-only import to a regular import, ` +
               `or use the @Inject decorator to specify an injection token.`,
           );
@@ -3875,7 +3875,7 @@ runInEachFileSystem((os: string) => {
           const diags = env.driveDiagnostics();
           expect(diags.length).toBe(1);
           expect(ts.flattenDiagnosticMessageText(diags[0].messageText, '\n')).toBe(
-            `No suitable injection token for parameter 'param' of class 'MyService'.\n` +
+            `No suitable injection token for parameter 'param' of class 'MyService'. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG2003\n` +
               `  Consider changing the type-only import to a regular import, ` +
               `or use the @Inject decorator to specify an injection token.`,
           );
@@ -3906,7 +3906,7 @@ runInEachFileSystem((os: string) => {
           const diags = env.driveDiagnostics();
           expect(diags.length).toBe(1);
           expect(ts.flattenDiagnosticMessageText(diags[0].messageText, '\n')).toBe(
-            `No suitable injection token for parameter 'param' of class 'MyService'.\n` +
+            `No suitable injection token for parameter 'param' of class 'MyService'. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG2003\n` +
               `  Consider using the @Inject decorator to specify an injection token.`,
           );
           expect(diags[0].relatedInformation!.length).toBe(1);
@@ -3935,7 +3935,7 @@ runInEachFileSystem((os: string) => {
           const diags = env.driveDiagnostics();
           expect(diags.length).toBe(1);
           expect(ts.flattenDiagnosticMessageText(diags[0].messageText, '\n')).toBe(
-            `No suitable injection token for parameter 'param' of class 'MyService'.\n` +
+            `No suitable injection token for parameter 'param' of class 'MyService'. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG2003\n` +
               `  Consider using the @Inject decorator to specify an injection token.`,
           );
           expect(diags[0].relatedInformation!.length).toBe(1);
@@ -3963,7 +3963,7 @@ runInEachFileSystem((os: string) => {
           const diags = env.driveDiagnostics();
           expect(diags.length).toBe(1);
           expect(ts.flattenDiagnosticMessageText(diags[0].messageText, '\n')).toBe(
-            `No suitable injection token for parameter 'param' of class 'MyService'.\n` +
+            `No suitable injection token for parameter 'param' of class 'MyService'. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG2003\n` +
               `  Consider using the @Inject decorator to specify an injection token.`,
           );
           expect(diags[0].relatedInformation!.length).toBe(2);
@@ -3997,7 +3997,7 @@ runInEachFileSystem((os: string) => {
           expect(diags.length).toBe(1);
           expect(ts.flattenDiagnosticMessageText(diags[0].messageText, '\n')).toBe(
             `No suitable injection token for parameter 'param' of ` +
-              `class 'MyService'.\n` +
+              `class 'MyService'. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG2003\n` +
               `  Consider using the @Inject decorator to specify an injection token.`,
           );
           expect(diags[0].relatedInformation!.length).toBe(1);
@@ -4023,7 +4023,7 @@ runInEachFileSystem((os: string) => {
           const diags = env.driveDiagnostics();
           expect(diags.length).toBe(1);
           expect(ts.flattenDiagnosticMessageText(diags[0].messageText, '\n')).toBe(
-            `No suitable injection token for parameter 'param' of class 'MyService'.\n` +
+            `No suitable injection token for parameter 'param' of class 'MyService'. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG2003\n` +
               `  Consider adding a type to the parameter or ` +
               `use the @Inject decorator to specify an injection token.`,
           );
@@ -6760,7 +6760,7 @@ runInEachFileSystem((os: string) => {
         const diags = env.driveDiagnostics();
         expect(diags.length).toBe(1);
         expect(ts.flattenDiagnosticMessageText(diags[0].messageText, '\n')).toBe(
-          `No suitable injection token for parameter 'foo' of class 'MyService'.\n` +
+          `No suitable injection token for parameter 'foo' of class 'MyService'. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG2003\n` +
             `  Consider using the @Inject decorator to specify an injection token.`,
         );
         expect(diags[0].relatedInformation!.length).toBe(2);
@@ -10678,7 +10678,7 @@ runInEachFileSystem((os: string) => {
 
           expect(diags.length).toBe(1);
           expect(diags[0].messageText).toBe(
-            'Selector of a ShadowDom-encapsulated component must all be in lower case.',
+            `Selector of a ShadowDom-encapsulated component must all be in lower case. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG2009`,
           );
           expect(getDiagnosticSourceCode(diags[0])).toBe(`'my-Comp'`);
         });
@@ -10700,7 +10700,7 @@ runInEachFileSystem((os: string) => {
 
           expect(diags.length).toBe(1);
           expect(diags[0].messageText).toBe(
-            'Selector of a ShadowDom-encapsulated component must start with a lower case letter.',
+            `Selector of a ShadowDom-encapsulated component must start with a lower case letter. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG2009`,
           );
           expect(getDiagnosticSourceCode(diags[0])).toBe(`'123-comp'`);
         });
@@ -10722,9 +10722,34 @@ runInEachFileSystem((os: string) => {
 
           expect(diags.length).toBe(1);
           expect(diags[0].messageText).toBe(
-            'Selector of a ShadowDom-encapsulated component must start with a lower case letter.',
+            `Selector of a ShadowDom-encapsulated component must start with a lower case letter. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG2009`,
           );
           expect(getDiagnosticSourceCode(diags[0])).toBe(`'-comp'`);
+        });
+
+        it('should append a link to the error guide for a diagnostic that has one', () => {
+          env.write(
+            'test.ts',
+            `
+            import {Component, ViewEncapsulation} from '@angular/core';
+            @Component({
+              template: '',
+              selector: '123-comp',
+              encapsulation: ViewEncapsulation.ShadowDom
+            })
+            export class TestCmp {}
+          `,
+          );
+          const diags = env.driveDiagnostics();
+
+          // NG2009 is listed in `COMPILER_ERRORS_WITH_GUIDES`, so its message gains a link to the
+          // guide. Looking the code up requires converting the `ts.Diagnostic` code back into an
+          // `ErrorCode` first; getting that wrong silently drops the link from every diagnostic.
+          expect(diags.length).toBe(1);
+          expect(diags[0].code).toBe(ngErrorCode(ErrorCode.COMPONENT_INVALID_SHADOW_DOM_SELECTOR));
+          expect(diags[0].messageText).toContain(
+            `Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG2009`,
+          );
         });
 
         it('should not emit a diagnostic for a component using an attribute selector', () => {

@@ -363,4 +363,92 @@ describe('defaultComparator', () => {
       {key: '2', value: 1},
     ]);
   });
+
+  describe('defaultComparator sort contract', () => {
+    // `Array.prototype.sort` gives implementation-defined results for a comparator that is not
+    // antisymmetric and transitive, so the order would otherwise depend on key insertion order.
+    const keyPool: unknown[] = [null, undefined, 0, 1, 10, 9, NaN, '9', '10', 'a', true, false, {}];
+    const compare = (a: unknown, b: unknown) =>
+      defaultComparator({key: a, value: 0} as any, {key: b, value: 0} as any);
+
+    it('should be antisymmetric for every pair of key types', () => {
+      const violations: string[] = [];
+      for (const a of keyPool) {
+        for (const b of keyPool) {
+          const ab = compare(a, b);
+          const ba = compare(b, a);
+          const ok = (ab < 0 && ba > 0) || (ab > 0 && ba < 0) || (ab === 0 && ba === 0);
+          if (!ok) violations.push(`compare(${String(a)}, ${String(b)}) = ${ab}, reverse = ${ba}`);
+        }
+      }
+      expect(violations).toEqual([]);
+    });
+
+    it('should be transitive for every triple of key types', () => {
+      const violations: string[] = [];
+      for (const a of keyPool) {
+        for (const b of keyPool) {
+          for (const c of keyPool) {
+            const ab = Math.sign(compare(a, b));
+            const bc = Math.sign(compare(b, c));
+            const ac = Math.sign(compare(a, c));
+            if (ab < 0 && bc < 0 && !(ac < 0)) {
+              violations.push(`${String(a)} < ${String(b)} < ${String(c)} but compare = ${ac}`);
+            }
+            if (ab === 0 && bc === 0 && ac !== 0) {
+              violations.push(`${String(a)} == ${String(b)} == ${String(c)} but compare = ${ac}`);
+            }
+          }
+        }
+      }
+      expect(violations).toEqual([]);
+    });
+
+    it('should never return NaN', () => {
+      for (const a of keyPool) {
+        for (const b of keyPool) {
+          expect(Number.isNaN(compare(a, b)))
+            .withContext(`compare(${String(a)}, ${String(b)})`)
+            .toBe(false);
+        }
+      }
+    });
+
+    it('should produce the same order regardless of insertion order', () => {
+      const permutations = <T>(items: T[]): T[][] => {
+        if (items.length <= 1) return [items];
+        const out: T[][] = [];
+        for (let i = 0; i < items.length; i++) {
+          const rest = items.slice(0, i).concat(items.slice(i + 1));
+          for (const p of permutations(rest)) out.push([items[i], ...p]);
+        }
+        return out;
+      };
+      const keySets: unknown[][] = [
+        [10, '9', 9],
+        [null, undefined, 'a'],
+        [NaN, 1, 2],
+        ['b', 'a', 'x'],
+        [3, 1, 2],
+      ];
+      for (const keys of keySets) {
+        const orders = new Set(
+          permutations(keys).map((perm) =>
+            perm
+              .map((key) => ({key, value: 0}))
+              .sort(defaultComparator as any)
+              .map((pair) => String(pair.key))
+              .join(','),
+          ),
+        );
+        expect(orders.size)
+          .withContext(`key set ${keys.map(String).join(',')}`)
+          .toBe(1);
+      }
+    });
+
+    it('should distinguish null from undefined instead of placing each after the other', () => {
+      expect(Math.sign(compare(null, undefined))).toBe(-Math.sign(compare(undefined, null)));
+    });
+  });
 });

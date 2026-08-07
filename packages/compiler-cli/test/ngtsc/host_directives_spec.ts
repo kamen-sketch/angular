@@ -8,6 +8,7 @@
 
 import ts from 'typescript';
 
+import {ERROR_DETAILS_PAGE_BASE_URL, ErrorCode, ngErrorCode} from '../../src/ngtsc/diagnostics';
 import {runInEachFileSystem} from '../../src/ngtsc/file_system/testing';
 import {loadStandardTestFiles} from '../../src/ngtsc/testing';
 
@@ -557,7 +558,7 @@ runInEachFileSystem(() => {
         expect(diags[0].messageText).toBe(`Type 'string' is not assignable to type 'number'.`);
         expect(diags[1].messageText).toBe(`Type 'string' is not assignable to type 'boolean'.`);
         expect(diags[2].messageText).toBe(
-          `Can't bind to 'valueAlias' since it isn't a known property of 'div'.`,
+          `Can't bind to 'valueAlias' since it isn't a known property of 'div'. Find more at ${ERROR_DETAILS_PAGE_BASE_URL}/NG8002`,
         );
       });
 
@@ -1373,6 +1374,7 @@ runInEachFileSystem(() => {
 
         const diags = env.driveDiagnostics();
         expect(diags.length).toBe(1);
+        expect(diags[0].code).toBe(ngErrorCode(ErrorCode.CONFLICTING_HOST_DIRECTIVE_BINDING));
         expect(diags[0].messageText).toContain(
           'Input declared in DuplicateHostDir.inp is exposed under the following conflicting names: "alias", "inp", "alias2"',
         );

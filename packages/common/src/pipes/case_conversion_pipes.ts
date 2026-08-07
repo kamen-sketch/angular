@@ -89,10 +89,14 @@ export class TitleCasePipe implements PipeTransform {
     if (value == null) return null;
     assertPipeArgument(TitleCasePipe, value);
 
-    return value.replace(
-      unicodeWordMatch,
-      (txt) => txt[0].toUpperCase() + txt.slice(1).toLowerCase(),
-    );
+    return value.replace(unicodeWordMatch, (txt) => {
+      // Take the first code *point*, not the first code unit: `txt[0]` is a lone surrogate for a
+      // word starting with a non-BMP letter, and a lone surrogate has no case mapping, so the
+      // initial letter of the cased astral scripts the pattern above matches — Deseret, Osage,
+      // Adlam — would never be capitalized.
+      const first = String.fromCodePoint(txt.codePointAt(0)!);
+      return first.toUpperCase() + txt.slice(first.length).toLowerCase();
+    });
   }
 }
 

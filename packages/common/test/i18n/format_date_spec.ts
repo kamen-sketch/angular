@@ -61,6 +61,27 @@ describe('Format date', () => {
     it('should throw for objects', () => {
       expect(() => toDate({} as any)).toThrow();
     });
+
+    it('should read a basic-format ISO date rather than a timestamp', () => {
+      // "20150101" is also a string of nothing but digits, so it would otherwise be parsed as
+      // 20,150,101 milliseconds since the epoch — 1970-01-01.
+      const iso = (value: string) => toDate(value).toISOString().slice(0, 10);
+      expect(iso('20150101')).toBe('2015-01-01');
+      expect(iso('20151231')).toBe('2015-12-31');
+    });
+
+    it('should still read a genuine timestamp string as a timestamp', () => {
+      expect(toDate('1420070400000').getTime()).toBe(1420070400000);
+      expect(toDate('1234567890').getTime()).toBe(1234567890);
+      expect(toDate('0').getTime()).toBe(0);
+    });
+
+    it('should not treat an out-of-range basic-format date as a date', () => {
+      // Month 13 and day 32 are what separate a date from an epoch value, so these fall through
+      // to the numeric branch exactly as before.
+      expect(toDate('20151301').getTime()).toBe(20151301);
+      expect(toDate('20150132').getTime()).toBe(20150132);
+    });
   });
 
   describe('formatDate', () => {

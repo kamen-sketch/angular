@@ -90,6 +90,25 @@ describe('TitleCasePipe', () => {
     expect(pipe.transform("it's complicated")).toEqual("It's Complicated");
   });
 
+  it('should capitalize the first letter of astral (non-BMP) cased scripts', () => {
+    // `txt[0]` would be a lone high surrogate here, which has no case mapping, so the initial
+    // letter of these scripts would be left untouched while the rest of the word was lowercased.
+    // Deseret: U+10428 SMALL LONG I -> U+10400 CAPITAL LONG I
+    expect(pipe.transform('\u{10428}\u{10429}')).toEqual('\u{10400}\u{10429}');
+    // Osage: U+104D8 SMALL A -> U+104B0 CAPITAL A
+    expect(pipe.transform('\u{104D8}\u{104D9}')).toEqual('\u{104B0}\u{104D9}');
+    // Adlam: U+1E922 SMALL ALIF -> U+1E900 CAPITAL ALIF
+    expect(pipe.transform('\u{1E922}\u{1E923}')).toEqual('\u{1E900}\u{1E923}');
+  });
+
+  it('should lowercase the remainder of a word starting with an astral capital', () => {
+    expect(pipe.transform('\u{10400}\u{10401}')).toEqual('\u{10400}\u{10429}');
+  });
+
+  it('should leave an uncased astral character alone', () => {
+    expect(pipe.transform('\u{1F600} hi')).toEqual('\u{1F600} Hi');
+  });
+
   it('should not treat non-space character as a separator', () => {
     expect(pipe.transform('one,two,three')).toEqual('One,two,three');
     expect(pipe.transform('true|false')).toEqual('True|false');

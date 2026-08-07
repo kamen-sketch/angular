@@ -2279,6 +2279,35 @@ describe('styling', () => {
     assertStyle(element, 'opacity', '');
   });
 
+  it('should parse a data URI in a [style] shorthand, not only at the start of a value', () => {
+    // The `url(` detector used to require that `url(` be the first four characters of the value,
+    // so a data URI appearing later in a shorthand was not consumed as a unit and the `;` inside
+    // it terminated the declaration early.
+    @Component({
+      template: `<div [style]="styleExp"></div>`,
+      changeDetection: ChangeDetectionStrategy.Eager,
+    })
+    class Cmp {
+      styleExp = '';
+    }
+
+    const fixture = TestBed.createComponent(Cmp);
+    const comp = fixture.componentInstance;
+    const dataUri =
+      'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
+    comp.styleExp = `background: #fff url(${dataUri}) no-repeat`;
+    expect(() => fixture.detectChanges()).not.toThrow();
+
+    const div = fixture.nativeElement.querySelector('div');
+    expect(div.style.getPropertyValue('background')).toContain('base64');
+
+    // A url() that is the whole value keeps working, and so does a plain declaration.
+    comp.styleExp = `background-image: url(${dataUri})`;
+    expect(() => fixture.detectChanges()).not.toThrow();
+    expect(div.style.getPropertyValue('background-image')).toContain('base64');
+  });
+
   it('should not sanitize style values before writing them', () => {
     @Component({
       template: ` <div [style.width]="widthExp" [style.background-image]="bgImageExp"></div> `,

@@ -38,7 +38,10 @@ export interface KeyValue<K, V> {
  * Transforms Object or Map into an array of key value pairs.
  *
  * The output array will be ordered by keys.
- * By default the comparator will be by Unicode point value.
+ * By default, keys of the same type are compared by value — strings by Unicode point value,
+ * numbers numerically, booleans with `false` first — and keys of different types are grouped by
+ * type, since no single value comparison can order them consistently. This only arises for `Map`
+ * input: the keys of a plain object are always strings.
  * You can optionally pass a compareFn if your keys are complex types.
  * Passing `null` as the compareFn will use natural ordering of the input.
  *
@@ -138,32 +141,67 @@ export class KeyValuePipe implements PipeTransform {
   }
 }
 
+/**
+ * Ranks a key by its type, so that keys of different types are ordered by type before they are
+ * ordered by value.
+ *
+ * `Array.prototype.sort` requires a comparator that is antisymmetric and transitive. Comparing
+ * keys of different types by their string representations cannot satisfy that alongside numeric
+ * ordering for numbers: `9 < 10` numerically, but `"10" < "9"` as strings, which makes
+ * `9 < 10 < "9"` while `9` and `"9"` compare equal. Grouping by type first removes the conflict.
+ *
+ * `NaN`, `null` and `undefined` get ranks of their own because none of them is ordered by the
+ * usual comparisons — `NaN` makes every arithmetic comparison false, and `null`/`undefined` are
+ * not distinguishable by a loose equality test.
+ */
+function keyTypeRank(value: unknown): number {
+  if (value === null) return 5;
+  if (value === undefined) return 6;
+  switch (typeof value) {
+    case 'number':
+      return Number.isNaN(value) ? 4 : 1;
+    case 'string':
+      return 2;
+    case 'boolean':
+      return 3;
+    default:
+      return 7;
+  }
+}
+
 export function defaultComparator<K, V>(
   keyValueA: KeyValue<K, V>,
   keyValueB: KeyValue<K, V>,
 ): number {
-  const a = keyValueA.key;
-  const b = keyValueB.key;
+  const a: any = keyValueA.key;
+  const b: any = keyValueB.key;
   // If both keys are the same, return 0 (no sorting needed).
   if (a === b) return 0;
-  // If one of the keys is `null` or `undefined`, place it at the end of the sort.
-  if (a == null) return 1; // `a` comes after `b`.
-  if (b == null) return -1; // `b` comes after `a`.
-  // If both keys are strings, compare them lexicographically.
-  if (typeof a == 'string' && typeof b == 'string') {
-    return a < b ? -1 : 1;
+
+  // Keys of different types are ordered by type: numbers, then strings, then booleans, then the
+  // unordered values (`NaN`, `null`, `undefined`), then everything else.
+  const rankA = keyTypeRank(a);
+  const rankB = keyTypeRank(b);
+  if (rankA !== rankB) return rankA < rankB ? -1 : 1;
+
+  switch (rankA) {
+    // Numbers (neither of which is `NaN`) and strings both order with `<`.
+    case 1:
+    case 2:
+      return a < b ? -1 : a > b ? 1 : 0;
+    // Booleans sort `false` before `true`; `a === b` above has already handled equal ones.
+    case 3:
+      return a ? 1 : -1;
+    // `NaN`, `null` and `undefined` each have no ordering within their own rank.
+    case 4:
+    case 5:
+    case 6:
+      return 0;
+    // Anything else — objects, symbols, functions — falls back to the string representation.
+    default: {
+      const aString = String(a);
+      const bString = String(b);
+      return aString < bString ? -1 : aString > bString ? 1 : 0;
+    }
   }
-  // If both keys are numbers, sort them numerically.
-  if (typeof a == 'number' && typeof b == 'number') {
-    return a - b;
-  }
-  // If both keys are booleans, sort `false` before `true`.
-  if (typeof a == 'boolean' && typeof b == 'boolean') {
-    return a < b ? -1 : 1;
-  }
-  // Fallback case: if keys are of different types, compare their string representations.
-  const aString = String(a);
-  const bString = String(b);
-  // Compare the string representations lexicographically.
-  return aString == bString ? 0 : aString < bString ? -1 : 1;
 }

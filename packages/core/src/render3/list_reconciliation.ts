@@ -231,6 +231,15 @@ export function reconcile<T, V>(
     // Final cleanup steps:
     // - more items in the new collection => insert
     while (liveStartIdx <= newEndIdx) {
+      // Items placed by this cleanup loop are never seen by the main loop above, so their keys
+      // have to be recorded here or a duplicate in the appended tail goes unreported.
+      if (ngDevMode) {
+        recordDuplicateKeys(
+          duplicateKeys!,
+          trackByFn(liveStartIdx, newCollection[liveStartIdx]),
+          liveStartIdx,
+        );
+      }
       createOrAttach(
         liveCollection,
         detachedItems,
@@ -300,7 +309,14 @@ export function reconcile<T, V>(
 
     // this is a new item as we run out of the items in the old collection - create or attach a
     // previously detached one
+    // Tracked separately from `liveStartIdx`, which must not advance differently in dev mode — the
+    // destroy loop below reads it.
+    let tailIdx = liveStartIdx;
     while (!newIterationResult.done) {
+      if (ngDevMode) {
+        recordDuplicateKeys(duplicateKeys!, trackByFn(tailIdx, newIterationResult.value), tailIdx);
+      }
+      tailIdx++;
       createOrAttach(
         liveCollection,
         detachedItems,

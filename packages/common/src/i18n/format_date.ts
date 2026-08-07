@@ -945,6 +945,20 @@ export function toDate(value: string | number | Date): Date {
       return createDate(y, m - 1, d);
     }
 
+    // A basic-format ISO date such as "20150101" is also a string of nothing but digits, so it has
+    // to be recognised before the numeric branch below claims it as a timestamp. Accept the match
+    // only when the month and day are in range: that is what separates a date from an epoch value
+    // like "1420070400000", which the same pattern would otherwise read as year 142007040, month
+    // 00, day 00.
+    let match: RegExpMatchArray | null;
+    if ((match = value.match(ISO8601_DATE_REGEX))) {
+      const month = +match[2];
+      const day = +match[3];
+      if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+        return isoStringToDate(match);
+      }
+    }
+
     const parsedNb = parseFloat(value);
 
     // any string that only contains numbers, like "1234" but not like "1234hello"
@@ -952,8 +966,9 @@ export function toDate(value: string | number | Date): Date {
       return new Date(parsedNb);
     }
 
-    let match: RegExpMatchArray | null;
-    if ((match = value.match(ISO8601_DATE_REGEX))) {
+    // An ISO-shaped string whose month or day is out of range is still handed to `isoStringToDate`,
+    // which rolls it over, exactly as before this reordering.
+    if (match) {
       return isoStringToDate(match);
     }
   }
