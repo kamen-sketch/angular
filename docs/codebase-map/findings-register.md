@@ -898,6 +898,23 @@ untested behaviour rather than a decision that was recorded.
 Contrast with `translations.ts:56`, a few lines away, where the analogous hazard **is** handled
 deliberately and documented in a comment (see finding 15).
 
+**The same `split(sep, 2)` truncation appears a third time**, in the compiler-cli's input/output
+mapping parser (`ngtsc/annotations/directive/src/shared.ts:1185`):
+
+```js
+const [fieldName, bindingPropertyName] = value.split(':', 2).map((str) => str.trim());
+```
+
+```
+"field: prop"           field="field"   bound="prop"
+"field: prop: extra"    field="field"   bound="prop"     <- " extra" dropped
+"xlink:href: x"         field="xlink"   bound="href"     <- ": x" dropped
+```
+
+Lower stakes than the i18n case — the discarded text is a malformed `inputs`/`outputs` entry rather
+than a description shown to translators — but it is the same silent truncation with no error, and
+the `xlink:href` row shows a plausible-looking value being re-split at the wrong boundary.
+
 ### 32. `XmlFile` drops empty attributes, and its three callers disagree about that — `open`
 
 `packages/localize/tools/src/extract/translation_files/xml_file.ts:35`

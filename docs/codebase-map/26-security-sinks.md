@@ -246,15 +246,16 @@ comment saying why — so the instances below are omissions rather than an unrec
 
 Collected sites where the key is caller- or data-supplied and the map is not hardened:
 
-| Site                                                                 | Key comes from                         | Status                                                                                  |
-| -------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------- |
-| `core/src/i18n/locale_data_api.ts:111`                               | locale string (URL, `Accept-Language`) | **defect** — [register § 42](./findings-register.md)                                    |
-| `event-dispatch/src/cache.ts:14`                                     | `jsaction` attribute text              | **defect** — [register § 15](./findings-register.md)                                    |
-| `event-dispatch/src/action_resolver.ts:261`                          | event types parsed from the attribute  | **defect (mild)** — register § 15                                                       |
-| `localize/tools/…/*_translation_parser.ts`                           | message id from a translation file     | **defect** — [register § 37](./findings-register.md)                                    |
-| `common/src/i18n/currencies.ts` via `locale_data_api.ts:771`, `:799` | currency code                          | cleared — every read after the guard is a numeric index, and functions have none        |
-| `common/src/i18n/format_date.ts:319`, `:332`, `:599`                 | `role`/`type`/`tagName`                | cleared — every key is `.toUpperCase()`d, and no `Object.prototype` member is uppercase |
-| `core/src/transfer_state.ts:90` (`get`)                              | a `StateKey` string                    | not reachable via framework keys — see § 12                                             |
+| Site                                                                                              | Key comes from                               | Status                                                                                                                        |
+| ------------------------------------------------------------------------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `core/src/i18n/locale_data_api.ts:111`                                                            | locale string (URL, `Accept-Language`)       | **defect** — [register § 42](./findings-register.md)                                                                          |
+| `event-dispatch/src/cache.ts:14`                                                                  | `jsaction` attribute text                    | **defect** — [register § 15](./findings-register.md)                                                                          |
+| `event-dispatch/src/action_resolver.ts:261`                                                       | event types parsed from the attribute        | **defect (mild)** — register § 15                                                                                             |
+| `localize/tools/…/*_translation_parser.ts`                                                        | message id from a translation file           | **defect** — [register § 37](./findings-register.md)                                                                          |
+| `common/src/i18n/currencies.ts` via `locale_data_api.ts:771`, `:799`                              | currency code                                | cleared — every read after the guard is a numeric index, and functions have none                                              |
+| `common/src/i18n/format_date.ts:319`, `:332`, `:599`                                              | `role`/`type`/`tagName`                      | cleared — every key is `.toUpperCase()`d, and no `Object.prototype` member is uppercase                                       |
+| `core/src/transfer_state.ts:90` (`get`)                                                           | a `StateKey` string                          | not reachable via framework keys — see § 12                                                                                   |
+| `ngtsc/annotations/directive/src/shared.ts:1175`, `compiler/src/render3/view/compiler.ts:524-546` | directive `inputs`/`outputs` and `host` keys | cleared — author-written decorator metadata, and a string assigned to `__proto__` is a silent no-op rather than a reparenting |
 
 Two properties decide whether a site is exploitable, and both are worth checking first:
 
