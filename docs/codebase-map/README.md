@@ -21,37 +21,39 @@ in the index for its package.
 
 ## Contents
 
-| #   | Document                                                                   | Covers                                                                                      |
-| --- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| 01  | [Repository layout](./01-repo-layout.md)                                   | top-level directories, package inventory, the shape every package follows                   |
-| 02  | [`core`](./02-core.md)                                                     | `LView`/`TView`, the instruction set, change detection, reactivity, DI, hydration, `@defer` |
-| 03  | [`compiler`](./03-compiler.md)                                             | template parsing, the 72-phase template pipeline, definition emit, i18n                     |
-| 04  | [`compiler-cli`](./04-compiler-cli.md)                                     | ngtsc, `DecoratorHandler`s, template type checking, incrementality, the linker              |
-| 05  | [`common`](./05-common.md)                                                 | built-in directives and pipes, locale formatting, `Location`, `HttpClient`                  |
-| 06  | [`forms`](./06-forms.md)                                                   | reactive and template-driven forms, and signal forms                                        |
-| 07  | [`router`](./07-router.md)                                                 | `UrlTree`, the navigation pipeline, guards/resolvers, outlets                               |
-| 08  | [Platform packages](./08-platform-packages.md)                             | `platform-browser`, `platform-browser-dynamic`, `platform-server`, `ssr`                    |
-| 09  | [`animations`, `elements`, `upgrade`](./09-animations-elements-upgrade.md) | the animation engine, custom elements, AngularJS interop                                    |
-| 10  | [`service-worker`](./10-service-worker.md)                                 | `ngsw-worker`, config generation, `SwUpdate`/`SwPush`                                       |
-| 11  | [`localize` and `language-service`](./11-localize-and-language-service.md) | `$localize`, i18n tooling, the editor plugin                                                |
-| 12  | [`zone.js`](./12-zone-js.md)                                               | zones, tasks, the patch set, test-framework integration                                     |
-| 13  | [Schematics and migrations](./13-schematics-and-migrations.md)             | Tsurge, `ng update` migrations, `ng generate` transformations                               |
-| 14  | [Support packages](./14-support-packages.md)                               | `core/primitives`, `benchpress`, `misc`, `private`, `examples`, `docs`                      |
-| 15  | [`devtools`](./15-devtools.md)                                             | the DevTools extension: protocol, in-page backend, panel UI                                 |
-| 16  | [`adev`](./16-adev.md)                                                     | angular.dev: the app, the content, the docs pipeline                                        |
-| 17  | [Tooling and infrastructure](./17-tooling-and-infrastructure.md)           | Bazel, goldens, benchmarks, integration tests, CI, repo conventions                         |
-| 18  | [Cross-cutting flows](./18-cross-cutting-flows.md)                         | five end-to-end traces that span packages                                                   |
-| 19  | [Layering and contracts](./19-layering-and-contracts.md)                   | the package dependency DAG and the 215-symbol compiler→runtime contract                     |
-| 20  | [Error codes](./20-error-codes.md)                                         | the two `NG…` code spaces, their conventions, and the full catalogue                        |
-| 21  | [The public API surface](./21-api-surface.md)                              | the two records of the API, SemVer coverage, stability tiers and deprecations               |
-| 22  | [The DevTools message protocol](./22-devtools-protocol.md)                 | the 48-event contract between the panel, the in-page agent and the extension shell          |
-| 23  | [Guides and the code they show](./23-docs-examples.md)                     | how angular.dev references real source, and what the docs build does and does not enforce   |
-| 24  | [Code ownership](./24-ownership.md)                                        | which review group owns which path, and the paths no group claims                           |
-| 25  | [The `ɵ` private surface](./25-private-surface.md)                         | the 588 symbols packages share with each other but not with applications                    |
-| 26  | [Security sinks](./26-security-sinks.md)                                   | every sink a bound value can reach, and the five layers of checks in front of them          |
+| #   | Document                                                                   | Covers                                                                                                           |
+| --- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| 01  | [Repository layout](./01-repo-layout.md)                                   | top-level directories, package inventory, the shape every package follows                                        |
+| 02  | [`core`](./02-core.md)                                                     | `LView`/`TView`, the instruction set, change detection, reactivity, DI, hydration, `@defer`                      |
+| 03  | [`compiler`](./03-compiler.md)                                             | template parsing, the 72-phase template pipeline, definition emit, i18n                                          |
+| 04  | [`compiler-cli`](./04-compiler-cli.md)                                     | ngtsc, `DecoratorHandler`s, template type checking, incrementality, the linker                                   |
+| 05  | [`common`](./05-common.md)                                                 | built-in directives and pipes, locale formatting, `Location`, `HttpClient`                                       |
+| 06  | [`forms`](./06-forms.md)                                                   | reactive and template-driven forms, and signal forms                                                             |
+| 07  | [`router`](./07-router.md)                                                 | `UrlTree`, the navigation pipeline, guards/resolvers, outlets                                                    |
+| 08  | [Platform packages](./08-platform-packages.md)                             | `platform-browser`, `platform-browser-dynamic`, `platform-server`, `ssr`                                         |
+| 09  | [`animations`, `elements`, `upgrade`](./09-animations-elements-upgrade.md) | the animation engine, custom elements, AngularJS interop                                                         |
+| 10  | [`service-worker`](./10-service-worker.md)                                 | `ngsw-worker`, config generation, `SwUpdate`/`SwPush`                                                            |
+| 11  | [`localize` and `language-service`](./11-localize-and-language-service.md) | `$localize`, i18n tooling, the editor plugin                                                                     |
+| 12  | [`zone.js`](./12-zone-js.md)                                               | zones, tasks, the patch set, test-framework integration                                                          |
+| 13  | [Schematics and migrations](./13-schematics-and-migrations.md)             | Tsurge, `ng update` migrations, `ng generate` transformations                                                    |
+| 14  | [Support packages](./14-support-packages.md)                               | `core/primitives`, `benchpress`, `misc`, `private`, `examples`, `docs`                                           |
+| 15  | [`devtools`](./15-devtools.md)                                             | the DevTools extension: protocol, in-page backend, panel UI                                                      |
+| 16  | [`adev`](./16-adev.md)                                                     | angular.dev: the app, the content, the docs pipeline                                                             |
+| 17  | [Tooling and infrastructure](./17-tooling-and-infrastructure.md)           | Bazel, goldens, benchmarks, integration tests, CI, repo conventions                                              |
+| 18  | [Cross-cutting flows](./18-cross-cutting-flows.md)                         | five end-to-end traces that span packages                                                                        |
+| 19  | [Layering and contracts](./19-layering-and-contracts.md)                   | the package dependency DAG and the 215-symbol compiler→runtime contract                                          |
+| 20  | [Error codes](./20-error-codes.md)                                         | the two `NG…` code spaces, their conventions, and the full catalogue                                             |
+| 21  | [The public API surface](./21-api-surface.md)                              | the two records of the API, SemVer coverage, stability tiers and deprecations                                    |
+| 22  | [The DevTools message protocol](./22-devtools-protocol.md)                 | the 48-event contract between the panel, the in-page agent and the extension shell                               |
+| 23  | [Guides and the code they show](./23-docs-examples.md)                     | how angular.dev references real source, and what the docs build does and does not enforce                        |
+| 24  | [Code ownership](./24-ownership.md)                                        | which review group owns which path, and the paths no group claims                                                |
+| 25  | [The `ɵ` private surface](./25-private-surface.md)                         | the 588 symbols packages share with each other but not with applications                                         |
+| 26  | [Security sinks](./26-security-sinks.md)                                   | every sink a bound value can reach, and the five layers of checks in front of them                               |
+| 27  | [Triage](./27-triage.md)                                                   | the findings ranked by what to act on first, with each proposed fix verified against the cases it must not break |
 
 A companion [findings register](./findings-register.md) records the defects and gaps this map
-turned up, with the evidence and status of each.
+turned up, with the evidence and status of each; [27](./27-triage.md) ranks them by what is worth
+acting on.
 
 Start with [01](./01-repo-layout.md) if you are new to the repository, or with
 [18](./18-cross-cutting-flows.md) if you already know roughly where things live and need to follow
