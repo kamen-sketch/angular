@@ -2457,6 +2457,189 @@ warnings, and the whole correctness fuzz below still passes unchanged against th
 
 Not fixed in the tree, per the standing instruction to analyse rather than repair.
 
+### 58. `keyvalue`'s default comparator is not a valid sort comparator — `open`
+
+`packages/common/src/pipes/keyvalue_pipe.ts:141`
+
+`KeyValuePipe` sorts its output with `defaultComparator` (`this.keyValues.sort(compareFn)`, `:133`).
+`Array.prototype.sort` requires a comparator that is antisymmetric, transitive, and always returns a
+number. `defaultComparator` breaks all three.
+
+Executed over a pool of 14 key values covering every type the pipe can receive:
+
+| Property         | Violations           |
+| ---------------- | -------------------- |
+| antisymmetry     | 2 ordered pairs      |
+| transitivity     | 2 triples            |
+| returns a number | 9 pairs return `NaN` |
+
+Each has a distinct cause:
+
+- **`null` vs `undefined`.** `:150-151` reads `if (a == null) return 1; if (b == null) return -1;`.
+  The loose `==` makes both branches match `undefined` too, and the `a === b` guard above does not
+  catch `null` against `undefined`. So `cmp(null, undefined) === 1` **and**
+  `cmp(undefined, null) === 1` — both claim to come after the other.
+- **`NaN`.** The numeric branch `:158` returns `a - b`, which is `NaN` whenever either key is `NaN`.
+- **Numbers against numeric strings.** The numeric branch sorts `9 < 10`, while the cross-type
+  fallback at `:165-168` compares string representations, where `"10" < "9"`. That gives the
+  intransitive triple `9 < 10 < "9"` with `cmp(9, "9") === 0`.
+
+The observable consequence is that the sorted order depends on the order the keys were inserted.
+Every permutation of the same key set was sorted and the distinct results counted:
+
+| key set                  | distinct orders from 6 permutations |
+| ------------------------ | ----------------------------------- |
+| `[10, "9", 9]`           | 3                                   |
+| `[null, undefined, "a"]` | 2                                   |
+| `[NaN, 1, 2]`            | 4                                   |
+| `["b", "a", "x"]`        | 1                                   |
+| `[3, 1, 2]`              | 1                                   |
+
+Some of those orders are not sorted under any reading — inserting `[9, 10, "9"]` renders
+`9 , 10 , "9"`, and `[2, NaN, 1]` renders `2 , NaN , 1`.
+
+**Reachability is narrower than it looks, and worth stating precisely.** The differ enumerates a
+plain object with `Object.keys(obj)` and a `Map` with `obj.forEach(fn)`
+(`default_keyvalue_differ.ts:266-272`). `Object.keys` always yields strings, so every key is the
+same type and the string branch is self-consistent — **objects are immune.** Only `Map` input can
+carry mixed or non-string keys, and the pipe's own JSDoc advertises `Map` support. The realistic
+shapes are a `Map` used to group records by a nullable field (producing both `null` and `undefined`
+keys), ids that arrive sometimes as numbers and sometimes as strings, and a key from a failed
+`parseFloat` (`NaN`). Not attacker-controlled; the damage is a list that renders in a different
+order for two users whose data differs only in arrival order.
+
+**Verified fix, with an honest note on what it changes.** Rank by type first, then order within the
+type — a total order by construction:
+
+```js
+function typeRank(v) {
+  if (v === null) return 5;
+  if (v === undefined) return 6;
+  switch (typeof v) {
+    case 'number':
+      return Number.isNaN(v) ? 4 : 1;
+    case 'string':
+      return 2;
+    case 'boolean':
+      return 3;
+    default:
+      return 7;
+  }
+}
+```
+
+then compare ranks, falling back to the type's natural order when they match. Re-audited: **0**
+antisymmetry violations, **0** transitivity violations, **0** `NaN` returns, and all five key sets
+above collapse to exactly 1 order.
+
+This is not a drop-in preserving every current output. Across 364 three-key sets, the current
+comparator is order-independent on 288 of them, and the proposal agrees on 201. Split by shape:
+**8/8 on homogeneous key sets** — which covers every plain object, and every `Map` with uniform key
+types — and 193/280 on mixed-type sets, where the relative order of a number against a string is
+deliberately redefined. That trade is unavoidable: "numbers sort numerically" and "cross-type sorts
+by string representation" cannot both hold, and it is exactly their disagreement that produces the
+intransitivity.
+
+### 59. `titlecase` never capitalizes a word starting with an astral letter — `open`
+
+`packages/common/src/pipes/case_conversion_pipes.ts:92`
+
+```js
+return value.replace(unicodeWordMatch, (txt) => txt[0].toUpperCase() + txt.slice(1).toLowerCase());
+```
+
+`txt[0]` indexes by UTF-16 code unit, so for a word beginning with a non-BMP character it is a lone
+high surrogate. A lone surrogate has no case mapping, `toUpperCase()` returns it unchanged, and
+`txt.slice(1)` begins with the matching low surrogate — which concatenation silently reassembles
+into the original character. The word is lowercased correctly from the second letter on; only the
+initial letter is left alone.
+
+This is not a case the regex declines to match. `unicodeWordMatch` (`:57`) carries explicit
+surrogate-pair alternatives for the cased astral scripts, so matching them was intended — the
+ranges include Deseret (`\uD801[\uDC00-\uDC9D]`), Osage (`\uD801[\uDCB0-\uDCD3…]`) and Adlam
+(`\uD83A[\uDD00-\uDD43…]`), all of which are bicameral.
+
+Ran the pipe's exact `replace` body against a per-code-point implementation, using the real regex
+extracted from the source:
+
+| input                   | pipe returns    | correct         |
+| ----------------------- | --------------- | --------------- |
+| `hello world`           | `Hello World`   | same            |
+| `école élan`            | `École Élan`    | same            |
+| `привет мир`            | `Привет Мир`    | same            |
+| Deseret U+10428 U+10429 | U+10428 U+10429 | U+10400 U+10429 |
+| Osage U+104D8 U+104D9   | U+104D8 U+104D9 | U+104B0 U+104D9 |
+| Adlam U+1E922 U+1E923   | U+1E922 U+1E923 | U+1E900 U+1E923 |
+
+3 of 12 diverge — every astral case, no BMP case. Words already starting with an astral **capital**
+come out right by luck, since leaving the letter alone is the correct result there.
+
+**Verified fix.** Take the first code point rather than the first code unit:
+
+```js
+const first = String.fromCodePoint(txt.codePointAt(0));
+return first.toUpperCase() + txt.slice(first.length).toLowerCase();
+```
+
+This is the `correct` column above; it matches the current output on every BMP case tested.
+
+Impact is confined to the bicameral astral scripts. Adlam is the one with meaningful live usage.
+
+### 60. One bad argument wedges `async` permanently — `open`
+
+`packages/common/src/pipes/async_pipe.ts:202`
+
+```js
+private _subscribe(obj) {
+  this._obj = obj;                              // :203  written first
+  this._strategy = this._selectStrategy(obj);   // :204  throws for an unsupported argument
+  ...
+}
+```
+
+`_selectStrategy` throws `invalidPipeArgumentError` (`:223`) when the value is neither a promise nor
+subscribable — but `_obj` has already been assigned, so the pipe is left with `_obj` set,
+`_strategy` null and `_subscription` null.
+
+That state breaks the invariant `_dispose` is documented to rely on. Its comment at `:227` reads
+_"`dispose` is only called if a subscription has been initialized before, indicating that
+`this._strategy` is also available"_ — but `transform` guards the `_dispose` call on `_obj`
+(`:194-195`), not on `_subscription`, and `_obj` is exactly the field that got written before the
+throw.
+
+Ran the real class body (imports stubbed, `@Pipe` decorator removed):
+
+| step | call                         | result                                                                 |
+| ---- | ---------------------------- | ---------------------------------------------------------------------- |
+| 1    | `transform(bogus)`           | throws `InvalidPipeArgument` — correct. `_obj` set, `_strategy` null   |
+| 2    | `transform(bogus)` again     | returns `null` silently — the diagnostic disappears                    |
+| 3    | `transform(validObservable)` | throws `TypeError: Cannot read properties of null (reading 'dispose')` |
+| 4    | `transform(validObservable)` | throws the same `TypeError` — never recovers                           |
+
+Step 3 is the damaging one. The developer corrects the mistake, passes a real observable, and gets a
+_different_ and less informative error pointing into framework internals — while step 2 has already
+hidden the message that named the actual problem. Since `async` is `pure: false`, `transform` runs
+on every change detection pass, so step 2 is what a developer sees almost immediately.
+
+**Verified fix.** Select the strategy before writing any state, so a rejected argument leaves the
+pipe untouched:
+
+```js
+private _subscribe(obj) {
+  const strategy = this._selectStrategy(obj);
+  this._obj = obj;
+  this._strategy = strategy;
+  this._subscription = strategy.createSubscription(...);
+}
+```
+
+`_obj` still has to be assigned before `createSubscription`, because a synchronously-emitting source
+reaches `_updateLatestValue`, which compares against `this._obj` (`:236`) — the reorder preserves
+that. Re-ran the same four steps against the patched copy: step 1 throws the correct error, step 2
+throws it **again** rather than going silent, and step 3 subscribes normally — a following emission
+yields its value. Guarding `_dispose` on `_subscription` instead would also stop the `TypeError`,
+but would leave step 2 silent; this ordering keeps the real mistake visible.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
@@ -2818,6 +3001,9 @@ Recorded so the same questions are not re-opened.
 | Does zone.js's `Promise` honour the single-settle and thenable rules?                                                                                                                                                | Yes, on the four points checked against a native baseline: resolve-then-reject keeps the first (one `once()` closure wraps _both_ resolvers, `:119-131`, `:508-513`); a thenable whose `then` throws after calling resolve stays resolved (the error path reuses the same spent `onceWrapper`, `:176-180`); a throwing `then` getter rejects (`:149-158`); self-resolution rejects.                                       |
 | `_keyMap[event.key]` (`key_events.ts:155`) is a plain-object lookup on runtime input                                                                                                                                 | Not reachable. No value in the UI Events `KeyboardEvent.key` set collides with an `Object.prototype` member, so only a synthetic event built in page script could supply one — at which point script already runs.                                                                                                                                                                                                        |
 | Does the `@for` reconciliation algorithm (`list_reconciliation.ts`) ever produce a wrong list, or drop the view-reuse guarantee that `track` exists to provide?                                                      | No, on 60 000 randomised cases plus 17 hand-built ones. Differential-fuzzed the real `reconcile` against an array oracle; see the note below this table.                                                                                                                                                                                                                                                                  |
+| `SlicePipe` (`slice_pipe.ts:92`) does its own index handling                                                                                                                                                         | It does not — it delegates straight to `value.slice(start, end)` after a `typeof`/`Array.isArray` guard, so it inherits the platform semantics exactly, which is what its JSDoc promises. Nothing to get wrong.                                                                                                                                                                                                           |
+| `SlicePipe` and `KeyValuePipe` are declared `pure: false`, so `transform` runs on every change-detection pass                                                                                                        | Deliberate, not an oversight. Both take inputs that are mutated in place (an array's contents, a `Map`'s entries), which a pure pipe would never see. `KeyValuePipe` pays for it with a `KeyValueDiffer` and rebuilds `keyValues` only when the differ reports a change (`keyvalue_pipe.ts:125`); `SlicePipe` reallocates each pass, since `slice` always copies.                                                         |
+| `LowerCasePipe` / `UpperCasePipe` use locale-independent `toLowerCase`/`toUpperCase` rather than the `Locale` variants                                                                                               | Correct for these pipes. `toLocaleUpperCase` would make output depend on the host locale rather than the app's `LOCALE_ID`, which is the opposite of what the rest of `common` does. The known divergences (Turkish dotless i, for one) are a consequence of the locale-independent mapping, not a defect in the pipe.                                                                                                    |
 | `reconcile` calls `setActiveConsumer(null)` (`:128`, `:247`) instead of restoring the value the call returned                                                                                                        | Not a defect. The sole caller `ɵɵrepeater` (`control_flow.ts:481`) already sets the ambient consumer to `null` on entry and hands the saved one in as an argument, so `null` _is_ the correct restore value. `reconcile` is not public API and has no other caller. Coupled to its caller, but not wrong.                                                                                                                 |
 | `initLiveItemsInTheFuture` (`:384`) is computed once via `??=` and never refreshed as items are consumed                                                                                                             | Not a defect. A stale `true` only causes a redundant detach — the item is destroyed at `:322` if never re-attached, and `liveEndIdx--` keeps the loop terminating. The JSDoc at `:99` states the algorithm "may apply sub-optimal number of operations"; the fuzz found no wrong result.                                                                                                                                  |
 
