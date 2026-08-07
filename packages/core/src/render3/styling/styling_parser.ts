@@ -252,6 +252,24 @@ export function consumeSeparator(
  * @param endIndex Ending index of character where the scan should end.
  * @returns Index after last style value character.
  */
+/**
+ * Whether a character can appear inside a CSS identifier.
+ *
+ * Used to tell the `url(` token apart from the tail of a longer identifier such as `foo_url(`.
+ * Characters above the ASCII range are treated as identifier characters, matching the CSS syntax
+ * specification, which allows any non-ASCII code point in an identifier.
+ */
+function isCssIdentifierChar(code: number): boolean {
+  return (
+    (code >= CharCode.a && code <= CharCode.z) ||
+    (code >= CharCode.A && code <= CharCode.Z) ||
+    (code >= CharCode.ZERO && code <= CharCode.NINE) ||
+    code === CharCode.DASH ||
+    code === CharCode.UNDERSCORE ||
+    code > 127
+  );
+}
+
 export function consumeStyleValue(text: string, startIndex: number, endIndex: number): number {
   let ch1 = -1; // 1st previous character
   let ch2 = -1; // 2nd previous character
@@ -265,11 +283,15 @@ export function consumeStyleValue(text: string, startIndex: number, endIndex: nu
     } else if (ch === CharCode.DOUBLE_QUOTE || ch === CharCode.SINGLE_QUOTE) {
       lastChIndex = i = consumeQuotedText(text, ch, i, endIndex);
     } else if (
-      startIndex === i - 4 && // We have seen only 4 characters so far "URL(" (Ignore "foo_URL()")
+      i - 4 >= startIndex &&
       ch3 === CharCode.U &&
       ch2 === CharCode.R &&
       ch1 === CharCode.L &&
-      ch === CharCode.OPEN_PAREN
+      ch === CharCode.OPEN_PAREN &&
+      // "url(" opens a URL only when it is not the tail of a longer identifier, so "foo_URL()" is
+      // still ignored. Testing the preceding character rather than the position lets a url() that
+      // appears later in a shorthand be recognised too, as in "background: #fff url(data:…)".
+      (i - 4 === startIndex || !isCssIdentifierChar(text.charCodeAt(i - 5)))
     ) {
       lastChIndex = i = consumeQuotedText(text, CharCode.CLOSE_PAREN, i, endIndex);
     } else if (ch > CharCode.SPACE) {

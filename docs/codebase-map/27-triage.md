@@ -5,7 +5,12 @@ confirmed, which is the wrong order for deciding what to do. This ranks them.
 
 Every fix proposed below was run against the cases that motivated the finding **and** against the
 cases the current code already gets right, so a fix is only listed if it is verified not to
-regress. Nothing here has been applied — the register's framework findings are all still `open`.
+regress.
+
+**Tier 1 and findings 57-60 are now applied in this branch**, with regression tests added to the
+existing spec files. The remaining tier 2 entries are still `open`. Note that the repository's own
+test suite has not been run — there is no `node_modules` here and the npm registry is blocked by
+the egress allowlist — so the added specs are unverified; see the note at the top of the register.
 
 ## How these are ranked
 

@@ -13,6 +13,20 @@ Numbers are stable identifiers assigned in the order findings were confirmed, no
 finding is filed under the section that classifies it, so the numbering within a section can skip —
 findings referenced elsewhere keep the number they were published under.
 
+**On `fixed` findings and what "verified" means here.** Eight findings — 40, 45, 49, 50, 57, 58, 59
+and 60 — are applied in this branch, with regression tests added to the existing spec files. Each
+fix was executed against the _edited_ framework source, staged into a scratch directory with its
+cross-package imports stubbed, and compared against the same source at `HEAD`, so the before/after
+numbers quoted under each finding come from running the real code rather than a transcription.
+
+What has **not** been run is the repository's own test suite. This environment has no
+`node_modules` and `registry.npmjs.org` answers `403` from the egress allowlist, so neither
+`pnpm install` nor Bazel can execute, and the added specs have never been through Jasmine or the
+TypeScript compiler. They are written against the surrounding conventions in each spec file, but
+they are unverified. Anyone picking this up should run
+`pnpm bazel test //packages/common/test/... //packages/forms/test/... //packages/core/test/...`
+before trusting them.
+
 Status values:
 
 | Status         | Meaning                                                            |
@@ -1434,7 +1448,7 @@ Linear in the number of tokens, not exponential in length. (`parts = parts.conca
 loop is quadratic in allocations, which is what the last two rows show; at the 256-char limit it is
 immaterial.)
 
-### 40. `toDate` reads an 8-digit ISO date as a millisecond timestamp — `open`
+### 40. `toDate` reads an 8-digit ISO date as a millisecond timestamp — `fixed`
 
 `packages/common/src/i18n/format_date.ts:948`
 
@@ -1861,7 +1875,7 @@ misconfigured or hostile cookie writer to trigger.
 (`platform-browser/src/browser/browser_adapter.ts:82`), equally unguarded, but not on a request
 path.
 
-### 45. `Validators.pattern` anchors textually, so an alternation is not anchored — `open`
+### 45. `Validators.pattern` anchors textually, so an alternation is not anchored — `fixed`
 
 `packages/forms/src/validators.ts:573`
 
@@ -2044,7 +2058,7 @@ Cleared in the same pass: the regex is **not** a backtracking risk despite the r
 class. Timed on the real pattern, 5000-character inputs of digits, dots, mixed dots-and-digits, and
 a near-miss all completed in under 0.05 ms.
 
-### 49. The node-injector bloom filter reads the wrong slot for a non-ASCII string token — `open`
+### 49. The node-injector bloom filter reads the wrong slot for a non-ASCII string token — `fixed`
 
 `packages/core/src/render3/di.ts:830`
 
@@ -2102,7 +2116,7 @@ written in a non-Latin language. Nothing covers it: a scan of `packages/core` fo
 Adding `& BLOOM_MASK` to `:830` makes the two sides agree; the numeric branch three lines below is
 already the model.
 
-### 50. `[style]` throws on a data URL unless `url(` starts the value — `open`
+### 50. `[style]` throws on a data URL unless `url(` starts the value — `fixed`
 
 `packages/core/src/render3/styling/styling_parser.ts:267`
 
@@ -2360,7 +2374,7 @@ value the compiler has already proven null.
 No test covers either: the partial evaluator's test directory contains no nullish-coalescing or
 optional-chaining case.
 
-### 57. `@for` misses duplicate track keys exactly when the list grows — `open`
+### 57. `@for` misses duplicate track keys exactly when the list grows — `fixed`
 
 `packages/core/src/render3/list_reconciliation.ts:233` and `:303`
 
@@ -2455,9 +2469,11 @@ Applied to the staged copy and re-run: all 8 cases warn on both paths, with corr
 20 000 randomised collections built from guaranteed-unique keys produced **0** false-positive
 warnings, and the whole correctness fuzz below still passes unchanged against the patched copy.
 
-Not fixed in the tree, per the standing instruction to analyse rather than repair.
+Applied in this branch (`list_reconciliation.ts:233` and `:303`). Re-ran both harnesses against the
+edited source: 0 of 8 duplicates unreported on either path, and the correctness fuzz still shows 0
+wrong results and 0 reuse violations across 60 000 randomised cases.
 
-### 58. `keyvalue`'s default comparator is not a valid sort comparator — `open`
+### 58. `keyvalue`'s default comparator is not a valid sort comparator — `fixed`
 
 `packages/common/src/pipes/keyvalue_pipe.ts:141`
 
@@ -2540,7 +2556,7 @@ deliberately redefined. That trade is unavoidable: "numbers sort numerically" an
 by string representation" cannot both hold, and it is exactly their disagreement that produces the
 intransitivity.
 
-### 59. `titlecase` never capitalizes a word starting with an astral letter — `open`
+### 59. `titlecase` never capitalizes a word starting with an astral letter — `fixed`
 
 `packages/common/src/pipes/case_conversion_pipes.ts:92`
 
@@ -2585,7 +2601,7 @@ This is the `correct` column above; it matches the current output on every BMP c
 
 Impact is confined to the bicameral astral scripts. Adlam is the one with meaningful live usage.
 
-### 60. One bad argument wedges `async` permanently — `open`
+### 60. One bad argument wedges `async` permanently — `fixed`
 
 `packages/common/src/pipes/async_pipe.ts:202`
 

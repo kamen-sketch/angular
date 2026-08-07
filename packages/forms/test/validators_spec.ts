@@ -406,8 +406,41 @@ import {useAutoTick, timeout} from '@angular/private/testing';
 
       it('should error on failure to match string', () => {
         expect(Validators.pattern('[a-zA-Z ]*')(new FormControl('aaa0'))).toEqual({
-          'pattern': {'requiredPattern': '^[a-zA-Z ]*$', 'actualValue': 'aaa0'},
+          'pattern': {'requiredPattern': '^(?:[a-zA-Z ]*)$', 'actualValue': 'aaa0'},
         });
+      });
+
+      it('should anchor both branches of a top-level alternation', () => {
+        // Appending `^` and `$` to the raw string would produce `^cat|dog$`, i.e. `(^cat)|(dog$)`,
+        // which accepts anything starting with `cat` or ending with `dog`.
+        const validator = Validators.pattern('cat|dog');
+        expect(validator(new FormControl('cat'))).toBeNull();
+        expect(validator(new FormControl('dog'))).toBeNull();
+        expect(validator(new FormControl('catxxx'))).not.toBeNull();
+        expect(validator(new FormControl('xxxdog'))).not.toBeNull();
+        expect(validator(new FormControl('xcatx'))).not.toBeNull();
+      });
+
+      it('should anchor an alternation used as an enum constraint', () => {
+        const validator = Validators.pattern('draft|published');
+        expect(validator(new FormControl('draft'))).toBeNull();
+        expect(validator(new FormControl('published'))).toBeNull();
+        expect(validator(new FormControl('draft-and-more'))).not.toBeNull();
+        expect(validator(new FormControl('not-published'))).not.toBeNull();
+      });
+
+      it('should still anchor a pattern that already ends with an escaped $', () => {
+        // `price\$` ends in a `$` character that is escaped, so it is not an anchor.
+        const validator = Validators.pattern('price\\$');
+        expect(validator(new FormControl('price$'))).toBeNull();
+        expect(validator(new FormControl('price$XXX'))).not.toBeNull();
+      });
+
+      it('should not double-anchor a pattern that is already anchored', () => {
+        const validator = Validators.pattern('^ok$');
+        expect(validator(new FormControl('ok'))).toBeNull();
+        expect(validator(new FormControl('xok'))).not.toBeNull();
+        expect(validator(new FormControl('okx'))).not.toBeNull();
       });
 
       it('should accept RegExp object', () => {

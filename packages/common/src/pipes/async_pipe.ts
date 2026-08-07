@@ -200,9 +200,15 @@ export class AsyncPipe implements OnDestroy, PipeTransform {
   }
 
   private _subscribe(obj: Subscribable<any> | PromiseLike<any> | EventEmitter<any>): void {
+    // Pick the strategy before writing any state: it throws for an unsupported argument, and if
+    // `_obj` were already set the pipe would be left with a null `_strategy` that a later
+    // `_dispose` would dereference. `_obj` still has to be assigned before `createSubscription`,
+    // because a synchronously emitting source reaches `_updateLatestValue`, which compares
+    // against it.
+    const strategy = this._selectStrategy(obj);
     this._obj = obj;
-    this._strategy = this._selectStrategy(obj);
-    this._subscription = this._strategy.createSubscription(
+    this._strategy = strategy;
+    this._subscription = strategy.createSubscription(
       obj,
       (value: Object) => this._updateLatestValue(obj, value),
       (e) => this.applicationErrorHandler(e),
