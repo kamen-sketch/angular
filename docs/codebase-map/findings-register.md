@@ -2360,6 +2360,103 @@ value the compiler has already proven null.
 No test covers either: the partial evaluator's test directory contains no nullish-coalescing or
 optional-chaining case.
 
+### 57. `@for` misses duplicate track keys exactly when the list grows — `open`
+
+`packages/core/src/render3/list_reconciliation.ts:233` and `:303`
+
+`reconcile` warns in dev mode when a track expression produces the same key twice, because duplicate
+keys corrupt view identity in ways that are very hard to debug. Keys are collected by
+`recordDuplicateKeys` (`:75`) into a `Map<key, Set<index>>`, and any key with more than one index is
+reported at `:327-352`.
+
+The collection happens inside the two main loops only. Both paths then have a cleanup loop for the
+case where the incoming collection is **longer** than the live one, and neither records:
+
+```js
+// array path, :233
+while (liveStartIdx <= newEndIdx) {
+  createOrAttach(
+    liveCollection,
+    detachedItems,
+    trackByFn,
+    liveStartIdx,
+    newCollection[liveStartIdx],
+  );
+  liveStartIdx++;
+}
+```
+
+```js
+// iterable path, :303
+while (!newIterationResult.done) {
+  createOrAttach(
+    liveCollection,
+    detachedItems,
+    trackByFn,
+    liveCollection.length,
+    newIterationResult.value,
+  );
+  newIterationResult = newCollectionIterator.next();
+}
+```
+
+Every item placed by these loops is invisible to the duplicate check. So a duplicate is reported
+when it sits within the overlap of the two collections, and silently ignored when it sits in the
+appended tail.
+
+Executed against the real source (staged copy, `ngDevMode = true`, `console.warn` captured). Eight
+incoming collections, each containing a genuine duplicate key:
+
+| live      | incoming  | array path | iterable path |
+| --------- | --------- | ---------- | ------------- |
+| `[1,1]`   | `[1,1]`   | warned     | warned        |
+| `[1,2,3]` | `[1,2,2]` | warned     | warned        |
+| `[1,2]`   | `[1,1,2]` | warned     | warned        |
+| `[1,2]`   | `[3,3]`   | warned     | warned        |
+| `[1,2,3]` | `[3,1,1]` | warned     | **silent**    |
+| `[1]`     | `[1,1]`   | **silent** | **silent**    |
+| `[1,2]`   | `[1,2,2]` | **silent** | **silent**    |
+| `[9]`     | `[9,9,9]` | **silent** | **silent**    |
+
+3 of 8 missed on the array path, 4 of 8 on the iterable path.
+
+What makes this worth recording rather than a cosmetic gap is _which_ cases are missed. Appending to
+a list is the ordinary way a developer first introduces a duplicate key — a row added twice, a
+paginated fetch that overlaps the previous page. The diagnostic is silent precisely at the moment it
+would be most useful, and starts working only later, once the list stops growing. `[9] -> [9,9,9]`
+is silent on both paths.
+
+Severity is bounded and should be stated plainly: **this is a diagnostic gap, not a correctness
+bug.** The reconciliation result itself is right — see the clearance below, 60 000 randomised cases
+with duplicates allowed produced no wrong ordering.
+
+**Verified fix.** Record in both cleanup loops. The array path can reuse `liveStartIdx`; the
+iterable path needs its own counter, since `liveStartIdx` must not be advanced in dev mode only or
+the final destroy loop (`:317`) would behave differently between dev and prod:
+
+```js
+// array path
+if (ngDevMode) {
+  recordDuplicateKeys(duplicateKeys, trackByFn(liveStartIdx, newCollection[liveStartIdx]), liveStartIdx);
+}
+
+// iterable path — tailIdx++ is unconditional, so control flow is identical in both modes
+let tailIdx = liveStartIdx;
+while (!newIterationResult.done) {
+  if (ngDevMode) {
+    recordDuplicateKeys(duplicateKeys, trackByFn(tailIdx, newIterationResult.value), tailIdx);
+  }
+  tailIdx++;
+  ...
+```
+
+Applied to the staged copy and re-run: all 8 cases warn on both paths, with correct indices
+(`[9] -> [9,9,9]` reports both `"0" and "1"` and `"1" and "2"`). Checked for regressions —
+20 000 randomised collections built from guaranteed-unique keys produced **0** false-positive
+warnings, and the whole correctness fuzz below still passes unchanged against the patched copy.
+
+Not fixed in the tree, per the standing instruction to analyse rather than repair.
+
 ## Gaps in repository tooling and data
 
 ### 19. `@deprecated` versions are parsed out of prose — `open`
@@ -2720,6 +2817,37 @@ Recorded so the same questions are not re-opened.
 | `resolvePromise` **throws** a `TypeError` on self-resolution (`zone.js/lib/common/promise.ts:143`), where the spec says _reject_                                                                                     | Not a deviation. The throw is an internal signal and every entry point converts it: `makeResolver` (`:110-114`), the constructor's executor wrapper (`:507-515`), and `scheduleResolveOrReject`'s microtask body (`:293-314`). `Promise.resolve`/`reject` (`:335`, `:339`) always pass a freshly built promise, so `promise === value` cannot hold there. Net behaviour is rejection with a `TypeError`, matching native. |
 | Does zone.js's `Promise` honour the single-settle and thenable rules?                                                                                                                                                | Yes, on the four points checked against a native baseline: resolve-then-reject keeps the first (one `once()` closure wraps _both_ resolvers, `:119-131`, `:508-513`); a thenable whose `then` throws after calling resolve stays resolved (the error path reuses the same spent `onceWrapper`, `:176-180`); a throwing `then` getter rejects (`:149-158`); self-resolution rejects.                                       |
 | `_keyMap[event.key]` (`key_events.ts:155`) is a plain-object lookup on runtime input                                                                                                                                 | Not reachable. No value in the UI Events `KeyboardEvent.key` set collides with an `Object.prototype` member, so only a synthetic event built in page script could supply one — at which point script already runs.                                                                                                                                                                                                        |
+| Does the `@for` reconciliation algorithm (`list_reconciliation.ts`) ever produce a wrong list, or drop the view-reuse guarantee that `track` exists to provide?                                                      | No, on 60 000 randomised cases plus 17 hand-built ones. Differential-fuzzed the real `reconcile` against an array oracle; see the note below this table.                                                                                                                                                                                                                                                                  |
+| `reconcile` calls `setActiveConsumer(null)` (`:128`, `:247`) instead of restoring the value the call returned                                                                                                        | Not a defect. The sole caller `ɵɵrepeater` (`control_flow.ts:481`) already sets the ambient consumer to `null` on entry and hands the saved one in as an argument, so `null` _is_ the correct restore value. `reconcile` is not public API and has no other caller. Coupled to its caller, but not wrong.                                                                                                                 |
+| `initLiveItemsInTheFuture` (`:384`) is computed once via `??=` and never refreshed as items are consumed                                                                                                             | Not a defect. A stale `true` only causes a redundant detach — the item is destroyed at `:322` if never re-attached, and `liveEndIdx--` keeps the loop terminating. The JSDoc at `:99` states the algorithm "may apply sub-optimal number of operations"; the fuzz found no wrong result.                                                                                                                                  |
+
+### How the `@for` reconciliation clearance was established
+
+The strongest verification this review has been able to apply, so the method is worth recording.
+
+`reconcile` is a good fuzzing target because it is written against an abstract `LiveCollection`
+adapter, so a test can supply a concrete array-backed one and observe every operation the algorithm
+performs. The harness gives each entry a unique view id, which makes view **reuse** — the thing
+`track` actually promises — observable rather than merely inferred from the final ordering.
+
+Two properties were asserted on every case:
+
+1. after `reconcile`, the live collection equals the incoming one element for element, in order;
+2. a key present in both collections keeps its original view id.
+
+Property 2 needs a careful oracle. A first attempt keyed the "before" ids into a plain `Map`, so
+duplicate keys collapsed to the last one and the check reported 4 283 violations that were entirely
+artifacts of the oracle. Restricting the guarantee to keys appearing **exactly once on both sides**
+— which is the only case where the pairing is even defined — brought it to zero without weakening
+what is being tested.
+
+Coverage: 17 hand-built scenarios (reverse, swap-ends, rotate, move-forward, duplicate keys in each
+direction, shuffle with insert and with delete, grow from empty, shrink to empty), 20 000 randomised
+cases for each of three generators (duplicate keys with `track` by key, duplicate keys with `track`
+by index, unique keys only), and the 17 scenarios re-run through the separate non-array iterable
+code path. **0 wrong results and 0 reuse violations across all of it.**
+
+The same suite was re-run against the patched copy carrying the finding 57 fix, unchanged.
 
 ---
 

@@ -1,6 +1,6 @@
 # Triage — what to act on first
 
-The [findings register](./findings-register.md) records 56 findings in the order they were
+The [findings register](./findings-register.md) records 57 findings in the order they were
 confirmed, which is the wrong order for deciding what to do. This ranks them.
 
 Every fix proposed below was run against the cases that motivated the finding **and** against the
@@ -144,6 +144,7 @@ Verified against both the cases that must match and the case the comment cares a
 | [46](./findings-register.md) SW `hasOwnProperty`  | Needs a push server relaying a hostile key                                                                                                      | `Object.hasOwn(desc, name)`                                                               |
 | [52](./findings-register.md) `1.2.3` lexes to 1.2 | A typo, and the value is visibly wrong                                                                                                          | a `seenPeriod` flag beside `hasSeparators`                                                |
 | [56](./findings-register.md) `??` not foldable    | Developer experience, not correctness — the build fails loudly                                                                                  | add `QuestionQuestionToken` to `BINARY_OPERATORS`                                         |
+| [57](./findings-register.md) `@for` dup-key warn  | Dev-mode diagnostic only; the rendered list is correct either way                                                                               | call `recordDuplicateKeys` in both cleanup loops                                          |
 
 ## Not worth prioritising, and why
 
